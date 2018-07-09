@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout android:padding="16dp"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/topicLabel"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/dlg_add_topic_body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <EditText
+        app:layout_constraintLeft_toLeftOf="@id/topicLabel"
+        app:layout_constraintTop_toBottomOf="@id/topicLabel"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:id="@+id/topic"
+        android:inputType="text"
+        android:ems="15"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        />
+
+
+</android.support.constraint.ConstraintLayout>

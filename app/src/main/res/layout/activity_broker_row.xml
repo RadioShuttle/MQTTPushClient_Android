@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rowselector">
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:visibility="gone"
+        android:layout_gravity="center_vertical"
+        android:layout_width="12dp"
+        android:layout_height="12dp" />
+
+
+    <ImageView
+        android:id="@+id/errorImage"
+        app:srcCompat="@drawable/ic_circle_error"
+        android:visibility="gone"
+        android:layout_gravity="center_vertical"
+        android:layout_width="12dp"
+        android:layout_height="12dp" />
+
+    <ImageView
+        android:id="@+id/okImage"
+        app:srcCompat="@drawable/ic_circle_ok"
+        android:visibility="gone"
+        android:layout_gravity="center_vertical"
+        android:layout_width="12dp"
+        android:layout_height="12dp" />
+
+    <ImageView
+        android:id="@+id/neutralImage"
+        app:srcCompat="@drawable/ic_circle_neutral"
+        android:visibility="gone"
+        android:layout_gravity="center_vertical"
+        android:layout_width="12dp"
+        android:layout_height="12dp" />
+
+    <LinearLayout
+        android:layout_marginLeft="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/push_server"
+            android:visibility="gone"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+        <TextView
+            android:id="@+id/displayName"
+            android:text=""
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+        <TextView
+            android:id="@+id/status"
+            android:text=""
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    </LinearLayout>
+
+</LinearLayout>

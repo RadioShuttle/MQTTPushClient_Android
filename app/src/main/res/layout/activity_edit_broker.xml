@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".EditBrokerActivity">
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/swiperefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.v4.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TableLayout
+                android:id="@+id/inputTable"
+                android:paddingTop="8dp"
+                android:shrinkColumns="1"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingBottom="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                >
+                <TableRow>
+                    <TextView
+                        android:layout_marginTop="8dp"
+                        android:layout_span="2"
+                        android:text="@string/label_push_notification_server"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                </TableRow>
+
+
+                <TableRow>
+                    <TextView
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/label_host"/>
+                    <EditText
+                        android:id="@+id/push_notification_server"
+                        android:inputType="text"
+                        android:ems="15"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:layout_marginLeft="4dp"
+                        />
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_marginTop="16dp"
+                        android:layout_span="2"
+                        android:text="@string/label_mqtt_server"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                </TableRow>
+
+                <TableRow>
+                    <TextView
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/label_host"/>
+                    <EditText
+                        android:id="@+id/mqtt_host"
+                        android:inputType="text"
+                        android:ems="15"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:layout_marginLeft="4dp"
+                        />
+                </TableRow>
+                <TableRow>
+                    <TextView
+                        android:layout_gravity="center_vertical|right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/label_port"/>
+                    <LinearLayout>
+                        <EditText
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/mqtt_port"
+                            android:inputType="numberDecimal"
+                            android:maxEms="5"
+                            android:ems="5"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:layout_marginLeft="4dp"
+                            />
+                        <CheckBox
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_column="1"
+                            android:id="@+id/ssl"
+                            android:text="@string/label_ssl"
+                            android:checked="false" />
+                    </LinearLayout>
+                </TableRow>
+
+                <TableRow>
+                    <TextView
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/label_user"/>
+                    <EditText
+                        android:id="@+id/user"
+                        android:inputType="text"
+                        android:ems="10"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:layout_marginLeft="4dp"
+                        />
+                </TableRow>
+                <TableRow>
+                    <TextView
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/label_pwd"/>
+                    <EditText
+                        android:id="@+id/password"
+                        android:inputType="textPassword"
+                        android:ems="10"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:layout_marginLeft="4dp"
+                        />
+                </TableRow>
+
+                <TableRow>
+                    <Button
+                        android:id="@+id/save_button"
+                        android:layout_column="1"
+                        android:layout_gravity="right"
+                        android:text="@string/action_save_broker"/>
+
+                </TableRow>
+
+                <TableRow  android:id="@+id/viewExplanation" android:visibility="gone">
+                    <TextView android:layout_marginTop="16dp"
+                        android:layout_span="2" android:text="@string/explanation_get_notified"/>
+
+                </TableRow>
+
+                <TableRow android:id="@+id/viewTopics" android:visibility="gone">
+                    <TextView
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/label_topics"/>
+                    <EditText
+                        android:id="@+id/topics"
+                        android:inputType="textMultiLine"
+                        android:ems="10"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:layout_marginLeft="4dp"
+                        />
+                </TableRow>
+
+            </TableLayout>
+
+        </android.support.v4.widget.NestedScrollView>
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+</android.support.constraint.ConstraintLayout>
