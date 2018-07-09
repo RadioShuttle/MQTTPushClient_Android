@@ -1,0 +1,77 @@
+<resources>
+    <string name="app_name">MQTT Push Client</string>
+
+    <!-- action menus -->
+    <string name="menu_refresh">Refresh</string>
+    <string name="action_add_broker">Add</string>
+    <string name="action_edit_broker">Edit</string>
+    <string name="action_remove_broker">Remove</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_quit">Quit</string>
+    <string name="action_topics">Topics</string>
+    <string name="action_save_broker">Save</string>
+    <string name="action_delete_topics">Delete</string>
+    <string name="action_add_topic">Add</string>
+
+    <string name="dlg_remove_broker_title">Remove Broker</string>
+    <string name="dlg_remove_broker_msg">Confirm removal of current selected broker.</string>
+
+    <string name="dlg_delete_topic_title">Delete Topic</string>
+    <string name="dlg_delete_topic_msg">Unsubscribe from selected topic.</string>
+    <string name="dlg_delete_topic_msg_pl">Unsubscribe from selected topics.</string>
+
+    <string name="dlg_add_topics_title">Add Topic</string>
+    <string name="dlg_add_topic_body">Subscribe to topic:</string>
+    <string name="dlg_add_error_empty_str">Field topic must not be empty.</string>
+
+    <string name="error_loading_brokers">Error: Loading brokers failed.</string>
+    <string name="error_saving_brokers">Error: Saving broker list failed.</string>
+
+    <!-- Add/Edit borker activity -->
+    <string name="title_add_broker">Add Server</string>
+    <string name="title_edit_broker">Edit Server</string>
+    <string name="title_messages">Messages</string>
+    <string name="title_topics">Topics</string>
+
+    <string name="label_push_notification_server">Push Notification Server</string>
+    <string name="label_host">Host:</string>
+    <string name="label_mqtt_server">MQTT Server</string>
+    <string name="label_port">Port:</string>
+    <string name="label_ssl">SSL</string>
+    <string name="label_user">User:</string>
+    <string name="label_pwd">Pwd:</string>
+    <string name="explanation_get_notified">Get notified about subscribed topics listed below</string>
+    <string name="label_topics">Topics:</string>
+    <string name="error_empty_field">Field must not be empty.</string>
+    <string name="error_data_unmodified">Data was not modified.</string>
+    <string name="info_data_saved">Data has been saved</string>
+    <string name="dlg_quit_without_save_title">Quit without saving?</string>
+    <string name="dlg_quit_without_save_msg">Server data has been modified.</string>
+    <string name="warning_back_pressed">Press back again to close this app</string>
+    <string name="op_in_progress">Please wait until current action has been finished.</string>
+
+    <string name="errormsg_unexpected_error">An unexprected error has occured.</string>
+
+    <!-- Connection failed -->
+    <string name="errormsg_connection_failed">Connection failed</string>
+    <string name="errormsg_socket_timeout">Connection failed: Timeout</string>
+    <string name="errormsg_econnrefused">Connection refused: The attempt to connect was ignored</string>
+    <string name="errormsg_enetunreach">Connection failed: No network</string>
+
+    <string name="errormsg_io_error">Failed I/O operation</string>
+    <string name="errormsg_timeout">Timeout</string>
+
+    <string name="errormsg_not_authorized">Bad user name or password or not authorized</string>
+    <string name="errormsg_invalid_url">Invalid MQTT server URL."</string>
+    <string name="errormsg_unexpected_server_error">An unexprected error on the push server has occured.</string>
+    <string name="errormsg_op_canceled">Request canceled.</string>
+    <string name="errormsg_fcm_id">Messaging token not received yet. Click refresh to retry.</string>
+
+    <string name="errormsg_incompatible_protocol" formatted="false">"Incompatible protocol version. Client: %d.%d, Server: %d.%d"</string>
+    <string name="errormsg_unknown_host">IP address of push server could not be determined.</string>
+
+    <string name="errormsg_mqtt_prefix">MQTT error:</string>
+    <string name="status_ok">Server online</string>
+
+
+</resources>

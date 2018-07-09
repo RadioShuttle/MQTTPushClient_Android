@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="row_selection">#FFBBDEFB</color>
+
+    <color name="circle_error">#ca322e</color>
+    <color name="circle_ok">#2b932f</color>
+    <color name="gray">#E0E0E0</color>
+    <color name="circle_progress">#ffb846</color>
+
+    <color name="colorHeader">#e8eaf6</color>
+
+</resources>
