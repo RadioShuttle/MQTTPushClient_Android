@@ -78,7 +78,7 @@ public class Connection {
     }
 
     public ArrayList<String> getTopics() throws IOException, ServerError {
-        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_TOPICS, ++mSeqNo);
+        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_SUBSCR, ++mSeqNo);
         handleError(response);
         ArrayList<String> topics;
         if (lastReturnCode == Cmd.RC_OK) {
@@ -91,12 +91,12 @@ public class Connection {
     }
 
     public void addTopics(List<String> topics) throws IOException, ServerError  {
-        Cmd.RawCmd response = mCmd.addTopicsRequest(++mSeqNo, topics);
+        Cmd.RawCmd response = mCmd.subscribeRequest(++mSeqNo, topics);
         handleError(response);
     }
 
     public void deleteTopics(List<String> topics) throws IOException, ServerError  {
-        Cmd.RawCmd response = mCmd.deleteTopicsRequest(++mSeqNo, topics);
+        Cmd.RawCmd response = mCmd.unsubscribeRequest(++mSeqNo, topics);
         handleError(response);
     }
 

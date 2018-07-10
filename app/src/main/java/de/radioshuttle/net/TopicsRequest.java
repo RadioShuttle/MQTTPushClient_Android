@@ -22,18 +22,18 @@ public class TopicsRequest extends BrokerRequest {
     }
 
     public void addTopics(List<String> topics) {
-        mCmd = Cmd.CMD_ADD_TOPICS;
+        mCmd = Cmd.CMD_SUBSCRIBE;
         mTopics = topics;
     }
 
     public void deleteTopics(List<String> topics) {
-        mCmd = Cmd.CMD_DEL_TOPICS;
+        mCmd = Cmd.CMD_UNSUBSCRIBE;
         mTopics = topics;
     }
 
     @Override
     public boolean perform() throws Exception {
-        if (mCmd == Cmd.CMD_DEL_TOPICS) {
+        if (mCmd == Cmd.CMD_UNSUBSCRIBE) {
             try {
                 mConnection.deleteTopics(mTopics);
             } catch(MQTTException e) {
@@ -44,7 +44,7 @@ public class TopicsRequest extends BrokerRequest {
                 requestErrorTxt = e.getMessage();
             }
             requestStatus = mConnection.lastReturnCode;
-        } else if (mCmd == Cmd.CMD_ADD_TOPICS) {
+        } else if (mCmd == Cmd.CMD_SUBSCRIBE) {
             try {
                 mConnection.addTopics(mTopics);
             } catch(MQTTException e) {
@@ -63,7 +63,7 @@ public class TopicsRequest extends BrokerRequest {
             Collections.sort(result);
             mBroker.topics = result;
         } else {
-            if (mCmd == Cmd.CMD_DEL_TOPICS && requestStatus == Cmd.RC_OK) {
+            if (mCmd == Cmd.CMD_UNSUBSCRIBE && requestStatus == Cmd.RC_OK) {
                 ArrayList<String> tmp = new ArrayList<>(mBroker.topics);
                 tmp.removeAll(mTopics);
                 mBroker.topics = tmp;

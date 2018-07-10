@@ -17,14 +17,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 public class Cmd {
 
     public final static int CMD_HELLO = 1;
     public final static int CMD_LOGIN = 2;
     public final static int CMD_GET_FCM_DATA = 3;
-    public final static int CMD_GET_TOPICS = 4;
-    public final static int CMD_ADD_TOPICS = 5;
-    public final static int CMD_DEL_TOPICS = 6;
+    public final static int CMD_GET_SUBSCR = 4;
+    public final static int CMD_SUBSCRIBE = 5;
+    public final static int CMD_UNSBUBSCTIBE = 6;
     public final static int CMD_SET_TOKEN = 7;
     public final static int CMD_REMOVE_TOKEN = 8;
     public final static int CMD_LOGOUT = 9;
@@ -113,7 +114,7 @@ public class Cmd {
         return readCommand();
     }
 
-    public void getTopicsResponse(RawCmd request, List<String> topics) throws IOException {
+    public void getSubscriptionsResponse(RawCmd request, List<String> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
@@ -138,7 +139,7 @@ public class Cmd {
         return subs;
     }
 
-    public RawCmd addTopicsRequest(int seqNo, List<String> topics) throws IOException {
+    public RawCmd subscribeRequest(int seqNo, List<String> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
@@ -149,11 +150,11 @@ public class Cmd {
                 writeString(topics.get(i), os);
             }
         }
-        writeCommand(CMD_ADD_TOPICS, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        writeCommand(CMD_SUBSCRIBE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 
-    public RawCmd deleteTopicsRequest(int seqNo, List<String> topics) throws IOException {
+    public RawCmd unsubscribeRequest(int seqNo, List<String> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
@@ -164,7 +165,7 @@ public class Cmd {
                 writeString(topics.get(i), os);
             }
         }
-        writeCommand(CMD_DEL_TOPICS, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        writeCommand(CMD_UNSBUBSCTIBE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 
