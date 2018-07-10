@@ -25,7 +25,7 @@ public class Cmd {
     public final static int CMD_GET_FCM_DATA = 3;
     public final static int CMD_GET_SUBSCR = 4;
     public final static int CMD_SUBSCRIBE = 5;
-    public final static int CMD_UNSBUBSCTIBE = 6;
+    public final static int CMD_UNSUBSCRIBE = 6;
     public final static int CMD_SET_TOKEN = 7;
     public final static int CMD_REMOVE_TOKEN = 8;
     public final static int CMD_LOGOUT = 9;
@@ -165,7 +165,7 @@ public class Cmd {
                 writeString(topics.get(i), os);
             }
         }
-        writeCommand(CMD_UNSBUBSCTIBE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        writeCommand(CMD_UNSUBSCRIBE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 
