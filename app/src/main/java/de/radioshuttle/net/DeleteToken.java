@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
 
-public class DeleteToken extends BrokerRequest {
+public class DeleteToken extends Request {
 
-    public DeleteToken(Context context, PushAccount pushAccount, MutableLiveData<BrokerRequest> brokerLiveData) {
+    public DeleteToken(Context context, PushAccount pushAccount, MutableLiveData<Request> brokerLiveData) {
         super(context, pushAccount, brokerLiveData);
     }
 

@@ -9,9 +9,9 @@ import java.util.List;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
 
-public class TopicsRequest extends BrokerRequest {
+public class TopicsRequest extends Request {
 
-    public TopicsRequest(Context context, PushAccount pushAccount, MutableLiveData<BrokerRequest> brokerLiveData) {
+    public TopicsRequest(Context context, PushAccount pushAccount, MutableLiveData<Request> brokerLiveData) {
         super(context, pushAccount, brokerLiveData);
     }
 

@@ -28,9 +28,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
 
-public class BrokerRequest extends AsyncTask<Void, Void, PushAccount> {
+public class Request extends AsyncTask<Void, Void, PushAccount> {
 
-    public BrokerRequest(Context context, PushAccount pushAccount, MutableLiveData<BrokerRequest> brokerLiveData) {
+    public Request(Context context, PushAccount pushAccount, MutableLiveData<Request> brokerLiveData) {
         mAppContext = context.getApplicationContext();
         mPushAccount = pushAccount;
         mBrokerLiveData = brokerLiveData;
@@ -226,7 +226,7 @@ public class BrokerRequest extends AsyncTask<Void, Void, PushAccount> {
     protected AtomicBoolean mCancelled;
     protected Context mAppContext;
     protected PushAccount mPushAccount;
-    protected MutableLiveData<BrokerRequest> mBrokerLiveData;
+    protected MutableLiveData<Request> mBrokerLiveData;
 
-    private final static String TAG = BrokerRequest.class.getSimpleName();
+    private final static String TAG = Request.class.getSimpleName();
 }
