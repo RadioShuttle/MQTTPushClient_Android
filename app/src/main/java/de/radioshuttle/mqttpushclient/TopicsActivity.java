@@ -41,7 +41,7 @@ import de.radioshuttle.net.BrokerRequest;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.TopicsRequest;
 
-import static de.radioshuttle.mqttpushclient.EditBrokerActivity.PARAM_BROKER_JSON;
+import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_BROKER_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
 public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerViewAdapter.RowSelectionListener {

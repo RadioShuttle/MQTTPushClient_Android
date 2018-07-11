@@ -20,8 +20,8 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static de.radioshuttle.mqttpushclient.BrokerListActivity.RC_SUBSCRIPTIONS;
-import static de.radioshuttle.mqttpushclient.EditBrokerActivity.PARAM_BROKER_JSON;
+import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_SUBSCRIPTIONS;
+import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_BROKER_JSON;
 
 public class MessagesActivity extends AppCompatActivity {
 

@@ -11,14 +11,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".BrokerListActivity">
+        <activity android:name=".AccountListActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".EditBrokerActivity" />
+        <activity android:name=".EditAccountActivity" />
 
         <service android:name="de.radioshuttle.fcm.MessagingService">
             <intent-filter>
