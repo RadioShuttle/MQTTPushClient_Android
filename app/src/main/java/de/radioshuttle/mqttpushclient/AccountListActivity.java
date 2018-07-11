@@ -45,7 +45,7 @@ public class AccountListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_broker_list);
+        setContentView(R.layout.activity_account_list);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setEnabled(true);
@@ -202,7 +202,7 @@ public class AccountListActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.activity_broker, menu);
+        inflater.inflate(R.menu.activity_account, menu);
         return true;
     }
 
@@ -297,7 +297,7 @@ public class AccountListActivity extends AppCompatActivity {
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             // Inflate a menu resource providing context menu items
             MenuInflater inflater = mode.getMenuInflater();
-            inflater.inflate(R.menu.activity_broker_action, menu);
+            inflater.inflate(R.menu.activity_account_action, menu);
             return true;
         }
 

@@ -44,7 +44,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
-        View view = mInflater.inflate(R.layout.activity_broker_row, parent, false);
+        View view = mInflater.inflate(R.layout.activity_account_row, parent, false);
         final ViewHolder holder = new ViewHolder(view);
 
         holder.pushServer = view.findViewById(R.id.push_server);

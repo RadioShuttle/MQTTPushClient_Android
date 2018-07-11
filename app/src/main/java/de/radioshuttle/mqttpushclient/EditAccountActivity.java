@@ -46,7 +46,7 @@ public class EditAccountActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_broker);
+        setContentView(R.layout.activity_edit_account);
 
         mPushNotificationServer = findViewById(R.id.push_notification_server);
         mMQTTHost = findViewById(R.id.mqtt_host);
@@ -117,7 +117,7 @@ public class EditAccountActivity extends AppCompatActivity {
             }
 
             try {
-                //TODO: remove (including definitions in activity_edit_broker.xml), also remove mTopics textEdit
+                //TODO: remove (including definitions in activity_edit_accountt.xml), also remove mTopics textEdit
                 // findViewById(R.id.viewExplanation).setVisibility(View.VISIBLE);
                 // findViewById(R.id.viewTopics).setVisibility(View.VISIBLE);
 
@@ -178,7 +178,7 @@ public class EditAccountActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.activity_edit_broker, menu);
+        inflater.inflate(R.menu.activity_edit_account, menu);
         return true;
     }
 
