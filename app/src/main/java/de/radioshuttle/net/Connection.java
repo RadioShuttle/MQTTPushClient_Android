@@ -158,7 +158,6 @@ public class Connection {
     protected Cmd mCmd;
     protected Socket mClientSocket;
     protected String mPushServer;
-    // protected Broker mBroker;
 
     public int lastReturnCode;
 

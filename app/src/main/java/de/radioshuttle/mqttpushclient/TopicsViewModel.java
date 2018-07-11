@@ -28,10 +28,10 @@ public class TopicsViewModel extends ViewModel{
         selectedTopics = new HashSet<>();
     }
 
-    public void init(String brokerJson) throws JSONException {
+    public void init(String accountJson) throws JSONException {
         if (!initialized) {
             initialized = true;
-            pushAccount = PushAccount.createBrokerFormJSON(new JSONObject(brokerJson));
+            pushAccount = PushAccount.createAccountFormJSON(new JSONObject(accountJson));
             pushAccount.topics.clear(); // load topics from server
         }
     }

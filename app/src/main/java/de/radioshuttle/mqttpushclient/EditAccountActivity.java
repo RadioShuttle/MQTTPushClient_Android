@@ -64,22 +64,22 @@ public class EditAccountActivity extends AppCompatActivity {
         mTopics = findViewById(R.id.topics);
 
         SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
-        String brokersJSON = settings.getString(AccountListActivity.BROKERS, null);
+        String accountsJSON = settings.getString(AccountListActivity.ACCOUNTS, null);
 
         mViewModel = ViewModelProviders.of(this).get(AccountViewModel.class);
         try {
-            mViewModel.init(brokersJSON);
+            mViewModel.init(accountsJSON);
         } catch (JSONException e) {
-            Log.d(TAG, brokersJSON);
-            Log.e(TAG, "Loading brokers failed." , e);
-            Toast.makeText(getApplicationContext(), R.string.error_loading_brokers, Toast.LENGTH_LONG).show();
+            Log.d(TAG, accountsJSON);
+            Log.e(TAG, "Loading accounts failed." , e);
+            Toast.makeText(getApplicationContext(), R.string.error_loading_accounts, Toast.LENGTH_LONG).show();
         }
 
-        mViewModel.requestBroker.observe(this, new Observer<Request>() {
+        mViewModel.request.observe(this, new Observer<Request>() {
             @Override
             public void onChanged(@Nullable Request request) {
                 if (request != null) {
-                    PushAccount b = request.getBroker();
+                    PushAccount b = request.getAccount();
                     if (b.status == 1) {
                         mSwipeRefreshLayout.setRefreshing(true);
                     } else {
@@ -107,13 +107,13 @@ public class EditAccountActivity extends AppCompatActivity {
         mMode = (args != null ? args.getInt(MODE, MODE_ADD) : MODE_ADD);
         if (mMode == MODE_EDIT) {
 
-            setTitle(R.string.title_edit_broker);
+            setTitle(R.string.title_edit_account);
 
             String json;
             if (savedInstanceState == null) {
-                json = args.getString(PARAM_BROKER_JSON);
+                json = args.getString(PARAM_ACCOUNT_JSON);
             } else {
-                json = savedInstanceState.getString(PARAM_BROKER_JSON);
+                json = savedInstanceState.getString(PARAM_ACCOUNT_JSON);
             }
 
             try {
@@ -121,7 +121,7 @@ public class EditAccountActivity extends AppCompatActivity {
                 // findViewById(R.id.viewExplanation).setVisibility(View.VISIBLE);
                 // findViewById(R.id.viewTopics).setVisibility(View.VISIBLE);
 
-                mPushAccount = PushAccount.createBrokerFormJSON(new JSONObject(json));
+                mPushAccount = PushAccount.createAccountFormJSON(new JSONObject(json));
                 mPushNotificationServer.setText(mPushAccount.pushserver);
                 URI u = new URI(mPushAccount.uri);
                 mMQTTHost.setText(u.getHost());
@@ -143,7 +143,7 @@ public class EditAccountActivity extends AppCompatActivity {
                 Log.e(TAG, "parse error", e);
             }
         } else { // MODE == MODE_ADD
-            setTitle(R.string.title_add_broker);
+            setTitle(R.string.title_add_account);
         }
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
@@ -197,7 +197,7 @@ public class EditAccountActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         if (mPushAccount != null) {
             try {
-                outState.putString("PARAM_BROKER_JSON", mPushAccount.getJSONObject().toString());
+                outState.putString("PARAM_ACCOUNT_JSON", mPushAccount.getJSONObject().toString());
             } catch (JSONException e) {
                 Log.e(TAG, "parse error", e);
             }
@@ -315,7 +315,7 @@ public class EditAccountActivity extends AppCompatActivity {
         if (checkData()) {
             if (hasDataChanged()) {
                 setUIEnabled(false, false);
-                mViewModel.saveBroker(this, getUserInput());
+                mViewModel.saveAccount(this, getUserInput());
             } else {
                 Toast.makeText(getApplicationContext(), R.string.error_data_unmodified, Toast.LENGTH_LONG).show();
             }
@@ -323,7 +323,7 @@ public class EditAccountActivity extends AppCompatActivity {
     }
 
     protected void saveLocalAndFinish(PushAccount checkedPushAccount) {
-        ArrayList<PushAccount> pushAccount = mViewModel.brokerList.getValue();
+        ArrayList<PushAccount> pushAccount = mViewModel.accountList.getValue();
         if (pushAccount == null)
             pushAccount = new ArrayList<>();
 
@@ -346,21 +346,21 @@ public class EditAccountActivity extends AppCompatActivity {
         }
 
         try {
-            mViewModel.brokerList.setValue(pushAccount);
+            mViewModel.accountList.setValue(pushAccount);
             SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = settings.edit();
-            editor.putString(AccountListActivity.BROKERS, mViewModel.getBrokersJSON());
+            editor.putString(AccountListActivity.ACCOUNTS, mViewModel.getAccountsJSON());
             editor.commit();
             Toast.makeText(getApplicationContext(), R.string.info_data_saved, Toast.LENGTH_LONG).show();
             Intent data = new Intent();
-            data.putExtra(PARAM_BROKER_JSON, mPushAccount.getJSONObject().toString());
+            data.putExtra(PARAM_ACCOUNT_JSON, mPushAccount.getJSONObject().toString());
             setResult(AppCompatActivity.RESULT_OK, data);
             finish();
 
 
         } catch (JSONException e) {
-            Log.e(TAG, "saving broker list failed", e);
-            showErrorMsg(getString(R.string.error_saving_brokers));
+            Log.e(TAG, "saving account list failed", e);
+            showErrorMsg(getString(R.string.error_saving_accounts));
         }
     }
 
@@ -427,6 +427,6 @@ public class EditAccountActivity extends AppCompatActivity {
     public final static String MODE = "MODE";
     public final static int MODE_ADD = 1;
     public final static int MODE_EDIT = 2;
-    public final static String PARAM_BROKER_JSON = "PARAM_BROKER_JSON";
+    public final static String PARAM_ACCOUNT_JSON = "PARAM_ACCOUNT_JSON";
     private final static String TAG = EditAccountActivity.class.getSimpleName();
 }

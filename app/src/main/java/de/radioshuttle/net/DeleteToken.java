@@ -23,8 +23,8 @@ import de.radioshuttle.mqttpushclient.PushAccount;
 
 public class DeleteToken extends Request {
 
-    public DeleteToken(Context context, PushAccount pushAccount, MutableLiveData<Request> brokerLiveData) {
-        super(context, pushAccount, brokerLiveData);
+    public DeleteToken(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
+        super(context, pushAccount, accountLiveData);
     }
 
     @Override

@@ -10,14 +10,14 @@
         app:showAsAction="always" />
 
     <item android:id="@+id/action_edit_account"
-        android:title="@string/action_edit_broker"
+        android:title="@string/action_edit_account"
         android:orderInCategory="10"
         android:icon="@drawable/ic_menu_edit"
         app:showAsAction="always"
         />
 
     <item android:id="@+id/action_remove_account"
-        android:title="@string/action_remove_broker"
+        android:title="@string/action_remove_account"
         android:orderInCategory="15"
         android:icon="@drawable/ic_menu_delete"
         app:showAsAction="always"

@@ -30,10 +30,10 @@ import de.radioshuttle.mqttpushclient.PushAccount;
 
 public class Request extends AsyncTask<Void, Void, PushAccount> {
 
-    public Request(Context context, PushAccount pushAccount, MutableLiveData<Request> brokerLiveData) {
+    public Request(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
         mAppContext = context.getApplicationContext();
         mPushAccount = pushAccount;
-        mBrokerLiveData = brokerLiveData;
+        mAccountLiveData = accountLiveData;
         mCancelled = new AtomicBoolean(false);
     }
 
@@ -62,8 +62,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 cont = false;
                 if (mPushAccount.status != 1) {
                     mPushAccount.status = 1;
-                    if (mBrokerLiveData != null) {
-                        mBrokerLiveData.postValue(this);
+                    if (mAccountLiveData != null) {
+                        mAccountLiveData.postValue(this);
                     }
                 }
 
@@ -204,8 +204,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             mPushAccount.requestErrorTxt = requestErrorTxt;
             mPushAccount.status = 0;
 
-            if (mBrokerLiveData != null) {
-                mBrokerLiveData.postValue(this);
+            if (mAccountLiveData != null) {
+                mAccountLiveData.postValue(this);
             }
         }
 
@@ -217,7 +217,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         return true;
     }
 
-    public PushAccount getBroker() {
+    public PushAccount getAccount() {
         return mPushAccount;
     }
 
@@ -226,7 +226,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected AtomicBoolean mCancelled;
     protected Context mAppContext;
     protected PushAccount mPushAccount;
-    protected MutableLiveData<Request> mBrokerLiveData;
+    protected MutableLiveData<Request> mAccountLiveData;
 
     private final static String TAG = Request.class.getSimpleName();
 }

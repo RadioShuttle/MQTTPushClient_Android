@@ -11,8 +11,8 @@ import de.radioshuttle.mqttpushclient.PushAccount;
 
 public class TopicsRequest extends Request {
 
-    public TopicsRequest(Context context, PushAccount pushAccount, MutableLiveData<Request> brokerLiveData) {
-        super(context, pushAccount, brokerLiveData);
+    public TopicsRequest(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
+        super(context, pushAccount, accountLiveData);
     }
 
     public void addTopic(String topic) {

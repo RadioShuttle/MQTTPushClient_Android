@@ -41,7 +41,7 @@ import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.TopicsRequest;
 
-import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_BROKER_JSON;
+import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
 public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerViewAdapter.RowSelectionListener {
@@ -61,7 +61,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
             public void onChanged(@Nullable Request request) {
                 if (request != null && request instanceof TopicsRequest) {
                     TopicsRequest topicsRequest = (TopicsRequest) request;
-                    PushAccount b = topicsRequest.getBroker();
+                    PushAccount b = topicsRequest.getAccount();
                     if (b.status == 1) {
                         if (mTopicsRecyclerViewAdapter != null && mTopicsRecyclerViewAdapter.getItemCount() == 0) {
                             if (b.topics.size() > 0) {
@@ -103,7 +103,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
         });
 
         Bundle args = getIntent().getExtras();
-        String json = args.getString(PARAM_BROKER_JSON);
+        String json = args.getString(PARAM_ACCOUNT_JSON);
         boolean hastMultipleServer = args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS);
 
         try {

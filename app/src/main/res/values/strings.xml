@@ -3,9 +3,9 @@
 
     <!-- action menus -->
     <string name="menu_refresh">Refresh</string>
-    <string name="action_add_broker">Add</string>
-    <string name="action_edit_broker">Edit</string>
-    <string name="action_remove_broker">Remove</string>
+    <string name="action_add_account">Add</string>
+    <string name="action_edit_account">Edit</string>
+    <string name="action_remove_account">Remove</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_quit">Quit</string>
     <string name="action_topics">Topics</string>
@@ -13,8 +13,8 @@
     <string name="action_delete_topics">Delete</string>
     <string name="action_add_topic">Add</string>
 
-    <string name="dlg_remove_broker_title">Remove Broker</string>
-    <string name="dlg_remove_broker_msg">Confirm removal of current selected broker.</string>
+    <string name="dlg_remove_account_title">Remove Account</string>
+    <string name="dlg_remove_account_msg">Confirm removal of current selected account.</string>
 
     <string name="dlg_delete_topic_title">Delete Topic</string>
     <string name="dlg_delete_topic_msg">Unsubscribe from selected topic.</string>
@@ -24,12 +24,12 @@
     <string name="dlg_add_topic_body">Subscribe to topic:</string>
     <string name="dlg_add_error_empty_str">Field topic must not be empty.</string>
 
-    <string name="error_loading_brokers">Error: Loading brokers failed.</string>
-    <string name="error_saving_brokers">Error: Saving broker list failed.</string>
+    <string name="error_loading_accounts">Error: Loading accounts failed.</string>
+    <string name="error_saving_accounts">Error: Saving account list failed.</string>
 
     <!-- Add/Edit borker activity -->
-    <string name="title_add_broker">Add Server</string>
-    <string name="title_edit_broker">Edit Server</string>
+    <string name="title_add_account">Add Server</string>
+    <string name="title_edit_account">Edit Server</string>
     <string name="title_messages">Messages</string>
     <string name="title_topics">Topics</string>
 

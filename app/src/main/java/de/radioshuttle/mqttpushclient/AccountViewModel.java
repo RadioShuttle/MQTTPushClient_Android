@@ -23,43 +23,43 @@ import de.radioshuttle.net.DeleteToken;
 
 public class AccountViewModel extends ViewModel {
 
-    public MutableLiveData<ArrayList<PushAccount>> brokerList;
-    public MutableLiveData<Request> requestBroker;
+    public MutableLiveData<ArrayList<PushAccount>> accountList;
+    public MutableLiveData<Request> request;
     public boolean initialized;
     private int requestCnt;
     private ArrayList<Request> currentRequests;
 
     public AccountViewModel() {
-        brokerList = new MutableLiveData<>();
-        requestBroker = new MutableLiveData<>();
+        accountList = new MutableLiveData<>();
+        request = new MutableLiveData<>();
         initialized = false;
         requestCnt = 0;
     }
 
-    public void init(String brokersJson) throws JSONException {
+    public void init(String accountsJson) throws JSONException {
         if (!initialized) {
-            setBrokersJSON(brokersJson, true);
+            setAccountsJSON(accountsJson, true);
             initialized = true;
             //TODO: test date remove
-            if (brokerList.getValue() == null || brokerList.getValue().isEmpty()) {
+            if (accountList.getValue() == null || accountList.getValue().isEmpty()) {
                 ArrayList<PushAccount> pushAccounts = new ArrayList<PushAccount>();
-                pushAccounts.add(PushAccount.createBrokerFormJSON(
+                pushAccounts.add(PushAccount.createAccountFormJSON(
                         new JSONObject(
                                 "{\"pushserver\":\"192.168.178.80\",\"uri\":\"tcp:\\/\\/mqtt.arduino-hannover.de:1883\",\"user\":\"XXXXXXXX\",\"id\":1,\"password\":\"XXXXXXXX\",\"clientID\":\"MQTTPushClient\",\"topics\":[\"XXXXXXXX\\/HELIOS\"]}"
                         ))
                 );
-                brokerList.setValue(pushAccounts);
+                accountList.setValue(pushAccounts);
             }
         }
     }
 
-    public void setBrokersJSON(String brokersJson, boolean init) throws JSONException {
+    public void setAccountsJSON(String accountsJson, boolean init) throws JSONException {
         ArrayList<PushAccount> pushAccounts = new ArrayList<PushAccount>();
-        if (brokersJson != null) {
-            JSONArray jarray = new JSONArray(brokersJson);
+        if (accountsJson != null) {
+            JSONArray jarray = new JSONArray(accountsJson);
             for(int i = 0 ; i < jarray.length(); i++) {
                 JSONObject b = jarray.getJSONObject(i);
-                pushAccounts.add(PushAccount.createBrokerFormJSON(b));
+                pushAccounts.add(PushAccount.createAccountFormJSON(b));
             }
         }
         if (init) {
@@ -67,28 +67,28 @@ public class AccountViewModel extends ViewModel {
                 b.status = -1;
             }
         }
-        brokerList.setValue(pushAccounts);
+        accountList.setValue(pushAccounts);
     }
 
-    public String getBrokersJSON() throws JSONException {
-        JSONArray brokerList = new JSONArray();
-        ArrayList<PushAccount> list = this.brokerList.getValue();
+    public String getAccountsJSON() throws JSONException {
+        JSONArray accountList = new JSONArray();
+        ArrayList<PushAccount> list = this.accountList.getValue();
         for(PushAccount b : list) {
-            brokerList.put(b.getJSONObject());
+            accountList.put(b.getJSONObject());
         }
-        return brokerList.toString();
+        return accountList.toString();
     }
 
     public PushAccount removeBorker(String key) {
         PushAccount ret = null;
-        ArrayList<PushAccount> pushAccounts = brokerList.getValue();
+        ArrayList<PushAccount> pushAccounts = accountList.getValue();
         if (key != null && pushAccounts != null && pushAccounts.size() > 0) {
             for(Iterator<PushAccount> it = pushAccounts.iterator(); it.hasNext();) {
                 PushAccount b = it.next();
                 if (key.equals(b.getKey())) {
                     ret = b;
                     it.remove();
-                    brokerList.setValue(pushAccounts);
+                    accountList.setValue(pushAccounts);
                     break;
                 }
             }
@@ -96,8 +96,8 @@ public class AccountViewModel extends ViewModel {
         return ret;
     }
 
-    public void checkBrokers(Context context) {
-        ArrayList<PushAccount> pushAccounts = brokerList.getValue();
+    public void checkAccounts(Context context) {
+        ArrayList<PushAccount> pushAccounts = accountList.getValue();
 
         if (currentRequests == null) {
             currentRequests = new ArrayList<>();
@@ -112,15 +112,15 @@ public class AccountViewModel extends ViewModel {
         if (pushAccounts != null) {
             requestCnt++;
             for(int i = 0; i < pushAccounts.size(); i++) {
-                Request request = new Request(context, pushAccounts.get(i), requestBroker);
+                Request request = new Request(context, pushAccounts.get(i), this.request);
                 currentRequests.add(request);
                 request.execute();
             }
         }
     }
 
-    /* add or uodate broker */
-    public void saveBroker(Context context, PushAccount pushAccount) {
+    /* add or uodate account */
+    public void saveAccount(Context context, PushAccount pushAccount) {
 
         if (currentRequests == null) {
             currentRequests = new ArrayList<>();
@@ -132,7 +132,7 @@ public class AccountViewModel extends ViewModel {
             currentRequests.clear();
         }
         requestCnt++;
-        Request request = new Request(context, pushAccount, requestBroker);
+        Request request = new Request(context, pushAccount, this.request);
         currentRequests.add(request);
         request.execute();
     }
@@ -152,7 +152,7 @@ public class AccountViewModel extends ViewModel {
 
     public boolean isCurrentRequest(Request request) {
         return
-            request.getBroker().status == 0 &&
+            request.getAccount().status == 0 &&
                     currentRequests != null &&
                     currentRequests.size() > 0 &&
                     currentRequests.get(currentRequests.size() - 1) == request;
@@ -160,7 +160,7 @@ public class AccountViewModel extends ViewModel {
 
     public boolean hasMultiplePushServers() {
         boolean multi = false;
-        ArrayList<PushAccount> pushAccounts = brokerList.getValue();
+        ArrayList<PushAccount> pushAccounts = accountList.getValue();
         if (pushAccounts != null) {
             HashSet<String> pushServer = new HashSet<>();
             for(PushAccount br : pushAccounts) {

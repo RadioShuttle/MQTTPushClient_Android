@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 
-import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_BROKER_JSON;
+import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
 public class AccountListActivity extends AppCompatActivity {
@@ -64,34 +64,33 @@ public class AccountListActivity extends AppCompatActivity {
         mListView.setLayoutManager(new LinearLayoutManager(this));
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
-        String brokersJSON = settings.getString(BROKERS, null);
-        // String brokesStateJSON = (savedInstanceState != null ? savedInstanceState.getString(BROKERS_STATE) : null);
+        String accountsJSON = settings.getString(ACCOUNTS, null);
 
         mViewModel = ViewModelProviders.of(this).get(AccountViewModel.class);
-        boolean brokersChecked = mViewModel.initialized;
+        boolean accountsChecked = mViewModel.initialized;
         try {
-            mViewModel.init(brokersJSON);
+            mViewModel.init(accountsJSON);
         } catch (JSONException e) {
-            Log.e(TAG, "Loading brokers failed." , e);
-            Toast.makeText(getApplicationContext(), R.string.error_loading_brokers, Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Loading accounts failed." , e);
+            Toast.makeText(getApplicationContext(), R.string.error_loading_accounts, Toast.LENGTH_LONG).show();
         }
 
-        mViewModel.brokerList.observe(this, new Observer<ArrayList<PushAccount>>() {
+        mViewModel.accountList.observe(this, new Observer<ArrayList<PushAccount>>() {
             @Override
             public void onChanged(@Nullable ArrayList<PushAccount> pushAccounts) {
                 mAdapter.setData(pushAccounts);
             }
         });
 
-        mViewModel.requestBroker.observe(this, new Observer<Request>() {
+        mViewModel.request.observe(this, new Observer<Request>() {
             @Override
             public void onChanged(@Nullable Request request) {
                 if (request != null) {
-                    ArrayList<PushAccount> pushAccounts = mViewModel.brokerList.getValue();
+                    ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
                     if (pushAccounts != null) {
                         for (int i = 0; i < pushAccounts.size(); i++) {
-                            PushAccount pushAccount = request.getBroker();
-                            if (request.getBroker().getKey().equals(pushAccounts.get(i).getKey())) {
+                            PushAccount pushAccount = request.getAccount();
+                            if (request.getAccount().getKey().equals(pushAccounts.get(i).getKey())) {
                                 pushAccounts.set(i, pushAccount);
                                 mAdapter.setData(pushAccounts);
                                 if (mViewModel.isCurrentRequest(request)) {
@@ -136,9 +135,9 @@ public class AccountListActivity extends AppCompatActivity {
                     Intent intent = new Intent(AccountListActivity.this, MessagesActivity.class);
                     intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
                     try {
-                        intent.putExtra(PARAM_BROKER_JSON, b.getJSONObject().toString());
+                        intent.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
                     } catch(JSONException e) {
-                        Log.e(TAG, "broker (subscriptions) parse error", e);
+                        Log.e(TAG, "push account (subscriptions) parse error", e);
                     }
                     startActivityForResult(intent, RC_MESSAGES);
                 }
@@ -146,27 +145,27 @@ public class AccountListActivity extends AppCompatActivity {
         });
         mListView.setAdapter(mAdapter);
 
-        if (!brokersChecked) {
+        if (!accountsChecked) {
             refresh();
         }
 
     }
 
-    public void deleteBroker(int sel) {
+    public void deleteAccount(int sel) {
         if (mAdapter != null) {
-            PushAccount b = mAdapter.getBroker(sel);
+            PushAccount b = mAdapter.getAccount(sel);
             if (b != null) {
                 b = mViewModel.removeBorker(b.getKey());
                 if (b != null) {
                     try {
                         SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
-                        editor.putString(BROKERS, mViewModel.getBrokersJSON());
+                        editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
                         editor.commit();
-                        ArrayList<PushAccount> pushAccounts = mViewModel.brokerList.getValue();
+                        ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
                         boolean found = false;
                         if (pushAccounts != null) {
-                            for(PushAccount br : mViewModel.brokerList.getValue()) {
+                            for(PushAccount br : mViewModel.accountList.getValue()) {
                                 if (br.getKey().equals(b.getKey())) {
                                     found = true;
                                 }
@@ -176,8 +175,8 @@ public class AccountListActivity extends AppCompatActivity {
                             mViewModel.deleteToken(this, b);
                         }
                     } catch (JSONException e) {
-                        Log.e(TAG, "saving deleted broker failed", e);
-                        Toast.makeText(getApplicationContext(), R.string.error_saving_brokers, Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "saving deleted account failed", e);
+                        Toast.makeText(getApplicationContext(), R.string.error_saving_accounts, Toast.LENGTH_LONG).show();
                     }
                 }
             }
@@ -190,13 +189,6 @@ public class AccountListActivity extends AppCompatActivity {
         if (mAdapter != null) {
             outState.putInt(SEL_ROW, mAdapter.getSelectedRow());
         }
-        /*
-        try {
-            outState.putString(BROKERS_STATE, mViewModel.getBrokersStateJSON());
-        } catch (JSONException e) {
-            Log.e(TAG, "onSaveInstance broker state", e);
-        }
-        */
     }
 
     @Override
@@ -211,15 +203,14 @@ public class AccountListActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         mActivityStarted = false;
 
-        // mBroker
-        if (requestCode == RC_ADD_BROKER || requestCode == RC_EDIT_BROKER) {
+        if (requestCode == RC_ADD_ACCOUNT || requestCode == RC_EDIT_ACCOUNT) {
             if (resultCode == AppCompatActivity.RESULT_OK) {
                 if (data != null) {
-                    String s = data.getStringExtra(PARAM_BROKER_JSON);
+                    String s = data.getStringExtra(PARAM_ACCOUNT_JSON);
                     if (s != null) {
                         try {
-                            PushAccount b = PushAccount.createBrokerFormJSON(new JSONObject(s));
-                            ArrayList<PushAccount> list = mViewModel.brokerList.getValue();
+                            PushAccount b = PushAccount.createAccountFormJSON(new JSONObject(s));
+                            ArrayList<PushAccount> list = mViewModel.accountList.getValue();
 
                             if (list != null) {
                                 b.requestStatus = Cmd.RC_OK;
@@ -235,7 +226,7 @@ public class AccountListActivity extends AppCompatActivity {
                                 if (!found) {
                                     list.add(b);
                                 }
-                                mViewModel.brokerList.setValue(list);
+                                mViewModel.accountList.setValue(list);
                             }
 
                         } catch (JSONException e) {
@@ -257,7 +248,7 @@ public class AccountListActivity extends AppCompatActivity {
                 intent.putExtra(EditAccountActivity.MODE, EditAccountActivity.MODE_ADD);
                 if (!mActivityStarted) {
                     mActivityStarted = true;
-                    startActivityForResult(intent, RC_ADD_BROKER);
+                    startActivityForResult(intent, RC_ADD_ACCOUNT);
                 }
                 return true;
             case R.id.menu_refresh:
@@ -269,11 +260,11 @@ public class AccountListActivity extends AppCompatActivity {
     }
 
     protected void refresh() {
-        ArrayList<PushAccount> pushAccounts = mViewModel.brokerList.getValue();
-        if (pushAccounts != null && pushAccounts.size() > 0) { // only allow refresh if a broker exists
+        ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
+        if (pushAccounts != null && pushAccounts.size() > 0) { // only allow refresh if an account exists
             if (!mSwipeRefreshLayout.isRefreshing())
                 mSwipeRefreshLayout.setRefreshing(true);
-            mViewModel.checkBrokers(this);
+            mViewModel.checkAccounts(this);
         } else if (!mViewModel.isRequestActive() && mSwipeRefreshLayout.isRefreshing()) {
             mSwipeRefreshLayout.setRefreshing(false);
         }
@@ -314,14 +305,14 @@ public class AccountListActivity extends AppCompatActivity {
                     Intent intent1 = new Intent(AccountListActivity.this, TopicsActivity.class);
                     if (mAdapter != null) {
                         int row = mAdapter.getSelectedRow();
-                        PushAccount b = mAdapter.getBroker(row);
+                        PushAccount b = mAdapter.getAccount(row);
                         if (b != null) {
                             try {
-                                intent1.putExtra(PARAM_BROKER_JSON, b.getJSONObject().toString());
+                                intent1.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
                                 intent1.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
                                 if (!mActivityStarted) {
                                     mActivityStarted = false;
-                                    startActivityForResult(intent1, RC_EDIT_BROKER);
+                                    startActivityForResult(intent1, RC_EDIT_ACCOUNT);
                                 }
                             } catch(JSONException e) {
                                 Log.e(TAG, "edit server parse error", e);
@@ -344,13 +335,13 @@ public class AccountListActivity extends AppCompatActivity {
                     intent.putExtra(EditAccountActivity.MODE, EditAccountActivity.MODE_EDIT);
                     if (mAdapter != null) {
                         int row = mAdapter.getSelectedRow();
-                        PushAccount b = mAdapter.getBroker(row);
+                        PushAccount b = mAdapter.getAccount(row);
                         if (b != null) {
                             try {
-                                intent.putExtra(PARAM_BROKER_JSON, b.getJSONObject().toString());
+                                intent.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
                                 if (!mActivityStarted) {
                                     mActivityStarted = false;
-                                    startActivityForResult(intent, RC_EDIT_BROKER);
+                                    startActivityForResult(intent, RC_EDIT_ACCOUNT);
                                 }
                             } catch(JSONException e) {
                                 Log.e(TAG, "edit server parse error", e);
@@ -381,15 +372,15 @@ public class AccountListActivity extends AppCompatActivity {
             final int selRow = args.getInt(SEL_ROW, 0);
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.dlg_remove_broker_title));
-            builder.setMessage(getString(R.string.dlg_remove_broker_msg));
+            builder.setTitle(getString(R.string.dlg_remove_account_title));
+            builder.setMessage(getString(R.string.dlg_remove_account_msg));
 
-            builder.setPositiveButton(R.string.action_remove_broker, new DialogInterface.OnClickListener() {
+            builder.setPositiveButton(R.string.action_remove_account, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     Activity a = getActivity();
                     if (a instanceof AccountListActivity) {
-                        ((AccountListActivity) a).deleteBroker(selRow);
+                        ((AccountListActivity) a).deleteAccount(selRow);
                     }
                 }
             });
@@ -409,15 +400,15 @@ public class AccountListActivity extends AppCompatActivity {
 
     /* preferneces */
     public final static String PREFS_NAME = "mqttpushclient_prefs";
-    public final static String BROKERS = "brokers";
+    public final static String ACCOUNTS = "accounts";
 
     /* keys for instance state */
     private final static String SEL_ROW = " SEL_ROW";
 
     private final static String TAG = AccountListActivity.class.getSimpleName();
 
-    public final static int RC_ADD_BROKER = 1;
-    public final static int RC_EDIT_BROKER = 2;
+    public final static int RC_ADD_ACCOUNT = 1;
+    public final static int RC_EDIT_ACCOUNT = 2;
     public final static int RC_MESSAGES = 3;
     public final static int RC_SUBSCRIPTIONS = 4;
 

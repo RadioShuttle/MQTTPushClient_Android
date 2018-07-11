@@ -195,7 +195,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
     public int getSelectedRow() {
         return mSelectedRow;
     }
-    public PushAccount getBroker(int idx) {
+    public PushAccount getAccount(int idx) {
         PushAccount b = null;
         if (pushAccounts != null && idx >= 0 && idx < pushAccounts.size()) {
             b = pushAccounts.get(idx);

@@ -21,7 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_SUBSCRIPTIONS;
-import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_BROKER_JSON;
+import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 
 public class MessagesActivity extends AppCompatActivity {
 
@@ -36,10 +36,10 @@ public class MessagesActivity extends AppCompatActivity {
         setTitle(getString(R.string.title_messages));
 
         Bundle args = getIntent().getExtras();
-        String json = args.getString(PARAM_BROKER_JSON);
+        String json = args.getString(PARAM_ACCOUNT_JSON);
         boolean hastMultipleServer = args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS);
         try {
-            PushAccount b = PushAccount.createBrokerFormJSON(new JSONObject(json));
+            PushAccount b = PushAccount.createAccountFormJSON(new JSONObject(json));
             TextView server = findViewById(R.id.push_notification_server);
             TextView key = findViewById(R.id.account_display_name);
             server.setText(b.pushserver);
@@ -72,7 +72,7 @@ public class MessagesActivity extends AppCompatActivity {
                     mActivityStarted = true;
                     Bundle args = getIntent().getExtras();
                     Intent intent = new Intent(this, TopicsActivity.class);
-                    intent.putExtra(PARAM_BROKER_JSON, args.getString(PARAM_BROKER_JSON));
+                    intent.putExtra(PARAM_ACCOUNT_JSON, args.getString(PARAM_ACCOUNT_JSON));
                     intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS));
                     startActivityForResult(intent, RC_SUBSCRIPTIONS);
                 }

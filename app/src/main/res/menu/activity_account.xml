@@ -5,7 +5,7 @@
         android:id="@+id/action_add"
         android:orderInCategory="80"
         android:icon="@drawable/ic_menu_add"
-        android:title="@string/action_add_broker"
+        android:title="@string/action_add_account"
         app:showAsAction="ifRoom" />
 
     <item

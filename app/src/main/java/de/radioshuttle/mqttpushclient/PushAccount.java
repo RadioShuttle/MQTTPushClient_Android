@@ -57,21 +57,21 @@ public class PushAccount {
     public ArrayList<String> topics;
 
     public JSONObject getJSONObject() throws JSONException {
-        JSONObject broker = new JSONObject();
-        broker.put("uri", uri);
-        broker.put("user", user);
+        JSONObject account = new JSONObject();
+        account.put("uri", uri);
+        account.put("user", user);
         if (password == null)
             password = new char[0];
-        broker.put("password", new String(password));
-        broker.put("clientID", clientID);
-        broker.put("pushserver", pushserver);
+        account.put("password", new String(password));
+        account.put("clientID", clientID);
+        account.put("pushserver", pushserver);
 
         JSONArray t = new JSONArray();
         for(String s : topics) {
             t.put(s);
         }
-        broker.put("topics", t);
-        return broker;
+        account.put("topics", t);
+        return account;
     };
 
     public JSONObject getJSONState() throws JSONException {
@@ -134,7 +134,7 @@ public class PushAccount {
         return sb.toString();
     }
 
-    public static PushAccount createBrokerFormJSON(JSONObject o) throws JSONException {
+    public static PushAccount createAccountFormJSON(JSONObject o) throws JSONException {
         PushAccount pushAccount = new PushAccount();
         if (o.has("pushserver")) {
             pushAccount.pushserver = o.getString("pushserver");
