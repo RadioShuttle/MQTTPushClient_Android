@@ -9,14 +9,14 @@
         android:title="@string/action_topics"
         app:showAsAction="always" />
 
-    <item android:id="@+id/action_edit_broker"
+    <item android:id="@+id/action_edit_account"
         android:title="@string/action_edit_broker"
         android:orderInCategory="10"
         android:icon="@drawable/ic_menu_edit"
         app:showAsAction="always"
         />
 
-    <item android:id="@+id/action_remove_broker"
+    <item android:id="@+id/action_remove_account"
         android:title="@string/action_remove_broker"
         android:orderInCategory="15"
         android:icon="@drawable/ic_menu_delete"

@@ -41,7 +41,7 @@ public class MessagesActivity extends AppCompatActivity {
         try {
             PushAccount b = PushAccount.createBrokerFormJSON(new JSONObject(json));
             TextView server = findViewById(R.id.push_notification_server);
-            TextView key = findViewById(R.id.broker_display_name);
+            TextView key = findViewById(R.id.account_display_name);
             server.setText(b.pushserver);
             key.setText(b.getDisplayName());
             if (!hastMultipleServer) {

@@ -109,7 +109,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
         try {
             mViewModel.init(json);
             TextView server = findViewById(R.id.push_notification_server);
-            TextView key = findViewById(R.id.broker_display_name);
+            TextView key = findViewById(R.id.account_display_name);
             server.setText(mViewModel.pushAccount.pushserver);
             key.setText(mViewModel.pushAccount.getDisplayName());
             if (!hastMultipleServer) {
@@ -298,7 +298,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
 
                     handled = true;
                     break;
-                case R.id.action_edit_broker:
+                case R.id.action_edit_account:
                     handled = true;
                     break;
             }

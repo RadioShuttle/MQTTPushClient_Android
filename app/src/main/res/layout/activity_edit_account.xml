@@ -128,7 +128,7 @@
                         android:id="@+id/save_button"
                         android:layout_column="1"
                         android:layout_gravity="right"
-                        android:text="@string/action_save_broker"/>
+                        android:text="@string/action_save_account"/>
 
                 </TableRow>
 

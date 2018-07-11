@@ -4,7 +4,7 @@
         android:id="@+id/action_save"
         android:orderInCategory="10"
         android:icon="@drawable/ic_menu_save"
-        android:title="@string/action_save_broker"
+        android:title="@string/action_save_account"
         app:showAsAction="ifRoom" />
 
 </menu>

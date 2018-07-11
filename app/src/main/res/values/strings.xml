@@ -9,7 +9,7 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_quit">Quit</string>
     <string name="action_topics">Topics</string>
-    <string name="action_save_broker">Save</string>
+    <string name="action_save_account">Save</string>
     <string name="action_delete_topics">Delete</string>
     <string name="action_add_topic">Add</string>
 

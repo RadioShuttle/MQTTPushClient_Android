@@ -56,7 +56,7 @@ public class AccountListActivity extends AppCompatActivity {
             }
         });
 
-        mListView = findViewById(R.id.brokerListView);
+        mListView = findViewById(R.id.accountListView);
         RecyclerView.ItemDecoration itemDecoration =
                 new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         mListView.addItemDecoration(itemDecoration);
@@ -330,7 +330,7 @@ public class AccountListActivity extends AppCompatActivity {
                     }
                     handled = true;
                     break;
-                case R.id.action_remove_broker:
+                case R.id.action_remove_account:
                     ConfirmDeleteDlg dlg = new ConfirmDeleteDlg();
                     Bundle args = new Bundle();
 
@@ -339,7 +339,7 @@ public class AccountListActivity extends AppCompatActivity {
                     dlg.show(getSupportFragmentManager(), ConfirmDeleteDlg.class.getSimpleName());
                     handled = true;
                     break;
-                case R.id.action_edit_broker:
+                case R.id.action_edit_account:
                     Intent intent = new Intent(AccountListActivity.this, EditAccountActivity.class);
                     intent.putExtra(EditAccountActivity.MODE, EditAccountActivity.MODE_EDIT);
                     if (mAdapter != null) {
