@@ -26,7 +26,7 @@ import static de.radioshuttle.mqttpushclient.EditBrokerActivity.PARAM_BROKER_JSO
 public class MessagesActivity extends AppCompatActivity {
 
     static class MessagesViewModel extends ViewModel {
-        public Broker broker;
+        public PushAccount pushAccount;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class MessagesActivity extends AppCompatActivity {
         String json = args.getString(PARAM_BROKER_JSON);
         boolean hastMultipleServer = args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS);
         try {
-            Broker b = Broker.createBrokerFormJSON(new JSONObject(json));
+            PushAccount b = PushAccount.createBrokerFormJSON(new JSONObject(json));
             TextView server = findViewById(R.id.push_notification_server);
             TextView key = findViewById(R.id.broker_display_name);
             server.setText(b.pushserver);

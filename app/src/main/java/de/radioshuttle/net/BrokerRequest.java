@@ -17,24 +17,22 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
-import com.google.firebase.internal.FirebaseAppHelper;
 
 import de.radioshuttle.mqttpushclient.R;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import de.radioshuttle.mqttpushclient.Broker;
+import de.radioshuttle.mqttpushclient.PushAccount;
 
-public class BrokerRequest extends AsyncTask<Void, Void, Broker> {
+public class BrokerRequest extends AsyncTask<Void, Void, PushAccount> {
 
-    public BrokerRequest(Context context, Broker broker, MutableLiveData<BrokerRequest> brokerLiveData) {
+    public BrokerRequest(Context context, PushAccount pushAccount, MutableLiveData<BrokerRequest> brokerLiveData) {
         mAppContext = context.getApplicationContext();
-        mBroker = broker;
+        mPushAccount = pushAccount;
         mBrokerLiveData = brokerLiveData;
         mCancelled = new AtomicBoolean(false);
     }
@@ -47,7 +45,7 @@ public class BrokerRequest extends AsyncTask<Void, Void, Broker> {
     }
 
     @Override
-    protected Broker doInBackground(Void... voids) {
+    protected PushAccount doInBackground(Void... voids) {
 
         int requestStatus = 0;
         int requestErrorCode = 0;
@@ -62,15 +60,15 @@ public class BrokerRequest extends AsyncTask<Void, Void, Broker> {
             /* connect */
             if (cont) {
                 cont = false;
-                if (mBroker.status != 1) {
-                    mBroker.status = 1;
+                if (mPushAccount.status != 1) {
+                    mPushAccount.status = 1;
                     if (mBrokerLiveData != null) {
                         mBrokerLiveData.postValue(this);
                     }
                 }
 
                 try {
-                    mConnection = new Connection(mBroker.pushserver, mAppContext);
+                    mConnection = new Connection(mPushAccount.pushserver, mAppContext);
                     mConnection.connect();
                     if (!mCancelled.get()) {
                         cont = true;
@@ -102,7 +100,7 @@ public class BrokerRequest extends AsyncTask<Void, Void, Broker> {
             /* login */
             if (cont) {
                 cont = false;
-                mConnection.login(mBroker);
+                mConnection.login(mPushAccount);
                 requestStatus = mConnection.lastReturnCode;
                 if (mConnection.lastReturnCode == Cmd.RC_OK) {
                     requestErrorTxt = mAppContext.getString(R.string.status_ok);
@@ -125,8 +123,8 @@ public class BrokerRequest extends AsyncTask<Void, Void, Broker> {
                 FirebaseApp app = null;
 
                 for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
-                    if (a.getName().equals(mBroker.pushserver)) {
-                        app = FirebaseApp.getInstance(mBroker.pushserver);
+                    if (a.getName().equals(mPushAccount.pushserver)) {
+                        app = FirebaseApp.getInstance(mPushAccount.pushserver);
                         break;
                     }
                 }
@@ -137,7 +135,7 @@ public class BrokerRequest extends AsyncTask<Void, Void, Broker> {
                             .setApiKey(m.get("api_key")) // Required for Auth.
                             // .setDatabaseUrl(m.get("database_url")) // Required for RTDB. //TODO
                             .build();
-                    app = FirebaseApp.initializeApp(mAppContext, options, mBroker.pushserver);
+                    app = FirebaseApp.initializeApp(mAppContext, options, mPushAccount.pushserver);
                 }
 
                 if (app != null) {
@@ -201,10 +199,10 @@ public class BrokerRequest extends AsyncTask<Void, Void, Broker> {
                 mConnection.disconnect();
             }
 
-            mBroker.requestStatus = requestStatus;
-            mBroker.requestErrorCode = requestErrorCode;
-            mBroker.requestErrorTxt = requestErrorTxt;
-            mBroker.status = 0;
+            mPushAccount.requestStatus = requestStatus;
+            mPushAccount.requestErrorCode = requestErrorCode;
+            mPushAccount.requestErrorTxt = requestErrorTxt;
+            mPushAccount.status = 0;
 
             if (mBrokerLiveData != null) {
                 mBrokerLiveData.postValue(this);
@@ -219,15 +217,15 @@ public class BrokerRequest extends AsyncTask<Void, Void, Broker> {
         return true;
     }
 
-    public Broker getBroker() {
-        return mBroker;
+    public PushAccount getBroker() {
+        return mPushAccount;
     }
 
 
     protected Connection mConnection;
     protected AtomicBoolean mCancelled;
     protected Context mAppContext;
-    protected Broker mBroker;
+    protected PushAccount mPushAccount;
     protected MutableLiveData<BrokerRequest> mBrokerLiveData;
 
     private final static String TAG = BrokerRequest.class.getSimpleName();

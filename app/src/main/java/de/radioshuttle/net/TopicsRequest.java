@@ -7,12 +7,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import de.radioshuttle.mqttpushclient.Broker;
+import de.radioshuttle.mqttpushclient.PushAccount;
 
 public class TopicsRequest extends BrokerRequest {
 
-    public TopicsRequest(Context context, Broker broker, MutableLiveData<BrokerRequest> brokerLiveData) {
-        super(context, broker, brokerLiveData);
+    public TopicsRequest(Context context, PushAccount pushAccount, MutableLiveData<BrokerRequest> brokerLiveData) {
+        super(context, pushAccount, brokerLiveData);
     }
 
     public void addTopic(String topic) {
@@ -61,12 +61,12 @@ public class TopicsRequest extends BrokerRequest {
             if (result == null)
                 result = new ArrayList<>();
             Collections.sort(result);
-            mBroker.topics = result;
+            mPushAccount.topics = result;
         } else {
             if (mCmd == Cmd.CMD_UNSUBSCRIBE && requestStatus == Cmd.RC_OK) {
-                ArrayList<String> tmp = new ArrayList<>(mBroker.topics);
+                ArrayList<String> tmp = new ArrayList<>(mPushAccount.topics);
                 tmp.removeAll(mTopics);
-                mBroker.topics = tmp;
+                mPushAccount.topics = tmp;
             }
         }
 

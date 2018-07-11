@@ -12,7 +12,6 @@ import android.app.Dialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
-import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
@@ -62,7 +61,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
             public void onChanged(@Nullable BrokerRequest brokerRequest) {
                 if (brokerRequest != null && brokerRequest instanceof TopicsRequest) {
                     TopicsRequest topicsRequest = (TopicsRequest) brokerRequest;
-                    Broker b = topicsRequest.getBroker();
+                    PushAccount b = topicsRequest.getBroker();
                     if (b.status == 1) {
                         if (mTopicsRecyclerViewAdapter != null && mTopicsRecyclerViewAdapter.getItemCount() == 0) {
                             if (b.topics.size() > 0) {
@@ -111,8 +110,8 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
             mViewModel.init(json);
             TextView server = findViewById(R.id.push_notification_server);
             TextView key = findViewById(R.id.broker_display_name);
-            server.setText(mViewModel.broker.pushserver);
-            key.setText(mViewModel.broker.getDisplayName());
+            server.setText(mViewModel.pushAccount.pushserver);
+            key.setText(mViewModel.pushAccount.getDisplayName());
             if (!hastMultipleServer) {
                 server.setVisibility(View.GONE);
             }

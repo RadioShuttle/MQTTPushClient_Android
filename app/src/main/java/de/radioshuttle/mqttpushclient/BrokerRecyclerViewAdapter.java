@@ -27,12 +27,12 @@ public class BrokerRecyclerViewAdapter extends RecyclerView.Adapter {
     public interface RowSelectionListener {
         void onItemSelected(int oldPos, int newPos);
         void onItemDeselected();
-        void onItemClicked(Broker b);
+        void onItemClicked(PushAccount b);
     }
 
 
     public BrokerRecyclerViewAdapter(AppCompatActivity activity, int selectedRow, RowSelectionListener listener) {
-        brokers = null;
+        pushAccounts = null;
         mSelectedRow = selectedRow;
         context = activity.getApplicationContext();
         mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -72,8 +72,8 @@ public class BrokerRecyclerViewAdapter extends RecyclerView.Adapter {
             public void onClick(View v) {
                 if (mSelectedRow == -1 && rowSelectionListener != null) {
                     int pos = holder.getAdapterPosition();
-                    if (pos != RecyclerView.NO_POSITION && brokers != null && pos >= 0 && pos < brokers.size()) {
-                        rowSelectionListener.onItemClicked(brokers.get(pos));
+                    if (pos != RecyclerView.NO_POSITION && pushAccounts != null && pos >= 0 && pos < pushAccounts.size()) {
+                        rowSelectionListener.onItemClicked(pushAccounts.get(pos));
                     }
                 } else if (mSelectedRow >= 0 && rowSelectionListener != null) {
                     int pos = holder.getAdapterPosition();
@@ -113,7 +113,7 @@ public class BrokerRecyclerViewAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ViewHolder vh = (ViewHolder) holder;
 
-        Broker b = brokers.get(position);
+        PushAccount b = pushAccounts.get(position);
         if (mMultiplePushServer) {
             if (vh.pushServer.getVisibility() != View.VISIBLE)
                 vh.pushServer.setVisibility(View.VISIBLE);
@@ -166,22 +166,22 @@ public class BrokerRecyclerViewAdapter extends RecyclerView.Adapter {
         // ImageViewCompat.setImageTintList(vh.circleImage, ColorStateList.valueOf(ContextCompat.getColor(context, R.color.green)));
     }
 
-    public void setData(ArrayList<Broker> brokers ) {
-        this.brokers = brokers;
+    public void setData(ArrayList<PushAccount> pushAccounts) {
+        this.pushAccounts = pushAccounts;
         //TODO: sort (if so, check selection by indices (viewModel , ...)
         //TODO: show header in row if there are more than one pushserver
-        if (mSelectedRow != -1 && brokers != null && mSelectedRow >= brokers.size()) {
+        if (mSelectedRow != -1 && pushAccounts != null && mSelectedRow >= pushAccounts.size()) {
             int old = mSelectedRow;
-            mSelectedRow = brokers.size() - 1;
+            mSelectedRow = pushAccounts.size() - 1;
             if (mSelectedRow == -1) {
                 rowSelectionListener.onItemDeselected();
             } else {
                 rowSelectionListener.onItemSelected(old, mSelectedRow);
             }
         }
-        if (brokers != null) {
+        if (pushAccounts != null) {
             HashSet<String> pushServer = new HashSet<>();
-            for(Broker b : brokers) {
+            for(PushAccount b : pushAccounts) {
                 if (b.pushserver != null && b.pushserver.trim().length() > 0) {
                     pushServer.add(b.pushserver.trim());
                 }
@@ -195,10 +195,10 @@ public class BrokerRecyclerViewAdapter extends RecyclerView.Adapter {
     public int getSelectedRow() {
         return mSelectedRow;
     }
-    public Broker getBroker(int idx) {
-        Broker b = null;
-        if (brokers != null && idx >= 0 && idx < brokers.size()) {
-            b = brokers.get(idx);
+    public PushAccount getBroker(int idx) {
+        PushAccount b = null;
+        if (pushAccounts != null && idx >= 0 && idx < pushAccounts.size()) {
+            b = pushAccounts.get(idx);
         }
         return b;
     }
@@ -215,7 +215,7 @@ public class BrokerRecyclerViewAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemCount() {
-        return brokers == null ? 0 : brokers.size();
+        return pushAccounts == null ? 0 : pushAccounts.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -236,5 +236,5 @@ public class BrokerRecyclerViewAdapter extends RecyclerView.Adapter {
     private int mSelectedRow;
     private Context context;
     private LayoutInflater mInflater;
-    private ArrayList<Broker> brokers;
+    private ArrayList<PushAccount> pushAccounts;
 }

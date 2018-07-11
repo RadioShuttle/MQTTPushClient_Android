@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import de.radioshuttle.net.BrokerRequest;
 import de.radioshuttle.net.Cmd;
 
-import static de.radioshuttle.mqttpushclient.BrokerListActivity.RC_SUBSCRIPTIONS;
 import static de.radioshuttle.mqttpushclient.EditBrokerActivity.PARAM_BROKER_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
@@ -77,10 +76,10 @@ public class BrokerListActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), R.string.error_loading_brokers, Toast.LENGTH_LONG).show();
         }
 
-        mViewModel.brokerList.observe(this, new Observer<ArrayList<Broker>>() {
+        mViewModel.brokerList.observe(this, new Observer<ArrayList<PushAccount>>() {
             @Override
-            public void onChanged(@Nullable ArrayList<Broker> brokers) {
-                mAdapter.setData(brokers);
+            public void onChanged(@Nullable ArrayList<PushAccount> pushAccounts) {
+                mAdapter.setData(pushAccounts);
             }
         });
 
@@ -88,13 +87,13 @@ public class BrokerListActivity extends AppCompatActivity {
             @Override
             public void onChanged(@Nullable BrokerRequest brokerRequest) {
                 if (brokerRequest != null) {
-                    ArrayList<Broker> brokers = mViewModel.brokerList.getValue();
-                    if (brokers != null) {
-                        for (int i = 0; i < brokers.size(); i++) {
-                            Broker broker = brokerRequest.getBroker();
-                            if (brokerRequest.getBroker().getKey().equals(brokers.get(i).getKey())) {
-                                brokers.set(i, broker);
-                                mAdapter.setData(brokers);
+                    ArrayList<PushAccount> pushAccounts = mViewModel.brokerList.getValue();
+                    if (pushAccounts != null) {
+                        for (int i = 0; i < pushAccounts.size(); i++) {
+                            PushAccount pushAccount = brokerRequest.getBroker();
+                            if (brokerRequest.getBroker().getKey().equals(pushAccounts.get(i).getKey())) {
+                                pushAccounts.set(i, pushAccount);
+                                mAdapter.setData(pushAccounts);
                                 if (mViewModel.isCurrentRequest(brokerRequest)) {
                                     mSwipeRefreshLayout.setRefreshing(false);
                                     mViewModel.confirmResultDelivered();
@@ -131,7 +130,7 @@ public class BrokerListActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onItemClicked(Broker b) {
+            public void onItemClicked(PushAccount b) {
                 if (!mActivityStarted && b != null) {
                     mActivityStarted = true;
                     Intent intent = new Intent(BrokerListActivity.this, MessagesActivity.class);
@@ -155,7 +154,7 @@ public class BrokerListActivity extends AppCompatActivity {
 
     public void deleteBroker(int sel) {
         if (mAdapter != null) {
-            Broker b = mAdapter.getBroker(sel);
+            PushAccount b = mAdapter.getBroker(sel);
             if (b != null) {
                 b = mViewModel.removeBorker(b.getKey());
                 if (b != null) {
@@ -164,10 +163,10 @@ public class BrokerListActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(BROKERS, mViewModel.getBrokersJSON());
                         editor.commit();
-                        ArrayList<Broker> brokers = mViewModel.brokerList.getValue();
+                        ArrayList<PushAccount> pushAccounts = mViewModel.brokerList.getValue();
                         boolean found = false;
-                        if (brokers != null) {
-                            for(Broker br : mViewModel.brokerList.getValue()) {
+                        if (pushAccounts != null) {
+                            for(PushAccount br : mViewModel.brokerList.getValue()) {
                                 if (br.getKey().equals(b.getKey())) {
                                     found = true;
                                 }
@@ -219,8 +218,8 @@ public class BrokerListActivity extends AppCompatActivity {
                     String s = data.getStringExtra(PARAM_BROKER_JSON);
                     if (s != null) {
                         try {
-                            Broker b = Broker.createBrokerFormJSON(new JSONObject(s));
-                            ArrayList<Broker> list = mViewModel.brokerList.getValue();
+                            PushAccount b = PushAccount.createBrokerFormJSON(new JSONObject(s));
+                            ArrayList<PushAccount> list = mViewModel.brokerList.getValue();
 
                             if (list != null) {
                                 b.requestStatus = Cmd.RC_OK;
@@ -270,8 +269,8 @@ public class BrokerListActivity extends AppCompatActivity {
     }
 
     protected void refresh() {
-        ArrayList<Broker> brokers = mViewModel.brokerList.getValue();
-        if (brokers != null && brokers.size() > 0) { // only allow refresh if a broker exists
+        ArrayList<PushAccount> pushAccounts = mViewModel.brokerList.getValue();
+        if (pushAccounts != null && pushAccounts.size() > 0) { // only allow refresh if a broker exists
             if (!mSwipeRefreshLayout.isRefreshing())
                 mSwipeRefreshLayout.setRefreshing(true);
             mViewModel.checkBrokers(this);
@@ -315,7 +314,7 @@ public class BrokerListActivity extends AppCompatActivity {
                     Intent intent1 = new Intent(BrokerListActivity.this, TopicsActivity.class);
                     if (mAdapter != null) {
                         int row = mAdapter.getSelectedRow();
-                        Broker b = mAdapter.getBroker(row);
+                        PushAccount b = mAdapter.getBroker(row);
                         if (b != null) {
                             try {
                                 intent1.putExtra(PARAM_BROKER_JSON, b.getJSONObject().toString());
@@ -345,7 +344,7 @@ public class BrokerListActivity extends AppCompatActivity {
                     intent.putExtra(EditBrokerActivity.MODE, EditBrokerActivity.MODE_EDIT);
                     if (mAdapter != null) {
                         int row = mAdapter.getSelectedRow();
-                        Broker b = mAdapter.getBroker(row);
+                        PushAccount b = mAdapter.getBroker(row);
                         if (b != null) {
                             try {
                                 intent.putExtra(PARAM_BROKER_JSON, b.getJSONObject().toString());

@@ -22,7 +22,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import java.util.List;
 import java.util.Map;
 
-import de.radioshuttle.mqttpushclient.Broker;
+import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 
 public class MessagingService extends FirebaseMessagingService {
@@ -128,7 +128,7 @@ public class MessagingService extends FirebaseMessagingService {
     }
 
     @TargetApi(26)
-    public static void removeUnusedChannels(List<Broker> notAllowedUsers, Context context) {
+    public static void removeUnusedChannels(List<PushAccount> notAllowedUsers, Context context) {
         //TODO:
     }
 

@@ -13,7 +13,6 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -32,20 +31,20 @@ public class TopicsViewModel extends ViewModel{
     public void init(String brokerJson) throws JSONException {
         if (!initialized) {
             initialized = true;
-            broker = Broker.createBrokerFormJSON(new JSONObject(brokerJson));
-            broker.topics.clear(); // load topics from server
+            pushAccount = PushAccount.createBrokerFormJSON(new JSONObject(brokerJson));
+            pushAccount.topics.clear(); // load topics from server
         }
     }
 
     public void getTopics(Context context) {
         requestCnt++;
-        currentRequest = new TopicsRequest(context, broker, topicsRequest);
+        currentRequest = new TopicsRequest(context, pushAccount, topicsRequest);
         currentRequest.execute();
     }
 
     public void deleteTopics(Context context, List<String> topics) {
         requestCnt++;
-        TopicsRequest request = new TopicsRequest(context, broker, topicsRequest);
+        TopicsRequest request = new TopicsRequest(context, pushAccount, topicsRequest);
         request.deleteTopics(topics);
         currentRequest = request;
         currentRequest.execute();
@@ -53,7 +52,7 @@ public class TopicsViewModel extends ViewModel{
 
     public void addTopic(Context context, String topic) {
         requestCnt++;
-        TopicsRequest request = new TopicsRequest(context, broker, topicsRequest);
+        TopicsRequest request = new TopicsRequest(context, pushAccount, topicsRequest);
         request.addTopic(topic);
         currentRequest = request;
         currentRequest.execute();
@@ -73,7 +72,7 @@ public class TopicsViewModel extends ViewModel{
 
     public MutableLiveData<BrokerRequest> topicsRequest;
     public HashSet<String> selectedTopics;
-    public Broker broker;
+    public PushAccount pushAccount;
     public boolean initialized;
     public String lastEnteredTopic;
     private int requestCnt;

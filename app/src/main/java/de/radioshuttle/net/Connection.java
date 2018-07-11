@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import de.radioshuttle.mqttpushclient.Broker;
+import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.Utils;
 
 public class Connection {
@@ -55,7 +55,7 @@ public class Connection {
         }
     }
 
-    public void login(Broker b) throws IOException, ServerError, InterruptedException {
+    public void login(PushAccount b) throws IOException, ServerError, InterruptedException {
         Cmd.RawCmd response = mCmd.loginRequest(++mSeqNo, b.uri, b.user, b.password);
 
         handleError(response);

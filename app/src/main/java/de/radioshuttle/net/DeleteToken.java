@@ -19,27 +19,27 @@ import com.google.firebase.iid.InstanceIdResult;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import de.radioshuttle.mqttpushclient.Broker;
+import de.radioshuttle.mqttpushclient.PushAccount;
 
 public class DeleteToken extends BrokerRequest {
 
-    public DeleteToken(Context context, Broker broker, MutableLiveData<BrokerRequest> brokerLiveData) {
-        super(context, broker, brokerLiveData);
+    public DeleteToken(Context context, PushAccount pushAccount, MutableLiveData<BrokerRequest> brokerLiveData) {
+        super(context, pushAccount, brokerLiveData);
     }
 
     @Override
     public boolean perform() throws Exception {
         FirebaseApp app = null;
         for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
-            if (a.getName().equals(mBroker.pushserver)) {
-                app = FirebaseApp.getInstance(mBroker.pushserver);
+            if (a.getName().equals(mPushAccount.pushserver)) {
+                app = FirebaseApp.getInstance(mPushAccount.pushserver);
                 FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
 
                 Task<InstanceIdResult> t = id.getInstanceId();
                 try {
                     Tasks.await(t, 3, TimeUnit.SECONDS);
                 } catch (Exception e) {
-                    Log.d(TAG, "Deletion of token for push server " +  mBroker.pushserver + "  failed: " + e.getMessage());
+                    Log.d(TAG, "Deletion of token for push server " +  mPushAccount.pushserver + "  failed: " + e.getMessage());
                 }
 
                 if (t.isSuccessful()) {
@@ -47,13 +47,13 @@ public class DeleteToken extends BrokerRequest {
                         id.deleteInstanceId();
                         Log.d(TAG, "token delteded");
                     } catch (IOException e) {
-                        Log.d(TAG, "deleteInstanceId() failed for " +  mBroker.pushserver + ": " + t.getResult().getToken());
+                        Log.d(TAG, "deleteInstanceId() failed for " +  mPushAccount.pushserver + ": " + t.getResult().getToken());
                         throw new ClientError(e);
                     }
                     mConnection.removeFCMToken(t.getResult().getToken());
-                    Log.d(TAG, "Token deleted for " +  mBroker.pushserver + ": " + t.getResult().getToken());
+                    Log.d(TAG, "Token deleted for " +  mPushAccount.pushserver + ": " + t.getResult().getToken());
                 } else {
-                    Log.d(TAG, "Deletion of token for push server " +  mBroker.pushserver + "  failed.");
+                    Log.d(TAG, "Deletion of token for push server " +  mPushAccount.pushserver + "  failed.");
                     throw new ClientError("Deletion of token failed.");
                 }
                 break;

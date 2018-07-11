@@ -79,7 +79,7 @@ public class EditBrokerActivity extends AppCompatActivity {
             @Override
             public void onChanged(@Nullable BrokerRequest brokerRequest) {
                 if (brokerRequest != null) {
-                    Broker b = brokerRequest.getBroker();
+                    PushAccount b = brokerRequest.getBroker();
                     if (b.status == 1) {
                         mSwipeRefreshLayout.setRefreshing(true);
                     } else {
@@ -95,7 +95,7 @@ public class EditBrokerActivity extends AppCompatActivity {
                             }
                             showErrorMsg(t);
                         } else {
-                            mBroker = b;
+                            mPushAccount = b;
                             saveLocalAndFinish(b);
                         }
                     }
@@ -121,19 +121,19 @@ public class EditBrokerActivity extends AppCompatActivity {
                 // findViewById(R.id.viewExplanation).setVisibility(View.VISIBLE);
                 // findViewById(R.id.viewTopics).setVisibility(View.VISIBLE);
 
-                mBroker = Broker.createBrokerFormJSON(new JSONObject(json));
-                mPushNotificationServer.setText(mBroker.pushserver);
-                URI u = new URI(mBroker.uri);
+                mPushAccount = PushAccount.createBrokerFormJSON(new JSONObject(json));
+                mPushNotificationServer.setText(mPushAccount.pushserver);
+                URI u = new URI(mPushAccount.uri);
                 mMQTTHost.setText(u.getHost());
                 if (u.getPort() != -1)
                     mMQTTPort.setText(String.valueOf(u.getPort()));
                 mMQTTSSL.setChecked(u.getScheme().toLowerCase().equals("ssl"));
-                mUser.setText(mBroker.user);
-                mPassword.setText(new String(mBroker.password));
+                mUser.setText(mPushAccount.user);
+                mPassword.setText(new String(mPushAccount.password));
                 StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < mBroker.topics.size(); i++) {
-                    sb.append(mBroker.topics.get(i));
-                    if (i + 1 < mBroker.topics.size())
+                for (int i = 0; i < mPushAccount.topics.size(); i++) {
+                    sb.append(mPushAccount.topics.get(i));
+                    if (i + 1 < mPushAccount.topics.size())
                         sb.append("\n");
                 }
 
@@ -195,9 +195,9 @@ public class EditBrokerActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (mBroker != null) {
+        if (mPushAccount != null) {
             try {
-                outState.putString("PARAM_BROKER_JSON", mBroker.getJSONObject().toString());
+                outState.putString("PARAM_BROKER_JSON", mPushAccount.getJSONObject().toString());
             } catch (JSONException e) {
                 Log.e(TAG, "parse error", e);
             }
@@ -235,8 +235,8 @@ public class EditBrokerActivity extends AppCompatActivity {
         }
     }
 
-    protected Broker getUserInput() {
-        Broker b = new Broker();
+    protected PushAccount getUserInput() {
+        PushAccount b = new PushAccount();
         b.pushserver = mPushNotificationServer.getText().toString().trim();
         String host = mMQTTHost.getText().toString().trim();
         String port = mMQTTPort.getText().toString().trim();
@@ -266,13 +266,13 @@ public class EditBrokerActivity extends AppCompatActivity {
     }
 
     protected boolean hasDataChanged() {
-        Broker o;
-        if (mBroker == null) {
-            o = new Broker();
+        PushAccount o;
+        if (mPushAccount == null) {
+            o = new PushAccount();
         } else {
-            o = mBroker;
+            o = mPushAccount;
         }
-        Broker n = getUserInput();
+        PushAccount n = getUserInput();
         if (mMQTTHost.getText().toString().trim().isEmpty() && mMQTTPort.getText().toString().trim().isEmpty() && !mMQTTSSL.isChecked()) {
             n.uri = null;
         }
@@ -322,16 +322,16 @@ public class EditBrokerActivity extends AppCompatActivity {
         }
     }
 
-    protected void saveLocalAndFinish(Broker checkedBroker) {
-        ArrayList<Broker> broker = mViewModel.brokerList.getValue();
-        if (broker == null)
-            broker = new ArrayList<>();
+    protected void saveLocalAndFinish(PushAccount checkedPushAccount) {
+        ArrayList<PushAccount> pushAccount = mViewModel.brokerList.getValue();
+        if (pushAccount == null)
+            pushAccount = new ArrayList<>();
 
         boolean found = false;
-        for(int i = 0; i < broker.size(); i++) {
-            Broker b = broker.get(i);
-            if (b.getKey().equals(checkedBroker.getKey())) {
-                Broker n = getUserInput();
+        for(int i = 0; i < pushAccount.size(); i++) {
+            PushAccount b = pushAccount.get(i);
+            if (b.getKey().equals(checkedPushAccount.getKey())) {
+                PushAccount n = getUserInput();
                 b.pushserver = n.pushserver;
                 b.uri = n.uri;
                 b.user = n.user;
@@ -342,18 +342,18 @@ public class EditBrokerActivity extends AppCompatActivity {
             }
         }
         if (!found) {
-            broker.add((checkedBroker));
+            pushAccount.add((checkedPushAccount));
         }
 
         try {
-            mViewModel.brokerList.setValue(broker);
+            mViewModel.brokerList.setValue(pushAccount);
             SharedPreferences settings = getSharedPreferences(BrokerListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = settings.edit();
             editor.putString(BrokerListActivity.BROKERS, mViewModel.getBrokersJSON());
             editor.commit();
             Toast.makeText(getApplicationContext(), R.string.info_data_saved, Toast.LENGTH_LONG).show();
             Intent data = new Intent();
-            data.putExtra(PARAM_BROKER_JSON, mBroker.getJSONObject().toString());
+            data.putExtra(PARAM_BROKER_JSON, mPushAccount.getJSONObject().toString());
             setResult(AppCompatActivity.RESULT_OK, data);
             finish();
 
@@ -411,7 +411,7 @@ public class EditBrokerActivity extends AppCompatActivity {
 
 
     public BrokerViewModel mViewModel;
-    public Broker mBroker;
+    public PushAccount mPushAccount;
     public TextView mPushNotificationServer;
     public TextView mMQTTHost;
     public TextView mMQTTPort;
