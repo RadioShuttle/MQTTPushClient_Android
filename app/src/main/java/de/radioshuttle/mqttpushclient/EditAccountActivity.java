@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import de.radioshuttle.net.BrokerRequest;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 
 public class EditAccountActivity extends AppCompatActivity {
@@ -75,15 +75,15 @@ public class EditAccountActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), R.string.error_loading_brokers, Toast.LENGTH_LONG).show();
         }
 
-        mViewModel.requestBroker.observe(this, new Observer<BrokerRequest>() {
+        mViewModel.requestBroker.observe(this, new Observer<Request>() {
             @Override
-            public void onChanged(@Nullable BrokerRequest brokerRequest) {
-                if (brokerRequest != null) {
-                    PushAccount b = brokerRequest.getBroker();
+            public void onChanged(@Nullable Request request) {
+                if (request != null) {
+                    PushAccount b = request.getBroker();
                     if (b.status == 1) {
                         mSwipeRefreshLayout.setRefreshing(true);
                     } else {
-                        if (mViewModel.isCurrentRequest(brokerRequest)) {
+                        if (mViewModel.isCurrentRequest(request)) {
                             mSwipeRefreshLayout.setRefreshing(false);
                             mViewModel.confirmResultDelivered();
                             setUIEnabled(true, true);

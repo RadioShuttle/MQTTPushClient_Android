@@ -18,16 +18,16 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import de.radioshuttle.net.BrokerRequest;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.net.DeleteToken;
 
 public class AccountViewModel extends ViewModel {
 
     public MutableLiveData<ArrayList<PushAccount>> brokerList;
-    public MutableLiveData<BrokerRequest> requestBroker;
+    public MutableLiveData<Request> requestBroker;
     public boolean initialized;
     private int requestCnt;
-    private ArrayList<BrokerRequest> currentBrokerRequests;
+    private ArrayList<Request> currentRequests;
 
     public AccountViewModel() {
         brokerList = new MutableLiveData<>();
@@ -99,21 +99,21 @@ public class AccountViewModel extends ViewModel {
     public void checkBrokers(Context context) {
         ArrayList<PushAccount> pushAccounts = brokerList.getValue();
 
-        if (currentBrokerRequests == null) {
-            currentBrokerRequests = new ArrayList<>();
+        if (currentRequests == null) {
+            currentRequests = new ArrayList<>();
         } else {
             /* cancel current tasks */
-            for(BrokerRequest b : currentBrokerRequests) {
+            for(Request b : currentRequests) {
                 b.cancel();
             }
-            currentBrokerRequests.clear();
+            currentRequests.clear();
         }
 
         if (pushAccounts != null) {
             requestCnt++;
             for(int i = 0; i < pushAccounts.size(); i++) {
-                BrokerRequest request = new BrokerRequest(context, pushAccounts.get(i), requestBroker);
-                currentBrokerRequests.add(request);
+                Request request = new Request(context, pushAccounts.get(i), requestBroker);
+                currentRequests.add(request);
                 request.execute();
             }
         }
@@ -122,18 +122,18 @@ public class AccountViewModel extends ViewModel {
     /* add or uodate broker */
     public void saveBroker(Context context, PushAccount pushAccount) {
 
-        if (currentBrokerRequests == null) {
-            currentBrokerRequests = new ArrayList<>();
+        if (currentRequests == null) {
+            currentRequests = new ArrayList<>();
         } else {
             /* cancel current tasks */
-            for(BrokerRequest b : currentBrokerRequests) {
+            for(Request b : currentRequests) {
                 b.cancel();
             }
-            currentBrokerRequests.clear();
+            currentRequests.clear();
         }
         requestCnt++;
-        BrokerRequest request = new BrokerRequest(context, pushAccount, requestBroker);
-        currentBrokerRequests.add(request);
+        Request request = new Request(context, pushAccount, requestBroker);
+        currentRequests.add(request);
         request.execute();
     }
 
@@ -150,12 +150,12 @@ public class AccountViewModel extends ViewModel {
         requestCnt = 0;
     }
 
-    public boolean isCurrentRequest(BrokerRequest request) {
+    public boolean isCurrentRequest(Request request) {
         return
             request.getBroker().status == 0 &&
-                    currentBrokerRequests != null &&
-                    currentBrokerRequests.size() > 0 &&
-                    currentBrokerRequests.get(currentBrokerRequests.size() - 1) == request;
+                    currentRequests != null &&
+                    currentRequests.size() > 0 &&
+                    currentRequests.get(currentRequests.size() - 1) == request;
     }
 
     public boolean hasMultiplePushServers() {

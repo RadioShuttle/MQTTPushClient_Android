@@ -34,7 +34,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import de.radioshuttle.net.BrokerRequest;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_BROKER_JSON;
@@ -83,18 +83,18 @@ public class AccountListActivity extends AppCompatActivity {
             }
         });
 
-        mViewModel.requestBroker.observe(this, new Observer<BrokerRequest>() {
+        mViewModel.requestBroker.observe(this, new Observer<Request>() {
             @Override
-            public void onChanged(@Nullable BrokerRequest brokerRequest) {
-                if (brokerRequest != null) {
+            public void onChanged(@Nullable Request request) {
+                if (request != null) {
                     ArrayList<PushAccount> pushAccounts = mViewModel.brokerList.getValue();
                     if (pushAccounts != null) {
                         for (int i = 0; i < pushAccounts.size(); i++) {
-                            PushAccount pushAccount = brokerRequest.getBroker();
-                            if (brokerRequest.getBroker().getKey().equals(pushAccounts.get(i).getKey())) {
+                            PushAccount pushAccount = request.getBroker();
+                            if (request.getBroker().getKey().equals(pushAccounts.get(i).getKey())) {
                                 pushAccounts.set(i, pushAccount);
                                 mAdapter.setData(pushAccounts);
-                                if (mViewModel.isCurrentRequest(brokerRequest)) {
+                                if (mViewModel.isCurrentRequest(request)) {
                                     mSwipeRefreshLayout.setRefreshing(false);
                                     mViewModel.confirmResultDelivered();
                                 }

@@ -37,7 +37,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.radioshuttle.net.BrokerRequest;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.TopicsRequest;
 
@@ -56,11 +56,11 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
         mViewModel = ViewModelProviders.of(this).get(TopicsViewModel.class);
         boolean topicsLoaded = mViewModel.initialized;
 
-        mViewModel.topicsRequest.observe(this, new Observer<BrokerRequest>() {
+        mViewModel.topicsRequest.observe(this, new Observer<Request>() {
             @Override
-            public void onChanged(@Nullable BrokerRequest brokerRequest) {
-                if (brokerRequest != null && brokerRequest instanceof TopicsRequest) {
-                    TopicsRequest topicsRequest = (TopicsRequest) brokerRequest;
+            public void onChanged(@Nullable Request request) {
+                if (request != null && request instanceof TopicsRequest) {
+                    TopicsRequest topicsRequest = (TopicsRequest) request;
                     PushAccount b = topicsRequest.getBroker();
                     if (b.status == 1) {
                         if (mTopicsRecyclerViewAdapter != null && mTopicsRecyclerViewAdapter.getItemCount() == 0) {
@@ -70,7 +70,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                             }
                         }
                     } else {
-                        if (mViewModel.isCurrentRequest(brokerRequest)) {
+                        if (mViewModel.isCurrentRequest(request)) {
                             mViewModel.confirmResultDelivered();
                             mSwipeRefreshLayout.setRefreshing(false);
                             invalidateOptionsMenu();

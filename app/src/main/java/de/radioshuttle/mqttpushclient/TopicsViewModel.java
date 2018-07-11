@@ -16,7 +16,7 @@ import org.json.JSONObject;
 import java.util.HashSet;
 import java.util.List;
 
-import de.radioshuttle.net.BrokerRequest;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.net.TopicsRequest;
 
 public class TopicsViewModel extends ViewModel{
@@ -66,16 +66,16 @@ public class TopicsViewModel extends ViewModel{
         requestCnt = 0;
     }
 
-    public boolean isCurrentRequest(BrokerRequest request) {
+    public boolean isCurrentRequest(Request request) {
         return currentRequest == request;
     }
 
-    public MutableLiveData<BrokerRequest> topicsRequest;
+    public MutableLiveData<Request> topicsRequest;
     public HashSet<String> selectedTopics;
     public PushAccount pushAccount;
     public boolean initialized;
     public String lastEnteredTopic;
     private int requestCnt;
-    private BrokerRequest currentRequest;
+    private Request currentRequest;
 
 }
