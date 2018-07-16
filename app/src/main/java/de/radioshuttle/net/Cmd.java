@@ -4,6 +4,7 @@
  *	30827 Garbsen, Germany.
  */
 
+
 package de.radioshuttle.net;
 
 import java.io.ByteArrayInputStream;
@@ -181,6 +182,31 @@ public class Cmd {
 
     public void response(RawCmd request, int rc) throws IOException {
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, rc, new byte[0]);
+    }
+
+    public void subscriptionUpdateResponse(RawCmd request, int[] results) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        if (results == null || results.length == 0) {
+            os.writeShort(0);
+        } else {
+            os.writeShort(results.length);
+            for(int i = 0; i < results.length; i++) {
+                os.writeShort(results[i]);
+            }
+        }
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public int[] readSubscriptionUpdateResult(byte[] data)  throws IOException {
+        int rc[];
+        ByteArrayInputStream ba = new ByteArrayInputStream(data);
+        DataInputStream is = new DataInputStream(ba);
+        rc = new int[is.readUnsignedShort()];
+        for(int i = 0; i < rc.length; i++) {
+            rc[i] = is.readShort();
+        }
+        return rc;
     }
 
     protected void writeCommandStrPara(int cmd, int seqNo, String arg) throws IOException {
