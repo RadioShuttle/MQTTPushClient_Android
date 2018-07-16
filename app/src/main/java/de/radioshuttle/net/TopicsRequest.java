@@ -35,7 +35,8 @@ public class TopicsRequest extends Request {
     public boolean perform() throws Exception {
         if (mCmd == Cmd.CMD_UNSUBSCRIBE) {
             try {
-                mConnection.deleteTopics(mTopics);
+                int[] rc = mConnection.deleteTopics(mTopics);
+                //TODO: handle rc
             } catch(MQTTException e) {
                 requestErrorCode = e.errorCode;
                 requestErrorTxt = e.getMessage();
@@ -46,7 +47,8 @@ public class TopicsRequest extends Request {
             requestStatus = mConnection.lastReturnCode;
         } else if (mCmd == Cmd.CMD_SUBSCRIBE) {
             try {
-                mConnection.addTopics(mTopics);
+                int[] rc = mConnection.addTopics(mTopics);
+                //TODO: handle rc
             } catch(MQTTException e) {
                 requestErrorCode = e.errorCode;
                 requestErrorTxt = e.getMessage();

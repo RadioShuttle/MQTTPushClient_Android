@@ -90,14 +90,16 @@ public class Connection {
         return topics;
     }
 
-    public void addTopics(List<String> topics) throws IOException, ServerError  {
+    public int[] addTopics(List<String> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.subscribeRequest(++mSeqNo, topics);
         handleError(response);
+        return mCmd.readSubscriptionUpdateResult(response.data);
     }
 
-    public void deleteTopics(List<String> topics) throws IOException, ServerError  {
+    public int[] deleteTopics(List<String> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.unsubscribeRequest(++mSeqNo, topics);
         handleError(response);
+        return mCmd.readSubscriptionUpdateResult(response.data);
     }
 
     public void bye() throws IOException {
