@@ -27,7 +27,7 @@ public class Cmd {
     public final static int CMD_GET_SUBSCR = 4;
     public final static int CMD_SUBSCRIBE = 5;
     public final static int CMD_UNSUBSCRIBE = 6;
-    public final static int CMD_SET_TOKEN = 7;
+    public final static int CMD_SET_DEVICE_INFO = 7;
     public final static int CMD_REMOVE_TOKEN = 8;
     public final static int CMD_LOGOUT = 9;
     public final static int CMD_BYE = 10;
@@ -110,9 +110,29 @@ public class Cmd {
         return m;
     }
 
-    public RawCmd setFcmTokenRequest(int seqNo, String token) throws IOException {
-        writeCommandStrPara(CMD_SET_TOKEN, seqNo, token);
+
+    public RawCmd setDeviceInfo(int seqNo, String clientOS, String osver, String device, String fcmToken, String extra) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(clientOS, os);
+        writeString(osver, os);
+        writeString(device, os);
+        writeString(fcmToken, os);
+        writeString(extra, os);
+        writeCommand(CMD_SET_DEVICE_INFO, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
+    }
+
+    public HashMap<String, String> readDeviceInfo(byte[] data) throws IOException {
+        HashMap<String, String> m = new HashMap<>();
+        ByteArrayInputStream ba = new ByteArrayInputStream(data);
+        DataInputStream is = new DataInputStream(ba);
+        m.put("os", readString(is));
+        m.put("os_ver", readString(is));
+        m.put("device", readString(is));
+        m.put("token", readString(is));
+        m.put("extra", readString(is));
+        return m;
     }
 
     public void getSubscriptionsResponse(RawCmd request, List<String> topics) throws IOException {

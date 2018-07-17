@@ -7,6 +7,8 @@
 package de.radioshuttle.net;
 
 import android.content.Context;
+import android.os.Build;
+import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -67,8 +69,23 @@ public class Connection {
         return mCmd.readFCMData(response.data);
     }
 
-    public void setFCMToken(String token) throws IOException, ServerError {
-        Cmd.RawCmd response = mCmd.setFcmTokenRequest(++mSeqNo, token);
+    final static String deviceInfo;
+    static {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Build.MANUFACTURER);
+        sb.setCharAt(0, Character.toUpperCase(sb.charAt(0)));
+        sb.append(' ');
+        sb.append(Build.MODEL);
+        sb.append(" (Android ");
+        sb.append(Build.VERSION.RELEASE);
+        sb.append(")");
+        deviceInfo = sb.toString();
+    }
+
+    public void setDeviceInfo(String fcmToken) throws IOException, ServerError {
+
+        Cmd.RawCmd response = mCmd.setDeviceInfo(++mSeqNo,
+                "Android", String.valueOf(Build.VERSION.SDK_INT), deviceInfo, fcmToken, null );
         handleError(response);
     }
 

@@ -9,6 +9,7 @@ package de.radioshuttle.net;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
@@ -152,7 +153,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     if (!t.isSuccessful()) {
                         throw new ClientError(mAppContext.getString(R.string.errormsg_fcm_id));
                     }
-                    mConnection.setFCMToken(t.getResult().getToken());
+                    mConnection.setDeviceInfo(t.getResult().getToken());
                     cont = true;
                 } else {
                     throw new ClientError("Initializing cloud messaging failed."); //TODO: add to resources, check for fcmlib
