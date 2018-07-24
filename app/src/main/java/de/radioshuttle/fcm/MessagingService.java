@@ -7,10 +7,14 @@
 package de.radioshuttle.fcm;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -21,15 +25,22 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.google.firebase.messaging.FirebaseMessagingService;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.mqttpushclient.Utils;
+
+import static de.radioshuttle.mqttpushclient.AccountListActivity.ACCOUNTS;
+import static de.radioshuttle.mqttpushclient.AccountListActivity.ARG_ACCOUNT;
+import static de.radioshuttle.mqttpushclient.AccountListActivity.ARG_TOPIC;
+import static de.radioshuttle.mqttpushclient.AccountListActivity.PREFS_NAME;
 
 public class MessagingService extends FirebaseMessagingService {
 
@@ -55,7 +66,66 @@ public class MessagingService extends FirebaseMessagingService {
     @Override
     public void onDeletedMessages() {
         super.onDeletedMessages();
-        //TODO
+
+        Notifications.MessageInfo m = Notifications.getMessageInfo(this);
+        // Log.d(TAG, m.group +" " + m.groupId);
+        if (m.groupId == 0) {
+            return; // no accounts anymore
+        }
+
+        String title = getString(R.string.notification_deleted);
+        String message = getString(R.string.notification_show_messages);
+
+        Intent intent = new Intent(this, AccountListActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra(FCM_ON_DELETE, true);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder b = null;
+        if (Build.VERSION.SDK_INT >= 26) {
+            b = new NotificationCompat.Builder(this, m.group);
+        } else {
+            b = new NotificationCompat.Builder(this);
+            //TODO: consider using an own unique ringtone
+            // Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        }
+
+        b.setContentTitle(title);
+        b.setContentText(message);
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            b.setSmallIcon(R.drawable.ic_notification_devices_other_vec);
+        } else {
+            // vector drawables not work here for versions pror lolipop
+            b.setSmallIcon(R.drawable.ic_notification_devices_other_img);
+        }
+
+        b.setOnlyAlertOnce(true);
+
+        if (Build.VERSION.SDK_INT >= 25)
+            b.setGroup(FCM_ON_DELETE);
+        b.setAutoCancel(false);
+        // b.setSound(defaultSoundUri);
+        b.setContentIntent(pendingIntent);
+        b.setShowWhen(true);
+
+        if (Build.VERSION.SDK_INT < 26) {
+            b.setPriority(Notification.PRIORITY_MAX);
+            b.setDefaults(Notification.DEFAULT_ALL);
+        }
+
+        Notification notification = b.build();
+        // TODO: consider to loop notification sound like an alarm message
+        // notification.flags |= Notification.FLAG_INSISTENT;
+
+        NotificationManagerCompat notificationManager =
+                NotificationManagerCompat.from(this);
+
+        notificationManager.notify(FCM_ON_DELETE, 0, notification);
     }
 
 
@@ -101,7 +171,7 @@ public class MessagingService extends FirebaseMessagingService {
                             latestMsg = m;
                         }
                         cnt++;
-                        //TODO: add to app
+                        //TODO: add data to app
                         Log.d(TAG, t + ": " + m.when + " " + new String(m.msg));
                     }
                 }
@@ -111,7 +181,33 @@ public class MessagingService extends FirebaseMessagingService {
         }
 
         if (latestMsg != null) {
-            //TODO: add intents
+            Notifications.MessageInfo messageInfo = Notifications.getMessageInfo(this, channelID);
+            if (messageInfo.groupId == 0) {
+                messageInfo.groupId = messageInfo.noOfGroups + 1;
+            }
+            messageInfo.messageId++;
+            Notifications.setMessageInfo(this, messageInfo);
+            messageInfo.messageId += cnt;
+
+            Intent intent = new Intent(this, AccountListActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.putExtra(ARG_ACCOUNT, channelID);
+            intent.putExtra(ARG_TOPIC, latestMsg.topic);
+
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    this,
+                    messageInfo.groupId, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+            Intent delItent = new Intent(this, Notifications.class);
+            delItent.setAction(Notifications.ACTION_CANCELLED);
+            delItent.putExtra(Notifications.DELETE_GROUP, messageInfo.group);
+
+            PendingIntent delPendingIntent = PendingIntent.getBroadcast(
+                    this,
+                    messageInfo.groupId, delItent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
 
             NotificationCompat.Builder b;
             if (Build.VERSION.SDK_INT >= 26) {
@@ -125,12 +221,17 @@ public class MessagingService extends FirebaseMessagingService {
             b.setContentTitle(channelID);
             b.setContentText(latestMsg.topic + ": " + new String(latestMsg.msg));
             b.setWhen(latestMsg.when);
-            if (cnt > 1) { //TODO: include previous messages already showing
-                String more = String.format("+%d", (cnt-1));
+            if (messageInfo.messageId > 1) {
+                String more = String.format("+%d", (messageInfo.messageId - 1));
                 b.setSubText(more);
+            }
+            if (Build.VERSION.SDK_INT >= 25) {
+                b.setGroup(channelID);
             }
 
             b.setAutoCancel(false);
+            b.setContentIntent(pendingIntent);
+            b.setDeleteIntent(delPendingIntent);
 
             if (Build.VERSION.SDK_INT < 26) {
                 b.setDefaults(0);
@@ -148,7 +249,7 @@ public class MessagingService extends FirebaseMessagingService {
             NotificationManagerCompat notificationManager =
                     NotificationManagerCompat.from(this);
 
-            notificationManager.notify(channelID, 0, notification); //TODO: set group id
+            notificationManager.notify(messageInfo.group, messageInfo.groupId, notification);
         }
 
         Log.d(TAG, "Messaging notify called.");
@@ -181,6 +282,8 @@ public class MessagingService extends FirebaseMessagingService {
     public static void removeUnusedChannels(List<PushAccount> notAllowedUsers, Context context) {
         //TODO:
     }
+
+    public final static String FCM_ON_DELETE = "FCM_ON_DELETE";
 
     private final static String TAG = MessagingService.class.getSimpleName();
 }
