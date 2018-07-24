@@ -15,6 +15,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -27,7 +28,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -176,6 +181,8 @@ public class AccountListActivity extends AppCompatActivity {
             if (fcm_on_delete) {
                 Notifications.cancelOnDeleteWarning(this);
             }
+
+            checkGooglePlayServices();
         }
 
     }
@@ -322,6 +329,30 @@ public class AccountListActivity extends AppCompatActivity {
 
     }
 
+    private boolean checkGooglePlayServices() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        final int status = apiAvailability.isGooglePlayServicesAvailable(this);
+        if (status != ConnectionResult.SUCCESS) {
+            Log.e(TAG, apiAvailability.getErrorString(status));
+
+            // ask user to update google play services.
+            if (apiAvailability.isUserResolvableError(status)) {
+                Dialog dialog = apiAvailability.getErrorDialog(this, status, RC_GOOGLE_PLAY_SERVICES);
+                dialog.show();
+            } else {
+                View rootView = findViewById(R.id.root_view);
+                if (rootView != null) {
+                    Snackbar.make(rootView, apiAvailability.getErrorString(status), Snackbar.LENGTH_INDEFINITE).show();
+                }
+            }
+            return false;
+        } else {
+            // google play services is updated.
+            return true;
+        }
+    }
+
+
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
         @Override
@@ -454,6 +485,8 @@ public class AccountListActivity extends AppCompatActivity {
     public final static int RC_EDIT_ACCOUNT = 2;
     public final static int RC_MESSAGES = 3;
     public final static int RC_SUBSCRIPTIONS = 4;
+    public final static int RC_GOOGLE_PLAY_SERVICES = 8;
+
 
     private long lastBackPressTime = 0;
     private boolean mActivityStarted;
