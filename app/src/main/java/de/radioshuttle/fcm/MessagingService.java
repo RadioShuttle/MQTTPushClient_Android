@@ -234,7 +234,8 @@ public class MessagingService extends FirebaseMessagingService {
             b.setDeleteIntent(delPendingIntent);
 
             if (Build.VERSION.SDK_INT < 26) {
-                b.setDefaults(0);
+                //TODO: check settings (ringtone, vibration, ....) see also createChannel for higher android versions
+                b.setDefaults(Notification.DEFAULT_ALL);
             }
 
             if (Build.VERSION.SDK_INT >= 21) {
@@ -261,26 +262,25 @@ public class MessagingService extends FirebaseMessagingService {
         NotificationManager nm =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        NotificationChannel nc = new NotificationChannel(channelId, channelId, NotificationManager.IMPORTANCE_LOW);
-        // nc.setDescription("Non alarm events");
-        nc.enableLights(false);
-        nc.enableVibration(false);
-        nc.setBypassDnd(false);
-        nm.createNotificationChannel(nc);
-        Log.d(TAG, "notification channel created.");
+        NotificationChannel nc = new NotificationChannel(channelId, channelId, NotificationManager.IMPORTANCE_DEFAULT);
+        if (nc == null) {
+            //TODO: check settings (ringtone, vibration, ....)
+            /*
+            nc.setDescription("Non alarm events");
+            nc.enableLights(false);
+            nc.enableVibration(false);
+            nc.setBypassDnd(false);
+            */
+            nm.createNotificationChannel(nc);
+            Log.d(TAG, "notification channel created.");
 
-
+        }
     }
 
     private static class Msg {
         long when;
         String topic;
         byte[] msg;
-    }
-
-    @TargetApi(26)
-    public static void removeUnusedChannels(List<PushAccount> notAllowedUsers, Context context) {
-        //TODO:
     }
 
     public final static String FCM_ON_DELETE = "FCM_ON_DELETE";
