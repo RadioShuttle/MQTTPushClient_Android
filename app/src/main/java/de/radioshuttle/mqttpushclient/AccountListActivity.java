@@ -33,7 +33,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
+import de.radioshuttle.fcm.MessagingService;
+import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 
@@ -132,14 +135,7 @@ public class AccountListActivity extends AppCompatActivity {
             public void onItemClicked(PushAccount b) {
                 if (!mActivityStarted && b != null) {
                     mActivityStarted = true;
-                    Intent intent = new Intent(AccountListActivity.this, MessagesActivity.class);
-                    intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
-                    try {
-                        intent.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
-                    } catch(JSONException e) {
-                        Log.e(TAG, "push account (subscriptions) parse error", e);
-                    }
-                    startActivityForResult(intent, RC_MESSAGES);
+                    startMessagesActivity(b);
                 }
             }
         });
@@ -149,6 +145,50 @@ public class AccountListActivity extends AppCompatActivity {
             refresh();
         }
 
+        /* check if started via notification, if found a matching account open messaging activity to show latest mqtt messages */
+        if (savedInstanceState == null) {
+            String arg_account = getIntent().getStringExtra(ARG_ACCOUNT);
+            String arg_topic = getIntent().getStringExtra(ARG_TOPIC);
+            if (arg_account != null && arg_topic != null) {
+                PushAccount showMessagesForAcc = null;
+                for (Iterator<PushAccount> it = mViewModel.accountList.getValue().iterator(); it.hasNext(); ) {
+                    PushAccount acc = it.next();
+                    // Log.d(TAG, acc.getKey() + " " + arg_account);
+
+                    if (acc.getMqttAccountName().equals(arg_account)) {
+                        Notifications.cancelAll(this, arg_account);
+                        showMessagesForAcc = acc; //TODO: there is no distinction for same mqtt accounts on diffrent push server accounts
+                        // TODO: topics are unknown here, so nothing happends. update code if there is a distinction between push server accounts
+                        for(String t : acc.topics) {
+                            if (acc.topics.equals(t)) {
+                                showMessagesForAcc = acc;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (showMessagesForAcc != null) {
+                    mActivityStarted = true;
+                    startMessagesActivity(showMessagesForAcc);
+                }
+            }
+            Boolean fcm_on_delete = getIntent().getBooleanExtra(MessagingService.FCM_ON_DELETE, false);
+            if (fcm_on_delete) {
+                Notifications.cancelOnDeleteWarning(this);
+            }
+        }
+
+    }
+
+    protected void startMessagesActivity(PushAccount b) {
+        Intent intent = new Intent(AccountListActivity.this, MessagesActivity.class);
+        intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
+        try {
+            intent.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
+        } catch(JSONException e) {
+            Log.e(TAG, "push account (subscriptions) parse error", e);
+        }
+        startActivityForResult(intent, RC_MESSAGES);
     }
 
     public void deleteAccount(int sel) {
@@ -401,6 +441,9 @@ public class AccountListActivity extends AppCompatActivity {
     /* preferneces */
     public final static String PREFS_NAME = "mqttpushclient_prefs";
     public final static String ACCOUNTS = "accounts";
+
+    public final static String ARG_ACCOUNT = "ARG_ACCOUNT";
+    public final static String ARG_TOPIC = "ARG_TOPIC";
 
     /* keys for instance state */
     private final static String SEL_ROW = " SEL_ROW";
