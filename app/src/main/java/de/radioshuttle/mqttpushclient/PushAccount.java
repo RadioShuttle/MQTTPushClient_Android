@@ -121,8 +121,10 @@ public class PushAccount {
             try {
                 u = new URI(uri);
                 sb.append(u.getAuthority());
+                /*
                 sb.append(':');
                 sb.append(u.getPort());
+                */
             } catch(Exception e) {
                 return "";
             }
@@ -130,6 +132,24 @@ public class PushAccount {
         sb.append('@');
         if (user != null && user.trim().length() > 0) {
             sb.append(user);
+        }
+        return sb.toString();
+    }
+
+    public String getMqttAccountName() {
+        StringBuilder sb = new StringBuilder();
+        if (user != null && user.trim().length() > 0) {
+            sb.append(user);
+        }
+        sb.append('@');
+        if (uri != null && uri.trim().length() > 0) {
+            URI u = null;
+            try {
+                u = new URI(uri);
+                sb.append(u.getAuthority());
+            } catch(Exception e) {
+                return "";
+            }
         }
         return sb.toString();
     }
