@@ -7,14 +7,12 @@
 package de.radioshuttle.fcm;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -25,22 +23,17 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.google.firebase.messaging.FirebaseMessagingService;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import de.radioshuttle.mqttpushclient.AccountListActivity;
-import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.mqttpushclient.Utils;
 
-import static de.radioshuttle.mqttpushclient.AccountListActivity.ACCOUNTS;
-import static de.radioshuttle.mqttpushclient.AccountListActivity.ARG_ACCOUNT;
-import static de.radioshuttle.mqttpushclient.AccountListActivity.ARG_TOPIC;
-import static de.radioshuttle.mqttpushclient.AccountListActivity.PREFS_NAME;
+import static de.radioshuttle.mqttpushclient.AccountListActivity.ARG_MQTT_ACCOUNT;
+import static de.radioshuttle.mqttpushclient.AccountListActivity.ARG_PUSHSERVER_ID;
 
 public class MessagingService extends FirebaseMessagingService {
 
@@ -136,6 +129,8 @@ public class MessagingService extends FirebaseMessagingService {
         if (Utils.isEmpty(channelID))
             return;
 
+        String pushServerID = data.get("pushserverid");
+
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationManager nm =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -191,8 +186,8 @@ public class MessagingService extends FirebaseMessagingService {
 
             Intent intent = new Intent(this, AccountListActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            intent.putExtra(ARG_ACCOUNT, channelID);
-            intent.putExtra(ARG_TOPIC, latestMsg.topic);
+            intent.putExtra(ARG_MQTT_ACCOUNT, channelID);
+            intent.putExtra(ARG_PUSHSERVER_ID, pushServerID);
 
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     this,
