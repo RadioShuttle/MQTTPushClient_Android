@@ -28,6 +28,9 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.Map;
 
+import de.radioshuttle.db.AppDatabase;
+import de.radioshuttle.db.Code;
+import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.mqttpushclient.Utils;
@@ -144,6 +147,29 @@ public class MessagingService extends FirebaseMessagingService {
         int cnt = 0;
         try {
             JSONArray msgsArray = new JSONArray(msg);
+            AppDatabase db = null;
+            Long psCode = null;
+            Long accountCode = null;
+            if (msgsArray.length() > 0) {
+                db = AppDatabase.getInstance(getApplicationContext());
+                if (Utils.isEmpty(pushServerID)) {
+                    pushServerID = ""; //TODO: remove assignment if pushserverid will be transmitted
+                }
+                psCode = db.mqttMessageDao().getCode(pushServerID);
+                if (psCode == null) {
+                    Code c = new Code();
+                    c.setName(pushServerID);
+                    psCode = db.mqttMessageDao().insertCode(c);
+                    // Log.d(TAG, " (before null) code: " + psCode);
+                }
+                accountCode = db.mqttMessageDao().getCode(channelID);
+                if (accountCode == null) {
+                    Code c = new Code();
+                    c.setName(channelID);
+                    accountCode = db.mqttMessageDao().insertCode(c);
+                    // Log.d(TAG, " (before null) accountCode: " + accountCode);
+                }
+            }
             for(int i = 0; i < msgsArray.length(); i++) {
                 JSONObject topic = msgsArray.getJSONObject(i);
                 Iterator<String> it = topic.keys();
@@ -166,12 +192,32 @@ public class MessagingService extends FirebaseMessagingService {
                             latestMsg = m;
                         }
                         cnt++;
-                        //TODO: add data to app
+                        //TODO: consider removing Msg class and replace it with MqttMessage below
+                        MqttMessage mqttMessage = new MqttMessage();
+                        mqttMessage.setPushServerID(psCode.intValue());
+                        mqttMessage.setMqttAccountID(accountCode.intValue());
+                        mqttMessage.setWhen(m.when);
+                        mqttMessage.setTopic(m.topic);
+                        try {
+                            mqttMessage.setMsg(new String(m.msg));
+                        } catch(Exception e) {
+                            // decoding error or payload not utf-8
+                            mqttMessage.setMsg(base64); //TODO: error should be rare but consider using hex
+                        }
+                        db.mqttMessageDao().insertMqttMessage(mqttMessage);
                         Log.d(TAG, t + ": " + m.when + " " + new String(m.msg));
                     }
                 }
             }
+            /*
+            List<MqttMessage> l = db.mqttMessageDao().getReceivedMessages(psCode.intValue(), accountCode.intValue());
+            for(MqttMessage m : l) {
+                Log.d(TAG, "" + m.getTopic() + " " + m.getMsg());
+            }
+            */
+
         } catch(Exception e) {
+            //TODO: error handling for db errors
             Log.d(TAG, "error parsing messages", e);
         }
 
