@@ -152,9 +152,9 @@ public class AccountListActivity extends AppCompatActivity {
 
         /* check if started via notification, if found a matching account open messaging activity to show latest mqtt messages */
         if (savedInstanceState == null) {
-            String arg_account = getIntent().getStringExtra(ARG_ACCOUNT);
-            String arg_topic = getIntent().getStringExtra(ARG_TOPIC);
-            if (arg_account != null && arg_topic != null) {
+            String arg_account = getIntent().getStringExtra(ARG_MQTT_ACCOUNT);
+            String arg_pushserver = getIntent().getStringExtra(ARG_PUSHSERVER_ID);
+            if (arg_account != null) {
                 PushAccount showMessagesForAcc = null;
                 for (Iterator<PushAccount> it = mViewModel.accountList.getValue().iterator(); it.hasNext(); ) {
                     PushAccount acc = it.next();
@@ -162,13 +162,9 @@ public class AccountListActivity extends AppCompatActivity {
 
                     if (acc.getMqttAccountName().equals(arg_account)) {
                         Notifications.cancelAll(this, arg_account);
-                        showMessagesForAcc = acc; //TODO: there is no distinction for same mqtt accounts on diffrent push server accounts
-                        // TODO: topics are unknown here, so nothing happends. update code if there is a distinction between push server accounts
-                        for(String t : acc.topics) {
-                            if (acc.topics.equals(t)) {
-                                showMessagesForAcc = acc;
-                                break;
-                            }
+
+                        if (Utils.equals(arg_pushserver, acc.pushserverID)) {
+                            showMessagesForAcc = acc;
                         }
                     }
                 }
@@ -473,8 +469,8 @@ public class AccountListActivity extends AppCompatActivity {
     public final static String PREFS_NAME = "mqttpushclient_prefs";
     public final static String ACCOUNTS = "accounts";
 
-    public final static String ARG_ACCOUNT = "ARG_ACCOUNT";
-    public final static String ARG_TOPIC = "ARG_TOPIC";
+    public final static String ARG_MQTT_ACCOUNT = "ARG_MQTT_ACCOUNT";
+    public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ID";
 
     /* keys for instance state */
     private final static String SEL_ROW = " SEL_ROW";
