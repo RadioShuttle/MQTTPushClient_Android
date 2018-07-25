@@ -21,32 +21,12 @@ public class PushAccount {
         topics = new ArrayList<>();
     }
 
-    public PushAccount(PushAccount b) {
-        uri = b.uri;
-        user = b.user;
-        if (b.password != null) {
-            Arrays.copyOf(b.password, b.password.length);
-        } else {
-            b.password = new char[0];
-        }
-        clientID = b.clientID;
-        pushserver = b.pushserver;
-        topics = new ArrayList<>();
-        if (b.topics != null && b.topics.size() > 0) {
-            topics.addAll(b.topics);
-        }
-
-        // status = b.status;
-        // requestStatus = b.requestStatus;
-        // requestErrorCode = b.requestErrorCode;
-        // requestErrorTxt = b.requestErrorTxt;
-    }
-
     public String uri;
     public String user;
     public char[] password;
     public String clientID;
     public String pushserver;
+    public String pushserverID;
 
     // transient
     public int status;
@@ -65,6 +45,7 @@ public class PushAccount {
         account.put("password", new String(password));
         account.put("clientID", clientID);
         account.put("pushserver", pushserver);
+        account.put("pushserverID", pushserverID == null ? "" : pushserverID);
 
         JSONArray t = new JSONArray();
         for(String s : topics) {
@@ -73,16 +54,6 @@ public class PushAccount {
         account.put("topics", t);
         return account;
     };
-
-    public JSONObject getJSONState() throws JSONException {
-        JSONObject bs = new JSONObject();
-        bs.put("key", getKey());
-        bs.put("status", status);
-        bs.put("requestStatus", requestStatus);
-        bs.put("requestErrorCode", requestErrorCode);
-        bs.put("requestErrorTxt", requestErrorTxt);
-        return bs;
-    }
 
     public String getDisplayName() {
         StringBuilder sb = new StringBuilder();
@@ -167,6 +138,10 @@ public class PushAccount {
         }
         if (o.has("clientID"))
             pushAccount.clientID = o.getString("clientID");
+        if (o.has("pushserverID")) {
+            pushAccount.pushserverID = o.getString("pushserverID");
+        }
+
         JSONArray t = o.getJSONArray("topics");
         for(int i = 0; i < t.length(); i++) {
             pushAccount.topics.add(t.getString(i));
