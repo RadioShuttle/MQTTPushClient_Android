@@ -32,7 +32,6 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
     protected MessagesPagedListAdapter(AppCompatActivity activity) {
         super(DIFF_CALLBACK);
         mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        dataSource = null;
         formatter = DateFormat.getDateTimeInstance(
                 DateFormat.SHORT,
                 DateFormat.SHORT,
@@ -72,17 +71,6 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
     @Override
     public void submitList(PagedList<MqttMessage> pagedList) {
         super.submitList(pagedList);
-        if (pagedList != null) {
-            dataSource = pagedList.getDataSource();
-        } else {
-            dataSource = null;
-        }
-    }
-
-    public void refresh() {
-        if (dataSource != null) {
-            dataSource.invalidate();
-        }
     }
 
     public static final DiffUtil.ItemCallback<MqttMessage> DIFF_CALLBACK =
@@ -99,7 +87,6 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
                 }
             };
 
-    DataSource dataSource;
     DateFormat formatter;
     private LayoutInflater mInflater;
 
