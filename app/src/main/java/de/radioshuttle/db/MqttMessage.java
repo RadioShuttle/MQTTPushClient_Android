@@ -73,4 +73,7 @@ public class MqttMessage {
     public void setMsg(String msg) {
         this.msg = msg;
     }
+
+    public final static String UPDATE_INTENT = "MQTT_MSG_UPDATE";
+    public final static String ARG_ACCOUNT = "MQTT_MSG_UPDATE_ACC";
 }
