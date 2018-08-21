@@ -25,6 +25,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -209,12 +210,21 @@ public class MessagingService extends FirebaseMessagingService {
                     }
                 }
             }
+            //TODO: remove testdata gen
             /*
-            List<MqttMessage> l = db.mqttMessageDao().getReceivedMessages(psCode.intValue(), accountCode.intValue());
-            for(MqttMessage m : l) {
-                Log.d(TAG, "" + m.getTopic() + " " + m.getMsg());
+            long l = System.currentTimeMillis() - (1000L * 60L * 60L * 24 * 365);
+            for(int i = 200; i > 0; i--) {
+                MqttMessage m = new MqttMessage();
+                m.setPushServerID(psCode.intValue());
+                m.setMqttAccountID(accountCode.intValue());
+                l += 1000L;
+                m.setWhen(l);
+                m.setTopic("autogerneated test data");
+                m.setMsg("Test text: " + i);
+                db.mqttMessageDao().insertMqttMessage(m);
             }
             */
+
 
         } catch(Exception e) {
             //TODO: error handling for db errors
