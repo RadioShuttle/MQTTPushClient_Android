@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 import android.util.Log;
 
@@ -210,7 +211,12 @@ public class MessagingService extends FirebaseMessagingService {
                     }
                 }
             }
-            //TODO: remove testdata gen
+
+            /* inform about database changes, if app is running it can update its views */
+            Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
+            intent.putExtra(MqttMessage.ARG_ACCOUNT, channelID);
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+
             /*
             long l = System.currentTimeMillis() - (1000L * 60L * 60L * 24 * 365);
             for(int i = 200; i > 0; i--) {
