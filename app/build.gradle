@@ -50,4 +50,10 @@ dependencies {
     annotationProcessor "android.arch.persistence.room:compiler:$room_version"
 }
 
+dependencies {
+    def paging_version = "1.0.0"
+    implementation "android.arch.paging:runtime:$paging_version"
+
+}
+
 apply plugin: 'com.google.gms.google-services'
