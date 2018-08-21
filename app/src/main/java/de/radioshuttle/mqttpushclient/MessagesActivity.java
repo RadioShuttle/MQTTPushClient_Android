@@ -112,9 +112,8 @@ public class MessagesActivity extends AppCompatActivity {
     }
 
     protected void doRefresh() {
-        if (mListView != null && mListView.getAdapter() != null) {
-
-            ((MessagesPagedListAdapter) mListView.getAdapter()).refresh();
+        if (mViewModel != null) {
+            mViewModel.refresh();
         }
     }
 
