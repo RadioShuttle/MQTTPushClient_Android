@@ -76,8 +76,4 @@
     <string name="errormsg_mqtt_prefix">MQTT error:</string>
     <string name="status_ok">Server online</string>
 
-    <string name="info_new_message">New message received</string>
-    <string name="title_show">Show</string>
-
-
 </resources>
