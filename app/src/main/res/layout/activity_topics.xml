@@ -9,8 +9,6 @@
 
     <LinearLayout
         android:id="@+id/header"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
         android:background="@color/colorHeader"
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
