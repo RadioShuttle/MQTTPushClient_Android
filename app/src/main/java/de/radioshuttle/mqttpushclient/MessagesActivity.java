@@ -9,8 +9,11 @@ package de.radioshuttle.mqttpushclient;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.paging.PagedList;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -60,6 +63,31 @@ public class MessagesActivity extends AppCompatActivity {
 
             final MessagesPagedListAdapter adapter = new MessagesPagedListAdapter(this);
             mListView.setAdapter(adapter);
+            mAdapterObserver = new RecyclerView.AdapterDataObserver() {
+                @Override
+                public void onItemRangeInserted(int positionStart, int itemCount) {
+                    Log.d(TAG, "item inserted: " + positionStart + " cnt: " + itemCount);
+                    if (positionStart == 0) {
+                        int pos =((LinearLayoutManager) mListView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+                        if (pos == 0) {
+                            mListView.scrollToPosition(0);
+                        } else if (pos > 0) {
+                            Snackbar sb = Snackbar.make(findViewById(R.id.rView), R.string.info_new_message,
+                            Snackbar.LENGTH_LONG);
+                            sb.setAction(R.string.title_show, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    mListView.scrollToPosition(0);
+                                }
+                            });
+                            sb.show();
+
+                        }
+                    }
+                }
+            };
+            adapter.registerAdapterDataObserver(mAdapterObserver);
+
             mViewModel.messagesPagedList.observe(this, new Observer<PagedList<MqttMessage>>() {
                 @Override
                 public void onChanged(@Nullable PagedList<MqttMessage> mqttMessages) {
@@ -117,6 +145,16 @@ public class MessagesActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mListView != null && mAdapterObserver != null) {
+            RecyclerView.Adapter a = mListView.getAdapter();
+            if (a != null) {
+                a.unregisterAdapterDataObserver(mAdapterObserver);
+            }
+        }
+    }
 
     @Override
     public void onBackPressed() {
@@ -138,6 +176,7 @@ public class MessagesActivity extends AppCompatActivity {
     public final static String PARAM_MULTIPLE_PUSHSERVERS = "PARAM_MULTIPLE_PUSHSERVERS";
 
     private RecyclerView mListView;
+    private RecyclerView.AdapterDataObserver mAdapterObserver;
     private MessagesViewModel mViewModel;
     private boolean mActivityStarted;
 
