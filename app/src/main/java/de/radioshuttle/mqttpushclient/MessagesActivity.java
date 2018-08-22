@@ -68,20 +68,9 @@ public class MessagesActivity extends AppCompatActivity {
                 public void onItemRangeInserted(int positionStart, int itemCount) {
                     Log.d(TAG, "item inserted: " + positionStart + " cnt: " + itemCount);
                     if (positionStart == 0) {
-                        int pos =((LinearLayoutManager) mListView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
-                        if (pos == 0) {
+                        int pos = ((LinearLayoutManager) mListView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+                        if (pos >= 0) {
                             mListView.scrollToPosition(0);
-                        } else if (pos > 0) {
-                            Snackbar sb = Snackbar.make(findViewById(R.id.rView), R.string.info_new_message,
-                            Snackbar.LENGTH_LONG);
-                            sb.setAction(R.string.title_show, new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    mListView.scrollToPosition(0);
-                                }
-                            });
-                            sb.show();
-
                         }
                     }
                 }
