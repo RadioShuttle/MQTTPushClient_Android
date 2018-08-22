@@ -64,7 +64,7 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
             holder.msg.setText(sb.toString());
 
         } else {
-            holder.msg = null;
+            holder.msg.setText(null);
         }
     }
 
