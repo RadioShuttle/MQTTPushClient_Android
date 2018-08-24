@@ -174,8 +174,8 @@ public class MessagesActivity extends AppCompatActivity {
 
     protected void showDeleteDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String all = "Delete all messages";
-        String oneDay = "Delete messages older than one day";
+        String all = getString(R.string.dlg_item_delete_all);
+        String oneDay = getString(R.string.dlg_item_delete_older_one_day);
 
 
         final int[] selection = new int[] {0};
@@ -185,7 +185,7 @@ public class MessagesActivity extends AppCompatActivity {
                 selection[0] = item;
             }
         });
-        builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(getString(R.string.action_delete_msgs), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Long before;
@@ -201,7 +201,7 @@ public class MessagesActivity extends AppCompatActivity {
                 mViewModel.deleteMessages(before);
             }
         });
-        builder.setNegativeButton("Cancel", null);
+        builder.setNegativeButton(getString(R.string.action_cancel), null);
         AlertDialog dlg = builder.create();
 
         dlg.show();

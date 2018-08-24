@@ -77,4 +77,8 @@
     <string name="errormsg_mqtt_prefix">MQTT error:</string>
     <string name="status_ok">Server online</string>
 
+    <!-- delete dialog -->
+    <string name="dlg_item_delete_all">Delete all messages</string>
+    <string name="dlg_item_delete_older_one_day">Delete messages older than one day</string>
+
 </resources>
