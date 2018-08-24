@@ -6,11 +6,15 @@
 
 package de.radioshuttle.mqttpushclient;
 
+import android.app.AlertDialog;
+import android.app.DialogFragment;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.paging.PagedList;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -25,6 +29,10 @@ import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import de.radioshuttle.db.MqttMessage;
 
@@ -133,6 +141,9 @@ public class MessagesActivity extends AppCompatActivity {
             case R.id.menu_refresh :
                 doRefresh();
                 return true;
+            case R.id.menu_delete :
+                showDeleteDialog();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -160,6 +171,43 @@ public class MessagesActivity extends AppCompatActivity {
         handleBackPressed();
         // super.onBackPressed();
     }
+
+    protected void showDeleteDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String all = "Delete all messages";
+        String oneDay = "Delete messages older than one day";
+
+
+        final int[] selection = new int[] {0};
+        builder.setSingleChoiceItems(new String[]{all, oneDay}, selection[0], new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                selection[0] = item;
+            }
+        });
+        builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Long before;
+                if (selection[0] == 0) {
+                    before = null;
+                } else {
+                    before = new Date().getTime() - (24L * 1000L * 3600L);
+                }
+                MessagesPagedListAdapter a = (MessagesPagedListAdapter) mListView.getAdapter();
+                if (a != null) {
+                    a.clearSelection();
+                }
+                mViewModel.deleteMessages(before);
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        AlertDialog dlg = builder.create();
+
+        dlg.show();
+
+    }
+
 
     protected void handleBackPressed() {
         setResult(AppCompatActivity.RESULT_CANCELED); //TODO:
