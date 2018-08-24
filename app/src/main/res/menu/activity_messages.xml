@@ -14,4 +14,11 @@
         android:title="@string/menu_refresh"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/menu_delete"
+        android:orderInCategory="120"
+        android:icon="@drawable/ic_menu_delete"
+        android:title="@string/action_delete_msgs"
+        app:showAsAction="ifRoom" />
+
 </menu>
