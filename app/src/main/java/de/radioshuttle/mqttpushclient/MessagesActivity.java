@@ -89,7 +89,7 @@ public class MessagesActivity extends AppCompatActivity {
                 public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
                     if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
-                        Log.d(TAG, "scroll state dragging");
+                        // Log.d(TAG, "scroll state dragging");
                         adapter.clearSelection();
                     }
                 }
@@ -137,9 +137,6 @@ public class MessagesActivity extends AppCompatActivity {
                     intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS));
                     startActivityForResult(intent, RC_SUBSCRIPTIONS);
                 }
-                return true;
-            case R.id.menu_refresh :
-                doRefresh();
                 return true;
             case R.id.menu_delete :
                 showDeleteDialog();
