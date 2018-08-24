@@ -217,6 +217,10 @@ public class MessagingService extends FirebaseMessagingService {
                 }
             }
 
+            /* delete all messages older than 30 days */
+            long before = new Date().getTime() - (30L * 24L * 1000L * 3600L);
+            db.mqttMessageDao().deleteMessagesBefore(before);
+
             /* inform about database changes, if app is running it can update its views */
             Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
             intent.putExtra(MqttMessage.ARG_ACCOUNT, channelID);
