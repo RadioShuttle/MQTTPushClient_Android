@@ -9,11 +9,8 @@ package de.radioshuttle.mqttpushclient;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.paging.PagedList;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -66,21 +63,34 @@ public class MessagesActivity extends AppCompatActivity {
             mAdapterObserver = new RecyclerView.AdapterDataObserver() {
                 @Override
                 public void onItemRangeInserted(int positionStart, int itemCount) {
-                    Log.d(TAG, "item inserted: " + positionStart + " cnt: " + itemCount);
+                    // Log.d(TAG, "item inserted: " + positionStart + " cnt: " + itemCount);
                     if (positionStart == 0) {
                         int pos = ((LinearLayoutManager) mListView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
                         if (pos >= 0) {
-                            mListView.scrollToPosition(0);
+                            MessagesPagedListAdapter a = (MessagesPagedListAdapter) mListView.getAdapter();
+                            if (a != null && a.hasNewItems()) {
+                                mListView.scrollToPosition(0);
+                            }
                         }
                     }
                 }
             };
             adapter.registerAdapterDataObserver(mAdapterObserver);
+            mListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                        Log.d(TAG, "scroll state dragging");
+                        adapter.clearSelection();
+                    }
+                }
+            });
 
             mViewModel.messagesPagedList.observe(this, new Observer<PagedList<MqttMessage>>() {
                 @Override
                 public void onChanged(@Nullable PagedList<MqttMessage> mqttMessages) {
-                    adapter.submitList(mqttMessages);
+                    adapter.submitList(mqttMessages, mViewModel.newItems);
                 }
             });
 
@@ -91,7 +101,7 @@ public class MessagesActivity extends AppCompatActivity {
         RecyclerView.ItemDecoration itemDecoration =
                 new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         mListView.addItemDecoration(itemDecoration);
-        mListView.setItemAnimator(null);
+        // mListView.setItemAnimator(null);
         mListView.setLayoutManager(new LinearLayoutManager(this));
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
