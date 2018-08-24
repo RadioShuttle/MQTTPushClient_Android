@@ -26,6 +26,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -172,6 +173,7 @@ public class MessagingService extends FirebaseMessagingService {
                     // Log.d(TAG, " (before null) accountCode: " + accountCode);
                 }
             }
+            ArrayList<Integer> ids = new ArrayList<>();
             for(int i = 0; i < msgsArray.length(); i++) {
                 JSONObject topic = msgsArray.getJSONObject(i);
                 Iterator<String> it = topic.keys();
@@ -206,7 +208,10 @@ public class MessagingService extends FirebaseMessagingService {
                             // decoding error or payload not utf-8
                             mqttMessage.setMsg(base64); //TODO: error should be rare but consider using hex
                         }
-                        db.mqttMessageDao().insertMqttMessage(mqttMessage);
+                        Long k = db.mqttMessageDao().insertMqttMessage(mqttMessage);
+                        if (k != null && k >= 0) {
+                            ids.add(k.intValue());
+                        }
                         Log.d(TAG, t + ": " + m.when + " " + new String(m.msg));
                     }
                 }
@@ -215,6 +220,7 @@ public class MessagingService extends FirebaseMessagingService {
             /* inform about database changes, if app is running it can update its views */
             Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
             intent.putExtra(MqttMessage.ARG_ACCOUNT, channelID);
+            intent.putExtra(MqttMessage.ARG_IDS, ids);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
             /*
