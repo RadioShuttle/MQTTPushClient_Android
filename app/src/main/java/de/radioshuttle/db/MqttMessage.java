@@ -76,4 +76,5 @@ public class MqttMessage {
 
     public final static String UPDATE_INTENT = "MQTT_MSG_UPDATE";
     public final static String ARG_ACCOUNT = "MQTT_MSG_UPDATE_ACC";
+    public final static String ARG_IDS = "MQTT_MSG_UPDATE_IDS";
 }
