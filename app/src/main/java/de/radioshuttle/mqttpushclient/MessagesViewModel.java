@@ -6,10 +6,10 @@
 
 package de.radioshuttle.mqttpushclient;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProvider;
 import android.arch.paging.DataSource;
@@ -19,6 +19,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 
@@ -50,6 +51,34 @@ public class MessagesViewModel extends AndroidViewModel {
             if (ds != null) {
                 ds.invalidate();
             }
+        }
+    }
+
+    public void deleteMessages(final Long since) {
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask t = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                AppDatabase db = AppDatabase.getInstance(getApplication());
+                MqttMessageDao dao = db.mqttMessageDao();
+                long psid = dao.getCode(pushAccount.pushserverID);
+                long accountID = dao.getCode(pushAccount.getMqttAccountName());
+                if (since != null) {
+                    dao.deleteMessagesForAccountBefore(psid, accountID, since);
+                } else {
+                    dao.deleteMessagesForAccount(psid, accountID);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                refresh();
+            }
+        };
+        if (pushAccount != null) {
+            t.execute((Object[]) null);
         }
     }
 
