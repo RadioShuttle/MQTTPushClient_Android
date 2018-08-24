@@ -8,6 +8,7 @@ package de.radioshuttle.db;
 
 import android.arch.paging.DataSource;
 import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 
@@ -37,4 +38,12 @@ public interface MqttMessageDao {
     @Query("SELECT * FROM mqtt_messages ORDER BY `when` DESC")
     public List<MqttMessage> loadReceivedMessages();
 
+    @Query("DELETE FROM mqtt_messages WHERE push_server_id = :pushServerID AND mqtt_accont_id = :mqttAccountID")
+    public void deleteMessagesForAccount(long pushServerID, long mqttAccountID);
+
+    @Query("DELETE FROM mqtt_messages WHERE push_server_id = :pushServerID AND mqtt_accont_id = :mqttAccountID AND `when` < :before")
+    public void deleteMessagesForAccountBefore(long pushServerID, long mqttAccountID, long before);
+
+    @Query("DELETE FROM mqtt_messages WHERE `when` < :before")
+    public void deleteMessagesBefore(long before);
 }
