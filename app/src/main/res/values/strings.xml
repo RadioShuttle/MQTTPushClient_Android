@@ -11,6 +11,7 @@
     <string name="action_topics">Topics</string>
     <string name="action_save_account">Save</string>
     <string name="action_delete_topics">Delete</string>
+    <string name="action_delete_msgs">Delete</string>
     <string name="action_add_topic">Add</string>
 
     <string name="dlg_remove_account_title">Remove Account</string>
