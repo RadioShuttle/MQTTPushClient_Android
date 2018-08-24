@@ -22,6 +22,8 @@ import android.content.IntentFilter;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 
+import java.util.HashSet;
+
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.db.MqttMessageDao;
@@ -29,10 +31,12 @@ import de.radioshuttle.db.MqttMessageDao;
 public class MessagesViewModel extends AndroidViewModel {
     public LiveData<PagedList<MqttMessage>> messagesPagedList;
     public PushAccount pushAccount;
+    public HashSet<Integer> newItems;
 
     public MessagesViewModel(String pushServer, String account, Application app) {
         super(app);
         MqttMessageDao dao = AppDatabase.getInstance(app).mqttMessageDao();
+        newItems = new HashSet<>();
         messagesPagedList = new LivePagedListBuilder<>(
                 dao.getReceivedMessages(pushServer, account), 20).build(); //TODO: page size
         IntentFilter intentFilter = new IntentFilter(MqttMessage.UPDATE_INTENT);
@@ -79,6 +83,7 @@ public class MessagesViewModel extends AndroidViewModel {
         public void onReceive(Context context, Intent intent) {
             String arg = intent.getStringExtra(MqttMessage.ARG_ACCOUNT);
             if (arg != null && pushAccount != null && pushAccount.getMqttAccountName().equals(arg)) {
+                newItems.addAll(intent.getIntegerArrayListExtra(MqttMessage.ARG_IDS));
                 refresh();
             }
         }
