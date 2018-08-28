@@ -38,6 +38,7 @@
     </LinearLayout>
 
     <android.support.v7.widget.RecyclerView
+        android:layout_marginTop="4dp"
         android:layout_below="@+id/header"
         android:id="@+id/messagesListView"
         android:scrollbars="vertical"
