@@ -330,18 +330,15 @@ public class MessagingService extends FirebaseMessagingService {
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         NotificationChannel nc = new NotificationChannel(channelId, channelId, NotificationManager.IMPORTANCE_DEFAULT);
-        if (nc == null) {
-            //TODO: check settings (ringtone, vibration, ....)
-            /*
-            nc.setDescription("Non alarm events");
-            nc.enableLights(false);
-            nc.enableVibration(false);
-            nc.setBypassDnd(false);
-            */
-            nm.createNotificationChannel(nc);
-            Log.d(TAG, "notification channel created.");
-
-        }
+        //TODO: check settings (ringtone, vibration, ....)
+        /*
+        nc.setDescription("Non alarm events");
+        nc.enableLights(false);
+        nc.enableVibration(false);
+        nc.setBypassDnd(false);
+        */
+        nm.createNotificationChannel(nc);
+        Log.d(TAG, "notification channel created.");
     }
 
     private static class Msg {
