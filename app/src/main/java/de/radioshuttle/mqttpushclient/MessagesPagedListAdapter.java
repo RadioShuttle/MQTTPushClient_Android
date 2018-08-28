@@ -18,6 +18,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,6 +42,7 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
                 DateFormat.SHORT,
                 DateFormat.SHORT,
                 Locale.getDefault());
+        timeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT);
     }
 
     @NonNull
@@ -49,8 +51,8 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
         View view = mInflater.inflate(R.layout.activity_messages_row, parent, false);
         final MessagesPagedListAdapter.ViewHolder holder = new MessagesPagedListAdapter.ViewHolder(view);
 
+        holder.subject = view.findViewById(R.id.subject);
         holder.msg = view.findViewById(R.id.msg);
-
 
         return holder;
     }
@@ -61,16 +63,20 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
 
         if (m != null) {
             StringBuilder sb = new StringBuilder();
-            sb.append(formatter.format(new Date(m.getWhen())));
-            sb.append("\n");
+            if (DateUtils.isToday(m.getWhen())) {
+                sb.append(timeFormatter.format(new Date(m.getWhen())));
+            } else {
+                sb.append(formatter.format(new Date(m.getWhen())));
+            }
+            sb.append(" - ");
             sb.append(m.getTopic());
-            sb.append("\n");
-            sb.append(m.getMsg());
+            holder.subject.setText(sb.toString());
 
-            holder.msg.setText(sb.toString());
+            holder.msg.setText(m.getMsg());
 
             holder.itemView.setSelected(selectedItems.contains(m.getId()));
         } else {
+            holder.subject.setText(null);
             holder.msg.setText(null);
             if (holder.itemView.isSelected())
                 holder.itemView.setSelected(false);
@@ -113,6 +119,7 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
 
     HashSet<Integer> selectedItems;
     DateFormat formatter;
+    DateFormat timeFormatter;
     private LayoutInflater mInflater;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -121,6 +128,7 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
             super(itemView);
         }
 
+        TextView subject;
         TextView msg;
 
     }
