@@ -178,7 +178,7 @@ public class MessagesActivity extends AppCompatActivity {
 
         builder.setTitle(title);
 
-        final int[] selection = new int[] {0};
+        final int[] selection = new int[] {1};
         builder.setSingleChoiceItems(new String[]{all, oneDay}, selection[0], new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int item) {
