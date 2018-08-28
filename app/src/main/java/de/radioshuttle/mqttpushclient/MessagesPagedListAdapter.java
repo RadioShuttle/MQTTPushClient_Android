@@ -83,16 +83,16 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
 
     public void clearSelection() {
         if (hasNewItems()) {
-            int r = Math.min(selectedItems.size(), getItemCount());
             selectedItems.clear();
-            notifyItemRangeChanged(0, r);
+            notifyDataSetChanged();
         }
     }
 
     public void submitList(PagedList<MqttMessage> pagedList, HashSet<Integer> newItems) {
-        if (newItems != null) {
+        if (newItems != null && newItems.size() > 0) {
             selectedItems.addAll(newItems);
             newItems.clear();
+            notifyDataSetChanged();
         }
         super.submitList(pagedList);
     }
