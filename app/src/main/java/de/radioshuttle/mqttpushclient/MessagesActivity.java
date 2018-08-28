@@ -172,9 +172,11 @@ public class MessagesActivity extends AppCompatActivity {
 
     protected void showDeleteDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String title = getString(R.string.dlg_del_messages_title);
         String all = getString(R.string.dlg_item_delete_all);
         String oneDay = getString(R.string.dlg_item_delete_older_one_day);
 
+        builder.setTitle(title);
 
         final int[] selection = new int[] {0};
         builder.setSingleChoiceItems(new String[]{all, oneDay}, selection[0], new DialogInterface.OnClickListener() {
