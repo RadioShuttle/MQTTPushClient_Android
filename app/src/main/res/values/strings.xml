@@ -78,7 +78,8 @@
     <string name="status_ok">Server online</string>
 
     <!-- delete dialog -->
-    <string name="dlg_item_delete_all">Delete all messages</string>
-    <string name="dlg_item_delete_older_one_day">Delete messages older than one day</string>
+    <string name="dlg_del_messages_title">Delete Messages</string>
+    <string name="dlg_item_delete_all">All</string>
+    <string name="dlg_item_delete_older_one_day">Older than one day</string>
 
 </resources>
