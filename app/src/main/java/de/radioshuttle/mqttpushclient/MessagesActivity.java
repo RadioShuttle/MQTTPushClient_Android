@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import de.radioshuttle.db.MqttMessage;
+import de.radioshuttle.fcm.Notifications;
 
 import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_SUBSCRIPTIONS;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
@@ -76,7 +77,7 @@ public class MessagesActivity extends AppCompatActivity {
                         int pos = ((LinearLayoutManager) mListView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
                         if (pos >= 0) {
                             MessagesPagedListAdapter a = (MessagesPagedListAdapter) mListView.getAdapter();
-                            if (a != null && a.hasNewItems()) {
+                            if (a != null) {
                                 mListView.scrollToPosition(0);
                             }
                         }
@@ -207,6 +208,7 @@ public class MessagesActivity extends AppCompatActivity {
 
 
     protected void handleBackPressed() {
+        Notifications.cancelAll(this, mViewModel.pushAccount.getMqttAccountName()); // clear systen notification tray
         setResult(AppCompatActivity.RESULT_CANCELED); //TODO:
         finish();
     }
