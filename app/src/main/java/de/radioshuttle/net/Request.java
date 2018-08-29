@@ -120,6 +120,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             if (cont) {
                 cont = false;
                 Map<String, String> m = mConnection.getFCMData();
+                mPushAccount.pushserverID = m.get("pushserverid");
 
                 FirebaseApp app = null;
 
