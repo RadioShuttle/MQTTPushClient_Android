@@ -93,11 +93,12 @@ public class Cmd {
         return request(CMD_GET_FCM_DATA, seqNo);
     }
 
-    public void fcmDataResponse(RawCmd request, String app_id , String api_key) throws IOException {
+    public void fcmDataResponse(RawCmd request, String app_id , String api_key, String pushServerID) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(app_id, os);
         writeString(api_key, os);
+        writeString(pushServerID, os);
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
@@ -107,6 +108,7 @@ public class Cmd {
         DataInputStream is = new DataInputStream(ba);
         m.put("app_id", readString(is));
         m.put("api_key", readString(is));
+        m.put("pushserverid", readString(is));
         return m;
     }
 
