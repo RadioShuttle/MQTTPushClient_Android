@@ -23,5 +23,21 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         />
 
+    <TextView
+        android:id="@+id/notificationsLabel"
+        app:layout_constraintTop_toBottomOf="@id/topic"
+        android:layout_marginTop="8dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/dlg_add_topic_notif"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Spinner
+        android:id="@+id/notificationtype_spinner"
+        app:layout_constraintTop_toBottomOf="@id/notificationsLabel"
+        android:spinnerMode="dropdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
 
 </android.support.constraint.ConstraintLayout>
