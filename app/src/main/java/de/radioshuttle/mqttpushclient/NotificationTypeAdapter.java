@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import static de.radioshuttle.mqttpushclient.PushAccount.Topic.*;
 
 public class NotificationTypeAdapter extends ArrayAdapter<Map.Entry<Integer, String>> {
 
@@ -82,7 +83,4 @@ public class NotificationTypeAdapter extends ArrayAdapter<Map.Entry<Integer, Str
 
     private LayoutInflater mInflater;
 
-    public final static int NOTIFICATION_HIGH = 2;
-    public final static int NOTIFICATION_MEDIUM = 1;
-    public final static int NOTIFICATION_LOW = 0;
 }
