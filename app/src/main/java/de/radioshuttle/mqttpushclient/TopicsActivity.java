@@ -28,11 +28,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +43,7 @@ import java.util.Map;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.TopicsRequest;
+import static de.radioshuttle.mqttpushclient.PushAccount.Topic.*;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
@@ -260,7 +259,10 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
             showAddDialog(mViewModel.lastEnteredTopic, getString(R.string.dlg_add_error_empty_str), prio);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
-            mViewModel.addTopic(this, topic);
+            PushAccount.Topic t = new PushAccount.Topic();
+            t.name = topic;
+            t.prio = prio;
+            mViewModel.addTopic(this, t);
         }
         if (!Utils.isEmpty(topic)) {
             mViewModel.lastEnteredTopic = topic;
@@ -425,7 +427,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                         EditText v = getDialog().findViewById(R.id.topic);
                         if (v != null) {
                             Object o = s.getSelectedItem();
-                            int prio = NotificationTypeAdapter.NOTIFICATION_HIGH; // default
+                            int prio = NOTIFICATION_HIGH; // default
                             if ( o != null && o instanceof Map.Entry<?, ?>) {
                                 Map.Entry<Integer, String> m = (Map.Entry<Integer, String>) s.getSelectedItem();
                                 Log.d(TAG, "selection: " + m.getKey() + " " + m.getValue()); //TODO

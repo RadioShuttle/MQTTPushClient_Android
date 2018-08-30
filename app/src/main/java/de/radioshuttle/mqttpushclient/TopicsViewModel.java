@@ -50,7 +50,7 @@ public class TopicsViewModel extends ViewModel{
         currentRequest.execute();
     }
 
-    public void addTopic(Context context, String topic) {
+    public void addTopic(Context context, PushAccount.Topic topic) {
         requestCnt++;
         TopicsRequest request = new TopicsRequest(context, pushAccount, topicsRequest);
         request.addTopic(topic);

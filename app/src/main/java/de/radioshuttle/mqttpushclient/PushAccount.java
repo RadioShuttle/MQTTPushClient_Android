@@ -34,7 +34,7 @@ public class PushAccount {
     public int requestErrorCode;
     public String requestErrorTxt;
 
-    public ArrayList<String> topics;
+    public ArrayList<Topic> topics;
 
     public JSONObject getJSONObject() throws JSONException {
         JSONObject account = new JSONObject();
@@ -47,11 +47,6 @@ public class PushAccount {
         account.put("pushserver", pushserver);
         account.put("pushserverID", pushserverID == null ? "" : pushserverID);
 
-        JSONArray t = new JSONArray();
-        for(String s : topics) {
-            t.put(s);
-        }
-        account.put("topics", t);
         return account;
     };
 
@@ -142,10 +137,6 @@ public class PushAccount {
             pushAccount.pushserverID = o.getString("pushserverID");
         }
 
-        JSONArray t = o.getJSONArray("topics");
-        for(int i = 0; i < t.length(); i++) {
-            pushAccount.topics.add(t.getString(i));
-        }
         return pushAccount;
     }
 
@@ -178,6 +169,15 @@ public class PushAccount {
 
             return cmp;
         }
+    }
+
+    public final static class Topic {
+        public String name;
+        public int prio;
+
+        public final static int NOTIFICATION_HIGH = 2;
+        public final static int NOTIFICATION_MEDIUM = 1;
+        public final static int NOTIFICATION_LOW = 0;
     }
 
 }
