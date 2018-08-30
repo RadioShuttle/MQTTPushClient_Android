@@ -15,8 +15,11 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 
 public class Cmd {
@@ -137,21 +140,34 @@ public class Cmd {
         return m;
     }
 
-    public void getSubscriptionsResponse(RawCmd request, List<String> topics) throws IOException {
+    public void getSubscriptionsResponse(RawCmd request, Map<String, Integer> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
             os.writeShort(0);
         } else {
             os.writeShort(topics.size());
-            for(int i = 0; i < topics.size(); i++) {
-                writeString(topics.get(i), os);
+            for(Iterator<Entry<String, Integer>> it = topics.entrySet().iterator(); it.hasNext();) {
+                Entry<String, Integer> e = it.next();
+                writeString(e.getKey(), os);
+                os.writeByte(e.getValue());
             }
         }
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
-    public ArrayList<String> readTopics(byte[] data)  throws IOException {
+    public LinkedHashMap<String, Integer> readTopics(byte[] data)  throws IOException {
+        LinkedHashMap<String, Integer> subs = new LinkedHashMap<>();
+        ByteArrayInputStream ba = new ByteArrayInputStream(data);
+        DataInputStream is = new DataInputStream(ba);
+        int size = is.readUnsignedShort();
+        for(int i = 0; i < size; i++) {
+            subs.put(readString(is), is.read());
+        }
+        return subs;
+    }
+
+    public List<String> readTopicsUnsub(byte[] data)  throws IOException {
         ArrayList<String> subs = new ArrayList<>();
         ByteArrayInputStream ba = new ByteArrayInputStream(data);
         DataInputStream is = new DataInputStream(ba);
@@ -162,15 +178,17 @@ public class Cmd {
         return subs;
     }
 
-    public RawCmd subscribeRequest(int seqNo, List<String> topics) throws IOException {
+    public RawCmd subscribeRequest(int seqNo, Map<String, Integer> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
             os.writeShort(0);
         } else {
             os.writeShort(topics.size());
-            for(int i = 0; i < topics.size(); i++) {
-                writeString(topics.get(i), os);
+            for(Iterator<Entry<String, Integer>> it = topics.entrySet().iterator(); it.hasNext();) {
+                Entry<String, Integer> e = it.next();
+                writeString(e.getKey(), os);
+                os.writeByte(e.getValue());
             }
         }
         writeCommand(CMD_SUBSCRIBE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());

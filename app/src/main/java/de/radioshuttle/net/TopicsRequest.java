@@ -5,11 +5,16 @@ import android.content.Context;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.mqttpushclient.Utils;
 
 public class TopicsRequest extends Request {
 
@@ -35,12 +40,10 @@ public class TopicsRequest extends Request {
 
     @Override
     public boolean perform() throws Exception {
-        //TODO:
-        List<String> tmp;
+
         if (mCmd == Cmd.CMD_UNSUBSCRIBE) {
-            tmp = mDelTopics;
             try {
-                int[] rc = mConnection.deleteTopics(tmp);
+                int[] rc = mConnection.deleteTopics(mDelTopics);
                 //TODO: handle rc
             } catch(MQTTException e) {
                 requestErrorCode = e.errorCode;
@@ -52,11 +55,11 @@ public class TopicsRequest extends Request {
             requestStatus = mConnection.lastReturnCode;
         } else if (mCmd == Cmd.CMD_SUBSCRIBE) {
             try {
-                tmp = new ArrayList<>();
+                HashMap<String, Integer> tmp = new HashMap<>();
                 for(PushAccount.Topic t : mTopics) {
-                    tmp.add(t.name);
+                    tmp.put(t.name, t.prio);
                 }
-                int[] rc = mConnection.addTopics(tmp); //TODO: add prios
+                int[] rc = mConnection.addTopics(tmp);
                 //TODO: handle rc
             } catch(MQTTException e) {
                 requestErrorCode = e.errorCode;
@@ -67,19 +70,28 @@ public class TopicsRequest extends Request {
             }
         }
 
-        ArrayList<String> result = mConnection.getTopics(); //TODO: get prios
+        LinkedHashMap<String, Integer> result = mConnection.getTopics();
         ArrayList<PushAccount.Topic> tmpRes = new ArrayList<>();
 
         if (mConnection.lastReturnCode == Cmd.RC_OK) {
             if (result == null)
-                result = new ArrayList<>();
-            Collections.sort(result);
-            for(String s : result) {
+                result = new LinkedHashMap<>();
+
+            for(Iterator<Map.Entry<String, Integer>> it = result.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, Integer> e = it.next();
                 PushAccount.Topic t = new PushAccount.Topic();
-                t.name = s;
-                t.prio = 0; //TODO
+                t.name = e.getKey();
+                t.prio = e.getValue();
                 tmpRes.add(t);
             }
+            Collections.sort(tmpRes, new Comparator<PushAccount.Topic>() {
+                @Override
+                public int compare(PushAccount.Topic o1, PushAccount.Topic o2) {
+                    String s1 = (o1.name == null ? "" : o1.name);
+                    String s2 = (o2.name == null ? "" : o2.name);
+                    return s1.compareTo(s2);
+                }
+            });
 
             mPushAccount.topics = tmpRes;
         } else {

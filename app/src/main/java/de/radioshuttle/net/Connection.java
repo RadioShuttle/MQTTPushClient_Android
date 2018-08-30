@@ -17,6 +17,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,10 +95,10 @@ public class Connection {
         handleError(response);
     }
 
-    public ArrayList<String> getTopics() throws IOException, ServerError {
+    public LinkedHashMap<String, Integer> getTopics() throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_SUBSCR, ++mSeqNo);
         handleError(response);
-        ArrayList<String> topics;
+        LinkedHashMap<String, Integer> topics;
         if (lastReturnCode == Cmd.RC_OK) {
             topics = mCmd.readTopics(response.data);
         } else {
@@ -107,7 +108,7 @@ public class Connection {
         return topics;
     }
 
-    public int[] addTopics(List<String> topics) throws IOException, ServerError  {
+    public int[] addTopics(Map<String, Integer> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.subscribeRequest(++mSeqNo, topics);
         handleError(response);
         return mCmd.readSubscriptionUpdateResult(response.data);
