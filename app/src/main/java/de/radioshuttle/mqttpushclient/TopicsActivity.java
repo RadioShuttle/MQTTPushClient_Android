@@ -28,7 +28,11 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +40,7 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
@@ -184,7 +189,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                 handled = true;
                 break;
             case R.id.action_add:
-                showAddDialog(mViewModel.lastEnteredTopic, null);
+                showAddDialog(mViewModel.lastEnteredTopic, null, null);
                 handled = true;
                 break;
             default:
@@ -193,7 +198,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
         return handled;
     }
 
-    protected void showAddDialog(String topic, String errorMsg) {
+    protected void showAddDialog(String topic, String errorMsg, Integer notificationType) {
         if (mViewModel.isRequestActive()) {
             Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
         } else {
@@ -205,6 +210,10 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
             if (errorMsg != null) {
                 args.putString(ARG_TOPIC_ERROR, errorMsg);
             }
+            if (notificationType != null) {
+                args.putInt(ARG_TOPIC_NTYPE, notificationType);
+            }
+
             dlg.setArguments(args);
 
             dlg.show(getSupportFragmentManager(), AddTopicDlg.class.getSimpleName());
@@ -246,9 +255,9 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
         }
     }
 
-    public void addTopic(String topic) {
+    public void addTopic(String topic, int prio) {
         if (Utils.isEmpty(topic)) {
-            showAddDialog(mViewModel.lastEnteredTopic, getString(R.string.dlg_add_error_empty_str));
+            showAddDialog(mViewModel.lastEnteredTopic, getString(R.string.dlg_add_error_empty_str), prio);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             mViewModel.addTopic(this, topic);
@@ -365,17 +374,47 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
 
             LayoutInflater inflater = (LayoutInflater) builder.getContext().getSystemService(LAYOUT_INFLATER_SERVICE);
             View body = inflater.inflate(R.layout.dlg_topics_body, null);
+
+            final Spinner s = body.findViewById(R.id.notificationtype_spinner);
+            if (s != null) {
+                s.setAdapter(new NotificationTypeAdapter(getContext()) {
+                });
+                s.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        Map.Entry<Integer, String> sel =
+                                (Map.Entry<Integer, String>) parent.getItemAtPosition(position);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+
+                    }
+                });
+            }
+
             EditText e = body.findViewById(R.id.topic);
             if (e != null) {
                 if (args != null) {
                     String errorMsg = args.getString(ARG_TOPIC_ERROR);
                     String topic = args.getString(ARG_TOPIC);
+                    Integer notificationType = args.getInt(ARG_TOPIC_NTYPE, -1);
+                    if (notificationType != -1) {
+                        NotificationTypeAdapter a = (NotificationTypeAdapter) s.getAdapter();
+                        for (int i = 0; i < s.getAdapter().getCount(); i++) {
+                            if (a.getItem(i).getKey() == notificationType.intValue()) {
+                                s.setSelection(i);
+                                break;
+                            }
+                        }
+                    }
                     e.setText(topic);
                     if (!Utils.isEmpty(errorMsg)) {
                         e.setError(errorMsg);
                     }
                 }
             }
+
             builder.setView(body);
 
             builder.setPositiveButton(R.string.action_add_topic, new DialogInterface.OnClickListener() {
@@ -385,7 +424,14 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                     if (a instanceof TopicsActivity) {
                         EditText v = getDialog().findViewById(R.id.topic);
                         if (v != null) {
-                            ((TopicsActivity) a).addTopic(v.getText().toString());
+                            Object o = s.getSelectedItem();
+                            int prio = NotificationTypeAdapter.NOTIFICATION_HIGH; // default
+                            if ( o != null && o instanceof Map.Entry<?, ?>) {
+                                Map.Entry<Integer, String> m = (Map.Entry<Integer, String>) s.getSelectedItem();
+                                Log.d(TAG, "selection: " + m.getKey() + " " + m.getValue()); //TODO
+                                prio = m.getKey();
+                            }
+                            ((TopicsActivity) a).addTopic(v.getText().toString(), prio);
                         }
                     }
                 }
@@ -435,6 +481,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
     private final static String SEL_ROWS = "SEL_ROWS";
     private final static String ARG_TOPIC = "ARG_TOPIC";
     private final static String ARG_TOPIC_ERROR = "ARG_TOPIC_ERROR";
+    private final static String ARG_TOPIC_NTYPE = "ARG_NOTIFICATION_TYPE";
 
     private final static String TAG = TopicsActivity.class.getSimpleName();
 
