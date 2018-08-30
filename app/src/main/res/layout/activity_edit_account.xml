@@ -132,26 +132,6 @@
 
                 </TableRow>
 
-                <TableRow  android:id="@+id/viewExplanation" android:visibility="gone">
-                    <TextView android:layout_marginTop="16dp"
-                        android:layout_span="2" android:text="@string/explanation_get_notified"/>
-
-                </TableRow>
-
-                <TableRow android:id="@+id/viewTopics" android:visibility="gone">
-                    <TextView
-                        android:gravity="right"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:text="@string/label_topics"/>
-                    <EditText
-                        android:id="@+id/topics"
-                        android:inputType="textMultiLine"
-                        android:ems="10"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:layout_marginLeft="4dp"
-                        />
-                </TableRow>
-
             </TableLayout>
 
         </android.support.v4.widget.NestedScrollView>
