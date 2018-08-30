@@ -61,7 +61,6 @@ public class EditAccountActivity extends AppCompatActivity {
                 save();
             }
         });
-        mTopics = findViewById(R.id.topics);
 
         SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
         String accountsJSON = settings.getString(AccountListActivity.ACCOUNTS, null);
@@ -117,9 +116,6 @@ public class EditAccountActivity extends AppCompatActivity {
             }
 
             try {
-                //TODO: remove (including definitions in activity_edit_accountt.xml), also remove mTopics textEdit
-                // findViewById(R.id.viewExplanation).setVisibility(View.VISIBLE);
-                // findViewById(R.id.viewTopics).setVisibility(View.VISIBLE);
 
                 mPushAccount = PushAccount.createAccountFormJSON(new JSONObject(json));
                 mPushNotificationServer.setText(mPushAccount.pushserver);
@@ -130,14 +126,6 @@ public class EditAccountActivity extends AppCompatActivity {
                 mMQTTSSL.setChecked(u.getScheme().toLowerCase().equals("ssl"));
                 mUser.setText(mPushAccount.user);
                 mPassword.setText(new String(mPushAccount.password));
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < mPushAccount.topics.size(); i++) {
-                    sb.append(mPushAccount.topics.get(i));
-                    if (i + 1 < mPushAccount.topics.size())
-                        sb.append("\n");
-                }
-
-                mTopics.setText(sb.toString());
 
             } catch (Exception e) {
                 Log.e(TAG, "parse error", e);
@@ -255,13 +243,6 @@ public class EditAccountActivity extends AppCompatActivity {
         b.user = mUser.getText().toString().trim();
         b.password = mPassword.getText().toString().toCharArray();
 
-        String[] t = mTopics.getText().toString().split("\n");
-        ArrayList<String> topics = new ArrayList<>();
-        for(int i = 0; i < t.length; i++) {
-            if (t[i].trim().length() > 0)
-            topics.add(t[i].trim());
-        }
-        b.topics = topics;
         return b;
     }
 
@@ -289,23 +270,6 @@ public class EditAccountActivity extends AppCompatActivity {
                 n.password = new char[0];
             }
             eq = eq && Arrays.equals(o.password, n.password);
-        }
-
-        if (eq) {
-            ArrayList<String> oa = new ArrayList<>(o.topics);
-            ArrayList<String> na = new ArrayList<>(n.topics);
-            if (oa.size() != na.size()) {
-                eq = false;
-            } else {
-                Collections.sort(oa);
-                Collections.sort(na);
-                for(int i = 0; i < oa.size(); i++) {
-                    if (!oa.get(i).equals(na.get(i))) {
-                        eq = false;
-                        break;
-                    }
-                }
-            }
         }
 
         return !eq;
@@ -420,7 +384,6 @@ public class EditAccountActivity extends AppCompatActivity {
     public TextView mUser;
     public TextView mPassword;
     public Button mSaveButton;
-    public TextView mTopics; //TODO: remove
     public int mMode;
 
     private Snackbar mSnackbar;
