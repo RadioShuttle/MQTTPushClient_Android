@@ -10,12 +10,24 @@
     android:paddingRight="16dp"
     android:background="@drawable/rowselector">
 
+    <ImageView
+        android:id="@+id/notificationButton"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:srcCompat="@drawable/ic_topic_prio_high"
+        android:layout_width="24dp"
+        android:layout_height="24dp" />
+
     <TextView
         android:id="@+id/topic"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/notificationButton"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content" />
+
 
 </android.support.constraint.ConstraintLayout>
