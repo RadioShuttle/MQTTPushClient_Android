@@ -23,7 +23,12 @@
 
     <string name="dlg_add_topics_title">Add Topic</string>
     <string name="dlg_add_topic_body">Subscribe to topic:</string>
+    <string name="dlg_add_topic_notif">Notifications:</string>
     <string name="dlg_add_error_empty_str">Field topic must not be empty.</string>
+
+    <string name="dlg_ntype_low">Off</string>
+    <string name="dlg_ntype_medium">Notify</string>
+    <string name="dlg_ntype_high">Notify + Sound</string>
 
     <string name="error_loading_accounts">Error: Loading accounts failed.</string>
     <string name="error_saving_accounts">Error: Saving account list failed.</string>
