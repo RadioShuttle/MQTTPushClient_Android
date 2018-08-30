@@ -13,10 +13,13 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+
+import static de.radioshuttle.mqttpushclient.PushAccount.Topic.*;
 
 public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
 
@@ -35,6 +38,9 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         final ViewHolder holder = new ViewHolder(view);
 
         holder.topic = view.findViewById(R.id.topic);
+        holder.notificationTypeImageHigh = view.findViewById(R.id.notificationImageHigh);
+        holder.notificationTypeImageMed = view.findViewById(R.id.notificationImageMed);
+        holder.notificationTypeImageLow = view.findViewById(R.id.notificationImageLow);
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             // Called when the user long-clicks on someView
@@ -66,12 +72,33 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ViewHolder vh = (ViewHolder) holder;
-        String e = mTopics.get(position);
-        vh.topic.setText(mTopics.get(position));
-        vh.itemView.setSelected(mSelectedTopics.contains(e));
+        PushAccount.Topic e = mTopics.get(position);
+        vh.topic.setText(e.name);
+        if (e.prio == NOTIFICATION_HIGH) {
+            setImageVisibility(vh.notificationTypeImageHigh, vh.notificationTypeImageLow, vh.notificationTypeImageMed);
+        } else if (e.prio == NOTIFICATION_MEDIUM) {
+            setImageVisibility(vh.notificationTypeImageMed, vh.notificationTypeImageLow, vh.notificationTypeImageHigh);
+        } else { // r.prio == NOTIFICATION_LOW
+            setImageVisibility(vh.notificationTypeImageLow, vh.notificationTypeImageMed, vh.notificationTypeImageHigh);
+        }
+
+        vh.itemView.setSelected(mSelectedTopics.contains(e.name));
     }
 
-    public void setData(ArrayList<String> data) {
+    protected void setImageVisibility(View visibleView, View gone1, View gone2) {
+        if (visibleView.getVisibility() != View.VISIBLE) {
+            visibleView.setVisibility(View.VISIBLE);
+        }
+        if (gone1.getVisibility() != View.GONE) {
+            gone1.setVisibility(View.GONE);
+        }
+        if (gone2.getVisibility() != View.GONE) {
+            gone2.setVisibility(View.GONE);
+        }
+    }
+
+
+    public void setData(ArrayList<PushAccount.Topic> data) {
         mTopics = data;
 
         /* if topics have been deleted the selected topics hashmap must be updated */
@@ -97,7 +124,7 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         int noOfSelectedItemsBefore = mSelectedTopics.size();
         int noOfSelectedItems = noOfSelectedItemsBefore;
 
-        String e = mTopics.get(pos);
+        String e = mTopics.get(pos).name;
         if (mSelectedTopics.contains(e)) {
             mSelectedTopics.remove(e);
             noOfSelectedItems--;
@@ -127,6 +154,9 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         }
 
         TextView topic;
+        ImageView notificationTypeImageHigh;
+        ImageView notificationTypeImageMed;
+        ImageView notificationTypeImageLow;
     }
 
     public interface RowSelectionListener {
@@ -136,7 +166,7 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
     private Context mContext;
     private LayoutInflater mInflater;
     private RowSelectionListener mRowSelectionListener;
-    private ArrayList<String> mTopics;
+    private ArrayList<PushAccount.Topic> mTopics;
     private HashSet<String> mSelectedTopics;
 
 }
