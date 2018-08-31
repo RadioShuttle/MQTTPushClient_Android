@@ -40,6 +40,9 @@
     <string name="notification_deleted">Pending messages deleted</string>
     <string name="notification_show_messages">Tap to see messages</string>
 
+    <!-- notification service -->
+    <string name="notificaion_alarm">ALARM!</string>
+
     <!-- Add/Edit borker activity -->
     <string name="title_add_account">Add Server</string>
     <string name="title_edit_account">Edit Server</string>
