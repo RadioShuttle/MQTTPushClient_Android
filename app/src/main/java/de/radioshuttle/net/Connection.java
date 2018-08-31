@@ -108,8 +108,14 @@ public class Connection {
         return topics;
     }
 
-    public int[] addTopics(Map<String, Integer> topics) throws IOException, ServerError  {
+    public int[] addTopics(LinkedHashMap<String, Integer> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.subscribeRequest(++mSeqNo, topics);
+        handleError(response);
+        return mCmd.readSubscriptionUpdateResult(response.data);
+    }
+
+    public int[] updateTopics(LinkedHashMap<String, Integer> topics) throws IOException, ServerError  {
+        Cmd.RawCmd response = mCmd.updateTopicsRequest(++mSeqNo, topics);
         handleError(response);
         return mCmd.readSubscriptionUpdateResult(response.data);
     }

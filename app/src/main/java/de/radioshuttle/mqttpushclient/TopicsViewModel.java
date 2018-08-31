@@ -58,6 +58,14 @@ public class TopicsViewModel extends ViewModel{
         currentRequest.execute();
     }
 
+    public void updateTopic(Context context, PushAccount.Topic topic) {
+        requestCnt++;
+        TopicsRequest request = new TopicsRequest(context, pushAccount, topicsRequest);
+        request.updateTopic(topic);
+        currentRequest = request;
+        currentRequest.execute();
+    }
+
     public boolean isRequestActive() {
         return requestCnt > 0;
     }

@@ -30,10 +30,11 @@ public class Cmd {
     public final static int CMD_GET_SUBSCR = 4;
     public final static int CMD_SUBSCRIBE = 5;
     public final static int CMD_UNSUBSCRIBE = 6;
-    public final static int CMD_SET_DEVICE_INFO = 7;
-    public final static int CMD_REMOVE_TOKEN = 8;
-    public final static int CMD_LOGOUT = 9;
-    public final static int CMD_BYE = 10;
+    public final static int CMD_UPDATE_TOPICS = 7;
+    public final static int CMD_SET_DEVICE_INFO = 8;
+    public final static int CMD_REMOVE_TOKEN = 9;
+    public final static int CMD_LOGOUT = 10;
+    public final static int CMD_BYE = 11;
 
     public RawCmd helloRequest(int seqNo) throws IOException {
         writeCommand(CMD_HELLO, seqNo, FLAG_REQUEST, 0, new byte[] {PROTOCOL_MAJOR, PROTOCOL_MINOR});
@@ -178,7 +179,15 @@ public class Cmd {
         return subs;
     }
 
-    public RawCmd subscribeRequest(int seqNo, Map<String, Integer> topics) throws IOException {
+    public RawCmd subscribeRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
+        return writeTopics(CMD_SUBSCRIBE, seqNo, topics);
+    }
+
+    public RawCmd updateTopicsRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
+        return writeTopics(CMD_UPDATE_TOPICS, seqNo, topics);
+    }
+
+    public RawCmd writeTopics(int cmd, int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
@@ -191,7 +200,7 @@ public class Cmd {
                 os.writeByte(e.getValue());
             }
         }
-        writeCommand(CMD_SUBSCRIBE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        writeCommand(cmd, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 
