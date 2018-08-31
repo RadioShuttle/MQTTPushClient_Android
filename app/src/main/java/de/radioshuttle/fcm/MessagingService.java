@@ -9,6 +9,7 @@ package de.radioshuttle.fcm;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -35,6 +36,7 @@ import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.Code;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
+import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.mqttpushclient.Utils;
 
@@ -113,6 +115,7 @@ public class MessagingService extends FirebaseMessagingService {
         b.setShowWhen(true);
 
         if (Build.VERSION.SDK_INT < 26) {
+            //TODO: settings similar to createChannel
             b.setPriority(Notification.PRIORITY_MAX);
             b.setDefaults(Notification.DEFAULT_ALL);
         }
@@ -140,13 +143,20 @@ public class MessagingService extends FirebaseMessagingService {
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationManager nm =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            // nm.deleteNotificationChannel(channelID); //TODO: remove
+            // ‚nm.deleteNotificationChannel(channelID+".a"); //TODO: remove
             if (nm.getNotificationChannel(channelID) == null) {
                 createChannel(channelID, getApplicationContext());
             }
+
         }
 
+
         String msg = data.get("messages");
-        Msg latestMsg = null;
+        Msg latestAlarmMsg = null; // prio high
+        Msg latestMsg = null; // prio normal
+        int cntAlarm = 0;
+        int cntNormal = 0;
         int cnt = 0;
         try {
             JSONArray msgsArray = new JSONArray(msg);
@@ -194,12 +204,24 @@ public class MessagingService extends FirebaseMessagingService {
                         m.when = d;
                         m.msg = Base64.decode(base64, Base64.DEFAULT);
                         m.topic = t;
-                        if (latestMsg == null) {
-                            latestMsg = m;
-                        } else if (latestMsg.when < (m.when)) {
-                            latestMsg = m;
+                        if (prio == PushAccount.Topic.NOTIFICATION_MEDIUM) {
+                            if (latestMsg == null) {
+                                latestMsg = m;
+                            } else if (latestMsg.when < (m.when)) {
+                                latestMsg = m;
+                            }
+                            cntNormal++;
+                        } else if (prio == PushAccount.Topic.NOTIFICATION_HIGH) {
+                            if (latestAlarmMsg == null) {
+                                latestAlarmMsg = m;
+                            } else if (latestMsg.when < (m.when)) {
+                                latestAlarmMsg = m;
+                            }
+                            cntAlarm++;
+                        } else {
+                            cnt++;
                         }
-                        cnt++;
+
                         //TODO: consider removing Msg class and replace it with MqttMessage below
                         MqttMessage mqttMessage = new MqttMessage();
                         mqttMessage.setPushServerID(psCode.intValue());
@@ -246,102 +268,135 @@ public class MessagingService extends FirebaseMessagingService {
             */
 
 
+            if (cntAlarm > 0 && latestAlarmMsg != null) {
+                showNotification(channelID, latestAlarmMsg, PushAccount.Topic.NOTIFICATION_HIGH, cntAlarm, pushServerID);
+            }
+            if (cntNormal > 0 && latestMsg != null) {
+                showNotification(channelID, latestMsg, PushAccount.Topic.NOTIFICATION_MEDIUM, cntNormal, pushServerID);
+            }
+            if (cnt > 0) {
+                showNotification(channelID, null, PushAccount.Topic.NOTIFICATION_LOW, cnt, pushServerID);
+            }
+
+
         } catch(Exception e) {
             //TODO: error handling for db errors
             Log.d(TAG, "error parsing messages", e);
         }
 
-        if (latestMsg != null) {
-            Notifications.MessageInfo messageInfo = Notifications.getMessageInfo(this, channelID);
-            if (messageInfo.groupId == 0) {
-                messageInfo.groupId = messageInfo.noOfGroups + 1;
-            }
-            messageInfo.messageId++;
-            Notifications.setMessageInfo(this, messageInfo);
-            messageInfo.messageId += cnt;
-
-            Intent intent = new Intent(this, AccountListActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            intent.putExtra(ARG_MQTT_ACCOUNT, channelID);
-            intent.putExtra(ARG_PUSHSERVER_ID, pushServerID);
-
-            PendingIntent pendingIntent = PendingIntent.getActivity(
-                    this,
-                    messageInfo.groupId, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
-
-
-            Intent delItent = new Intent(this, Notifications.class);
-            delItent.setAction(Notifications.ACTION_CANCELLED);
-            delItent.putExtra(Notifications.DELETE_GROUP, messageInfo.group);
-
-            PendingIntent delPendingIntent = PendingIntent.getBroadcast(
-                    this,
-                    messageInfo.groupId, delItent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
-
-            NotificationCompat.Builder b;
-            if (Build.VERSION.SDK_INT >= 26) {
-                b = new NotificationCompat.Builder(this, channelID);
-            } else {
-                b = new NotificationCompat.Builder(this);
-                //TODO: consider using an own unique ringtone
-                // Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            }
-
-            b.setContentTitle(channelID);
-            b.setContentText(latestMsg.topic + ": " + new String(latestMsg.msg));
-            b.setWhen(latestMsg.when);
-            if (messageInfo.messageId > 1) {
-                String more = String.format("+%d", (messageInfo.messageId - 1));
-                b.setSubText(more);
-            }
-            if (Build.VERSION.SDK_INT >= 25) {
-                b.setGroup(channelID);
-            }
-
-            b.setAutoCancel(false);
-            b.setContentIntent(pendingIntent);
-            b.setDeleteIntent(delPendingIntent);
-
-            if (Build.VERSION.SDK_INT < 26) {
-                //TODO: check settings (ringtone, vibration, ....) see also createChannel for higher android versions
-                b.setDefaults(Notification.DEFAULT_ALL);
-            }
-
-            if (Build.VERSION.SDK_INT >= 21) {
-                b.setSmallIcon(R.drawable.ic_notification_devices_other_vec);
-            } else {
-                // vector drawables not work here for versions pror lolipop
-                b.setSmallIcon(R.drawable.ic_notification_devices_other_img);
-            }
-
-            Notification notification = b.build();
-
-            NotificationManagerCompat notificationManager =
-                    NotificationManagerCompat.from(this);
-
-            notificationManager.notify(messageInfo.group, messageInfo.groupId, notification);
-        }
 
         Log.d(TAG, "Messaging notify called.");
 
     }
 
+    protected void showNotification(String account, Msg m, int prio, int cnt, String pushServerID) {
+        String group = account;
+        if (prio == PushAccount.Topic.NOTIFICATION_HIGH) {
+            group += ".a";
+        }
+
+        Notifications.MessageInfo messageInfo = Notifications.getMessageInfo(this, group);
+        if (messageInfo.groupId == 0) {
+            messageInfo.groupId = messageInfo.noOfGroups + 1;
+        }
+        messageInfo.messageId += cnt;
+        Notifications.setMessageInfo(this, messageInfo);
+
+        if (m == null) {
+            return;
+        }
+
+        Intent intent = new Intent(this, AccountListActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra(ARG_MQTT_ACCOUNT, account);
+        intent.putExtra(ARG_PUSHSERVER_ID, pushServerID);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                messageInfo.groupId, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+        Intent delItent = new Intent(this, Notifications.class);
+        delItent.setAction(Notifications.ACTION_CANCELLED);
+        delItent.putExtra(Notifications.DELETE_GROUP, messageInfo.group);
+
+        PendingIntent delPendingIntent = PendingIntent.getBroadcast(
+                this,
+                messageInfo.groupId, delItent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder b;
+        if (Build.VERSION.SDK_INT >= 26) {
+            b = new NotificationCompat.Builder(this, group);
+        } else {
+            b = new NotificationCompat.Builder(this);
+            //TODO: consider using an own unique ringtone
+            // Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        }
+
+        if (prio == PushAccount.Topic.NOTIFICATION_HIGH)
+            b.setContentTitle(getString(R.string.notificaion_alarm) + " " + account);
+        else
+            b.setContentTitle(account);
+        b.setContentText(m.topic + ": " + new String(m.msg));
+        b.setWhen(m.when);
+        if (messageInfo.messageId > 1) {
+            String more = String.format("+%d", (messageInfo.messageId - 1));
+            b.setSubText(more);
+        }
+        if (Build.VERSION.SDK_INT >= 25) {
+            b.setGroup(account);
+        }
+
+        b.setAutoCancel(false);
+        b.setContentIntent(pendingIntent);
+        b.setDeleteIntent(delPendingIntent);
+
+        if (Build.VERSION.SDK_INT < 26) {
+            //TODO: check settings (ringtone, vibration, ....) see also createChannel for higher android versions
+            b.setDefaults(Notification.DEFAULT_ALL);
+        }
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            b.setSmallIcon(R.drawable.ic_notification_devices_other_vec);
+        } else {
+            // vector drawables not work here for versions pror lolipop
+            b.setSmallIcon(R.drawable.ic_notification_devices_other_img);
+        }
+
+        Notification notification = b.build();
+
+        NotificationManagerCompat notificationManager =
+                NotificationManagerCompat.from(this);
+
+        notificationManager.notify(messageInfo.group, messageInfo.groupId, notification);
+
+    }
+
     @TargetApi(26)
-    public static void createChannel(String channelId, Context context) {
+    public static void createChannel(String account, Context context) {
         NotificationManager nm =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        NotificationChannel nc = new NotificationChannel(channelId, channelId, NotificationManager.IMPORTANCE_DEFAULT);
-        //TODO: check settings (ringtone, vibration, ....)
-        /*
-        nc.setDescription("Non alarm events");
-        nc.enableLights(false);
-        nc.enableVibration(false);
-        nc.setBypassDnd(false);
-        */
-        nm.createNotificationChannel(nc);
+        String channelID = account + ".a";
+        String groupID = "g." + account;
+
+        NotificationChannel ch = nm.getNotificationChannel(channelID);
+        if (ch == null) {
+            nm.createNotificationChannelGroup(new NotificationChannelGroup(groupID, account));
+            NotificationChannel nc = new NotificationChannel(channelID, "Alarm messages", NotificationManager.IMPORTANCE_DEFAULT);
+            nc.setGroup(groupID);
+            nm.createNotificationChannel(nc);
+        }
+
+        channelID = account;
+        ch = nm.getNotificationChannel(channelID);
+        if (ch == null) {
+            NotificationChannel nc = new NotificationChannel(channelID, "Regular messages", NotificationManager.IMPORTANCE_LOW);
+            nc.setGroup(groupID);
+            nm.createNotificationChannel(nc);
+        }
         Log.d(TAG, "notification channel created.");
     }
 
