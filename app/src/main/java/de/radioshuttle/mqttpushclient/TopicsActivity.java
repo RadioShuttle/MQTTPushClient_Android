@@ -43,6 +43,8 @@ import java.util.Map;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.TopicsRequest;
+
+import static de.radioshuttle.mqttpushclient.EditAccountActivity.MODE;
 import static de.radioshuttle.mqttpushclient.PushAccount.Topic.*;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
@@ -188,7 +190,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                 handled = true;
                 break;
             case R.id.action_add:
-                showAddDialog(mViewModel.lastEnteredTopic, null, null);
+                showEditDialog(mViewModel.lastEnteredTopic, MODE_ADD,null, null);
                 handled = true;
                 break;
             default:
@@ -197,12 +199,13 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
         return handled;
     }
 
-    protected void showAddDialog(String topic, String errorMsg, Integer notificationType) {
+    protected void showEditDialog(String topic, int mode, String errorMsg, Integer notificationType) {
         if (mViewModel.isRequestActive()) {
             Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
         } else {
-            AddTopicDlg dlg = new AddTopicDlg();
+            EditTopicDlg dlg = new EditTopicDlg();
             Bundle args = new Bundle();
+            args.putInt(ARG_EDIT_MODE, mode);
             if (topic != null) {
                 args.putString(ARG_TOPIC, topic);
             }
@@ -215,7 +218,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
 
             dlg.setArguments(args);
 
-            dlg.show(getSupportFragmentManager(), AddTopicDlg.class.getSimpleName());
+            dlg.show(getSupportFragmentManager(), EditTopicDlg.class.getSimpleName());
         }
     }
 
@@ -256,7 +259,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
 
     public void addTopic(String topic, int prio) {
         if (Utils.isEmpty(topic)) {
-            showAddDialog(mViewModel.lastEnteredTopic, getString(R.string.dlg_add_error_empty_str), prio);
+            showEditDialog(mViewModel.lastEnteredTopic,MODE_ADD, getString(R.string.dlg_add_error_empty_str), prio);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             PushAccount.Topic t = new PushAccount.Topic();
@@ -267,6 +270,10 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
         if (!Utils.isEmpty(topic)) {
             mViewModel.lastEnteredTopic = topic;
         }
+    }
+
+    public void updateTopic(String topic, int prio) {
+        //TODO:
     }
 
     protected void showErrorMsg(String msg) {
@@ -309,7 +316,30 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
 
                     handled = true;
                     break;
-                case R.id.action_edit_account:
+                case R.id.action_edit_topic:
+                    if (mViewModel.selectedTopics.size() != 1) {
+                        Toast.makeText(getApplicationContext(), R.string.select_single_topic, Toast.LENGTH_LONG).show();
+                    } else {
+                        if (mViewModel.isRequestActive()) {
+                            Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
+                        } else {
+                            if (mViewModel.selectedTopics.size() == 1 && mViewModel != null) {
+                                String t = mViewModel.selectedTopics.iterator().next();
+                                TopicsRecyclerViewAdapter a = (TopicsRecyclerViewAdapter) mListView.getAdapter();
+                                if (a != null) {
+                                    ArrayList<PushAccount.Topic> list = a.getTopics();
+                                    if (list != null) {
+                                        for(PushAccount.Topic topic : list) {
+                                            if (topic.name.equals(t)) {
+                                                showEditDialog(topic.name, MODE_EDIT, null, topic.prio);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     handled = true;
                     break;
             }
@@ -364,15 +394,16 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
         }
     }
 
-    public static class AddTopicDlg extends DialogFragment {
+    public static class EditTopicDlg extends DialogFragment {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
 
-            Bundle args = getArguments();
+            final Bundle args = getArguments();
+
+            final int mode = args.getInt(ARG_EDIT_MODE);
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.dlg_add_topics_title));
 
             LayoutInflater inflater = (LayoutInflater) builder.getContext().getSystemService(LAYOUT_INFLATER_SERVICE);
             View body = inflater.inflate(R.layout.dlg_topics_body, null);
@@ -395,49 +426,65 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                 });
             }
 
+            builder.setView(body);
             EditText e = body.findViewById(R.id.topic);
-            if (e != null) {
-                if (args != null) {
-                    String errorMsg = args.getString(ARG_TOPIC_ERROR);
-                    String topic = args.getString(ARG_TOPIC);
-                    Integer notificationType = args.getInt(ARG_TOPIC_NTYPE, -1);
-                    if (notificationType != -1) {
-                        NotificationTypeAdapter a = (NotificationTypeAdapter) s.getAdapter();
-                        for (int i = 0; i < s.getAdapter().getCount(); i++) {
-                            if (a.getItem(i).getKey() == notificationType.intValue()) {
-                                s.setSelection(i);
-                                break;
-                            }
-                        }
-                    }
-                    e.setText(topic);
-                    if (!Utils.isEmpty(errorMsg)) {
-                        e.setError(errorMsg);
+            String errorMsg = args.getString(ARG_TOPIC_ERROR);
+            String topic = args.getString(ARG_TOPIC);
+
+            Integer notificationType = args.getInt(ARG_TOPIC_NTYPE, -1);
+            if (notificationType != -1) {
+                NotificationTypeAdapter a = (NotificationTypeAdapter) s.getAdapter();
+                for (int i = 0; i < s.getAdapter().getCount(); i++) {
+                    if (a.getItem(i).getKey() == notificationType.intValue()) {
+                        s.setSelection(i);
+                        break;
                     }
                 }
             }
 
-            builder.setView(body);
+            if (mode == MODE_ADD) {
+                builder.setTitle(getString(R.string.dlg_add_topic_title));
+                e.setText(topic);
+                if (!Utils.isEmpty(errorMsg)) {
+                    e.setError(errorMsg);
+                }
 
-            builder.setPositiveButton(R.string.action_add_topic, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Activity a = getActivity();
-                    if (a instanceof TopicsActivity) {
-                        EditText v = getDialog().findViewById(R.id.topic);
-                        if (v != null) {
-                            Object o = s.getSelectedItem();
-                            int prio = NOTIFICATION_HIGH; // default
-                            if ( o != null && o instanceof Map.Entry<?, ?>) {
-                                Map.Entry<Integer, String> m = (Map.Entry<Integer, String>) s.getSelectedItem();
-                                Log.d(TAG, "selection: " + m.getKey() + " " + m.getValue()); //TODO
-                                prio = m.getKey();
+                builder.setPositiveButton(R.string.action_add_topic, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Activity a = getActivity();
+                        if (a instanceof TopicsActivity) {
+                            EditText v = getDialog().findViewById(R.id.topic);
+                            if (v != null) {
+                                int prio = getSelectedNotificationType(s);
+                                ((TopicsActivity) a).addTopic(v.getText().toString(), prio);
                             }
-                            ((TopicsActivity) a).addTopic(v.getText().toString(), prio);
                         }
                     }
+                });
+            } else { // mode == MODE_EDIT
+                builder.setTitle(getString(R.string.dlg_update_topic_title));
+                if (e != null) {
+                    e.setVisibility(View.GONE);
                 }
-            });
+                TextView label = body.findViewById(R.id.topicLabel);
+                label.setText(R.string.dlg_edit_topic_label2);
+
+                TextView e2 = body.findViewById(R.id.topic2);
+                e2.setVisibility(View.VISIBLE);
+                e2.setText(topic);
+
+                builder.setPositiveButton(R.string.action_update_topic, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Activity a = getActivity();
+                        if (a instanceof TopicsActivity) {
+                            int prio = getSelectedNotificationType(s);
+                            ((TopicsActivity) a).updateTopic(args.getString(ARG_TOPIC), prio);
+                        }
+                    }
+                });
+            }
 
             builder.setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
                 @Override
@@ -446,28 +493,22 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
             });
 
             AlertDialog dlg = builder.create();
-            /*
-            dlg.setOnShowListener(new DialogInterface.OnShowListener() {
-                @Override
-                public void onShow(DialogInterface dialog) {
-
-                    Button b = ((AlertDialog) dialog).getButton(DialogInterface.BUTTON_POSITIVE);
-                    if (b != null) {
-                        b.setText(R.string.action_add_topic);
-                        b.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.d(TAG, "on click");
-                            }
-                        });
-                    }
-                }
-            });
-            */
             dlg.setCanceledOnTouchOutside(false);
 
             return dlg;
         }
+
+        protected int getSelectedNotificationType(Spinner s) {
+            Object o = s.getSelectedItem();
+            int prio = NOTIFICATION_HIGH; // default
+            if (o != null && o instanceof Map.Entry<?, ?>) {
+                Map.Entry<Integer, String> m = (Map.Entry<Integer, String>) s.getSelectedItem();
+                Log.d(TAG, "selection: " + m.getKey() + " " + m.getValue());
+                prio = m.getKey();
+            }
+            return prio;
+        }
+
 
     }
 
@@ -481,7 +522,10 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
     private RecyclerView mListView;
 
     private final static String SEL_ROWS = "SEL_ROWS";
+    private final static String ARG_EDIT_MODE = "ARG_EDIT_MODE";
     private final static String ARG_TOPIC = "ARG_TOPIC";
+    private final static int MODE_ADD = 0;
+    private final static int MODE_EDIT = 2;
     private final static String ARG_TOPIC_ERROR = "ARG_TOPIC_ERROR";
     private final static String ARG_TOPIC_NTYPE = "ARG_NOTIFICATION_TYPE";
 
