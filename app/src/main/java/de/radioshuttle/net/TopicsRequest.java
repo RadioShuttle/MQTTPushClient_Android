@@ -23,12 +23,12 @@ public class TopicsRequest extends Request {
     }
 
     public void addTopic(PushAccount.Topic topic) {
-        ArrayList<PushAccount.Topic> topics = new ArrayList<>();
-        topics.add(topic);
+        LinkedHashMap<String, Integer> topics = new LinkedHashMap<>();
+        topics.put(topic.name, topic.prio);
         addTopics(topics);
     }
 
-    public void addTopics(List<PushAccount.Topic> topics) {
+    public void addTopics(LinkedHashMap<String, Integer> topics) {
         mCmd = Cmd.CMD_SUBSCRIBE;
         mTopics = topics;
     }
@@ -36,6 +36,17 @@ public class TopicsRequest extends Request {
     public void deleteTopics(List<String> topics) {
         mCmd = Cmd.CMD_UNSUBSCRIBE;
         mDelTopics = topics;
+    }
+
+    public void updateTopic(PushAccount.Topic topic) {
+        LinkedHashMap<String, Integer> topics = new LinkedHashMap<>();
+        topics.put(topic.name, topic.prio);
+        updateTopics(topics);
+    }
+
+    public void updateTopics(LinkedHashMap<String, Integer> topics) {
+        mCmd = Cmd.CMD_UPDATE_TOPICS;
+        mTopics = topics;
     }
 
     @Override
@@ -53,13 +64,14 @@ public class TopicsRequest extends Request {
                 requestErrorTxt = e.getMessage();
             }
             requestStatus = mConnection.lastReturnCode;
-        } else if (mCmd == Cmd.CMD_SUBSCRIBE) {
+        } else if (mCmd == Cmd.CMD_SUBSCRIBE || mCmd == Cmd.CMD_UPDATE_TOPICS) {
             try {
-                HashMap<String, Integer> tmp = new HashMap<>();
-                for(PushAccount.Topic t : mTopics) {
-                    tmp.put(t.name, t.prio);
+                int[] rc;
+                if (mCmd == Cmd.CMD_SUBSCRIBE) {
+                     rc = mConnection.addTopics(mTopics);
+                } else {
+                    rc = mConnection.updateTopics(mTopics);
                 }
-                int[] rc = mConnection.addTopics(tmp);
                 //TODO: handle rc
             } catch(MQTTException e) {
                 requestErrorCode = e.errorCode;
@@ -117,6 +129,6 @@ public class TopicsRequest extends Request {
     public String requestErrorTxt;
 
     public int mCmd;
-    public List<PushAccount.Topic> mTopics;
+    public LinkedHashMap<String, Integer> mTopics;
     protected List<String> mDelTopics;
 }
