@@ -163,6 +163,14 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         void onSelectionChange(int noOfSelectedItemsBefore, int noOfSelectedItems);
     }
 
+    public HashSet<String> getSelectedTopics() {
+        return mSelectedTopics;
+    }
+
+    public ArrayList<PushAccount.Topic> getTopics() {
+        return mTopics;
+    }
+
     private Context mContext;
     private LayoutInflater mInflater;
     private RowSelectionListener mRowSelectionListener;
