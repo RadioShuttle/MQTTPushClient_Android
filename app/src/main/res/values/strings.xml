@@ -13,6 +13,8 @@
     <string name="action_delete_topics">Delete</string>
     <string name="action_delete_msgs">Delete</string>
     <string name="action_add_topic">Add</string>
+    <string name="action_edit_topic">Edit</string>
+    <string name="action_update_topic">Update</string>
 
     <string name="dlg_remove_account_title">Remove Account</string>
     <string name="dlg_remove_account_msg">Confirm removal of current selected account.</string>
@@ -21,8 +23,10 @@
     <string name="dlg_delete_topic_msg">Unsubscribe from selected topic.</string>
     <string name="dlg_delete_topic_msg_pl">Unsubscribe from selected topics.</string>
 
-    <string name="dlg_add_topics_title">Add Topic</string>
-    <string name="dlg_add_topic_body">Subscribe to topic:</string>
+    <string name="dlg_add_topic_title">Add Topic</string>
+    <string name="dlg_update_topic_title">Update topic</string>
+    <string name="dlg_edit_topic_label">Subscribe to topic:</string>
+    <string name="dlg_edit_topic_label2">Topic:</string>
     <string name="dlg_add_topic_notif">Notifications:</string>
     <string name="dlg_add_error_empty_str">Field topic must not be empty.</string>
 
@@ -58,6 +62,8 @@
     <string name="dlg_quit_without_save_msg">Server data has been modified.</string>
     <string name="warning_back_pressed">Press back again to close this app</string>
     <string name="op_in_progress">Please wait until current action has been finished.</string>
+
+    <string name="select_single_topic">Only one topic may be selected for editing</string>
 
     <string name="errormsg_unexpected_error">An unexprected error has occured.</string>
 
