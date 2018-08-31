@@ -181,7 +181,11 @@ public class MessagingService extends FirebaseMessagingService {
                 String base64;
                 while(it.hasNext()) {
                     String t = it.next();
-                    JSONArray msgsArrayPerTopic = topic.getJSONArray(t);
+                    JSONObject dataPerTopic = topic.getJSONObject(t);
+                    int prio = dataPerTopic.getInt("prio");
+                    JSONArray msgsArrayPerTopic = dataPerTopic.getJSONArray("mdata");
+
+                    // JSONArray msgsArrayPerTopic = topic.getJSONArray(t);
                     for(int j = 0; j < msgsArrayPerTopic.length(); j++) {
                         JSONArray entryArray = msgsArrayPerTopic.getJSONArray(j);
                         d = entryArray.getLong(0) * 1000L;
@@ -212,7 +216,7 @@ public class MessagingService extends FirebaseMessagingService {
                         if (k != null && k >= 0) {
                             ids.add(k.intValue());
                         }
-                        Log.d(TAG, t + ": " + m.when + " " + new String(m.msg));
+                        Log.d(TAG, t + ": " + prio + " " + m.when + " " + new String(m.msg));
                     }
                 }
             }
