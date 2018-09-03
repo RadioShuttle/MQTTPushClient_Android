@@ -41,6 +41,7 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         holder.notificationTypeImageHigh = view.findViewById(R.id.notificationImageHigh);
         holder.notificationTypeImageMed = view.findViewById(R.id.notificationImageMed);
         holder.notificationTypeImageLow = view.findViewById(R.id.notificationImageLow);
+        holder.notificationTypeImageDis = view.findViewById(R.id.notificationImageDis);
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             // Called when the user long-clicks on someView
@@ -75,17 +76,18 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         PushAccount.Topic e = mTopics.get(position);
         vh.topic.setText(e.name);
         if (e.prio == NOTIFICATION_HIGH) {
-            setImageVisibility(vh.notificationTypeImageHigh, vh.notificationTypeImageLow, vh.notificationTypeImageMed);
+            setImageVisibility(vh.notificationTypeImageHigh, vh.notificationTypeImageLow, vh.notificationTypeImageMed, vh.notificationTypeImageDis);
         } else if (e.prio == NOTIFICATION_MEDIUM) {
-            setImageVisibility(vh.notificationTypeImageMed, vh.notificationTypeImageLow, vh.notificationTypeImageHigh);
-        } else { // r.prio == NOTIFICATION_LOW
-            setImageVisibility(vh.notificationTypeImageLow, vh.notificationTypeImageMed, vh.notificationTypeImageHigh);
+            setImageVisibility(vh.notificationTypeImageMed, vh.notificationTypeImageLow, vh.notificationTypeImageHigh, vh.notificationTypeImageDis);
+        } else if (e.prio == NOTIFICATION_LOW) {
+            setImageVisibility(vh.notificationTypeImageLow, vh.notificationTypeImageMed, vh.notificationTypeImageHigh, vh.notificationTypeImageDis);
+        } else if (e.prio == NOTIFICATION_DISABLED) {
+            setImageVisibility(vh.notificationTypeImageDis, vh.notificationTypeImageLow, vh.notificationTypeImageMed, vh.notificationTypeImageHigh);
         }
-
         vh.itemView.setSelected(mSelectedTopics.contains(e.name));
     }
 
-    protected void setImageVisibility(View visibleView, View gone1, View gone2) {
+    protected void setImageVisibility(View visibleView, View gone1, View gone2, View gone3) {
         if (visibleView.getVisibility() != View.VISIBLE) {
             visibleView.setVisibility(View.VISIBLE);
         }
@@ -94,6 +96,9 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         }
         if (gone2.getVisibility() != View.GONE) {
             gone2.setVisibility(View.GONE);
+        }
+        if (gone3.getVisibility() != View.GONE) {
+            gone3.setVisibility(View.GONE);
         }
     }
 
@@ -157,6 +162,7 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         ImageView notificationTypeImageHigh;
         ImageView notificationTypeImageMed;
         ImageView notificationTypeImageLow;
+        ImageView notificationTypeImageDis;
     }
 
     public interface RowSelectionListener {
