@@ -115,7 +115,6 @@ public class MessagingService extends FirebaseMessagingService {
         b.setShowWhen(true);
 
         if (Build.VERSION.SDK_INT < 26) {
-            //TODO: settings similar to createChannel
             b.setPriority(Notification.PRIORITY_MAX);
             b.setDefaults(Notification.DEFAULT_ALL);
         }
@@ -165,9 +164,6 @@ public class MessagingService extends FirebaseMessagingService {
             Long accountCode = null;
             if (msgsArray.length() > 0) {
                 db = AppDatabase.getInstance(getApplicationContext());
-                if (Utils.isEmpty(pushServerID)) {
-                    pushServerID = ""; //TODO: remove assignment if pushserverid will be transmitted
-                }
                 psCode = db.mqttMessageDao().getCode(pushServerID);
                 if (psCode == null) {
                     Code c = new Code();
@@ -331,8 +327,6 @@ public class MessagingService extends FirebaseMessagingService {
             b = new NotificationCompat.Builder(this, group);
         } else {
             b = new NotificationCompat.Builder(this);
-            //TODO: consider using an own unique ringtone
-            // Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         }
 
         if (prio == PushAccount.Topic.NOTIFICATION_HIGH)
@@ -354,8 +348,6 @@ public class MessagingService extends FirebaseMessagingService {
         b.setDeleteIntent(delPendingIntent);
 
         if (Build.VERSION.SDK_INT < 26) {
-            //TODO: check settings (ringtone, vibration, ....) see also createChannel for higher android versions
-            // b.setDefaults(Notification.DEFAULT_ALL);
             if (prio == PushAccount.Topic.NOTIFICATION_HIGH) {
                 b.setPriority(Notification.PRIORITY_HIGH);
                 b.setDefaults(Notification.DEFAULT_ALL);
