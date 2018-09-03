@@ -25,13 +25,16 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
         <receiver android:name="de.radioshuttle.fcm.Notifications">
             <intent-filter>
-                <action android:name="notification_cancelled"/>
+                <action android:name="notification_cancelled" />
             </intent-filter>
         </receiver>
+
         <activity android:name=".TopicsActivity" />
-        <activity android:name=".MessagesActivity"></activity>
+        <activity android:name=".MessagesActivity" />
+        <activity android:name=".ActionsActivity"></activity>
     </application>
 
 </manifest>
