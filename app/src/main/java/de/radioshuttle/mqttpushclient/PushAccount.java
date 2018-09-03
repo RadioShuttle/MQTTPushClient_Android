@@ -175,9 +175,10 @@ public class PushAccount {
         public String name;
         public int prio;
 
-        public final static int NOTIFICATION_HIGH = 2;
-        public final static int NOTIFICATION_MEDIUM = 1;
-        public final static int NOTIFICATION_LOW = 0;
+        public final static int NOTIFICATION_HIGH = 3;
+        public final static int NOTIFICATION_MEDIUM = 2;
+        public final static int NOTIFICATION_LOW = 1;
+        public final static int NOTIFICATION_DISABLED = 0;
     }
 
 }

@@ -29,6 +29,7 @@ public class NotificationTypeAdapter extends ArrayAdapter<Map.Entry<Integer, Str
         entries.put(NOTIFICATION_HIGH, context.getString(R.string.dlg_ntype_high));
         entries.put(NOTIFICATION_MEDIUM, context.getString(R.string.dlg_ntype_medium));
         entries.put(NOTIFICATION_LOW, context.getString(R.string.dlg_ntype_low));
+        entries.put(NOTIFICATION_DISABLED, context.getString(R.string.dlg_ntype_dis));
         addAll(entries.entrySet());
     }
 
@@ -45,8 +46,10 @@ public class NotificationTypeAdapter extends ArrayAdapter<Map.Entry<Integer, Str
             icon.setImageResource(R.drawable.ic_topic_prio_high);
         } else if (key == NOTIFICATION_MEDIUM) {
             icon.setImageResource(R.drawable.ic_topic_prio_medium);
-        } else { // key == NOTIFICATION_LOW
+        } else if (key == NOTIFICATION_LOW){
             icon.setImageResource(R.drawable.ic_topic_prio_low);
+        } else { // key == NOTIFICATION_DISABLED
+            icon.setImageResource(R.drawable.ic_topic_disabled);
         }
         return v;
     }
@@ -65,8 +68,10 @@ public class NotificationTypeAdapter extends ArrayAdapter<Map.Entry<Integer, Str
             icon.setImageResource(R.drawable.ic_topic_prio_high);
         } else if (key == NOTIFICATION_MEDIUM) {
             icon.setImageResource(R.drawable.ic_topic_prio_medium);
-        } else { // key == NOTIFICATION_LOW
+        } else if (key == NOTIFICATION_LOW){
             icon.setImageResource(R.drawable.ic_topic_prio_low);
+        } else { // key == NOTIFICATION_DISABLED
+            icon.setImageResource(R.drawable.ic_topic_disabled);
         }
         return v;
     }
