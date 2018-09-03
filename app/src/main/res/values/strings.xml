@@ -12,6 +12,7 @@
     <string name="action_save_account">Save</string>
     <string name="action_delete_topics">Delete</string>
     <string name="action_delete_msgs">Delete</string>
+    <string name="action_actions">Actions</string>
     <string name="action_add_topic">Add</string>
     <string name="action_edit_topic">Edit</string>
     <string name="action_update_topic">Update</string>
@@ -51,6 +52,7 @@
     <string name="title_edit_account">Edit Server</string>
     <string name="title_messages">Messages</string>
     <string name="title_topics">Topics</string>
+    <string name="title_actions">Actions</string>
 
     <string name="label_push_notification_server">Push Notification Server</string>
     <string name="label_host">Host:</string>
