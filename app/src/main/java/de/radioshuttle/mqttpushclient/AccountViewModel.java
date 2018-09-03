@@ -45,7 +45,7 @@ public class AccountViewModel extends ViewModel {
                 ArrayList<PushAccount> pushAccounts = new ArrayList<PushAccount>();
                 pushAccounts.add(PushAccount.createAccountFormJSON(
                         new JSONObject(
-                                "{\"pushserver\":\"192.168.178.80\",\"uri\":\"tcp:\\/\\/mqtt.arduino-hannover.de:1883\",\"user\":\"XXXXXXXX\",\"id\":1,\"password\":\"XXXXXXXX\",\"clientID\":\"MQTTPushClient\",\"topics\":[\"XXXXXXXX\\/HELIOS\"]}"
+                                "{\"pushserver\":\"192.168.178.80\",\"pushserverID\":\"stonehenge.helios.de:2033\",\"uri\":\"tcp:\\/\\/mqtt.arduino-hannover.de:1883\",\"user\":\"XXXXXXXX\",\"id\":1,\"password\":\"XXXXXXXX\",\"clientID\":\"MQTTPushClient\",\"topics\":[\"XXXXXXXX\\/HELIOS\"]}"
                         ))
                 );
                 accountList.setValue(pushAccounts);
