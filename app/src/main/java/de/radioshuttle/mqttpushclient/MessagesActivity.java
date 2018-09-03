@@ -37,6 +37,7 @@ import java.util.GregorianCalendar;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.fcm.Notifications;
 
+import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_ACTIONS;
 import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_SUBSCRIPTIONS;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 
@@ -139,8 +140,20 @@ public class MessagesActivity extends AppCompatActivity {
                     startActivityForResult(intent, RC_SUBSCRIPTIONS);
                 }
                 return true;
+            case R.id.menu_actions :
+                if (!mActivityStarted) {
+                    mActivityStarted = true;
+                    Bundle args = getIntent().getExtras();
+                    Intent intent = new Intent(this, ActionsActivity.class);
+                    intent.putExtra(PARAM_ACCOUNT_JSON, args.getString(PARAM_ACCOUNT_JSON));
+                    intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS));
+                    startActivityForResult(intent, RC_ACTIONS);
+                }
+                return true;
             case R.id.menu_delete :
-                showDeleteDialog();
+                if (!mActivityStarted) {
+                    showDeleteDialog();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
