@@ -60,7 +60,8 @@ public class Notifications extends BroadcastReceiver {
         return info;
     };
 
-    // returns message info of first found channel in preferences (e.g. to display non mqtt related info)
+    // returns message info of first found alarm channel (channel name ends with ".a") in preferences (e.g. to display non mqtt related info)
+    // if no alarm channel found, use first found channel
     public static MessageInfo getMessageInfo(Context context) {
         SharedPreferences settings = context.getSharedPreferences(Notifications.PREFS_NAME, Activity.MODE_PRIVATE);
         String messageInfoJson = settings.getString(Notifications.MESSAGE_INFO, null);
@@ -72,7 +73,17 @@ public class Notifications extends BroadcastReceiver {
                 if (it.hasNext()) {
                     channelName = it.next();
                     Log.d(TAG, "channel name: " + channelName);
+                    if (channelName != null && !channelName.endsWith(".a")) {
+                        while (it.hasNext()) {
+                            String tmpName = it.next();
+                            if (tmpName != null && tmpName.endsWith(".a")) {
+                                channelName = tmpName;
+                                break;
+                            }
+                        }
+                    }
                 }
+
             } catch (JSONException e) {
                 Log.d(TAG, "json error: ", e);
             }
