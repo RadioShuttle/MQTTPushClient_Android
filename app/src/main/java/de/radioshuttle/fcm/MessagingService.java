@@ -214,7 +214,7 @@ public class MessagingService extends FirebaseMessagingService {
                         } else if (prio == PushAccount.Topic.NOTIFICATION_HIGH) {
                             if (latestAlarmMsg == null) {
                                 latestAlarmMsg = m;
-                            } else if (latestMsg.when < (m.when)) {
+                            } else if (latestAlarmMsg.when < (m.when)) {
                                 latestAlarmMsg = m;
                             }
                             cntAlarm++;
@@ -371,6 +371,13 @@ public class MessagingService extends FirebaseMessagingService {
             // vector drawables not work here for versions pror lolipop
             b.setSmallIcon(R.drawable.ic_notification_devices_other_img);
         }
+
+        long lastAlert = Notifications.getLastNofificationProcessed(getApplicationContext());
+        long now = System.currentTimeMillis();
+        // Log.d(TAG, "last alert: " + lastAlert);
+
+        b.setOnlyAlertOnce(lastAlert != 0 && now - lastAlert < 10000L);
+        Notifications.setLastNofificationProcessed(getApplicationContext(), now);
 
         Notification notification = b.build();
 
