@@ -481,6 +481,7 @@ public class AccountListActivity extends AppCompatActivity {
     public final static int RC_EDIT_ACCOUNT = 2;
     public final static int RC_MESSAGES = 3;
     public final static int RC_SUBSCRIPTIONS = 4;
+    public final static int RC_ACTIONS = 5;
     public final static int RC_GOOGLE_PLAY_SERVICES = 8;
 
 
