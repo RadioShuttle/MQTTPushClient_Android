@@ -39,6 +39,16 @@
         android:layout_width="24dp"
         android:layout_height="24dp" />
 
+    <ImageView
+        android:id="@+id/notificationImageDis"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:srcCompat="@drawable/ic_topic_disabled"
+        android:visibility="gone"
+        android:layout_width="24dp"
+        android:layout_height="24dp" />
+
     <TextView
         android:id="@+id/topic"
         app:layout_constraintTop_toTopOf="parent"
