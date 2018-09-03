@@ -35,6 +35,7 @@ public class Notifications extends BroadcastReceiver {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
 
         String messageInfoJson = settings.getString(MESSAGE_INFO, null);
+
         JSONObject messageInfo;
 
         if (!Utils.isEmpty(messageInfoJson)) {
@@ -152,6 +153,21 @@ public class Notifications extends BroadcastReceiver {
         }
     }
 
+    public static void setLastNofificationProcessed(Context context, long l) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+
+        /* save message info */
+        SharedPreferences.Editor editor = settings.edit();
+        // Log.d(TAG, messageInfo.toString());
+        editor.putLong(LAST_NOTIFICATION, l);
+        editor.commit();
+    }
+
+    public static long getLastNofificationProcessed(Context context) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+        return settings.getLong(LAST_NOTIFICATION, 0L);
+    }
+
     public Notifications() {}
 
     public static class MessageInfo {
@@ -166,6 +182,7 @@ public class Notifications extends BroadcastReceiver {
 
     public final static String PREFS_NAME = "messages";
     public final static String MESSAGE_INFO = "messageinfo";
+    public final static String LAST_NOTIFICATION = "last_notification";
     private final static String MESSAGE_ID = "message_id";
     private final static String GROUP_ID = "group_id";
     private final static String TAG = Notifications.class.getSimpleName();
