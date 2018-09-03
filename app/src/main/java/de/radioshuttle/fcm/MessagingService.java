@@ -355,7 +355,14 @@ public class MessagingService extends FirebaseMessagingService {
 
         if (Build.VERSION.SDK_INT < 26) {
             //TODO: check settings (ringtone, vibration, ....) see also createChannel for higher android versions
-            b.setDefaults(Notification.DEFAULT_ALL);
+            // b.setDefaults(Notification.DEFAULT_ALL);
+            if (prio == PushAccount.Topic.NOTIFICATION_HIGH) {
+                b.setPriority(Notification.PRIORITY_HIGH);
+                b.setDefaults(Notification.DEFAULT_ALL);
+            } else { // PushAccount.Topic.NOTIFICATION_LOW
+                b.setPriority(Notification.PRIORITY_LOW);
+                b.setDefaults(0);
+            }
         }
 
         if (Build.VERSION.SDK_INT >= 21) {
@@ -385,7 +392,8 @@ public class MessagingService extends FirebaseMessagingService {
         NotificationChannel ch = nm.getNotificationChannel(channelID);
         if (ch == null) {
             nm.createNotificationChannelGroup(new NotificationChannelGroup(groupID, account));
-            NotificationChannel nc = new NotificationChannel(channelID, "Alarm messages", NotificationManager.IMPORTANCE_DEFAULT);
+            //TODO: localize user visible channel names
+            NotificationChannel nc = new NotificationChannel(channelID, context.getString(R.string.notificaion_channel_alarm), NotificationManager.IMPORTANCE_DEFAULT);
             nc.setGroup(groupID);
             nm.createNotificationChannel(nc);
         }
@@ -393,7 +401,7 @@ public class MessagingService extends FirebaseMessagingService {
         channelID = account;
         ch = nm.getNotificationChannel(channelID);
         if (ch == null) {
-            NotificationChannel nc = new NotificationChannel(channelID, "Regular messages", NotificationManager.IMPORTANCE_LOW);
+            NotificationChannel nc = new NotificationChannel(channelID, context.getString(R.string.notificaion_channel_reg), NotificationManager.IMPORTANCE_LOW);
             nc.setGroup(groupID);
             nm.createNotificationChannel(nc);
         }
