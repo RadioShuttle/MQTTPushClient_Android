@@ -105,7 +105,7 @@ public class MessagingService extends FirebaseMessagingService {
             b.setSmallIcon(R.drawable.ic_notification_devices_other_img);
         }
 
-        b.setOnlyAlertOnce(true);
+        setAlertOnlyOnce(b, getApplicationContext());
 
         if (Build.VERSION.SDK_INT >= 25)
             b.setGroup(FCM_ON_DELETE);
@@ -364,12 +364,7 @@ public class MessagingService extends FirebaseMessagingService {
             b.setSmallIcon(R.drawable.ic_notification_devices_other_img);
         }
 
-        long lastAlert = Notifications.getLastNofificationProcessed(getApplicationContext());
-        long now = System.currentTimeMillis();
-        // Log.d(TAG, "last alert: " + lastAlert);
-
-        b.setOnlyAlertOnce(lastAlert != 0 && now - lastAlert < 10000L);
-        Notifications.setLastNofificationProcessed(getApplicationContext(), now);
+        setAlertOnlyOnce(b, getApplicationContext());
 
         Notification notification = b.build();
 
@@ -378,6 +373,15 @@ public class MessagingService extends FirebaseMessagingService {
 
         notificationManager.notify(messageInfo.group, messageInfo.groupId, notification);
 
+    }
+
+    protected static void setAlertOnlyOnce(NotificationCompat.Builder b, Context context) {
+        long lastAlert = Notifications.getLastNofificationProcessed(context);
+        long now = System.currentTimeMillis();
+        // Log.d(TAG, "last alert: " + lastAlert);
+
+        b.setOnlyAlertOnce(lastAlert != 0 && now - lastAlert < 10000L);
+        Notifications.setLastNofificationProcessed(context, now);
     }
 
     @TargetApi(26)
