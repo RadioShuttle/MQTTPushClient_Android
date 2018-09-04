@@ -44,7 +44,6 @@ import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.TopicsRequest;
 
-import static de.radioshuttle.mqttpushclient.EditAccountActivity.MODE;
 import static de.radioshuttle.mqttpushclient.PushAccount.Topic.*;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
@@ -460,7 +459,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                     e.setError(errorMsg);
                 }
 
-                builder.setPositiveButton(R.string.action_add_topic, new DialogInterface.OnClickListener() {
+                builder.setPositiveButton(R.string.action_add, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Activity a = getActivity();
