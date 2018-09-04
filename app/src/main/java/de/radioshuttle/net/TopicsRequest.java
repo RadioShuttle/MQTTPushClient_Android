@@ -1,3 +1,9 @@
+/*
+ *	$Id$
+ *	This is an unpublished work copyright (c) 2018 HELIOS Software GmbH
+ *	30827 Garbsen, Germany.
+ */
+
 package de.radioshuttle.net;
 
 import android.arch.lifecycle.MutableLiveData;
@@ -6,7 +12,6 @@ import android.content.Context;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -14,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
-import de.radioshuttle.mqttpushclient.Utils;
 
 public class TopicsRequest extends Request {
 
@@ -122,6 +126,12 @@ public class TopicsRequest extends Request {
         }
 
         return true;
+    }
+
+    @Override
+    protected void onPostExecute(PushAccount pushAccount) {
+        super.onPostExecute(pushAccount);
+        //TODO: assign new topics
     }
 
     public int requestStatus;
