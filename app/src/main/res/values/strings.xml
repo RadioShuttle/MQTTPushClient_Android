@@ -13,7 +13,8 @@
     <string name="action_delete_topics">Delete</string>
     <string name="action_delete_msgs">Delete</string>
     <string name="action_actions">Actions</string>
-    <string name="action_add_topic">Add</string>
+    <string name="action_add">Add</string>
+    <string name="action_update">Update</string>
     <string name="action_edit_topic">Edit</string>
     <string name="action_update_topic">Update</string>
 
@@ -30,6 +31,18 @@
     <string name="dlg_edit_topic_label2">Topic:</string>
     <string name="dlg_add_topic_notif">Notifications:</string>
     <string name="dlg_add_error_empty_str">Field topic must not be empty.</string>
+
+    <string name="dlg_actions_title_add">Add Action</string>
+    <string name="dlg_actions_title_update">Update Action</string>
+    <string name="dlg_actions_name_label">Name:</string>
+    <string name="dlg_actions_topic_label">Topic:</string>
+    <string name="dlg_actions_content_label">Content:</string>
+    <string name="dlg_actions_error_empty_str">Field must not be empty.</string>
+
+    <string name="dlg_delete_actions_title">Delete Action</string>
+    <string name="dlg_delete_actions_msg">Delete selected action.</string>
+    <string name="dlg_delete_actions_msg_pl">Delete selected actions.</string>
+
 
     <string name="dlg_ntype_dis">Disabled</string>
     <string name="dlg_ntype_low">None</string>
