@@ -34,7 +34,7 @@ public class PushAccount {
     public int requestErrorCode;
     public String requestErrorTxt;
 
-    public ArrayList<Topic> topics;
+    public volatile ArrayList<Topic> topics;
 
     public JSONObject getJSONObject() throws JSONException {
         JSONObject account = new JSONObject();
