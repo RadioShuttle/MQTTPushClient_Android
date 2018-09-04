@@ -8,19 +8,23 @@ package de.radioshuttle.mqttpushclient;
 
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
+import android.content.Context;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashSet;
+import java.util.List;
 
+import de.radioshuttle.net.ActionsRequest;
 import de.radioshuttle.net.Request;
+import de.radioshuttle.net.TopicsRequest;
 
 public class ActionsViewModel extends ViewModel {
 
     public ActionsViewModel() {
         initialized = false;
-        topicsRequest = new MutableLiveData<>();
+        actionsRequest = new MutableLiveData<>();
         requestCnt = 0;
         selectedActions = new HashSet<>();
     }
@@ -33,7 +37,57 @@ public class ActionsViewModel extends ViewModel {
         }
     }
 
-    public MutableLiveData<Request> topicsRequest;
+    public void getActions(Context context) {
+        requestCnt++;
+        currentRequest = new ActionsRequest(context, pushAccount, actionsRequest);
+        currentRequest.execute();
+    }
+
+    public void deleteActions(Context context, List<String> actionNames) {
+        requestCnt++;
+        ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
+        request.deleteActions(actionNames);
+        currentRequest = request;
+        currentRequest.execute();
+    }
+
+    public void addAction(Context context, ActionsViewModel.Action a) {
+        requestCnt++;
+        ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
+        request.addAction(a);
+        currentRequest = request;
+        currentRequest.execute();
+    }
+
+    public void updateAction(Context context, ActionsViewModel.Action a, String oldName) {
+        requestCnt++;
+        ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
+        request.updateAction(a, oldName);
+        currentRequest = request;
+        currentRequest.execute();
+    }
+
+    public boolean isRequestActive() {
+        return requestCnt > 0;
+    }
+
+    public void confirmResultDelivered() {
+        requestCnt = 0;
+    }
+
+    public boolean isCurrentRequest(Request request) {
+        return currentRequest == request;
+    }
+
+    public static class Action {
+        public String name;
+        public String topic;
+        public String content;
+        public String prevName;
+    }
+
+
+    public MutableLiveData<Request> actionsRequest;
     public HashSet<String> selectedActions;
     public PushAccount pushAccount;
     public boolean initialized;
