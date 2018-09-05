@@ -40,7 +40,7 @@ public class AccountViewModel extends ViewModel {
         if (!initialized) {
             setAccountsJSON(accountsJson, true);
             initialized = true;
-            //TODO: test date remove
+            /*
             if (accountList.getValue() == null || accountList.getValue().isEmpty()) {
                 ArrayList<PushAccount> pushAccounts = new ArrayList<PushAccount>();
                 pushAccounts.add(PushAccount.createAccountFormJSON(
@@ -50,6 +50,7 @@ public class AccountViewModel extends ViewModel {
                 );
                 accountList.setValue(pushAccounts);
             }
+            */
         }
     }
 
