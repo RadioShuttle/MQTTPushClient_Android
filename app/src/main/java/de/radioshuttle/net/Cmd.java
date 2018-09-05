@@ -33,8 +33,13 @@ public class Cmd {
     public final static int CMD_UPDATE_TOPICS = 7;
     public final static int CMD_SET_DEVICE_INFO = 8;
     public final static int CMD_REMOVE_TOKEN = 9;
-    public final static int CMD_LOGOUT = 10;
-    public final static int CMD_BYE = 11;
+    public final static int CMD_GET_ACTIONS = 10;
+    public final static int CMD_ADD_ACTION = 11;
+    public final static int CMD_UPDATE_ACTION = 12;
+    public final static int CMD_REMOVE_ACTIONS = 13;
+
+    public final static int CMD_LOGOUT = 14;
+    public final static int CMD_BYE = 15;
 
     public RawCmd helloRequest(int seqNo) throws IOException {
         writeCommand(CMD_HELLO, seqNo, FLAG_REQUEST, 0, new byte[] {PROTOCOL_MAJOR, PROTOCOL_MINOR});
@@ -141,6 +146,121 @@ public class Cmd {
         return m;
     }
 
+    public void getActionsReponse(RawCmd request, LinkedHashMap<String, Action> actions) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        if (actions == null || actions.size() == 0) {
+            os.writeShort(0);
+        } else {
+            os.writeShort(actions.size());
+            for(Iterator<Entry<String, Action>> it = actions.entrySet().iterator(); it.hasNext();) {
+                Entry<String, Action> e = it.next();
+                writeString(e.getKey(), os);
+                writeString(e.getValue().topic, os);
+                writeString(e.getValue().content, os);
+                os.writeBoolean(e.getValue().retain);
+            }
+        }
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public LinkedHashMap<String, Action> readActions(byte[] data)  throws IOException {
+        LinkedHashMap<String, Action> actions = new LinkedHashMap<>();
+        ByteArrayInputStream ba = new ByteArrayInputStream(data);
+        DataInputStream is = new DataInputStream(ba);
+        int size = is.readUnsignedShort();
+        String key;
+        Action a;
+        for(int i = 0; i < size; i++) {
+            a = new Action();
+            key = readString(is);
+            a.topic = readString(is);
+            a.content = readString(is);
+            a.retain = is.readBoolean();
+            actions.put(key, a);
+        }
+        return actions;
+    }
+
+    public Map<String, String> readActionData(int cmd, byte[] data) throws IOException {
+        HashMap<String, String> map = new HashMap<>();
+        ByteArrayInputStream ba = new ByteArrayInputStream(data);
+        DataInputStream is = new DataInputStream(ba);
+        if (cmd == CMD_UPDATE_ACTION) {
+            map.put("prev_actionname", readString(is));
+        }
+        map.put("actionname", readString(is));
+        map.put("topic", readString(is));
+        map.put("content", readString(is));
+        map.put("retain", is.readBoolean() ? "true" : "false");
+        return map;
+    }
+
+    public RawCmd addActionRequest(int seqNo, String actioName, Action a) throws IOException  {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(actioName, os);
+        writeString(a.topic, os);
+        writeString(a.content, os);
+        os.writeBoolean(a.retain);
+        writeCommand(CMD_ADD_ACTION, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public RawCmd updateActionRequest(int seqNo, String oldActionName, String actioName, Action a) throws IOException  {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(oldActionName, os);
+        writeString(actioName, os);
+        writeString(a.topic, os);
+        writeString(a.content, os);
+        os.writeBoolean(a.retain);
+        writeCommand(CMD_UPDATE_ACTION, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public RawCmd removeActionsRequest(int seqNo, List<String> actions) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        if (actions == null || actions.size() == 0) {
+            os.writeShort(0);
+        } else {
+            os.writeShort(actions.size());
+            for(int i = 0; i < actions.size(); i++) {
+                writeString(actions.get(i), os);
+            }
+        }
+        writeCommand(CMD_REMOVE_ACTIONS, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+
+    public LinkedHashMap<String, Integer> readTopics(byte[] data)  throws IOException {
+        LinkedHashMap<String, Integer> subs = new LinkedHashMap<>();
+        ByteArrayInputStream ba = new ByteArrayInputStream(data);
+        DataInputStream is = new DataInputStream(ba);
+        int size = is.readUnsignedShort();
+        for(int i = 0; i < size; i++) {
+            subs.put(readString(is), is.read());
+        }
+        return subs;
+    }
+
+    public List<String> readStringList(byte[] data)  throws IOException {
+        ArrayList<String> subs = new ArrayList<>();
+        ByteArrayInputStream ba = new ByteArrayInputStream(data);
+        DataInputStream is = new DataInputStream(ba);
+        int size = is.readUnsignedShort();
+        for(int i = 0; i < size; i++) {
+            subs.add(readString(is));
+        }
+        return subs;
+    }
+
+    public RawCmd subscribeRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
+        return writeTopics(CMD_SUBSCRIBE, seqNo, topics);
+    }
+
     public void getSubscriptionsResponse(RawCmd request, Map<String, Integer> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
@@ -155,32 +275,6 @@ public class Cmd {
             }
         }
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
-    }
-
-    public LinkedHashMap<String, Integer> readTopics(byte[] data)  throws IOException {
-        LinkedHashMap<String, Integer> subs = new LinkedHashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
-        int size = is.readUnsignedShort();
-        for(int i = 0; i < size; i++) {
-            subs.put(readString(is), is.read());
-        }
-        return subs;
-    }
-
-    public List<String> readTopicsUnsub(byte[] data)  throws IOException {
-        ArrayList<String> subs = new ArrayList<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
-        int size = is.readUnsignedShort();
-        for(int i = 0; i < size; i++) {
-            subs.add(readString(is));
-        }
-        return subs;
-    }
-
-    public RawCmd subscribeRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
-        return writeTopics(CMD_SUBSCRIBE, seqNo, topics);
     }
 
     public RawCmd updateTopicsRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
@@ -219,21 +313,7 @@ public class Cmd {
         return readCommand();
     }
 
-    public RawCmd removeFCMTokenRequest(int seqNo, String token) throws IOException {
-        writeCommandStrPara(CMD_REMOVE_TOKEN, seqNo, token);
-        return readCommand();
-    }
-
-    public RawCmd request(int cmd, int seq) throws IOException {
-        writeCommand(cmd, seq, FLAG_REQUEST, 0, new byte[0]);
-        return readCommand();
-    }
-
-    public void response(RawCmd request, int rc) throws IOException {
-        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, rc, new byte[0]);
-    }
-
-    public void subscriptionUpdateResponse(RawCmd request, int[] results) throws IOException {
+    public void intArrayResponse(RawCmd request, int[] results) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (results == null || results.length == 0) {
@@ -247,7 +327,7 @@ public class Cmd {
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
-    public int[] readSubscriptionUpdateResult(byte[] data)  throws IOException {
+    public int[] readIntArray(byte[] data)  throws IOException {
         int rc[];
         ByteArrayInputStream ba = new ByteArrayInputStream(data);
         DataInputStream is = new DataInputStream(ba);
@@ -256,6 +336,20 @@ public class Cmd {
             rc[i] = is.readShort();
         }
         return rc;
+    }
+
+    public RawCmd removeFCMTokenRequest(int seqNo, String token) throws IOException {
+        writeCommandStrPara(CMD_REMOVE_TOKEN, seqNo, token);
+        return readCommand();
+    }
+
+    public RawCmd request(int cmd, int seq) throws IOException {
+        writeCommand(cmd, seq, FLAG_REQUEST, 0, new byte[0]);
+        return readCommand();
+    }
+
+    public void response(RawCmd request, int rc) throws IOException {
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, rc, new byte[0]);
     }
 
     protected void writeCommandStrPara(int cmd, int seqNo, String arg) throws IOException {
@@ -381,6 +475,16 @@ public class Cmd {
         public int flags;
         public int rc;
         public byte[] data;
+    }
+
+    public static class Action {
+        public String topic;
+        public String content;
+        public boolean retain;
+
+        public final static int OK = 0;
+        public final static int ERR_NOT_FOUND_EX = 1; // add: key already exists, update: entry not found
+        public final static int ERR_INVALID_FORMAT = 2;
     }
 
     /* return codes */
