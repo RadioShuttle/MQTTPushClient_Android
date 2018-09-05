@@ -7,14 +7,13 @@
 package de.radioshuttle.mqttpushclient;
 
 import android.app.AlertDialog;
-import android.app.DialogFragment;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.paging.PagedList;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentManager;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -30,12 +29,13 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.fcm.Notifications;
+import de.radioshuttle.net.ActionsRequest;
+import de.radioshuttle.net.Cmd;
+import de.radioshuttle.net.Request;
 
 import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_ACTIONS;
 import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_SUBSCRIPTIONS;
@@ -67,6 +67,11 @@ public class MessagesActivity extends AppCompatActivity {
                     .get(MessagesViewModel.class);
             if (mViewModel.pushAccount == null)
                 mViewModel.pushAccount = b;
+
+            mActionsViewModel = ViewModelProviders.of(this).get(ActionsViewModel.class);
+            boolean actionsLoaded = mActionsViewModel.initialized;
+            mActionsViewModel.init(json);
+
 
             final MessagesPagedListAdapter adapter = new MessagesPagedListAdapter(this);
             mListView.setAdapter(adapter);
@@ -104,6 +109,51 @@ public class MessagesActivity extends AppCompatActivity {
                 }
             });
 
+            mActionsViewModel.actionsRequest.observe(this, new Observer<Request>() {
+                @Override
+                public void onChanged(@Nullable Request request) {
+                    if (request != null && request instanceof ActionsRequest) {
+                        ActionsRequest actionsRequest = (ActionsRequest) request;
+                        PushAccount b = actionsRequest.getAccount();
+                        if (b.status == 1) {
+                            // special case: configuration change and load in progress -> update view
+                        } else {
+                            if (mActionsViewModel.isCurrentRequest(request)) {
+                                mActionsViewModel.confirmResultDelivered();
+                                // mSwipeRefreshLayout.setRefreshing(false);
+                                invalidateOptionsMenu();
+                            }
+                            if (b.requestStatus != Cmd.RC_OK) {
+                                String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                                if (b.requestStatus == Cmd.RC_MQTT_ERROR || b.requestStatus == Cmd.RC_NOT_AUTHORIZED) {
+                                    t = MessagesActivity.this.getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                                }
+                                // showErrorMsg(t); //TODO: show error?
+                            } else {
+                                if (actionsRequest.requestStatus != Cmd.RC_OK) { // getActions() or publish failed
+                                    String t = (actionsRequest.requestErrorTxt == null ? "" : actionsRequest.requestErrorTxt);
+                                    if (actionsRequest.requestStatus == Cmd.RC_MQTT_ERROR) {
+                                        t = MessagesActivity.this.getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                                    }
+                                    // showErrorMsg(t); //TODO: show error
+                                } else {
+                                    if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
+                                        mSnackbar.dismiss();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            //TODO: consider adding refresh (swiperefres) to refresh list of action commands (menu items)
+
+            if (!actionsLoaded) {
+                refreshActions();
+            }
+
+
         } catch (JSONException e) {
             Log.e(TAG, "parse error", e);
         }
@@ -113,6 +163,7 @@ public class MessagesActivity extends AppCompatActivity {
         mListView.addItemDecoration(itemDecoration);
         // mListView.setItemAnimator(null);
         mListView.setLayoutManager(new LinearLayoutManager(this));
+
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
@@ -125,7 +176,44 @@ public class MessagesActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        ActionsRequest r = (ActionsRequest) mActionsViewModel.actionsRequest.getValue();
+        if (r != null)
+        {
+            if (r.mActions != null) {
+                menu.removeGroup(ACTION_ITEM_GROUP_ID);
+                MenuItem item;
+
+                int i = 0;
+                for(ActionsViewModel.Action a : r.mActions) {
+                    item = menu.add(ACTION_ITEM_GROUP_ID, i++,  200+ i, a.name );
+                    item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+                }
+            }
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    protected void showErrorMsg(String msg) {
+        View v = findViewById(R.id.rView);
+        if (v != null) {
+            mSnackbar = Snackbar.make(v, msg, Snackbar.LENGTH_INDEFINITE);
+            mSnackbar.show();
+        }
+    }
+
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        if (item.getGroupId() == ACTION_ITEM_GROUP_ID) {
+            if (!mActivityStarted) {
+                String actionCmd = item.getTitle().toString();
+                Log.d(TAG, "action item clicked: " +  actionCmd);
+            }
+            return true;
+        }
+
         switch (item.getItemId()) {
             case android.R.id.home :
                 handleBackPressed();
@@ -163,6 +251,13 @@ public class MessagesActivity extends AppCompatActivity {
     protected void doRefresh() {
         if (mViewModel != null) {
             mViewModel.refresh();
+        }
+    }
+
+    protected void refreshActions() {
+        if (!mActionsViewModel.isRequestActive()) {
+            // mSwipeRefreshLayout.setRefreshing(true); //TODO: swipe refresh
+            mActionsViewModel.getActions(this);
         }
     }
 
@@ -231,15 +326,22 @@ public class MessagesActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_ACTIONS) {
+            refreshActions();
+        }
         mActivityStarted = false;
     }
 
     public final static String PARAM_MULTIPLE_PUSHSERVERS = "PARAM_MULTIPLE_PUSHSERVERS";
 
+    private Snackbar mSnackbar;
     private RecyclerView mListView;
     private RecyclerView.AdapterDataObserver mAdapterObserver;
     private MessagesViewModel mViewModel;
+    private ActionsViewModel mActionsViewModel;
     private boolean mActivityStarted;
+
+    private final static int ACTION_ITEM_GROUP_ID = Menu.FIRST + 1;
 
     private final static String TAG = MessagesActivity.class.getSimpleName();
 }
