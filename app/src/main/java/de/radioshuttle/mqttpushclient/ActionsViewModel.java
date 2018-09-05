@@ -59,10 +59,10 @@ public class ActionsViewModel extends ViewModel {
         currentRequest.execute();
     }
 
-    public void updateAction(Context context, ActionsViewModel.Action a, String oldName) {
+    public void updateAction(Context context, ActionsViewModel.Action a) {
         requestCnt++;
         ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
-        request.updateAction(a, oldName);
+        request.updateAction(a);
         currentRequest = request;
         currentRequest.execute();
     }
@@ -84,6 +84,7 @@ public class ActionsViewModel extends ViewModel {
         public String topic;
         public String content;
         public String prevName;
+        public boolean retain;
     }
 
 

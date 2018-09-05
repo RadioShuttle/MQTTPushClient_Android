@@ -215,7 +215,7 @@ public class ActionsActivity extends AppCompatActivity {
             showEditDialog(MODE_EDIT, a, getString(R.string.dlg_actions_error_empty_str), 2);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
-            mViewModel.updateAction(this, a, a.prevName);
+            mViewModel.updateAction(this, a);
         }
     }
 
