@@ -84,6 +84,7 @@ public class TopicsRequest extends Request {
                 requestErrorCode = e.errorCode;
                 requestErrorTxt = e.getMessage();
             }
+            requestStatus = mConnection.lastReturnCode;
         }
 
         LinkedHashMap<String, Integer> result = mConnection.getTopics();
