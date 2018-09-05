@@ -8,7 +8,6 @@ package de.radioshuttle.net;
 
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,30 +109,54 @@ public class Connection {
     public int[] addTopics(LinkedHashMap<String, Integer> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.subscribeRequest(++mSeqNo, topics);
         handleError(response);
-        return mCmd.readSubscriptionUpdateResult(response.data);
+        return mCmd.readIntArray(response.data);
     }
 
     public int[] updateTopics(LinkedHashMap<String, Integer> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.updateTopicsRequest(++mSeqNo, topics);
         handleError(response);
-        return mCmd.readSubscriptionUpdateResult(response.data);
+        return mCmd.readIntArray(response.data);
     }
 
     public int[] deleteTopics(List<String> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.unsubscribeRequest(++mSeqNo, topics);
         handleError(response);
-        return mCmd.readSubscriptionUpdateResult(response.data);
+        return mCmd.readIntArray(response.data);
+    }
+
+    public int[] addAction(String actionName, Cmd.Action a) throws IOException, ServerError  {
+        Cmd.RawCmd response = mCmd.addActionRequest(++mSeqNo, actionName, a);
+        handleError(response);
+        return mCmd.readIntArray(response.data);
+    }
+
+    public int[] updateAction(String prevName, String actionName, Cmd.Action a) throws IOException, ServerError  {
+        Cmd.RawCmd response = mCmd.updateActionRequest(++mSeqNo, prevName, actionName, a);
+        handleError(response);
+        return mCmd.readIntArray(response.data);
+    }
+
+    public int[] deleteActions(List<String> actionNames) throws IOException, ServerError  {
+        Cmd.RawCmd response = mCmd.removeActionsRequest(++mSeqNo, actionNames);
+        handleError(response);
+        return mCmd.readIntArray(response.data);
+    }
+
+    public LinkedHashMap<String, Cmd.Action> getActions() throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_ACTIONS, ++mSeqNo);
+        handleError(response);
+        LinkedHashMap<String, Cmd.Action> actions;
+        if (lastReturnCode == Cmd.RC_OK) {
+            actions = mCmd.readActions(response.data);
+        } else {
+            actions = null;
+        }
+        return actions;
     }
 
     public void bye() throws IOException {
         mCmd.writeCommand(Cmd.CMD_BYE, ++mSeqNo, Cmd.FLAG_REQUEST, 0, new byte[0]);
     }
-
-    /*
-    public void getSubstricptions() throws IOException {
-        mCmd.request(Cmd.CMD_SUBSCRPTIONS);
-    }
-    */
 
     public void disconnect() {
         if (mCmd != null) {
