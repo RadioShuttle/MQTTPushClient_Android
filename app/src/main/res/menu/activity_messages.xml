@@ -20,6 +20,6 @@
         android:orderInCategory="120"
         android:icon="@drawable/ic_menu_actions"
         android:title="@string/action_actions"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
 </menu>
