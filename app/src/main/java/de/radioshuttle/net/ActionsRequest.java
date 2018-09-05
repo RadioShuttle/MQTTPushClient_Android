@@ -24,6 +24,7 @@ public class ActionsRequest extends Request {
     public ActionsRequest(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
         super(context, pushAccount, accountLiveData);
         mActions = new ArrayList<>();
+        tmpRes = new ArrayList<>();
     }
 
     public void addAction(ActionsViewModel.Action a) {
@@ -77,11 +78,13 @@ public class ActionsRequest extends Request {
                 requestErrorCode = e.errorCode;
                 requestErrorTxt = e.getMessage();
             }
+            requestStatus = mConnection.lastReturnCode;
         }
 
+        //TODO: check getActions() error codes, also check same problem in TopicsRequest
         LinkedHashMap<String, Cmd.Action> result = mConnection.getActions();
-        ArrayList<ActionsViewModel.Action> tmpRes = new ArrayList<>();
         if (mConnection.lastReturnCode == Cmd.RC_OK) {
+            tmpRes.clear();
             for(Iterator<Map.Entry<String, Cmd.Action>> it = result.entrySet().iterator(); it.hasNext();) {
                 Map.Entry<String, Cmd.Action> e = it.next();
                 ActionsViewModel.Action a = new ActionsViewModel.Action();
@@ -108,6 +111,12 @@ public class ActionsRequest extends Request {
         return true;
     }
 
+    @Override
+    protected void onPostExecute(PushAccount pushAccount) {
+        super.onPostExecute(pushAccount);
+        mActions = tmpRes; //TODO: use onPostExecute() also in TopicsRequest
+    }
+
     public int requestStatus;
     public int requestErrorCode;
     public String requestErrorTxt;
@@ -116,6 +125,9 @@ public class ActionsRequest extends Request {
     public List<String> mActionListArg;
     public ActionsViewModel.Action mActionArg;
 
+    private ArrayList<ActionsViewModel.Action> tmpRes;
+
+    /** contains the reuslt if request was successful  */
     public ArrayList<ActionsViewModel.Action> mActions;
 
 }
