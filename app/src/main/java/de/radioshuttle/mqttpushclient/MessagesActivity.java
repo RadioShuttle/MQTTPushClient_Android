@@ -14,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -25,11 +26,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.Iterator;
 
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.fcm.Notifications;
@@ -120,7 +123,7 @@ public class MessagesActivity extends AppCompatActivity {
                         } else {
                             if (mActionsViewModel.isCurrentRequest(request)) {
                                 mActionsViewModel.confirmResultDelivered();
-                                // mSwipeRefreshLayout.setRefreshing(false);
+                                mSwipeRefreshLayout.setRefreshing(false);
                                 invalidateOptionsMenu();
                             }
                             if (b.requestStatus != Cmd.RC_OK) {
@@ -128,14 +131,14 @@ public class MessagesActivity extends AppCompatActivity {
                                 if (b.requestStatus == Cmd.RC_MQTT_ERROR || b.requestStatus == Cmd.RC_NOT_AUTHORIZED) {
                                     t = MessagesActivity.this.getString(R.string.errormsg_mqtt_prefix) + " " + t;
                                 }
-                                // showErrorMsg(t); //TODO: show error?
+                                showErrorMsg(t);
                             } else {
                                 if (actionsRequest.requestStatus != Cmd.RC_OK) { // getActions() or publish failed
                                     String t = (actionsRequest.requestErrorTxt == null ? "" : actionsRequest.requestErrorTxt);
                                     if (actionsRequest.requestStatus == Cmd.RC_MQTT_ERROR) {
                                         t = MessagesActivity.this.getString(R.string.errormsg_mqtt_prefix) + " " + t;
                                     }
-                                    // showErrorMsg(t); //TODO: show error
+                                    showErrorMsg(t);
                                 } else {
                                     if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
                                         mSnackbar.dismiss();
@@ -147,10 +150,19 @@ public class MessagesActivity extends AppCompatActivity {
                 }
             });
 
-            //TODO: consider adding refresh (swiperefres) to refresh list of action commands (menu items)
+            mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+            mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    refreshActions(false);
+                }
+            });
 
             if (!actionsLoaded) {
-                refreshActions();
+                refreshActions(true);
+            } else {
+                mSwipeRefreshLayout.setRefreshing(mActionsViewModel.isRequestActive());
+
             }
 
 
@@ -163,6 +175,7 @@ public class MessagesActivity extends AppCompatActivity {
         mListView.addItemDecoration(itemDecoration);
         // mListView.setItemAnimator(null);
         mListView.setLayoutManager(new LinearLayoutManager(this));
+
 
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -210,6 +223,17 @@ public class MessagesActivity extends AppCompatActivity {
             if (!mActivityStarted) {
                 String actionCmd = item.getTitle().toString();
                 Log.d(TAG, "action item clicked: " +  actionCmd);
+                ActionsRequest r = (ActionsRequest) mActionsViewModel.actionsRequest.getValue();
+                if (r != null) {
+                    for(Iterator<ActionsViewModel.Action> it = r.mActions.iterator(); it.hasNext();) {
+                        ActionsViewModel.Action a = it.next();
+                        if (a.name.equals(actionCmd)) {
+                            mActionsViewModel.publish(getApplicationContext(), a);
+                            Toast.makeText(this, getString(R.string.action_cmd_exe, actionCmd), Toast.LENGTH_LONG).show();
+                            break;
+                        }
+                    }
+                }
             }
             return true;
         }
@@ -254,9 +278,10 @@ public class MessagesActivity extends AppCompatActivity {
         }
     }
 
-    protected void refreshActions() {
+    protected void refreshActions(boolean setRefreshing) {
         if (!mActionsViewModel.isRequestActive()) {
-            // mSwipeRefreshLayout.setRefreshing(true); //TODO: swipe refresh
+            if (setRefreshing)
+                mSwipeRefreshLayout.setRefreshing(true);
             mActionsViewModel.getActions(this);
         }
     }
@@ -327,7 +352,7 @@ public class MessagesActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RC_ACTIONS) {
-            refreshActions();
+            refreshActions(true);
         }
         mActivityStarted = false;
     }
@@ -336,6 +361,7 @@ public class MessagesActivity extends AppCompatActivity {
 
     private Snackbar mSnackbar;
     private RecyclerView mListView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView.AdapterDataObserver mAdapterObserver;
     private MessagesViewModel mViewModel;
     private ActionsViewModel mActionsViewModel;
