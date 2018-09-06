@@ -63,5 +63,17 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             app:layout_constraintLeft_toLeftOf="@id/actionContentLabel"
             app:layout_constraintTop_toBottomOf="@id/actionContentLabel" />
+
+        <CheckBox
+            android:id="@+id/retain"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dlg_actions_retain_label"
+            android:checked="false"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            app:layout_constraintLeft_toLeftOf="@id/actionContentText"
+            app:layout_constraintTop_toBottomOf="@id/actionContentText" />
+
     </android.support.constraint.ConstraintLayout>
 </ScrollView>
