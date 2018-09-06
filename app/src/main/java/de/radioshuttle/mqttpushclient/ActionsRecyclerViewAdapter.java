@@ -35,6 +35,7 @@ public class ActionsRecyclerViewAdapter extends RecyclerView.Adapter {
         final ViewHolder holder = new ViewHolder(view);
 
         holder.name = view.findViewById(R.id.actionName);
+        holder.topic = view.findViewById(R.id.actionTopic);
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             // Called when the user long-clicks on someView
@@ -68,6 +69,7 @@ public class ActionsRecyclerViewAdapter extends RecyclerView.Adapter {
         ViewHolder vh = (ViewHolder) holder;
         ActionsViewModel.Action e = mActions.get(position);
         vh.name.setText(e.name);
+        vh.topic.setText(e.topic);
         vh.itemView.setSelected(mSelectedActions.contains(e.name));
     }
 
@@ -131,6 +133,7 @@ public class ActionsRecyclerViewAdapter extends RecyclerView.Adapter {
         }
 
         TextView name;
+        TextView topic;
     }
 
     public ArrayList<ActionsViewModel.Action> getActions() {
