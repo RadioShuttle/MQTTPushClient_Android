@@ -132,6 +132,12 @@ public class EditAccountActivity extends AppCompatActivity {
             }
         } else { // MODE == MODE_ADD
             setTitle(R.string.title_add_account);
+            if (savedInstanceState == null) {
+                mPushNotificationServer.setText("pushsrv.radioshuttle.de");
+                mMQTTHost.setText("mqtt.arduino-hannover.de");
+                mMQTTPort.setText("1883");
+                mUser.requestFocus();
+            }
         }
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
