@@ -38,6 +38,7 @@
     <string name="dlg_actions_topic_label">Topic:</string>
     <string name="dlg_actions_content_label">Content:</string>
     <string name="dlg_actions_error_empty_str">Field must not be empty.</string>
+    <string name="dlg_actions_retain_label">Retain</string>
 
     <string name="dlg_delete_actions_title">Delete Action</string>
     <string name="dlg_delete_actions_msg">Delete selected action.</string>
@@ -55,12 +56,13 @@
     <string name="notification_deleted">Pending messages deleted</string>
     <string name="notification_show_messages">Tap to see messages</string>
 
+    <string name="action_cmd_exe">Executed %s</string>
     <!-- notification service -->
     <string name="notificaion_alarm">ALARM!</string>
     <string name="notificaion_channel_alarm">Alarm messages</string>
     <string name="notificaion_channel_reg">Regular messages</string>
 
-    <!-- Add/Edit borker activity -->
+    <!-- Add/Edit server activity -->
     <string name="title_add_account">Add Server</string>
     <string name="title_edit_account">Edit Server</string>
     <string name="title_messages">Messages</string>
