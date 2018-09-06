@@ -142,6 +142,12 @@ public class Connection {
         return mCmd.readIntArray(response.data);
     }
 
+    public int[] publish(String topic, String content, boolean retain) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.publish(++mSeqNo, topic, content, retain);
+        handleError(response);
+        return mCmd.readIntArray(response.data);
+    }
+
     public LinkedHashMap<String, Cmd.Action> getActions() throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_ACTIONS, ++mSeqNo);
         handleError(response);

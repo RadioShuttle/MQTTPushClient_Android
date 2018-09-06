@@ -42,6 +42,11 @@ public class ActionsRequest extends Request {
         mActionArg = a;
     }
 
+    public void publish(ActionsViewModel.Action a) {
+        mCmd = Cmd.CMD_PUBLISH;
+        mActionArg = a;
+    }
+
     @Override
     public boolean perform() throws Exception {
 
@@ -57,7 +62,7 @@ public class ActionsRequest extends Request {
                 requestErrorTxt = e.getMessage();
             }
             requestStatus = mConnection.lastReturnCode;
-        } else if (mCmd == Cmd.CMD_ADD_ACTION || mCmd == Cmd.CMD_UPDATE_ACTION) {
+        } else if (mCmd == Cmd.CMD_ADD_ACTION || mCmd == Cmd.CMD_UPDATE_ACTION || mCmd == Cmd.CMD_PUBLISH) {
             try {
                 int[] rc;
                 Cmd.Action arg = new Cmd.Action();
@@ -67,8 +72,10 @@ public class ActionsRequest extends Request {
 
                 if (mCmd == Cmd.CMD_ADD_ACTION) {
                     rc = mConnection.addAction(mActionArg.name, arg);
-                } else {
+                } else if (mCmd == Cmd.CMD_UPDATE_ACTION) {
                     rc = mConnection.updateAction(mActionArg.prevName, mActionArg.name, arg);
+                } else {
+                    rc = mConnection.publish(arg.topic, arg.content, arg.retain);
                 }
                 //TODO: handle rc
             } catch(MQTTException e) {

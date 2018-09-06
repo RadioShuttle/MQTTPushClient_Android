@@ -37,9 +37,9 @@ public class Cmd {
     public final static int CMD_ADD_ACTION = 11;
     public final static int CMD_UPDATE_ACTION = 12;
     public final static int CMD_REMOVE_ACTIONS = 13;
-
     public final static int CMD_LOGOUT = 14;
     public final static int CMD_BYE = 15;
+    public final static int CMD_PUBLISH = 17;
 
     public RawCmd helloRequest(int seqNo) throws IOException {
         writeCommand(CMD_HELLO, seqNo, FLAG_REQUEST, 0, new byte[] {PROTOCOL_MAJOR, PROTOCOL_MINOR});
@@ -189,7 +189,9 @@ public class Cmd {
         if (cmd == CMD_UPDATE_ACTION) {
             map.put("prev_actionname", readString(is));
         }
-        map.put("actionname", readString(is));
+        if (cmd != CMD_PUBLISH) {
+            map.put("actionname", readString(is));
+        }
         map.put("topic", readString(is));
         map.put("content", readString(is));
         map.put("retain", is.readBoolean() ? "true" : "false");
@@ -204,6 +206,16 @@ public class Cmd {
         writeString(a.content, os);
         os.writeBoolean(a.retain);
         writeCommand(CMD_ADD_ACTION, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public RawCmd publish(int seqNo, String topic, String content, boolean retain) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(topic, os);
+        writeString(content, os);
+        os.writeBoolean(retain);
+        writeCommand(CMD_PUBLISH, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 

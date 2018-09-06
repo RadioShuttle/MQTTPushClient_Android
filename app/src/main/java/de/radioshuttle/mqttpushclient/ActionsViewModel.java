@@ -59,6 +59,14 @@ public class ActionsViewModel extends ViewModel {
         currentRequest.execute();
     }
 
+    public void publish(Context context, ActionsViewModel.Action a) {
+        requestCnt++;
+        ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
+        request.publish(a);
+        currentRequest = request;
+        currentRequest.execute();
+    }
+
     public void updateAction(Context context, ActionsViewModel.Action a) {
         requestCnt++;
         ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
