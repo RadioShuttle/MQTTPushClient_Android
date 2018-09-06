@@ -29,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -175,6 +176,7 @@ public class ActionsActivity extends AppCompatActivity {
                 args.putString(ARG_NAME, a.name);
                 args.putString(ARG_TOPIC, a.topic);
                 args.putString(ARG_CONTENT, a.content);
+                args.putBoolean(ARG_RETIAN, a.retain);
                 if (mode == MODE_EDIT) {
                     if (!Utils.isEmpty(a.prevName)) {
                         args.putString(ARG_PREV, a.prevName);
@@ -262,6 +264,10 @@ public class ActionsActivity extends AppCompatActivity {
                     actionContent.setError(errorTxt);
                 }
             }
+            final CheckBox retainCheckBox = body.findViewById(R.id.retain);
+            if (retainCheckBox != null) {
+                retainCheckBox.setChecked(args.getBoolean(ARG_RETIAN, false));
+            }
 
             builder.setView(body);
 
@@ -275,6 +281,7 @@ public class ActionsActivity extends AppCompatActivity {
                         a.name = actionName.getText().toString();
                         a.topic = actionTopic.getText().toString();
                         a.content = actionContent.getText().toString();
+                        a.retain = retainCheckBox.isChecked();
                         Activity ac =  getActivity();
                         if (ac instanceof ActionsActivity) {
                             ((ActionsActivity) ac).addAction(a);
@@ -292,6 +299,7 @@ public class ActionsActivity extends AppCompatActivity {
                         a.topic = actionTopic.getText().toString();
                         a.content = actionContent.getText().toString();
                         a.prevName = args.getString(ARG_PREV);
+                        a.retain = retainCheckBox.isChecked();
                         Activity ac =  getActivity();
                         if (ac instanceof ActionsActivity) {
                             ((ActionsActivity) ac).updateAction(a);
@@ -319,6 +327,7 @@ public class ActionsActivity extends AppCompatActivity {
         final static String ARG_PREV = "ARG_PREV";
         final static String ARG_ERROR = "ARG_ERROR";
         final static String ARG_IDX = "ARG_IDX";
+        final static String ARG_RETIAN = "ARG_RETIAN";
         final static int MODE_ADD = 0;
         final static int MODE_EDIT = 1;
 
