@@ -408,12 +408,15 @@ public class Cmd {
     /* basic write functions */
 
     public void writeHeader(int cmd, int seqNo, int flags, int rc, int contentSize) throws IOException {
-        dos.write(MAGIC_BLOCK);
-        dos.writeShort(cmd);
-        dos.writeShort(seqNo); // seq no
-        dos.writeShort(flags);
-        dos.writeShort(rc); // return code
-        dos.writeInt(contentSize);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(out);
+        os.write(MAGIC_BLOCK);
+        os.writeShort(cmd);
+        os.writeShort(seqNo); // seq no
+        os.writeShort(flags);
+        os.writeShort(rc); // return code
+        os.writeInt(contentSize);
+        writeContent(out.toByteArray());
     }
 
     public void writeContent(byte[] data) throws IOException {
