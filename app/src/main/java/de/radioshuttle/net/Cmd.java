@@ -7,6 +7,7 @@
 
 package de.radioshuttle.net;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -42,7 +43,7 @@ public class Cmd {
     public final static int CMD_PUBLISH = 17;
 
     public RawCmd helloRequest(int seqNo) throws IOException {
-        writeCommand(CMD_HELLO, seqNo, FLAG_REQUEST, 0, new byte[] {PROTOCOL_MAJOR, PROTOCOL_MINOR});
+        writeCommand(CMD_HELLO, seqNo, FLAG_REQUEST, 0, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
         return readCommand();
     }
 
@@ -54,7 +55,7 @@ public class Cmd {
         if (password == null)
             password = new char[0];
         os.writeShort(password.length);
-        for(int i = 0; i < password.length; i++)
+        for (int i = 0; i < password.length; i++)
             os.writeChar(password[i]);
         writeCommand(CMD_LOGIN, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
@@ -68,7 +69,7 @@ public class Cmd {
         m.put("user", readString(is));
         short n = is.readShort();
         char[] pwd = new char[n];
-        for(int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             pwd[i] = is.readChar();
         }
         m.put("password", pwd);
@@ -76,9 +77,8 @@ public class Cmd {
     }
 
     public void helloResponse(RawCmd requestHeader, int rc) throws IOException {
-        writeCommand(CMD_HELLO, requestHeader.seqNo, FLAG_RESPONSE, rc, new byte[] {PROTOCOL_MAJOR, PROTOCOL_MINOR});
+        writeCommand(CMD_HELLO, requestHeader.seqNo, FLAG_RESPONSE, rc, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
     }
-
 
     /* rc should be RC_SERVER_ERROR or RC_MQTT_ERROR */
     public void errorResponse(RawCmd request, int rc, int errorCode, String errorMsg) throws IOException {
@@ -102,7 +102,7 @@ public class Cmd {
         return request(CMD_GET_FCM_DATA, seqNo);
     }
 
-    public void fcmDataResponse(RawCmd request, String app_id , String api_key, String pushServerID) throws IOException {
+    public void fcmDataResponse(RawCmd request, String app_id, String api_key, String pushServerID) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(app_id, os);
@@ -121,8 +121,8 @@ public class Cmd {
         return m;
     }
 
-
-    public RawCmd setDeviceInfo(int seqNo, String clientOS, String osver, String device, String fcmToken, String extra) throws IOException {
+    public RawCmd setDeviceInfo(int seqNo, String clientOS, String osver, String device, String fcmToken, String extra)
+            throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(clientOS, os);
@@ -153,7 +153,7 @@ public class Cmd {
             os.writeShort(0);
         } else {
             os.writeShort(actions.size());
-            for(Iterator<Entry<String, Action>> it = actions.entrySet().iterator(); it.hasNext();) {
+            for (Iterator<Entry<String, Action>> it = actions.entrySet().iterator(); it.hasNext();) {
                 Entry<String, Action> e = it.next();
                 writeString(e.getKey(), os);
                 writeString(e.getValue().topic, os);
@@ -164,14 +164,14 @@ public class Cmd {
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
-    public LinkedHashMap<String, Action> readActions(byte[] data)  throws IOException {
+    public LinkedHashMap<String, Action> readActions(byte[] data) throws IOException {
         LinkedHashMap<String, Action> actions = new LinkedHashMap<>();
         ByteArrayInputStream ba = new ByteArrayInputStream(data);
         DataInputStream is = new DataInputStream(ba);
         int size = is.readUnsignedShort();
         String key;
         Action a;
-        for(int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             a = new Action();
             key = readString(is);
             a.topic = readString(is);
@@ -198,7 +198,7 @@ public class Cmd {
         return map;
     }
 
-    public RawCmd addActionRequest(int seqNo, String actioName, Action a) throws IOException  {
+    public RawCmd addActionRequest(int seqNo, String actioName, Action a) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(actioName, os);
@@ -219,7 +219,7 @@ public class Cmd {
         return readCommand();
     }
 
-    public RawCmd updateActionRequest(int seqNo, String oldActionName, String actioName, Action a) throws IOException  {
+    public RawCmd updateActionRequest(int seqNo, String oldActionName, String actioName, Action a) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(oldActionName, os);
@@ -238,7 +238,7 @@ public class Cmd {
             os.writeShort(0);
         } else {
             os.writeShort(actions.size());
-            for(int i = 0; i < actions.size(); i++) {
+            for (int i = 0; i < actions.size(); i++) {
                 writeString(actions.get(i), os);
             }
         }
@@ -246,24 +246,23 @@ public class Cmd {
         return readCommand();
     }
 
-
-    public LinkedHashMap<String, Integer> readTopics(byte[] data)  throws IOException {
+    public LinkedHashMap<String, Integer> readTopics(byte[] data) throws IOException {
         LinkedHashMap<String, Integer> subs = new LinkedHashMap<>();
         ByteArrayInputStream ba = new ByteArrayInputStream(data);
         DataInputStream is = new DataInputStream(ba);
         int size = is.readUnsignedShort();
-        for(int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             subs.put(readString(is), is.read());
         }
         return subs;
     }
 
-    public List<String> readStringList(byte[] data)  throws IOException {
+    public List<String> readStringList(byte[] data) throws IOException {
         ArrayList<String> subs = new ArrayList<>();
         ByteArrayInputStream ba = new ByteArrayInputStream(data);
         DataInputStream is = new DataInputStream(ba);
         int size = is.readUnsignedShort();
-        for(int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             subs.add(readString(is));
         }
         return subs;
@@ -280,7 +279,7 @@ public class Cmd {
             os.writeShort(0);
         } else {
             os.writeShort(topics.size());
-            for(Iterator<Entry<String, Integer>> it = topics.entrySet().iterator(); it.hasNext();) {
+            for (Iterator<Entry<String, Integer>> it = topics.entrySet().iterator(); it.hasNext();) {
                 Entry<String, Integer> e = it.next();
                 writeString(e.getKey(), os);
                 os.writeByte(e.getValue());
@@ -300,7 +299,7 @@ public class Cmd {
             os.writeShort(0);
         } else {
             os.writeShort(topics.size());
-            for(Iterator<Entry<String, Integer>> it = topics.entrySet().iterator(); it.hasNext();) {
+            for (Iterator<Entry<String, Integer>> it = topics.entrySet().iterator(); it.hasNext();) {
                 Entry<String, Integer> e = it.next();
                 writeString(e.getKey(), os);
                 os.writeByte(e.getValue());
@@ -317,7 +316,7 @@ public class Cmd {
             os.writeShort(0);
         } else {
             os.writeShort(topics.size());
-            for(int i = 0; i < topics.size(); i++) {
+            for (int i = 0; i < topics.size(); i++) {
                 writeString(topics.get(i), os);
             }
         }
@@ -332,19 +331,19 @@ public class Cmd {
             os.writeShort(0);
         } else {
             os.writeShort(results.length);
-            for(int i = 0; i < results.length; i++) {
+            for (int i = 0; i < results.length; i++) {
                 os.writeShort(results[i]);
             }
         }
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
-    public int[] readIntArray(byte[] data)  throws IOException {
+    public int[] readIntArray(byte[] data) throws IOException {
         int rc[];
         ByteArrayInputStream ba = new ByteArrayInputStream(data);
         DataInputStream is = new DataInputStream(ba);
         rc = new int[is.readUnsignedShort()];
-        for(int i = 0; i < rc.length; i++) {
+        for (int i = 0; i < rc.length; i++) {
             rc[i] = is.readShort();
         }
         return rc;
@@ -416,12 +415,12 @@ public class Cmd {
         os.writeShort(flags);
         os.writeShort(rc); // return code
         os.writeInt(contentSize);
-        writeContent(out.toByteArray());
+        bos.write(out.toByteArray());
     }
 
     public void writeContent(byte[] data) throws IOException {
-        dos.write(data);
-        dos.flush();
+        bos.write(data);
+        bos.flush();
     }
 
     public void writeCommand(int cmd, int seqNo, int flags, int rc, byte[] data) throws IOException {
@@ -439,18 +438,30 @@ public class Cmd {
 
     public void close() {
         if (dis != null) {
-            try { dis.close();} catch (IOException e) {}
+            try {
+                dis.close();
+            } catch (IOException e) {
+            }
         }
         if (dos != null) {
-            try { dos.close();} catch (IOException e) {}
+            try {
+                dos.close();
+            } catch (IOException e) {
+            }
+        }
+        if (bos != null) {
+            try {
+                bos.close();
+            } catch (IOException e) {
+            }
         }
     }
 
     public Cmd(DataInputStream is, DataOutputStream os) {
         dis = is;
         dos = os;
+        bos = new BufferedOutputStream(os);
     }
-
 
     public static void writeString(String s, DataOutputStream dos) throws IOException {
         if (s == null) {
@@ -483,6 +494,7 @@ public class Cmd {
 
     protected DataInputStream dis;
     protected DataOutputStream dos;
+    protected BufferedOutputStream bos;
 
     public static class RawCmd {
         public int command;
