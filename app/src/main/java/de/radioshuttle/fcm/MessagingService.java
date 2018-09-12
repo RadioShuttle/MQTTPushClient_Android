@@ -7,6 +7,7 @@
 package de.radioshuttle.fcm;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -14,6 +15,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -36,6 +38,7 @@ import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.Code;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
+import de.radioshuttle.mqttpushclient.AccountViewModel;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.mqttpushclient.Utils;
@@ -133,19 +136,53 @@ public class MessagingService extends FirebaseMessagingService {
     protected void processMessage(Map<String, String> data) {
         Log.d(TAG, "Messaging service called.");
 
-        String channelID = data.get("account");
-        if (Utils.isEmpty(channelID))
+        String mqttAccountName = data.get("account");
+        if (Utils.isEmpty(mqttAccountName))
             return;
 
         String pushServerID = data.get("pushserverid");
+        Log.d(TAG, "mqtt account: " + mqttAccountName + " " + pushServerID);
+
+        if (Utils.isEmpty(pushServerID))
+            return;
+
+        String pushServerLocalAddr = null;
+        /* read accpimt */
+        SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+        String accountsJSON = settings.getString(AccountListActivity.ACCOUNTS, null);
+        int mc = 0;
+        if (accountsJSON != null) {
+            try {
+                JSONArray jarray = new JSONArray(accountsJSON);
+                for (int i = 0; i < jarray.length(); i++) {
+                    JSONObject b = jarray.getJSONObject(i);
+                    PushAccount pushAccount = PushAccount.createAccountFormJSON(b);
+                    if (mqttAccountName.equals(pushAccount.getMqttAccountName())) {
+                        mc++;
+                        if (pushAccount.pushserverID.equals(pushServerID)){
+                            pushServerLocalAddr = pushAccount.pushserver;
+                        }
+                    }
+                }
+            } catch(Exception e) {
+                Log.e(TAG, "Error parsing JSON: ", e);
+            }
+        }
+        boolean multiMqttAccounts = mc > 1;
+
+        if (pushServerLocalAddr == null)
+            return;
+
+        // Log.d(TAG, "pushServerLocalAddr: " + pushServerLocalAddr);
+
 
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationManager nm =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            // nm.deleteNotificationChannel(channelID); //TODO: remove
-            // ‚nm.deleteNotificationChannel(channelID+".a"); //TODO: remove
-            if (nm.getNotificationChannel(channelID) == null) {
-                createChannel(channelID, getApplicationContext());
+            // nm.deleteNotificationChannel(mqttAccountName); //TODO: remove
+            // ‚nm.deleteNotificationChannel(mqttAccountName+".a"); //TODO: remove
+            if (nm.getNotificationChannel(pushServerLocalAddr + ":" + mqttAccountName) == null) {
+                createChannel(pushServerLocalAddr, mqttAccountName, getApplicationContext());
             }
 
         }
@@ -161,7 +198,7 @@ public class MessagingService extends FirebaseMessagingService {
             JSONArray msgsArray = new JSONArray(msg);
             AppDatabase db = null;
             Long psCode = null;
-            Long accountCode = null;
+            Long mqttAccountCode = null;
             if (msgsArray.length() > 0) {
                 db = AppDatabase.getInstance(getApplicationContext());
                 psCode = db.mqttMessageDao().getCode(pushServerID);
@@ -171,12 +208,12 @@ public class MessagingService extends FirebaseMessagingService {
                     psCode = db.mqttMessageDao().insertCode(c);
                     // Log.d(TAG, " (before null) code: " + psCode);
                 }
-                accountCode = db.mqttMessageDao().getCode(channelID);
-                if (accountCode == null) {
+                mqttAccountCode = db.mqttMessageDao().getCode(mqttAccountName);
+                if (mqttAccountCode == null) {
                     Code c = new Code();
-                    c.setName(channelID);
-                    accountCode = db.mqttMessageDao().insertCode(c);
-                    // Log.d(TAG, " (before null) accountCode: " + accountCode);
+                    c.setName(mqttAccountName);
+                    mqttAccountCode = db.mqttMessageDao().insertCode(c);
+                    // Log.d(TAG, " (before null) mqttAccountCode: " + mqttAccountCode);
                 }
             }
             ArrayList<Integer> ids = new ArrayList<>();
@@ -221,7 +258,7 @@ public class MessagingService extends FirebaseMessagingService {
                         //TODO: consider removing Msg class and replace it with MqttMessage below
                         MqttMessage mqttMessage = new MqttMessage();
                         mqttMessage.setPushServerID(psCode.intValue());
-                        mqttMessage.setMqttAccountID(accountCode.intValue());
+                        mqttMessage.setMqttAccountID(mqttAccountCode.intValue());
                         mqttMessage.setWhen(m.when);
                         mqttMessage.setTopic(m.topic);
                         try {
@@ -245,7 +282,8 @@ public class MessagingService extends FirebaseMessagingService {
 
             /* inform about database changes, if app is running it can update its views */
             Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
-            intent.putExtra(MqttMessage.ARG_ACCOUNT, channelID);
+            intent.putExtra(MqttMessage.ARG_PUSHSERVER_ID, pushServerLocalAddr);
+            intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mqttAccountName);
             intent.putExtra(MqttMessage.ARG_IDS, ids);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
@@ -254,7 +292,7 @@ public class MessagingService extends FirebaseMessagingService {
             for(int i = 200; i > 0; i--) {
                 MqttMessage m = new MqttMessage();
                 m.setPushServerID(psCode.intValue());
-                m.setMqttAccountID(accountCode.intValue());
+                m.setMqttAccountID(mqttAccountCode.intValue());
                 l += 1000L;
                 m.setWhen(l);
                 m.setTopic("autogerneated test data");
@@ -265,13 +303,13 @@ public class MessagingService extends FirebaseMessagingService {
 
 
             if (cntAlarm > 0 && latestAlarmMsg != null) {
-                showNotification(channelID, latestAlarmMsg, PushAccount.Topic.NOTIFICATION_HIGH, cntAlarm, pushServerID);
+                showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, latestAlarmMsg, PushAccount.Topic.NOTIFICATION_HIGH, cntAlarm);
             }
             if (cntNormal > 0 && latestMsg != null) {
-                showNotification(channelID, latestMsg, PushAccount.Topic.NOTIFICATION_MEDIUM, cntNormal, pushServerID);
+                showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, latestMsg, PushAccount.Topic.NOTIFICATION_MEDIUM, cntNormal);
             }
             if (cnt > 0) {
-                showNotification(channelID, null, PushAccount.Topic.NOTIFICATION_LOW, cnt, pushServerID);
+                showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, null, PushAccount.Topic.NOTIFICATION_LOW, cnt);
             }
 
 
@@ -285,7 +323,9 @@ public class MessagingService extends FirebaseMessagingService {
 
     }
 
-    protected void showNotification(String account, Msg m, int prio, int cnt, String pushServerID) {
+    protected void showNotification(String pushServerAddr, String mqttAccount, String pushServerID, boolean multiMqttAccounts , Msg m, int prio, int cnt) {
+        String account = pushServerAddr + ":" + mqttAccount;
+
         String group = account;
         if (prio == PushAccount.Topic.NOTIFICATION_HIGH) {
             group += ".a";
@@ -304,7 +344,7 @@ public class MessagingService extends FirebaseMessagingService {
 
         Intent intent = new Intent(this, AccountListActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra(ARG_MQTT_ACCOUNT, account);
+        intent.putExtra(ARG_MQTT_ACCOUNT, mqttAccount);
         intent.putExtra(ARG_PUSHSERVER_ID, pushServerID);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -329,10 +369,11 @@ public class MessagingService extends FirebaseMessagingService {
             b = new NotificationCompat.Builder(this);
         }
 
+        String accountDisplayName = (multiMqttAccounts ? pushServerAddr + ": " + mqttAccount : mqttAccount);
         if (prio == PushAccount.Topic.NOTIFICATION_HIGH)
-            b.setContentTitle(getString(R.string.notificaion_alarm) + " " + account);
+            b.setContentTitle(getString(R.string.notificaion_alarm) + " " + accountDisplayName);
         else
-            b.setContentTitle(account);
+            b.setContentTitle(accountDisplayName);
         b.setContentText(m.topic + ": " + new String(m.msg));
         b.setWhen(m.when);
         if (messageInfo.messageId > 1) {
@@ -385,16 +426,19 @@ public class MessagingService extends FirebaseMessagingService {
     }
 
     @TargetApi(26)
-    public static void createChannel(String account, Context context) {
+    public static void createChannel(String pushServerAddr, String mqttAccount, Context context) {
         NotificationManager nm =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        String account = pushServerAddr + ":" + mqttAccount;
 
         String channelID = account + ".a";
         String groupID = "g." + account;
 
         NotificationChannel ch = nm.getNotificationChannel(channelID);
         if (ch == null) {
-            nm.createNotificationChannelGroup(new NotificationChannelGroup(groupID, account));
+            String groupDisplayName = pushServerAddr + ": " + mqttAccount;
+            nm.createNotificationChannelGroup(new NotificationChannelGroup(groupID, groupDisplayName));
             //TODO: localize user visible channel names
             NotificationChannel nc = new NotificationChannel(channelID, context.getString(R.string.notificaion_channel_alarm), NotificationManager.IMPORTANCE_DEFAULT);
             nc.setGroup(groupID);
