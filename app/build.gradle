@@ -14,8 +14,8 @@ android {
         applicationId "de.radioshuttle.mqttpushclient"
         minSdkVersion 16
         targetSdkVersion 27
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.0.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         signingConfig signingConfigs.config
@@ -63,3 +63,7 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services'
+
+dependencies {
+    implementation 'com.android.support.constraint:constraint-layout:+'
+}
