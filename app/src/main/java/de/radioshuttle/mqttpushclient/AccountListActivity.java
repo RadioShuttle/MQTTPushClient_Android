@@ -183,6 +183,10 @@ public class AccountListActivity extends AppCompatActivity {
 
     }
 
+    protected void updateNoOfNewMsgs() {
+
+    }
+
     protected void startMessagesActivity(PushAccount b) {
         Intent intent = new Intent(AccountListActivity.this, MessagesActivity.class);
         intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
@@ -284,9 +288,10 @@ public class AccountListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
+        Intent intent;
         switch (item.getItemId()) {
             case R.id.action_add:
-                Intent intent = new Intent(this, EditAccountActivity.class);
+                intent = new Intent(this, EditAccountActivity.class);
                 // intent.putExtra(LoginActivity.EMAIL, mail);
                 intent.putExtra(EditAccountActivity.MODE, EditAccountActivity.MODE_ADD);
                 if (!mActivityStarted) {
@@ -296,6 +301,13 @@ public class AccountListActivity extends AppCompatActivity {
                 return true;
             case R.id.menu_refresh:
                 refresh();
+                return true;
+            case R.id.menu_about:
+                intent = new Intent(this, AboutActivity.class);
+                if (!mActivityStarted) {
+                    mActivityStarted = true;
+                    startActivityForResult(intent, RC_ABOUT);
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -482,6 +494,7 @@ public class AccountListActivity extends AppCompatActivity {
     public final static int RC_MESSAGES = 3;
     public final static int RC_SUBSCRIPTIONS = 4;
     public final static int RC_ACTIONS = 5;
+    public final static int RC_ABOUT = 6;
     public final static int RC_GOOGLE_PLAY_SERVICES = 8;
 
 
