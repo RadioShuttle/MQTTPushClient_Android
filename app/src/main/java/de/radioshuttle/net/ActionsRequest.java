@@ -88,7 +88,6 @@ public class ActionsRequest extends Request {
             requestStatus = mConnection.lastReturnCode;
         }
 
-        //TODO: check getActions() error codes, also check same problem in TopicsRequest
         LinkedHashMap<String, Cmd.Action> result = mConnection.getActions();
         if (mConnection.lastReturnCode == Cmd.RC_OK) {
             tmpRes.clear();
@@ -118,12 +117,6 @@ public class ActionsRequest extends Request {
         return true;
     }
 
-    @Override
-    protected void onPostExecute(PushAccount pushAccount) {
-        super.onPostExecute(pushAccount);
-        mActions = tmpRes; //TODO: use onPostExecute() also in TopicsRequest
-    }
-
     public int requestStatus;
     public int requestErrorCode;
     public String requestErrorTxt;
@@ -135,6 +128,6 @@ public class ActionsRequest extends Request {
     private ArrayList<ActionsViewModel.Action> tmpRes;
 
     /** contains the reuslt if request was successful  */
-    public ArrayList<ActionsViewModel.Action> mActions;
+    public volatile ArrayList<ActionsViewModel.Action> mActions;
 
 }
