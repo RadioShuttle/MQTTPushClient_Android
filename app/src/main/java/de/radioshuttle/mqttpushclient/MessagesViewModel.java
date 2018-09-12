@@ -110,8 +110,10 @@ public class MessagesViewModel extends AndroidViewModel {
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String arg = intent.getStringExtra(MqttMessage.ARG_ACCOUNT);
-            if (arg != null && pushAccount != null && pushAccount.getMqttAccountName().equals(arg)) {
+            String arg = intent.getStringExtra(MqttMessage.ARG_MQTT_ACCOUNT);
+            String argID = intent.getStringExtra(MqttMessage.ARG_PUSHSERVER_ID);
+            if (arg != null && argID != null && pushAccount != null && pushAccount.getMqttAccountName().equals(arg) &&
+                    pushAccount.pushserverID != null && pushAccount.pushserverID.equals(argID)) {
                 newItems.addAll(intent.getIntegerArrayListExtra(MqttMessage.ARG_IDS));
                 refresh();
             }
