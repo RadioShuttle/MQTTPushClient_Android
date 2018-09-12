@@ -33,6 +33,7 @@ public class PushAccount {
     public int requestStatus;
     public int requestErrorCode;
     public String requestErrorTxt;
+    public int newMessages;
 
     public volatile ArrayList<Topic> topics;
 
