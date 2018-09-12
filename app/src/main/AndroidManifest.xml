@@ -34,7 +34,8 @@
 
         <activity android:name=".TopicsActivity" />
         <activity android:name=".MessagesActivity" />
-        <activity android:name=".ActionsActivity"></activity>
+        <activity android:name=".ActionsActivity" />
+        <activity android:name=".AboutActivity"></activity>
     </application>
 
 </manifest>
