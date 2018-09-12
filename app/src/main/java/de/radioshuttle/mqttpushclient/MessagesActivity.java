@@ -343,7 +343,9 @@ public class MessagesActivity extends AppCompatActivity {
 
 
     protected void handleBackPressed() {
-        Notifications.cancelAll(this, mViewModel.pushAccount.getMqttAccountName()); // clear systen notification tray
+        String name = mViewModel.pushAccount.getNotifcationChannelName();
+        Notifications.cancelAll(this, name); // clear systen notification tray
+        Notifications.cancelAll(this, name + ".a"); // clear systen notification tray
         setResult(AppCompatActivity.RESULT_CANCELED); //TODO:
         finish();
     }

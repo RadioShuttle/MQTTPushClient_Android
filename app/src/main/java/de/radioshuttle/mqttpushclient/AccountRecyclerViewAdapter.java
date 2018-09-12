@@ -202,9 +202,11 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
 
     protected void readNewMessagesCounter(String key) {
         if (pushAccounts != null) {
+            String name = null;
             for(PushAccount a : pushAccounts) {
-                Notifications.MessageInfo m1 = Notifications.getMessageInfo(context, a.getDisplayName());
-                Notifications.MessageInfo m2 = Notifications.getMessageInfo(context, a.getDisplayName() + ".a");
+                name = a.getNotifcationChannelName();
+                Notifications.MessageInfo m1 = Notifications.getMessageInfo(context, name);
+                Notifications.MessageInfo m2 = Notifications.getMessageInfo(context, name + ".a");
                 a.newMessages = m1.messageId + m2.messageId;
             }
         }
