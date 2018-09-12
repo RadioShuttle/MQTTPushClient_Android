@@ -121,6 +121,17 @@ public class PushAccount {
         return sb.toString();
     }
 
+    /** returns the notification channel name for regular notifications (append ".a" for category alarm) */
+    public String getNotifcationChannelName() {
+        String name = null;
+        if (pushserver != null ) {
+            name = pushserver;
+        } else {
+            name = "";
+        }
+        return name + ":" + getMqttAccountName();
+    }
+
     public static PushAccount createAccountFormJSON(JSONObject o) throws JSONException {
         PushAccount pushAccount = new PushAccount();
         if (o.has("pushserver")) {
