@@ -20,6 +20,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.Cmd;
 
 public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
@@ -54,6 +55,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
         holder.okImage = view.findViewById(R.id.okImage);
         holder.neutralImage = view.findViewById(R.id.neutralImage);
         holder.progressBar = view.findViewById(R.id.progressBar);
+        holder.newMessages = view.findViewById(R.id.messageCnt);
 
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -159,6 +161,12 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
             vh.okImage.setVisibility(View.GONE);
         }
 
+        if (b.newMessages <= 0) {
+            vh.newMessages.setText("");
+        } else {
+            vh.newMessages.setText(String.valueOf(b.newMessages));
+        }
+
 
         holder.itemView.setSelected(mSelectedRow == position);
 
@@ -169,7 +177,6 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
     public void setData(ArrayList<PushAccount> pushAccounts) {
         this.pushAccounts = pushAccounts;
         //TODO: sort (if so, check selection by indices (viewModel , ...)
-        //TODO: show header in row if there are more than one pushserver
         if (mSelectedRow != -1 && pushAccounts != null && mSelectedRow >= pushAccounts.size()) {
             int old = mSelectedRow;
             mSelectedRow = pushAccounts.size() - 1;
@@ -188,8 +195,19 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
             }
             mMultiplePushServer = pushServer.size() > 1;
         }
+        readNewMessagesCounter(null);
 
         notifyDataSetChanged();
+    }
+
+    protected void readNewMessagesCounter(String key) {
+        if (pushAccounts != null) {
+            for(PushAccount a : pushAccounts) {
+                Notifications.MessageInfo m1 = Notifications.getMessageInfo(context, a.getDisplayName());
+                Notifications.MessageInfo m2 = Notifications.getMessageInfo(context, a.getDisplayName() + ".a");
+                a.newMessages = m1.messageId + m2.messageId;
+            }
+        }
     }
 
     public int getSelectedRow() {
@@ -225,6 +243,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
         TextView pushServer;
         TextView displayName;
         TextView status;
+        TextView newMessages;
         ImageView errorImage;
         ImageView okImage;
         ImageView neutralImage;
