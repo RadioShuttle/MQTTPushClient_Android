@@ -3,6 +3,8 @@
 
     <!-- action menus -->
     <string name="menu_refresh">Refresh</string>
+    <string name="menu_about">About</string>
+
     <string name="action_add_account">Add</string>
     <string name="action_edit_account">Edit</string>
     <string name="action_remove_account">Remove</string>
@@ -68,6 +70,8 @@
     <string name="title_messages">Messages</string>
     <string name="title_topics">Topics</string>
     <string name="title_actions">Actions</string>
+    <string name="title_about">About</string>
+    <string name="about_version" formatted="false">"Version: %s (%d)"</string>
 
     <string name="label_push_notification_server">Push Notification Server</string>
     <string name="label_host">Host:</string>
@@ -89,6 +93,10 @@
     <string name="select_single_topic">Only one topic may be selected for editing</string>
 
     <string name="errormsg_unexpected_error">An unexprected error has occured.</string>
+
+    <!-- About dialog -->
+    <string name="home_url_label">www.radioshuttle.de</string>
+    <string name="help_url_help_label">Online help</string>
 
     <!-- Connection failed -->
     <string name="errormsg_connection_failed">Connection failed</string>
