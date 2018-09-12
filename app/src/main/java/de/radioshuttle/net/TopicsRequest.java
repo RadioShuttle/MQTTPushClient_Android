@@ -129,12 +129,6 @@ public class TopicsRequest extends Request {
         return true;
     }
 
-    @Override
-    protected void onPostExecute(PushAccount pushAccount) {
-        super.onPostExecute(pushAccount);
-        //TODO: assign new topics
-    }
-
     public int requestStatus;
     public int requestErrorCode;
     public String requestErrorTxt;
