@@ -145,6 +145,7 @@ public class AccountListActivity extends AppCompatActivity {
             }
         });
         mListView.setAdapter(mAdapter);
+        mViewModel.addNotificationUpdateListener(getApplication());
 
         if (!accountsChecked) {
             refresh();
