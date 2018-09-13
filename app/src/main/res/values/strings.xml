@@ -96,7 +96,7 @@
 
     <!-- About dialog -->
     <string name="home_url_label">www.radioshuttle.de</string>
-    <string name="help_url_help_label">Online help</string>
+    <string name="help_url_help_label">Online Help</string>
 
     <!-- Connection failed -->
     <string name="errormsg_connection_failed">Connection failed</string>
