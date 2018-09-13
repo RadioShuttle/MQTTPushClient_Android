@@ -164,7 +164,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
         if (b.newMessages <= 0) {
             vh.newMessages.setText("");
         } else {
-            vh.newMessages.setText(String.valueOf(b.newMessages));
+            vh.newMessages.setText("+" + String.valueOf(b.newMessages));
         }
 
 
