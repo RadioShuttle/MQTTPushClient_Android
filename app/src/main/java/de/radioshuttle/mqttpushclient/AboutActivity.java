@@ -56,10 +56,10 @@ public class AboutActivity extends AppCompatActivity {
 
         Button helpButton = findViewById(R.id.helpURL);
         if (helpButton != null) {
-            homeButton.setOnClickListener(new View.OnClickListener() {
+            helpButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Uri webpage = Uri.parse("http://www.radioshuttle.de"); //TODO: set help
+                    Uri webpage = Uri.parse("http://www.radioshuttle.de/mqtt-push-client/");
                     Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
                     startActivity(webIntent);
                 }
