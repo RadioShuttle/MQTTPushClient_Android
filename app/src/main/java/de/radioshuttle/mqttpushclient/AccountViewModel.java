@@ -6,9 +6,15 @@
 
 package de.radioshuttle.mqttpushclient;
 
+import android.app.Application;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.DeleteToken;
 
@@ -25,15 +32,36 @@ public class AccountViewModel extends ViewModel {
 
     public MutableLiveData<ArrayList<PushAccount>> accountList;
     public MutableLiveData<Request> request;
+
     public boolean initialized;
     private int requestCnt;
     private ArrayList<Request> currentRequests;
+    private Application app;
 
     public AccountViewModel() {
         accountList = new MutableLiveData<>();
         request = new MutableLiveData<>();
         initialized = false;
         requestCnt = 0;
+        app = null;
+
+    }
+
+    public void addNotificationUpdateListener(Application app) {
+        if (this.app == null) {
+            this.app = app;
+            IntentFilter intentFilter = new IntentFilter(MqttMessage.UPDATE_INTENT);
+            intentFilter.addAction(MqttMessage.DELETE_INTENT);
+            LocalBroadcastManager.getInstance(app).registerReceiver(broadcastReceiver, intentFilter);
+        }
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (app != null && broadcastReceiver != null) {
+            LocalBroadcastManager.getInstance(app).unregisterReceiver(broadcastReceiver);
+        }
     }
 
     public void init(String accountsJson) throws JSONException {
@@ -174,4 +202,43 @@ public class AccountViewModel extends ViewModel {
         return multi;
     }
 
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent.getAction().equals(MqttMessage.UPDATE_INTENT)) {
+                String arg = intent.getStringExtra(MqttMessage.ARG_MQTT_ACCOUNT);
+                String argID = intent.getStringExtra(MqttMessage.ARG_PUSHSERVER_ID);
+                Log.d(TAG, "received upd intent: " + arg + " / " + argID);
+                ArrayList<PushAccount> pushAccounts = accountList.getValue();
+                if (pushAccounts != null) {
+                    Log.d(TAG, "push accounts size: " + pushAccounts.size());
+                    for(PushAccount pushAccount : pushAccounts) {
+                        Log.d(TAG, "check: " + pushAccount.getMqttAccountName() + " " + pushAccount.pushserver);
+                        if (arg != null && argID != null && pushAccount != null && pushAccount.getMqttAccountName().equals(arg) &&
+                                pushAccount.pushserver != null && pushAccount.pushserver.equals(argID)) {
+                            accountList.setValue(pushAccounts); // notify about update change
+                            break;
+                        }
+                    }
+                }
+            } else if (intent.getAction().equals(MqttMessage.DELETE_INTENT)) {
+                String arg = intent.getStringExtra(MqttMessage.ARG_CHANNELNAME);
+                Log.d(TAG, "received del intent: " + arg);
+                ArrayList<PushAccount> pushAccounts = accountList.getValue();
+                if (pushAccounts != null) {
+                    Log.d(TAG, "push accounts size: " + pushAccounts.size());
+                    for(PushAccount pushAccount : pushAccounts) {
+                        Log.d(TAG, "check: " + pushAccount.getMqttAccountName() + " " + pushAccount.pushserver);
+                        if (arg != null && pushAccount != null && pushAccount.getNotifcationChannelName().equals(arg)) {
+                            accountList.setValue(pushAccounts); // notify about update change
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    private final static String TAG = AccountViewModel.class.getSimpleName();
 }
