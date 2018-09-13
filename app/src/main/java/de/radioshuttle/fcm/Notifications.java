@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -19,6 +20,7 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 
+import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.Utils;
 
 
@@ -142,6 +144,14 @@ public class Notifications extends BroadcastReceiver {
                 notificationManager.cancel(mi.group, mi.groupId);
                 mi.messageId = 0;
                 setMessageInfo(context, mi);
+
+                Intent intent = new Intent(MqttMessage.DELETE_INTENT);
+                if (group.endsWith(".a")) {
+                    group = group.substring(0, group.length() - 2);
+                }
+                intent.putExtra(MqttMessage.ARG_CHANNELNAME, group);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
             }
         }
     }
