@@ -161,10 +161,12 @@ public class AccountListActivity extends AppCompatActivity {
                     // Log.d(TAG, acc.getKey() + " " + arg_account);
 
                     if (acc.getMqttAccountName().equals(arg_account)) {
-                        Notifications.cancelAll(this, arg_account);
 
                         if (Utils.equals(arg_pushserver, acc.pushserverID)) {
                             showMessagesForAcc = acc;
+                            String k = showMessagesForAcc.getNotifcationChannelName();
+                            Notifications.cancelAll(this, k);
+                            Notifications.cancelAll(this, k + ".a");
                         }
                     }
                 }
@@ -176,6 +178,7 @@ public class AccountListActivity extends AppCompatActivity {
             Boolean fcm_on_delete = getIntent().getBooleanExtra(MessagingService.FCM_ON_DELETE, false);
             if (fcm_on_delete) {
                 Notifications.cancelOnDeleteWarning(this);
+                Log.d(TAG, "notification deletion intent received.");
             }
 
             checkGooglePlayServices();
