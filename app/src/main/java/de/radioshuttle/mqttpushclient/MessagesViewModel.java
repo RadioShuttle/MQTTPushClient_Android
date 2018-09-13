@@ -22,6 +22,7 @@ import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.util.HashSet;
 
@@ -112,12 +113,15 @@ public class MessagesViewModel extends AndroidViewModel {
         public void onReceive(Context context, Intent intent) {
             String arg = intent.getStringExtra(MqttMessage.ARG_MQTT_ACCOUNT);
             String argID = intent.getStringExtra(MqttMessage.ARG_PUSHSERVER_ID);
+            Log.d(TAG, "received intent: " + arg + " / " + argID);
             if (arg != null && argID != null && pushAccount != null && pushAccount.getMqttAccountName().equals(arg) &&
-                    pushAccount.pushserverID != null && pushAccount.pushserverID.equals(argID)) {
+                    pushAccount.pushserver != null && pushAccount.pushserver.equals(argID)) {
+                Log.d(TAG, "received intent: " + intent.getIntegerArrayListExtra(MqttMessage.ARG_IDS).size());
                 newItems.addAll(intent.getIntegerArrayListExtra(MqttMessage.ARG_IDS));
                 refresh();
             }
         }
     };
 
+    private final static String TAG = MessagesViewModel.class.getSimpleName();
 }
