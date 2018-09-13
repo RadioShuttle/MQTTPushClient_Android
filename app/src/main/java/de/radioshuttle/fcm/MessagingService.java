@@ -308,9 +308,11 @@ public class MessagingService extends FirebaseMessagingService {
             if (cntNormal > 0 && latestMsg != null) {
                 showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, latestMsg, PushAccount.Topic.NOTIFICATION_MEDIUM, cntNormal);
             }
+            /*
             if (cnt > 0) {
                 showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, null, PushAccount.Topic.NOTIFICATION_LOW, cnt);
             }
+            */
 
 
         } catch(Exception e) {
