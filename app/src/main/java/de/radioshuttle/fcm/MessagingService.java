@@ -280,13 +280,6 @@ public class MessagingService extends FirebaseMessagingService {
             long before = new Date().getTime() - (30L * 24L * 1000L * 3600L);
             db.mqttMessageDao().deleteMessagesBefore(before);
 
-            /* inform about database changes, if app is running it can update its views */
-            Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
-            intent.putExtra(MqttMessage.ARG_PUSHSERVER_ID, pushServerLocalAddr);
-            intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mqttAccountName);
-            intent.putExtra(MqttMessage.ARG_IDS, ids);
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-
             /*
             long l = System.currentTimeMillis() - (1000L * 60L * 60L * 24 * 365);
             for(int i = 200; i > 0; i--) {
@@ -314,6 +307,12 @@ public class MessagingService extends FirebaseMessagingService {
             }
             */
 
+            /* inform about database changes, if app is running it can update its views */
+            Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
+            intent.putExtra(MqttMessage.ARG_PUSHSERVER_ID, pushServerLocalAddr);
+            intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mqttAccountName);
+            intent.putExtra(MqttMessage.ARG_IDS, ids);
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
         } catch(Exception e) {
             //TODO: error handling for db errors
