@@ -68,6 +68,12 @@ public class Connection {
         return mCmd.readFCMData(response.data);
     }
 
+    public Map<String, String> getFCMDataIOS() throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_FCM_DATA_IOS, ++mSeqNo);
+        handleError(response);
+        return mCmd.readFCMDataIOS(response.data);
+    }
+
     final static String deviceInfo;
     static {
         StringBuilder sb = new StringBuilder();
