@@ -41,6 +41,7 @@ public class Cmd {
     public final static int CMD_LOGOUT = 14;
     public final static int CMD_BYE = 15;
     public final static int CMD_PUBLISH = 17;
+    public final static int CMD_GET_FCM_DATA_IOS = 18;
 
     public RawCmd helloRequest(int seqNo) throws IOException {
         writeCommand(CMD_HELLO, seqNo, FLAG_REQUEST, 0, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
@@ -111,12 +112,31 @@ public class Cmd {
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
+    public void fcmDataIOSResponse(RawCmd request, String app_id_ios, String api_key_ios, String pushServerID) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(app_id_ios, os);
+        writeString(api_key_ios, os);
+        writeString(pushServerID, os);
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
     public Map<String, String> readFCMData(byte[] data) throws IOException {
         HashMap<String, String> m = new HashMap<>();
         ByteArrayInputStream ba = new ByteArrayInputStream(data);
         DataInputStream is = new DataInputStream(ba);
         m.put("app_id", readString(is));
         m.put("api_key", readString(is));
+        m.put("pushserverid", readString(is));
+        return m;
+    }
+
+    public Map<String, String> readFCMDataIOS(byte[] data) throws IOException {
+        HashMap<String, String> m = new HashMap<>();
+        ByteArrayInputStream ba = new ByteArrayInputStream(data);
+        DataInputStream is = new DataInputStream(ba);
+        m.put("app_id_ios", readString(is));
+        m.put("api_key_ios", readString(is));
         m.put("pushserverid", readString(is));
         return m;
     }
