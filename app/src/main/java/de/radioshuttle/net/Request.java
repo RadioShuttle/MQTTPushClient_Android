@@ -119,8 +119,15 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             /* de.radioshuttle.fcm data*/
             if (cont) {
                 cont = false;
+                //TODO: remove ios example
+                /*
+                Map<String, String> m2 = mConnection.getFCMDataIOS();
+                Log.d(TAG, "app_id " + m2.get("app_id_ios") + m2.get("api_key_ios"));
+                */
+
                 Map<String, String> m = mConnection.getFCMData();
                 mPushAccount.pushserverID = m.get("pushserverid");
+
 
                 FirebaseApp app = null;
 
