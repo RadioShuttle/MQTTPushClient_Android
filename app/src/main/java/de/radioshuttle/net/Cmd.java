@@ -42,6 +42,7 @@ public class Cmd {
     public final static int CMD_BYE = 15;
     public final static int CMD_PUBLISH = 17;
     public final static int CMD_GET_FCM_DATA_IOS = 18;
+    public final static int CMD_GET_MESSAGES = 19;
 
     public RawCmd helloRequest(int seqNo) throws IOException {
         writeCommand(CMD_HELLO, seqNo, FLAG_REQUEST, 0, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
@@ -64,8 +65,7 @@ public class Cmd {
 
     public Map<String, Object> readLoginData(byte[] data) throws IOException {
         HashMap<String, Object> m = new HashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         m.put("uri", readString(is));
         m.put("user", readString(is));
         short n = is.readShort();
@@ -92,8 +92,7 @@ public class Cmd {
 
     public Map<String, Object> readErrorData(byte[] data) throws IOException {
         HashMap<String, Object> m = new HashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         m.put("err_code", is.readShort());
         m.put("err_msg", readString(is));
         return m;
@@ -123,8 +122,7 @@ public class Cmd {
 
     public Map<String, String> readFCMData(byte[] data) throws IOException {
         HashMap<String, String> m = new HashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         m.put("app_id", readString(is));
         m.put("api_key", readString(is));
         m.put("pushserverid", readString(is));
@@ -133,11 +131,10 @@ public class Cmd {
 
     public Map<String, String> readFCMDataIOS(byte[] data) throws IOException {
         HashMap<String, String> m = new HashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         m.put("app_id_ios", readString(is));
         m.put("api_key_ios", readString(is));
-        m.put("pushserverid", readString(is));
+        m.put("pushserverid_ios", readString(is));
         return m;
     }
 
@@ -156,8 +153,7 @@ public class Cmd {
 
     public HashMap<String, String> readDeviceInfo(byte[] data) throws IOException {
         HashMap<String, String> m = new HashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         m.put("os", readString(is));
         m.put("os_ver", readString(is));
         m.put("device", readString(is));
@@ -186,8 +182,7 @@ public class Cmd {
 
     public LinkedHashMap<String, Action> readActions(byte[] data) throws IOException {
         LinkedHashMap<String, Action> actions = new LinkedHashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         int size = is.readUnsignedShort();
         String key;
         Action a;
@@ -204,8 +199,7 @@ public class Cmd {
 
     public Map<String, String> readActionData(int cmd, byte[] data) throws IOException {
         HashMap<String, String> map = new HashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         if (cmd == CMD_UPDATE_ACTION) {
             map.put("prev_actionname", readString(is));
         }
@@ -268,8 +262,7 @@ public class Cmd {
 
     public LinkedHashMap<String, Integer> readTopics(byte[] data) throws IOException {
         LinkedHashMap<String, Integer> subs = new LinkedHashMap<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         int size = is.readUnsignedShort();
         for (int i = 0; i < size; i++) {
             subs.put(readString(is), is.read());
@@ -279,13 +272,17 @@ public class Cmd {
 
     public List<String> readStringList(byte[] data) throws IOException {
         ArrayList<String> subs = new ArrayList<>();
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         int size = is.readUnsignedShort();
         for (int i = 0; i < size; i++) {
             subs.add(readString(is));
         }
         return subs;
+    }
+
+    public DataInputStream getDataInputStream(byte[] data) throws IOException {
+        ByteArrayInputStream bi = new ByteArrayInputStream(data);
+        return new DataInputStream(bi);
     }
 
     public RawCmd subscribeRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
@@ -306,6 +303,65 @@ public class Cmd {
             }
         }
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public RawCmd getCachedMessagesRequest(int seqNo, long since, int seqCnt) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        os.writeLong(since);
+        os.writeInt(seqCnt);
+        writeCommand(CMD_GET_MESSAGES, seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public void getCachedMessagesResponse(RawCmd request, List<Object[]> messages) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        if (messages == null || messages.size() == 0) {
+            os.writeShort(0);
+        } else {
+            os.writeShort(messages.size());
+            for(Object[] msg : messages) {
+                if (msg.length >= 4) {
+                    os.writeLong((Long) msg[0]);
+                    writeString((String) msg[1], os);
+                    byte[] b = (byte[]) msg[2];
+                    if (b == null || b.length == 0) {
+                        os.writeShort(0);
+                    } else {
+                        os.writeShort(b.length);
+                        os.write(b);
+                    }
+                    os.writeInt((Integer) msg[3]);
+                }
+            }
+        }
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public List<Object[]> readCachedMessages(byte[] data)  throws IOException {
+        List<Object[]> messages = new ArrayList<Object[]>();
+        DataInputStream is = getDataInputStream(data);
+        int len = is.readShort();
+        int b = 0;
+        if (len > 0) {
+            for(int i = 0; i < len; i++) {
+                Object[] o = new Object[4];
+                o[0] = is.readLong();
+                o[1] = readString(is);
+                b = is.readUnsignedShort();
+                if (b > 0) {
+                    byte[] buf = new byte[b];
+                    is.readFully(buf);
+                    o[2] = buf;
+                } else {
+                    o[2] = new byte[0];
+                }
+                o[3] = is.readInt();
+                messages.add(o);
+            }
+        }
+        return messages;
     }
 
     public RawCmd updateTopicsRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
@@ -360,8 +416,7 @@ public class Cmd {
 
     public int[] readIntArray(byte[] data) throws IOException {
         int rc[];
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
+        DataInputStream is = getDataInputStream(data);
         rc = new int[is.readUnsignedShort()];
         for (int i = 0; i < rc.length; i++) {
             rc[i] = is.readShort();
@@ -391,9 +446,7 @@ public class Cmd {
     }
 
     public String readStringPara(byte[] data) throws IOException {
-        ByteArrayInputStream ba = new ByteArrayInputStream(data);
-        DataInputStream is = new DataInputStream(ba);
-        return readString(is);
+        return readString(getDataInputStream(data));
     }
 
     /* basic read functions */
