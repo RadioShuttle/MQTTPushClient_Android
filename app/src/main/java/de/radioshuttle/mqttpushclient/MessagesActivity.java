@@ -346,6 +346,7 @@ public class MessagesActivity extends AppCompatActivity {
         String name = mViewModel.pushAccount.getNotifcationChannelName();
         Notifications.cancelAll(this, name); // clear systen notification tray
         Notifications.cancelAll(this, name + ".a"); // clear systen notification tray
+        Notifications.resetNewMessageCounter(this, mViewModel.pushAccount.pushserver, mViewModel.pushAccount.getMqttAccountName());
         setResult(AppCompatActivity.RESULT_CANCELED); //TODO:
         finish();
     }
