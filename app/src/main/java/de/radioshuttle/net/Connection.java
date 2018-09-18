@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -165,6 +166,17 @@ public class Connection {
         }
         return actions;
     }
+
+    public List<Object[]> getCachedMessages(long since, int seqNo)  throws IOException, ServerError {
+        List<Object[]> messages = new ArrayList<>();
+        Cmd.RawCmd response = mCmd.getCachedMessagesRequest(++mSeqNo, since, seqNo);
+        handleError(response);
+        if (lastReturnCode == Cmd.RC_OK) {
+            messages = mCmd.readCachedMessages(response.data);
+        }
+        return messages;
+    }
+
 
     public void bye() throws IOException {
         mCmd.writeCommand(Cmd.CMD_BYE, ++mSeqNo, Cmd.FLAG_REQUEST, 0, new byte[0]);
