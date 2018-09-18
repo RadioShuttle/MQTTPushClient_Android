@@ -12,7 +12,7 @@ import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 
 @Entity (tableName = "mqtt_messages",
-        indices = {@Index(value = {"push_server_id", "mqtt_accont_id", "when"})})
+        indices = {@Index(value = {"push_server_id", "mqtt_accont_id", "when", "seqno"}, unique = true)})
 public class MqttMessage {
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -25,6 +25,7 @@ public class MqttMessage {
     private long when;
     private String topic;
     private String msg;
+    private int seqno;
 
     public int getId() {
         return id;
@@ -74,10 +75,23 @@ public class MqttMessage {
         this.msg = msg;
     }
 
+    public void setSeqno(int seqNo) {
+        seqno = seqNo;
+    }
+
+    public int getSeqno() {
+        return seqno;
+    }
+
     public final static String UPDATE_INTENT = "MQTT_MSG_UPDATE";
     public final static String DELETE_INTENT = "MQTT_MSG_DELETE";
+    public final static String MSG_CNT_INTENT = "MSG_CNT_INTENT";
+
     public final static String ARG_CHANNELNAME = "MQTT_DEL_CHANNELNAME";
-    public final static String ARG_PUSHSERVER_ID = "MQTT_MSG_UPDATE_PUSHSERVER";
+    public final static String ARG_PUSHSERVER_ADDR = "MQTT_MSG_UPDATE_PUSHSERVER";
     public final static String ARG_MQTT_ACCOUNT = "MQTT_MSG_UPDATE_ACC";
+    public final static String ARG_CNT = "MQTT_MSG_CNT";
     public final static String ARG_IDS = "MQTT_MSG_UPDATE_IDS";
+
+    public static long MESSAGE_EXPIRE_MS = 30L * 24L * 1000L * 3600L;
 }
