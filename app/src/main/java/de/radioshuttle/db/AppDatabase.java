@@ -11,7 +11,7 @@ import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 
-@Database(entities = {MqttMessage.class, Code.class}, version = 1)
+@Database(entities = {MqttMessage.class, Code.class}, version = 2)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract MqttMessageDao mqttMessageDao();
@@ -19,6 +19,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public static synchronized AppDatabase getInstance(Context appContext) {
         if (db == null) {
             db = Room.databaseBuilder(appContext, AppDatabase.class, "mqtt_messages_db")
+                    .fallbackToDestructiveMigration()
                     .build();
         }
         return db;
@@ -26,3 +27,4 @@ public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase db;
 }
+
