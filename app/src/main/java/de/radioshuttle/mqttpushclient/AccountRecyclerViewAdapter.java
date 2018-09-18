@@ -195,19 +195,16 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
             }
             mMultiplePushServer = pushServer.size() > 1;
         }
-        readNewMessagesCounter(null);
+        readNoOfNewMessages(null);
 
         notifyDataSetChanged();
     }
 
-    protected void readNewMessagesCounter(String key) {
+    protected void readNoOfNewMessages(String key) {
         if (pushAccounts != null) {
             String name = null;
             for(PushAccount a : pushAccounts) {
-                name = a.getNotifcationChannelName();
-                Notifications.MessageInfo m1 = Notifications.getMessageInfo(context, name);
-                Notifications.MessageInfo m2 = Notifications.getMessageInfo(context, name + ".a");
-                a.newMessages = m1.messageId + m2.messageId;
+                a.newMessages = Notifications.getNoOfNewMessages(context, a.pushserver, a.getMqttAccountName());
             }
         }
     }
