@@ -8,8 +8,11 @@ package de.radioshuttle.net;
 
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
+import android.content.Intent;
+import android.database.sqlite.SQLiteConstraintException;
 import android.os.AsyncTask;
-import android.os.Build;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
@@ -19,10 +22,17 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
+import de.radioshuttle.db.AppDatabase;
+import de.radioshuttle.db.Code;
+import de.radioshuttle.db.MqttMessage;
+import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.mqttpushclient.R;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -128,6 +138,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 Map<String, String> m = mConnection.getFCMData();
                 mPushAccount.pushserverID = m.get("pushserverid");
 
+                /* get last messages from server */
+                syncMessages();
 
                 FirebaseApp app = null;
 
@@ -220,6 +232,107 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
         return null;
     }
+
+    protected void syncMessages() throws IOException, ServerError {
+        long[] lastReceivedKey = Notifications.getMaxReceivedDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName());
+        long lastReceived = lastReceivedKey[0];
+        int lastReceivedSeqNo = (int) lastReceivedKey[1] + 1;
+
+        AppDatabase db = null;
+        Long psCode = null;
+        Long mqttAccountCode = null;
+
+        db = AppDatabase.getInstance(mAppContext);
+        psCode = db.mqttMessageDao().getCode(mPushAccount.pushserverID);
+        if (psCode == null) {
+            Code c = new Code();
+            c.setName(mPushAccount.pushserverID);
+            try {
+                psCode = db.mqttMessageDao().insertCode(c);
+            } catch(SQLiteConstraintException e) {
+                // rare case: MessagingService has just inserted this pushServerID
+                Log.d(TAG,"insert pushserver id into code table: ", e);
+                psCode = db.mqttMessageDao().getCode(mPushAccount.pushserverID);
+            }
+            // Log.d(TAG, " (before null) code: " + psCode);
+        }
+        mqttAccountCode = db.mqttMessageDao().getCode(mPushAccount.getMqttAccountName());
+        if (mqttAccountCode == null) {
+            Code c = new Code();
+            c.setName(mPushAccount.getMqttAccountName());
+            try {
+                mqttAccountCode = db.mqttMessageDao().insertCode(c);
+            } catch(SQLiteConstraintException e) {
+                Log.d(TAG,"insert accountname into code table: ", e);
+                // rare case: MessagingService has just inserted this mqtt account
+                mqttAccountCode = db.mqttMessageDao().insertCode(c);
+            }
+            // Log.d(TAG, " (before null) mqttAccountCode: " + mqttAccountCode);
+        }
+
+        Log.d(TAG, "getCachedMessages: " + (lastReceived / 1000L) + " / " + lastReceivedSeqNo);
+        List<Object[]> messages =  mConnection.getCachedMessages(lastReceived / 1000L, lastReceivedSeqNo);
+        ArrayList<Integer> ids = new ArrayList<>();
+
+        long expireDate = System.currentTimeMillis() - MqttMessage.MESSAGE_EXPIRE_MS;
+
+        for(int i = 0; i < messages.size(); i++) {
+            MqttMessage mqttMessage = new MqttMessage();
+            mqttMessage.setPushServerID(psCode.intValue());
+            mqttMessage.setMqttAccountID(mqttAccountCode.intValue());
+
+            mqttMessage.setWhen((Long) messages.get(i)[0] * 1000L);
+            mqttMessage.setTopic((String) messages.get(i)[1]);
+            try {
+                mqttMessage.setMsg(new String((byte[]) messages.get(i)[2]));
+            } catch(Exception e) {
+                mqttMessage.setMsg(Base64.encodeToString((byte[]) messages.get(i)[2], Base64.DEFAULT)); //TODO: error should be rare but consider using hex
+            }
+            mqttMessage.setSeqno((Integer) messages.get(i)[3]);
+
+            if (mqttMessage.getWhen() < expireDate)
+                continue;
+
+            Log.i(TAG, "entry: " + new Date(mqttMessage.getWhen()) + " " + (mqttMessage.getWhen() / 1000L)  + " "
+                    +  mqttMessage.getSeqno() + " " + mqttMessage.getTopic() + " " + mqttMessage.getMsg());
+
+            try {
+                Long k = db.mqttMessageDao().insertMqttMessage(mqttMessage);
+                if (k != null && k >= 0) {
+                    ids.add(k.intValue());
+                    if (mqttMessage.getWhen() > lastReceived) {
+                        lastReceived = mqttMessage.getWhen();
+                        lastReceivedSeqNo = mqttMessage.getSeqno();
+                    } else if (mqttMessage.getWhen() == lastReceived) {
+                        if (mqttMessage.getSeqno() > lastReceivedSeqNo) {
+                            lastReceivedSeqNo = mqttMessage.getSeqno();
+                        }
+                    }
+                }
+            } catch(SQLiteConstraintException e) {
+                /* this error may occur, if the message has already been added by sync operation */
+                Log.d(TAG, "constraint error: " + e.getMessage());
+                continue;
+            }
+        }
+
+        if (ids.size() > 0) {
+            Notifications.addToNewMessageCounter(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(),
+                    ids.size(), lastReceived, lastReceivedSeqNo);
+            Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
+            intent.putExtra(MqttMessage.ARG_PUSHSERVER_ADDR, mPushAccount.pushserver);
+            intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mPushAccount.getMqttAccountName());
+            intent.putExtra(MqttMessage.ARG_IDS, ids);
+            LocalBroadcastManager.getInstance(mAppContext).sendBroadcast(intent);
+
+        }
+
+        /* delete all messages older than 30 days */
+        long before = System.currentTimeMillis() - MqttMessage.MESSAGE_EXPIRE_MS;
+        db.mqttMessageDao().deleteMessagesBefore(before);
+
+    }
+
 
     /** override for additional commands after login and exchanging de.radioshuttle.fcm data  */
     public boolean perform() throws Exception {
