@@ -112,7 +112,7 @@ public class MessagesViewModel extends AndroidViewModel {
         @Override
         public void onReceive(Context context, Intent intent) {
             String arg = intent.getStringExtra(MqttMessage.ARG_MQTT_ACCOUNT);
-            String argID = intent.getStringExtra(MqttMessage.ARG_PUSHSERVER_ID);
+            String argID = intent.getStringExtra(MqttMessage.ARG_PUSHSERVER_ADDR);
             Log.d(TAG, "received intent: " + arg + " / " + argID);
             if (arg != null && argID != null && pushAccount != null && pushAccount.getMqttAccountName().equals(arg) &&
                     pushAccount.pushserver != null && pushAccount.pushserver.equals(argID)) {
