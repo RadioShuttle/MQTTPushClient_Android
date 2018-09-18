@@ -213,6 +213,7 @@ public class AccountListActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
                         editor.commit();
+                        Notifications.deleteMessageCounter(this, b.pushserver, b.getMqttAccountName());
                         ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
                         boolean found = false;
                         if (pushAccounts != null) {
@@ -486,7 +487,7 @@ public class AccountListActivity extends AppCompatActivity {
     public final static String ACCOUNTS = "accounts";
 
     public final static String ARG_MQTT_ACCOUNT = "ARG_MQTT_ACCOUNT";
-    public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ID";
+    public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ADDR";
 
     /* keys for instance state */
     private final static String SEL_ROW = " SEL_ROW";
