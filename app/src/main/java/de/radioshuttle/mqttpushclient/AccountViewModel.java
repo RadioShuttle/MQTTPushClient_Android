@@ -50,8 +50,7 @@ public class AccountViewModel extends ViewModel {
     public void addNotificationUpdateListener(Application app) {
         if (this.app == null) {
             this.app = app;
-            IntentFilter intentFilter = new IntentFilter(MqttMessage.UPDATE_INTENT);
-            intentFilter.addAction(MqttMessage.DELETE_INTENT);
+            IntentFilter intentFilter = new IntentFilter(MqttMessage.MSG_CNT_INTENT);
             LocalBroadcastManager.getInstance(app).registerReceiver(broadcastReceiver, intentFilter);
         }
     }
@@ -206,9 +205,9 @@ public class AccountViewModel extends ViewModel {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            if (intent.getAction().equals(MqttMessage.UPDATE_INTENT)) {
+            if (intent.getAction().equals(MqttMessage.MSG_CNT_INTENT)) {
                 String arg = intent.getStringExtra(MqttMessage.ARG_MQTT_ACCOUNT);
-                String argID = intent.getStringExtra(MqttMessage.ARG_PUSHSERVER_ID);
+                String argID = intent.getStringExtra(MqttMessage.ARG_PUSHSERVER_ADDR);
                 Log.d(TAG, "received upd intent: " + arg + " / " + argID);
                 ArrayList<PushAccount> pushAccounts = accountList.getValue();
                 if (pushAccounts != null) {
@@ -217,20 +216,6 @@ public class AccountViewModel extends ViewModel {
                         Log.d(TAG, "check: " + pushAccount.getMqttAccountName() + " " + pushAccount.pushserver);
                         if (arg != null && argID != null && pushAccount != null && pushAccount.getMqttAccountName().equals(arg) &&
                                 pushAccount.pushserver != null && pushAccount.pushserver.equals(argID)) {
-                            accountList.setValue(pushAccounts); // notify about update change
-                            break;
-                        }
-                    }
-                }
-            } else if (intent.getAction().equals(MqttMessage.DELETE_INTENT)) {
-                String arg = intent.getStringExtra(MqttMessage.ARG_CHANNELNAME);
-                Log.d(TAG, "received del intent: " + arg);
-                ArrayList<PushAccount> pushAccounts = accountList.getValue();
-                if (pushAccounts != null) {
-                    Log.d(TAG, "push accounts size: " + pushAccounts.size());
-                    for(PushAccount pushAccount : pushAccounts) {
-                        Log.d(TAG, "check: " + pushAccount.getMqttAccountName() + " " + pushAccount.pushserver);
-                        if (arg != null && pushAccount != null && pushAccount.getNotifcationChannelName().equals(arg)) {
                             accountList.setValue(pushAccounts); // notify about update change
                             break;
                         }
