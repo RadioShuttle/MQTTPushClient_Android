@@ -16,6 +16,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteConstraintException;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -38,7 +39,6 @@ import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.Code;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
-import de.radioshuttle.mqttpushclient.AccountViewModel;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.mqttpushclient.Utils;
@@ -187,13 +187,14 @@ public class MessagingService extends FirebaseMessagingService {
 
         }
 
-
         String msg = data.get("messages");
         Msg latestAlarmMsg = null; // prio high
         Msg latestMsg = null; // prio normal
         int cntAlarm = 0;
         int cntNormal = 0;
         int cnt = 0;
+        long maxReceivedDate = 0L;
+        int sequenzNo = 0;
         try {
             JSONArray msgsArray = new JSONArray(msg);
             AppDatabase db = null;
@@ -205,14 +206,26 @@ public class MessagingService extends FirebaseMessagingService {
                 if (psCode == null) {
                     Code c = new Code();
                     c.setName(pushServerID);
-                    psCode = db.mqttMessageDao().insertCode(c);
+                    try {
+                        psCode = db.mqttMessageDao().insertCode(c);
+                    } catch(SQLiteConstraintException e) {
+                        // rare case: sync messages has just inserted this pushServerID
+                        Log.d(TAG,"insert pushserver id into code table: ", e);
+                        psCode = db.mqttMessageDao().getCode(pushServerID); // reread
+                    }
                     // Log.d(TAG, " (before null) code: " + psCode);
                 }
                 mqttAccountCode = db.mqttMessageDao().getCode(mqttAccountName);
                 if (mqttAccountCode == null) {
                     Code c = new Code();
                     c.setName(mqttAccountName);
-                    mqttAccountCode = db.mqttMessageDao().insertCode(c);
+                    try {
+                        mqttAccountCode = db.mqttMessageDao().insertCode(c);
+                    } catch(SQLiteConstraintException e) {
+                        // rare case: sync messages has just inserted this accountname
+                        Log.d(TAG,"insert accountname into code table: ", e);
+                        mqttAccountCode = db.mqttMessageDao().getCode(mqttAccountName);
+                    }
                     // Log.d(TAG, " (before null) mqttAccountCode: " + mqttAccountCode);
                 }
             }
@@ -222,6 +235,7 @@ public class MessagingService extends FirebaseMessagingService {
                 Iterator<String> it = topic.keys();
                 long d;
                 String base64;
+                int seqNo = 0;
                 while(it.hasNext()) {
                     String t = it.next();
                     JSONObject dataPerTopic = topic.getJSONObject(t);
@@ -233,10 +247,48 @@ public class MessagingService extends FirebaseMessagingService {
                         JSONArray entryArray = msgsArrayPerTopic.getJSONArray(j);
                         d = entryArray.getLong(0) * 1000L;
                         base64 = entryArray.getString(1);
+                        if (entryArray.length() >= 3) {
+                            seqNo = entryArray.getInt(2);
+                        } else {
+                            seqNo = 0;
+                        }
                         Msg m = new Msg();
                         m.when = d;
                         m.msg = Base64.decode(base64, Base64.DEFAULT);
                         m.topic = t;
+                        m.seqNo = seqNo;
+
+                        //TODO: consider removing Msg class and replace it with MqttMessage below
+                        MqttMessage mqttMessage = new MqttMessage();
+                        mqttMessage.setPushServerID(psCode.intValue());
+                        mqttMessage.setMqttAccountID(mqttAccountCode.intValue());
+                        mqttMessage.setWhen(m.when);
+                        mqttMessage.setTopic(m.topic);
+                        mqttMessage.setSeqno(m.seqNo);
+                        try {
+                            mqttMessage.setMsg(new String(m.msg));
+                        } catch(Exception e) {
+                            // decoding error or payload not utf-8
+                            mqttMessage.setMsg(base64); //TODO: error should be rare but consider using hex
+                        }
+                        try {
+                            Long k = db.mqttMessageDao().insertMqttMessage(mqttMessage);
+                            if (k != null && k >= 0) {
+                                ids.add(k.intValue());
+                                if (d > maxReceivedDate) {
+                                    maxReceivedDate = d;
+                                    sequenzNo = seqNo;
+                                } else if (d == maxReceivedDate) {
+                                    if (seqNo > sequenzNo) {
+                                        sequenzNo = seqNo;
+                                    }
+                                }
+                            }
+                        } catch(SQLiteConstraintException e) {
+                            /* this error may occur, if the message has already been added by sync operation */
+                            Log.d(TAG, "constraint error: " + e.getMessage());
+                            continue;
+                        }
                         if (prio == PushAccount.Topic.NOTIFICATION_MEDIUM) {
                             if (latestMsg == null) {
                                 latestMsg = m;
@@ -255,29 +307,13 @@ public class MessagingService extends FirebaseMessagingService {
                             cnt++;
                         }
 
-                        //TODO: consider removing Msg class and replace it with MqttMessage below
-                        MqttMessage mqttMessage = new MqttMessage();
-                        mqttMessage.setPushServerID(psCode.intValue());
-                        mqttMessage.setMqttAccountID(mqttAccountCode.intValue());
-                        mqttMessage.setWhen(m.when);
-                        mqttMessage.setTopic(m.topic);
-                        try {
-                            mqttMessage.setMsg(new String(m.msg));
-                        } catch(Exception e) {
-                            // decoding error or payload not utf-8
-                            mqttMessage.setMsg(base64); //TODO: error should be rare but consider using hex
-                        }
-                        Long k = db.mqttMessageDao().insertMqttMessage(mqttMessage);
-                        if (k != null && k >= 0) {
-                            ids.add(k.intValue());
-                        }
-                        Log.d(TAG, t + ": " + prio + " " + m.when + " " + new String(m.msg));
+                        Log.d(TAG, t + ": " + prio + " " + m.when + " " + m.seqNo + " " + new String(m.msg));
                     }
                 }
             }
 
             /* delete all messages older than 30 days */
-            long before = new Date().getTime() - (30L * 24L * 1000L * 3600L);
+            long before = new Date().getTime() - (MqttMessage.MESSAGE_EXPIRE_MS);
             db.mqttMessageDao().deleteMessagesBefore(before);
 
             /*
@@ -301,26 +337,29 @@ public class MessagingService extends FirebaseMessagingService {
             if (cntNormal > 0 && latestMsg != null) {
                 showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, latestMsg, PushAccount.Topic.NOTIFICATION_MEDIUM, cntNormal);
             }
-            /*
-            if (cnt > 0) {
-                showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, null, PushAccount.Topic.NOTIFICATION_LOW, cnt);
+
+            int total = cntAlarm + cntNormal + cnt;
+            if (total > 0) {
+                Notifications.addToNewMessageCounter(getApplicationContext(), pushServerLocalAddr, mqttAccountName, total, maxReceivedDate, sequenzNo);
             }
-            */
 
             /* inform about database changes, if app is running it can update its views */
-            Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
-            intent.putExtra(MqttMessage.ARG_PUSHSERVER_ID, pushServerLocalAddr);
-            intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mqttAccountName);
-            intent.putExtra(MqttMessage.ARG_IDS, ids);
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+            if (ids.size() > 0) {
+                Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
+                intent.putExtra(MqttMessage.ARG_PUSHSERVER_ADDR, pushServerLocalAddr);
+                intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mqttAccountName);
+                intent.putExtra(MqttMessage.ARG_IDS, ids);
+                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+            }
+
+            if (cntAlarm > 0 || cntNormal > 0) {
+                Log.d(TAG, "Messaging notify called.");
+            }
 
         } catch(Exception e) {
             //TODO: error handling for db errors
             Log.d(TAG, "error parsing messages", e);
         }
-
-
-        Log.d(TAG, "Messaging notify called.");
 
     }
 
@@ -460,6 +499,7 @@ public class MessagingService extends FirebaseMessagingService {
         long when;
         String topic;
         byte[] msg;
+        int seqNo;
     }
 
     public final static String FCM_ON_DELETE = "FCM_ON_DELETE";
