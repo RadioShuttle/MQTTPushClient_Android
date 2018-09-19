@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -14,6 +15,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
@@ -40,6 +42,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import de.radioshuttle.db.AppDatabase;
+import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.Request;
@@ -213,7 +217,6 @@ public class AccountListActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
                         editor.commit();
-                        Notifications.deleteMessageCounter(this, b.pushserver, b.getMqttAccountName());
                         ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
                         boolean found = false;
                         if (pushAccounts != null) {
@@ -224,6 +227,23 @@ public class AccountListActivity extends AppCompatActivity {
                             }
                         }
                         if (!found) {
+                            Notifications.deleteMessageCounter(this, b.pushserver, b.getMqttAccountName());
+
+                            @SuppressLint("StaticFieldLeak")
+                            AsyncTask<String, Object, Object> t = new AsyncTask<String, Object, Object>() {
+                                @Override
+                                protected Object doInBackground(String[] objects) {
+                                    AppDatabase db = AppDatabase.getInstance(getApplication());
+                                    MqttMessageDao dao = db.mqttMessageDao();
+                                    long psid = dao.getCode(objects[0]);
+                                    long accountID = dao.getCode(objects[1]);
+                                    dao.deleteMessagesForAccount(psid, accountID);
+                                    return null;
+                                }
+
+                            };
+                            t.execute(new String[] {b.pushserverID, b.getMqttAccountName()});
+
                             mViewModel.deleteToken(this, b);
                         }
                     } catch (JSONException e) {
