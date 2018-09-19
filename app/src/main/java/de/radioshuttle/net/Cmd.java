@@ -454,23 +454,24 @@ public class Cmd {
     public RawCmd readCommand() throws EOFException, IOException {
         RawCmd cmd = new RawCmd();
         byte[] magic = new byte[4];
-        dis.readFully(magic);
-        String magicx = new String(magic, "US-ASCII");
-        if (!magicx.toUpperCase().equals(MAGIC)) {
-            throw new IOException("Invalid header");
-        }
 
         // read header
         byte[] h = new byte[HEADER_SIZE];
         dis.readFully(h);
         DataInputStream di = new DataInputStream(new ByteArrayInputStream(h));
 
+        di.readFully(magic);
+        String magicx = new String(magic, "US-ASCII");
+        if (!magicx.toUpperCase().equals(MAGIC)) {
+            throw new IOException("Invalid header");
+        }
+
         cmd.command = di.readUnsignedShort();
         cmd.seqNo = di.readUnsignedShort();
         cmd.flags = di.readUnsignedShort();
         cmd.rc = di.readUnsignedShort();
         int len = di.readInt();
-        if (len > 1024)
+        if (len > MAX_PAYLOAD)
             throw new IOException("Invalid content length");
         cmd.data = new byte[len];
         dis.readFully(cmd.data);
@@ -604,6 +605,9 @@ public class Cmd {
     public final static byte PROTOCOL_MINOR = 0;
     public final static int MAGIC_SIZE = 4;
     public final static byte[] MAGIC_BLOCK;
+
+    public final static int MAX_PAYLOAD = 1024 * 256;
+
     static {
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
         try {
@@ -612,6 +616,6 @@ public class Cmd {
         }
         MAGIC_BLOCK = bao.toByteArray();
     }
-    public final static int HEADER_SIZE = 12;
+    public final static int HEADER_SIZE = 16;
 
 }
