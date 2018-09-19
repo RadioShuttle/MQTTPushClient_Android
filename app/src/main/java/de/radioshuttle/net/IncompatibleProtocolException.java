@@ -18,6 +18,7 @@ public class IncompatibleProtocolException extends IOException {
         mExpectedMinor = expectedMinor;
         mCurrentMajor = currMajor;
         mCurrentMinor = currentMin;
+        mAppContext = context.getApplicationContext();
     }
 
     @Override
