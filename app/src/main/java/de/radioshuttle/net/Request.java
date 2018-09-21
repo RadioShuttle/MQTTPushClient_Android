@@ -206,7 +206,6 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             requestStatus = Connection.STATUS_IO_ERROR;
             requestErrorTxt = mAppContext.getString(R.string.errormsg_io_error);
         } catch(Exception e) {
-            e.printStackTrace();
             Log.e(TAG, "unexpected error: ", e);
             requestStatus = Connection.STATUS_UNEXPECTED_ERROR;
             requestErrorTxt = mAppContext.getString(R.string.errormsg_unexpected_error);
