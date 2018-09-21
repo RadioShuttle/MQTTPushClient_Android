@@ -8,6 +8,7 @@ package de.radioshuttle.net;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -20,6 +21,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
+import de.radioshuttle.mqttpushclient.BuildConfig;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.Utils;
 
@@ -49,11 +54,34 @@ public class Connection {
                 new DataInputStream(mClientSocket.getInputStream()),
                 new DataOutputStream(mClientSocket.getOutputStream()));
 
-        Cmd.RawCmd reponse = mCmd.helloRequest(++mSeqNo);
+        Cmd.RawCmd reponse = mCmd.helloRequest(++mSeqNo, true); //TODO
 
         if (reponse.rc == Cmd.RC_INVALID_PROTOCOL) {
             throw new IncompatibleProtocolException(Cmd.PROTOCOL_MAJOR, Cmd.PROTOCOL_MINOR,
                     reponse.data[0], reponse.data[1], mContext);
+        }
+
+        /* upgrade to ssl */
+        if (reponse.rc == Cmd.RC_OK && (reponse.flags & Cmd.FLAG_SSL) > 0) {
+            SSLSocketFactory sslSocketFactory = null;
+            if (BuildConfig.DEBUG) {
+                try {
+                    /* a customized socket factory which trust anyone (to allow testing ssl with self signed certificates) */
+                    sslSocketFactory = (SSLSocketFactory) SSLUtils.createSslSocketFactory();
+                } catch(Exception e) {
+                    Log.e(TAG, "error creating socket factory: ", e);
+                }
+            } else {
+                sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            }
+
+            SSLSocket sslSocket = (SSLSocket)sslSocketFactory. createSocket(mClientSocket,
+                    mClientSocket.getInetAddress().getHostAddress(),
+                    mClientSocket.getPort(),
+                    true);
+            sslSocket.setUseClientMode(true);
+            sslSocket.startHandshake();
+            mClientSocket = sslSocket;
         }
     }
 
@@ -233,4 +261,5 @@ public class Connection {
 
     public int lastReturnCode;
 
+    private final static String TAG = Connection.class.getSimpleName();
 }
