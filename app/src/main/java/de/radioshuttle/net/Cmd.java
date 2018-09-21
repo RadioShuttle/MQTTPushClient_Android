@@ -44,8 +44,12 @@ public class Cmd {
     public final static int CMD_GET_FCM_DATA_IOS = 18;
     public final static int CMD_GET_MESSAGES = 19;
 
-    public RawCmd helloRequest(int seqNo) throws IOException {
-        writeCommand(CMD_HELLO, seqNo, FLAG_REQUEST, 0, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
+    public RawCmd helloRequest(int seqNo, boolean ssl) throws IOException {
+        int flags = FLAG_REQUEST;
+        if (ssl) {
+            flags |= FLAG_SSL;
+        }
+        writeCommand(CMD_HELLO, seqNo, flags, 0, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
         return readCommand();
     }
 
@@ -78,7 +82,7 @@ public class Cmd {
     }
 
     public void helloResponse(RawCmd requestHeader, int rc) throws IOException {
-        writeCommand(CMD_HELLO, requestHeader.seqNo, FLAG_RESPONSE, rc, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
+        writeCommand(CMD_HELLO, requestHeader.seqNo, FLAG_RESPONSE, rc, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR});
     }
 
     /* rc should be RC_SERVER_ERROR or RC_MQTT_ERROR */
@@ -598,16 +602,16 @@ public class Cmd {
 
     public final static int FLAG_REQUEST = 0;
     public final static int FLAG_RESPONSE = 1;
+    public final static int FLAG_SSL = 2;
 
     /* protocol */
     public final static String MAGIC = "MQTP";
     public final static byte PROTOCOL_MAJOR = 1;
-    public final static byte PROTOCOL_MINOR = 0;
+    public final static byte PROTOCOL_MINOR = 1;
     public final static int MAGIC_SIZE = 4;
     public final static byte[] MAGIC_BLOCK;
 
     public final static int MAX_PAYLOAD = 1024 * 256;
-
     static {
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
         try {
