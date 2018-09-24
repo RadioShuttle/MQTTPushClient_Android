@@ -100,6 +100,8 @@
 
     <!-- Connection failed -->
     <string name="errormsg_connection_failed">Connection failed</string>
+    <string name="errormsg_connection_failed_SSL">Connection failed (SSL error)</string>
+    <string name="errormsg_certificate_error">Invalid or unknown certificate.</string>
     <string name="errormsg_socket_timeout">Connection failed: Timeout</string>
     <string name="errormsg_econnrefused">Connection refused: The attempt to connect was ignored</string>
     <string name="errormsg_enetunreach">Connection failed: No network</string>

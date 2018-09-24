@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 import android.util.Log;
@@ -30,12 +31,17 @@ import de.radioshuttle.mqttpushclient.R;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.security.cert.CertPathValidatorException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
 
@@ -100,6 +106,12 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 } catch (SocketTimeoutException so) {
                     requestStatus = Connection.STATUS_TIMEOUT;
                     requestErrorTxt = mAppContext.getString(R.string.errormsg_socket_timeout);
+                } catch(SSLHandshakeException e) {
+                    requestStatus = Connection.STATUS_CONNECTION_FAILED;
+                    requestErrorTxt = mAppContext.getString(R.string.errormsg_connection_failed_SSL);
+                    if (e.getCause() instanceof CertificateException) {
+                        requestErrorTxt += ": " + mAppContext.getString(R.string.errormsg_certificate_error);
+                    }
                 } catch (IOException io) {
                     requestStatus = Connection.STATUS_CONNECTION_FAILED;
                     String msg = io.getMessage();
@@ -110,7 +122,6 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     } else {
                         // default msg,
                         requestErrorTxt = mAppContext.getString(R.string.errormsg_connection_failed);
-                        //TODO: consider appending exception message text
                     }
                 }
             }
