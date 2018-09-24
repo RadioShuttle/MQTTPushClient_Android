@@ -6,16 +6,25 @@
 
 package de.radioshuttle.mqttpushclient;
 
+import android.app.Application;
+import android.arch.lifecycle.AndroidViewModel;
+import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import de.radioshuttle.net.Connection;
 
 public class AboutActivity extends AppCompatActivity {
 
@@ -25,6 +34,8 @@ public class AboutActivity extends AppCompatActivity {
         setContentView(R.layout.activity_about);
 
         setTitle(R.string.title_about);
+
+        mViewModel = ViewModelProviders.of(this).get(AboutViewModel.class);
 
         TextView version = (TextView) findViewById(R.id.version);
         if (version != null) {
@@ -66,6 +77,24 @@ public class AboutActivity extends AppCompatActivity {
             });
         }
 
+        View logo = findViewById(R.id.logo);
+        if (logo != null) {
+            logo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mViewModel.cnt++;
+                    if (mViewModel.cnt == 6) {
+                        Connection.debugMode = true;
+
+                        if (Build.VERSION.SDK_INT >= 26) {
+                            ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE));
+                        } else {
+                            ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(150);
+                        }
+                    }
+                }
+            });
+        }
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -92,4 +121,15 @@ public class AboutActivity extends AppCompatActivity {
         setResult(AppCompatActivity.RESULT_CANCELED); //TODO:
         finish();
     }
+
+    public static class AboutViewModel extends AndroidViewModel {
+        public AboutViewModel(Application app) {
+            super(app);
+            cnt = 0;
+        }
+        public int cnt;
+    }
+
+    AboutViewModel mViewModel;
+
 }
