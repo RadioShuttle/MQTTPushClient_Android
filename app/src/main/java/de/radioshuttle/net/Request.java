@@ -51,7 +51,14 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     public void cancel() {
         mCancelled.set(true);
         if (mConnection != null) {
-            mConnection.disconnect();
+            Thread t = new Thread(new Runnable() { //TODO: check if there are still network ops on main ui thread
+                @Override
+                public void run() {
+                    Log.d(TAG, "connection cancelled.");
+                    mConnection.disconnect();
+                }
+            });
+            t.start();
         }
     }
 
