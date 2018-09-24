@@ -54,7 +54,8 @@ public class Connection {
                 new DataInputStream(mClientSocket.getInputStream()),
                 new DataOutputStream(mClientSocket.getOutputStream()));
 
-        Cmd.RawCmd reponse = mCmd.helloRequest(++mSeqNo, true); //TODO
+        boolean requestSSL = !debugMode;
+        Cmd.RawCmd reponse = mCmd.helloRequest(++mSeqNo, requestSSL);
 
         if (reponse.rc == Cmd.RC_INVALID_PROTOCOL) {
             throw new IncompatibleProtocolException(Cmd.PROTOCOL_MAJOR, Cmd.PROTOCOL_MINOR,
@@ -70,6 +71,7 @@ public class Connection {
                     sslSocketFactory = (SSLSocketFactory) SSLUtils.createSslSocketFactory();
                 } catch(Exception e) {
                     Log.e(TAG, "error creating socket factory: ", e);
+                    throw new IOException("error creating socket factory", e);
                 }
             } else {
                 sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -82,6 +84,9 @@ public class Connection {
             sslSocket.setUseClientMode(true);
             sslSocket.startHandshake();
             mClientSocket = sslSocket;
+            mCmd = new Cmd(
+                    new DataInputStream(mClientSocket.getInputStream()),
+                    new DataOutputStream(mClientSocket.getOutputStream()));
         }
     }
 
@@ -260,6 +265,8 @@ public class Connection {
     protected String mPushServer;
 
     public int lastReturnCode;
+
+    public static volatile boolean debugMode = false;
 
     private final static String TAG = Connection.class.getSimpleName();
 }
