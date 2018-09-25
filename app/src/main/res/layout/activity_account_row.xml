@@ -42,7 +42,7 @@
         android:layout_width="12dp"
         android:layout_height="12dp" />
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_marginLeft="16dp"
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -83,6 +83,6 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </LinearLayout>

@@ -6,7 +6,7 @@
 
 package de.radioshuttle.net;
 
-import android.arch.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.util.Log;
 

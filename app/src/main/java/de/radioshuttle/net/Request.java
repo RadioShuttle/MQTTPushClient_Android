@@ -6,13 +6,13 @@
 
 package de.radioshuttle.net;
 
-import android.arch.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.support.v4.content.LocalBroadcastManager;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Base64;
 import android.util.Log;
 
@@ -31,7 +31,6 @@ import de.radioshuttle.mqttpushclient.R;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,7 +39,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
