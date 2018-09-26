@@ -43,12 +43,17 @@ public class Cmd {
     public final static int CMD_PUBLISH = 17;
     public final static int CMD_GET_FCM_DATA_IOS = 18;
     public final static int CMD_GET_MESSAGES = 19;
+    public final static int CMD_ADM = 20;
 
     public RawCmd helloRequest(int seqNo, boolean ssl) throws IOException {
         int flags = FLAG_REQUEST;
         if (ssl) {
             flags |= FLAG_SSL;
         }
+        return helloRequest(seqNo, flags);
+    }
+
+    public RawCmd helloRequest(int seqNo, int flags) throws IOException {
         writeCommand(CMD_HELLO, seqNo, flags, 0, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
         return readCommand();
     }
@@ -64,6 +69,11 @@ public class Cmd {
         for (int i = 0; i < password.length; i++)
             os.writeChar(password[i]);
         writeCommand(CMD_LOGIN, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public RawCmd remoteAdmin(int seqNo, String command) throws IOException {
+        writeCommandStrPara(CMD_ADM, seqNo, command);
         return readCommand();
     }
 
@@ -603,6 +613,7 @@ public class Cmd {
     public final static int FLAG_REQUEST = 0;
     public final static int FLAG_RESPONSE = 1;
     public final static int FLAG_SSL = 2;
+    public final static int FLAG_ADM = 4;
 
     /* protocol */
     public final static String MAGIC = "MQTP";
