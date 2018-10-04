@@ -324,6 +324,14 @@ public class AccountListActivity extends AppCompatActivity {
                     startActivityForResult(intent, RC_ADD_ACCOUNT);
                 }
                 return true;
+            case R.id.menu_privacy:
+                if (!mActivityStarted) {
+                    mActivityStarted = true;
+                    intent = new Intent(this, PrivacyActivity.class);
+                    startActivityForResult(intent, RC_PRIVACY);
+                }
+                return true;
+
             case R.id.menu_refresh:
                 refresh();
                 return true;
@@ -520,6 +528,7 @@ public class AccountListActivity extends AppCompatActivity {
     public final static int RC_SUBSCRIPTIONS = 4;
     public final static int RC_ACTIONS = 5;
     public final static int RC_ABOUT = 6;
+    public final static int RC_PRIVACY = 7;
     public final static int RC_GOOGLE_PLAY_SERVICES = 8;
 
 
