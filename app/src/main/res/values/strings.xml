@@ -10,7 +10,7 @@
     <string name="action_edit_account">Edit</string>
     <string name="action_remove_account">Remove</string>
     <string name="action_cancel">Cancel</string>
-    <string name="action_quit">Quit</string>
+    <string name="action_back">Back</string>
     <string name="action_topics">Topics</string>
     <string name="action_save_account">Save</string>
     <string name="action_delete_topics">Delete</string>
@@ -86,8 +86,8 @@
     <string name="error_empty_field">Field must not be empty.</string>
     <string name="error_data_unmodified">Data was not modified.</string>
     <string name="info_data_saved">Data has been saved</string>
-    <string name="dlg_quit_without_save_title">Quit without saving?</string>
-    <string name="dlg_quit_without_save_msg">Server data has been modified.</string>
+    <string name="dlg_back_without_save_title">Go back without saving?</string>
+    <string name="dlg_back_without_save_msg">Server data has been modified.</string>
     <string name="warning_back_pressed">Press back again to close this app</string>
     <string name="op_in_progress">Please wait until current action has been finished.</string>
 
@@ -97,7 +97,8 @@
 
     <string name="title_privacy">Privacy Policy</string>
     <string name="privacy_summary">
-This app stores MQTT account credentials and settings locally and on the specified remote server to receive push notifications
+MQTT Push Client stores MQTT logon credentials and settings locally and on the specified remote server
+to communicate with the MQTT broker and to receive push notifications
 (via Google\'s Firebase Cloud Messaging)
     </string>
 

@@ -355,10 +355,10 @@ public class EditAccountActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.dlg_quit_without_save_title));
-            builder.setMessage(getString(R.string.dlg_quit_without_save_msg));
+            builder.setTitle(getString(R.string.dlg_back_without_save_title));
+            builder.setMessage(getString(R.string.dlg_back_without_save_msg));
 
-            builder.setPositiveButton(R.string.action_quit, new DialogInterface.OnClickListener() {
+            builder.setPositiveButton(R.string.action_back, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     getActivity().setResult(AppCompatActivity.RESULT_CANCELED);
