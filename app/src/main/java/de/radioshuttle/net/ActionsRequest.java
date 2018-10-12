@@ -33,24 +33,24 @@ public class ActionsRequest extends Request {
     }
 
     public void deleteActions(List<String> actionNames) {
-        mCmd = Cmd.CMD_REMOVE_ACTIONS;
+        mCmd = Cmd.CMD_DEL_ACTIONS;
         mActionListArg = actionNames;
     }
 
     public void updateAction(ActionsViewModel.Action a) {
-        mCmd = Cmd.CMD_UPDATE_ACTION;
+        mCmd = Cmd.CMD_UPD_ACTION;
         mActionArg = a;
     }
 
     public void publish(ActionsViewModel.Action a) {
-        mCmd = Cmd.CMD_PUBLISH;
+        mCmd = Cmd.CMD_MQTT_PUBLISH;
         mActionArg = a;
     }
 
     @Override
     public boolean perform() throws Exception {
 
-        if (mCmd == Cmd.CMD_REMOVE_ACTIONS) {
+        if (mCmd == Cmd.CMD_DEL_ACTIONS) {
             try {
                 int[] rc = mConnection.deleteActions(mActionListArg);
                 //TODO: handle rc
@@ -62,7 +62,7 @@ public class ActionsRequest extends Request {
                 requestErrorTxt = e.getMessage();
             }
             requestStatus = mConnection.lastReturnCode;
-        } else if (mCmd == Cmd.CMD_ADD_ACTION || mCmd == Cmd.CMD_UPDATE_ACTION || mCmd == Cmd.CMD_PUBLISH) {
+        } else if (mCmd == Cmd.CMD_ADD_ACTION || mCmd == Cmd.CMD_UPD_ACTION || mCmd == Cmd.CMD_MQTT_PUBLISH) {
             try {
                 int[] rc;
                 Cmd.Action arg = new Cmd.Action();
@@ -72,7 +72,7 @@ public class ActionsRequest extends Request {
 
                 if (mCmd == Cmd.CMD_ADD_ACTION) {
                     rc = mConnection.addAction(mActionArg.name, arg);
-                } else if (mCmd == Cmd.CMD_UPDATE_ACTION) {
+                } else if (mCmd == Cmd.CMD_UPD_ACTION) {
                     rc = mConnection.updateAction(mActionArg.prevName, mActionArg.name, arg);
                 } else {
                     rc = mConnection.publish(arg.topic, arg.content, arg.retain);

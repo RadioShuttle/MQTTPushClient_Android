@@ -33,12 +33,12 @@ public class TopicsRequest extends Request {
     }
 
     public void addTopics(LinkedHashMap<String, Integer> topics) {
-        mCmd = Cmd.CMD_SUBSCRIBE;
+        mCmd = Cmd.CMD_ADD_TOPICS;
         mTopics = topics;
     }
 
     public void deleteTopics(List<String> topics) {
-        mCmd = Cmd.CMD_UNSUBSCRIBE;
+        mCmd = Cmd.CMD_DEL_TOPICS;
         mDelTopics = topics;
     }
 
@@ -49,14 +49,14 @@ public class TopicsRequest extends Request {
     }
 
     public void updateTopics(LinkedHashMap<String, Integer> topics) {
-        mCmd = Cmd.CMD_UPDATE_TOPICS;
+        mCmd = Cmd.CMD_UPD_TOPICS;
         mTopics = topics;
     }
 
     @Override
     public boolean perform() throws Exception {
 
-        if (mCmd == Cmd.CMD_UNSUBSCRIBE) {
+        if (mCmd == Cmd.CMD_DEL_TOPICS) {
             try {
                 int[] rc = mConnection.deleteTopics(mDelTopics);
                 //TODO: handle rc
@@ -68,10 +68,10 @@ public class TopicsRequest extends Request {
                 requestErrorTxt = e.getMessage();
             }
             requestStatus = mConnection.lastReturnCode;
-        } else if (mCmd == Cmd.CMD_SUBSCRIBE || mCmd == Cmd.CMD_UPDATE_TOPICS) {
+        } else if (mCmd == Cmd.CMD_ADD_TOPICS || mCmd == Cmd.CMD_UPD_TOPICS) {
             try {
                 int[] rc;
-                if (mCmd == Cmd.CMD_SUBSCRIBE) {
+                if (mCmd == Cmd.CMD_ADD_TOPICS) {
                      rc = mConnection.addTopics(mTopics);
                 } else {
                     rc = mConnection.updateTopics(mTopics);
@@ -112,7 +112,7 @@ public class TopicsRequest extends Request {
 
             mPushAccount.topics = tmpRes;
         } else {
-            if (mCmd == Cmd.CMD_UNSUBSCRIBE && requestStatus == Cmd.RC_OK && mPushAccount.topics != null) {
+            if (mCmd == Cmd.CMD_DEL_TOPICS && requestStatus == Cmd.RC_OK && mPushAccount.topics != null) {
                 ArrayList<PushAccount.Topic> tmp2 = new ArrayList<>(mPushAccount.topics);
                 HashSet<String> deleted = new HashSet<>(mDelTopics);
                 Iterator<PushAccount.Topic> t = tmp2.iterator();

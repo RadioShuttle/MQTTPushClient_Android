@@ -134,7 +134,7 @@ public class Connection {
     }
 
     public LinkedHashMap<String, Integer> getTopics() throws IOException, ServerError {
-        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_SUBSCR, ++mSeqNo);
+        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_TOPICS, ++mSeqNo);
         handleError(response);
         LinkedHashMap<String, Integer> topics;
         if (lastReturnCode == Cmd.RC_OK) {
@@ -147,7 +147,7 @@ public class Connection {
     }
 
     public int[] addTopics(LinkedHashMap<String, Integer> topics) throws IOException, ServerError  {
-        Cmd.RawCmd response = mCmd.subscribeRequest(++mSeqNo, topics);
+        Cmd.RawCmd response = mCmd.addTopicsRequest(++mSeqNo, topics);
         handleError(response);
         return mCmd.readIntArray(response.data);
     }
@@ -159,7 +159,7 @@ public class Connection {
     }
 
     public int[] deleteTopics(List<String> topics) throws IOException, ServerError  {
-        Cmd.RawCmd response = mCmd.unsubscribeRequest(++mSeqNo, topics);
+        Cmd.RawCmd response = mCmd.deleteTopicsRequest(++mSeqNo, topics);
         handleError(response);
         return mCmd.readIntArray(response.data);
     }
@@ -177,13 +177,13 @@ public class Connection {
     }
 
     public int[] deleteActions(List<String> actionNames) throws IOException, ServerError  {
-        Cmd.RawCmd response = mCmd.removeActionsRequest(++mSeqNo, actionNames);
+        Cmd.RawCmd response = mCmd.deleteActionsRequest(++mSeqNo, actionNames);
         handleError(response);
         return mCmd.readIntArray(response.data);
     }
 
     public int[] publish(String topic, String content, boolean retain) throws IOException, ServerError {
-        Cmd.RawCmd response = mCmd.publish(++mSeqNo, topic, content, retain);
+        Cmd.RawCmd response = mCmd.mqttPublishRequest(++mSeqNo, topic, content, retain);
         handleError(response);
         return mCmd.readIntArray(response.data);
     }
@@ -212,7 +212,7 @@ public class Connection {
 
 
     public void bye() throws IOException {
-        mCmd.writeCommand(Cmd.CMD_BYE, ++mSeqNo, Cmd.FLAG_REQUEST, 0, new byte[0]);
+        mCmd.writeCommand(Cmd.CMD_DISCONNECT, ++mSeqNo, Cmd.FLAG_REQUEST, 0, new byte[0]);
     }
 
     public void disconnect() {

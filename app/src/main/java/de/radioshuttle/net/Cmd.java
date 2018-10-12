@@ -28,22 +28,22 @@ public class Cmd {
     public final static int CMD_HELLO = 1;
     public final static int CMD_LOGIN = 2;
     public final static int CMD_GET_FCM_DATA = 3;
-    public final static int CMD_GET_SUBSCR = 4;
-    public final static int CMD_SUBSCRIBE = 5;
-    public final static int CMD_UNSUBSCRIBE = 6;
-    public final static int CMD_UPDATE_TOPICS = 7;
+    public final static int CMD_GET_TOPICS = 4;
+    public final static int CMD_ADD_TOPICS = 5;
+    public final static int CMD_DEL_TOPICS = 6;
+    public final static int CMD_UPD_TOPICS = 7;
     public final static int CMD_SET_DEVICE_INFO = 8;
     public final static int CMD_REMOVE_TOKEN = 9;
     public final static int CMD_GET_ACTIONS = 10;
     public final static int CMD_ADD_ACTION = 11;
-    public final static int CMD_UPDATE_ACTION = 12;
-    public final static int CMD_REMOVE_ACTIONS = 13;
-    public final static int CMD_LOGOUT = 14;
-    public final static int CMD_BYE = 15;
-    public final static int CMD_PUBLISH = 17;
+    public final static int CMD_UPD_ACTION = 12;
+    public final static int CMD_DEL_ACTIONS = 13;
+    public final static int CMD_LOGOUT = 14; //TODO: unused?
+    public final static int CMD_DISCONNECT = 15;
+    public final static int CMD_MQTT_PUBLISH = 17;
     public final static int CMD_GET_FCM_DATA_IOS = 18;
     public final static int CMD_GET_MESSAGES = 19;
-    public final static int CMD_ADM = 20;
+    public final static int CMD_ADMIN = 20;
 
     public RawCmd helloRequest(int seqNo, boolean ssl) throws IOException {
         int flags = FLAG_REQUEST;
@@ -72,8 +72,8 @@ public class Cmd {
         return readCommand();
     }
 
-    public RawCmd remoteAdmin(int seqNo, String command) throws IOException {
-        writeCommandStrPara(CMD_ADM, seqNo, command);
+    public RawCmd adminCommand(int seqNo, String command) throws IOException {
+        writeCommandStrPara(CMD_ADMIN, seqNo, command);
         return readCommand();
     }
 
@@ -214,10 +214,10 @@ public class Cmd {
     public Map<String, String> readActionData(int cmd, byte[] data) throws IOException {
         HashMap<String, String> map = new HashMap<>();
         DataInputStream is = getDataInputStream(data);
-        if (cmd == CMD_UPDATE_ACTION) {
+        if (cmd == CMD_UPD_ACTION) {
             map.put("prev_actionname", readString(is));
         }
-        if (cmd != CMD_PUBLISH) {
+        if (cmd != CMD_MQTT_PUBLISH) {
             map.put("actionname", readString(is));
         }
         map.put("topic", readString(is));
@@ -237,13 +237,13 @@ public class Cmd {
         return readCommand();
     }
 
-    public RawCmd publish(int seqNo, String topic, String content, boolean retain) throws IOException {
+    public RawCmd mqttPublishRequest(int seqNo, String topic, String content, boolean retain) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(topic, os);
         writeString(content, os);
         os.writeBoolean(retain);
-        writeCommand(CMD_PUBLISH, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        writeCommand(CMD_MQTT_PUBLISH, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 
@@ -255,11 +255,11 @@ public class Cmd {
         writeString(a.topic, os);
         writeString(a.content, os);
         os.writeBoolean(a.retain);
-        writeCommand(CMD_UPDATE_ACTION, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        writeCommand(CMD_UPD_ACTION, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 
-    public RawCmd removeActionsRequest(int seqNo, List<String> actions) throws IOException {
+    public RawCmd deleteActionsRequest(int seqNo, List<String> actions) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (actions == null || actions.size() == 0) {
@@ -270,7 +270,7 @@ public class Cmd {
                 writeString(actions.get(i), os);
             }
         }
-        writeCommand(CMD_REMOVE_ACTIONS, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        writeCommand(CMD_DEL_ACTIONS, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 
@@ -299,11 +299,11 @@ public class Cmd {
         return new DataInputStream(bi);
     }
 
-    public RawCmd subscribeRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
-        return writeTopics(CMD_SUBSCRIBE, seqNo, topics);
+    public RawCmd addTopicsRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
+        return writeTopics(CMD_ADD_TOPICS, seqNo, topics);
     }
 
-    public void getSubscriptionsResponse(RawCmd request, Map<String, Integer> topics) throws IOException {
+    public void getTopicsResponse(RawCmd request, Map<String, Integer> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
@@ -379,7 +379,7 @@ public class Cmd {
     }
 
     public RawCmd updateTopicsRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
-        return writeTopics(CMD_UPDATE_TOPICS, seqNo, topics);
+        return writeTopics(CMD_UPD_TOPICS, seqNo, topics);
     }
 
     public RawCmd writeTopics(int cmd, int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
@@ -399,7 +399,7 @@ public class Cmd {
         return readCommand();
     }
 
-    public RawCmd unsubscribeRequest(int seqNo, List<String> topics) throws IOException {
+    public RawCmd deleteTopicsRequest(int seqNo, List<String> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
@@ -410,7 +410,7 @@ public class Cmd {
                 writeString(topics.get(i), os);
             }
         }
-        writeCommand(CMD_UNSUBSCRIBE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        writeCommand(CMD_DEL_TOPICS, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
 
