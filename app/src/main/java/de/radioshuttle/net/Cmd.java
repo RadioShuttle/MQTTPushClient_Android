@@ -14,14 +14,17 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 
 public class Cmd {
 
@@ -65,9 +68,9 @@ public class Cmd {
         writeString(user, os);
         if (password == null)
             password = new char[0];
-        os.writeShort(password.length);
-        for (int i = 0; i < password.length; i++)
-            os.writeChar(password[i]);
+        byte[] buf = toByteArray(password); // convert to UTF-8 bytes
+        os.writeShort(buf.length);
+        os.write(buf);
         writeCommand(CMD_LOGIN, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
@@ -84,8 +87,14 @@ public class Cmd {
         m.put("user", readString(is));
         short n = is.readShort();
         char[] pwd = new char[n];
-        for (int i = 0; i < n; i++) {
-            pwd[i] = is.readChar();
+        if (PROTOCOL_MAJOR == 1 && clientProtocolMinor < 2) { // pre 1.2 password is utf-16
+            for (int i = 0; i < n; i++) {
+                pwd[i] = is.readChar();
+            }
+        } else {
+            byte[] buf = new byte[n];
+            is.readFully(buf);
+            pwd = toCharArray(buf); // convert to UTF-16 chars
         }
         m.put("password", pwd);
         return m;
@@ -552,9 +561,7 @@ public class Cmd {
     }
 
     public static void writeString(String s, DataOutputStream dos) throws IOException {
-        if (s == null) {
-            dos.writeShort(-1);
-        } else if (s.length() == 0) {
+        if (s == null || s.length() == 0) {
             dos.writeShort(0);
         } else {
             byte[] b = s.getBytes("UTF-8");
@@ -566,9 +573,7 @@ public class Cmd {
     public static String readString(DataInputStream dis) throws IOException {
         String s;
         short len = dis.readShort();
-        if (len == -1) {
-            s = null;
-        } else if (len == 0) {
+        if (len == 0 || len == -1) { // len == -1 was pre 1.2
             s = "";
         } else if (len > 0) {
             byte[] b = new byte[len];
@@ -578,6 +583,27 @@ public class Cmd {
             throw new IOException("Invalid string len");
         }
         return s;
+    }
+
+    /** converts char array to UTF-8 byte array */
+    public static byte[] toByteArray(char[] chars) {
+        CharBuffer charBuffer = CharBuffer.wrap(chars);
+        ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+        byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+                byteBuffer.position(), byteBuffer.limit());
+        // Arrays.fill(charBuffer.array(), '\u0000'); // clear sensitive data
+        Arrays.fill(byteBuffer.array(), (byte) 0); // clear sensitive data
+        return bytes;
+    }
+
+    /** converts UTF-8 byte array to char array */
+    public static char[] toCharArray(byte[] bytes) {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+        CharBuffer charBuffer = Charset.forName("UTF-8").decode(byteBuffer);
+        char[] chars = Arrays.copyOfRange(charBuffer.array(), charBuffer.position(), charBuffer.limit());
+        Arrays.fill(charBuffer.array(), '\u0000'); // clear sensitive data
+        Arrays.fill(byteBuffer.array(), (byte) 0); // clear sensitive data
+        return chars;
     }
 
     protected DataInputStream dis;
@@ -618,9 +644,11 @@ public class Cmd {
     /* protocol */
     public final static String MAGIC = "MQTP";
     public final static byte PROTOCOL_MAJOR = 1;
-    public final static byte PROTOCOL_MINOR = 1;
+    public final static byte PROTOCOL_MINOR = 2;
     public final static int MAGIC_SIZE = 4;
     public final static byte[] MAGIC_BLOCK;
+
+    public byte clientProtocolMinor;
 
     public final static int MAX_PAYLOAD = 1024 * 256;
     static {
