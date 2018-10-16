@@ -146,8 +146,10 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             if (cont) {
                 cont = false;
                 //TODO: remove ios example
+                /*
                 Map<String, String> m2 = mConnection.getFCMDataIOS();
-                Log.d(TAG, "app_id " + m2.get("app_id_ios") + " " +  m2.get("sender_id"));
+                Log.d(TAG, "app_id " + m2.get("app_id_") + " " +  m2.get("sender_id"));
+                */
 
                 Map<String, String> m = mConnection.getFCMData();
                 mPushAccount.pushserverID = m.get("pushserverid");
@@ -156,10 +158,11 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 syncMessages();
 
                 FirebaseApp app = null;
+                String firebaseOptionsName = m.get("sender_id");
 
                 for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
-                    if (a.getName().equals(mPushAccount.pushserver)) {
-                        app = FirebaseApp.getInstance(mPushAccount.pushserver);
+                    if (a.getName().equals(firebaseOptionsName)) {
+                        app = FirebaseApp.getInstance(firebaseOptionsName);
                         break;
                     }
                 }
@@ -168,7 +171,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     FirebaseOptions options = new FirebaseOptions.Builder()
                             .setApplicationId(m.get("app_id"))
                             .build();
-                    app = FirebaseApp.initializeApp(mAppContext, options, mPushAccount.pushserver);
+                    app = FirebaseApp.initializeApp(mAppContext, options, firebaseOptionsName);
                 }
 
                 if (app != null) {
