@@ -146,10 +146,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             if (cont) {
                 cont = false;
                 //TODO: remove ios example
-                /*
                 Map<String, String> m2 = mConnection.getFCMDataIOS();
-                Log.d(TAG, "app_id " + m2.get("app_id_ios") + m2.get("api_key_ios"));
-                */
+                Log.d(TAG, "app_id " + m2.get("app_id_ios") + " " +  m2.get("sender_id"));
 
                 Map<String, String> m = mConnection.getFCMData();
                 mPushAccount.pushserverID = m.get("pushserverid");
@@ -168,9 +166,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
                 if (app == null) {
                     FirebaseOptions options = new FirebaseOptions.Builder()
-                            .setApplicationId(m.get("app_id")) // Required for Analytics.
-                            .setApiKey(m.get("api_key")) // Required for Auth.
-                            // .setDatabaseUrl(m.get("database_url")) // Required for RTDB. //TODO
+                            .setApplicationId(m.get("app_id"))
                             .build();
                     app = FirebaseApp.initializeApp(mAppContext, options, mPushAccount.pushserver);
                 }
