@@ -125,21 +125,10 @@ public class Cmd {
         return request(CMD_GET_FCM_DATA, seqNo);
     }
 
-    public void fcmDataResponse(RawCmd request, String app_id, String pushServerID) throws IOException {
+    public void fcmDataResponse(RawCmd request, String app_id, String senderID, String pushServerID) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(app_id, os);
-        if (PROTOCOL_MAJOR == 1 && clientProtocolMinor < 3) { // pre 1.3, send api key
-            writeString("AIzaSyC_2NHz5Gu5od75JD3AnuF-6nlcY-0TqZE", os); // provide api key for apps not updated so far
-        }
-        writeString(pushServerID, os);
-        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
-    }
-
-    public void fcmDataIOSResponse(RawCmd request, String app_id_ios, String senderID, String pushServerID) throws IOException {
-        ByteArrayOutputStream ba = new ByteArrayOutputStream();
-        DataOutputStream os = new DataOutputStream(ba);
-        writeString(app_id_ios, os);
         writeString(senderID, os);
         writeString(pushServerID, os);
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
@@ -149,16 +138,8 @@ public class Cmd {
         HashMap<String, String> m = new HashMap<>();
         DataInputStream is = getDataInputStream(data);
         m.put("app_id", readString(is));
-        m.put("pushserverid", readString(is));
-        return m;
-    }
-
-    public Map<String, String> readFCMDataIOS(byte[] data) throws IOException {
-        HashMap<String, String> m = new HashMap<>();
-        DataInputStream is = getDataInputStream(data);
-        m.put("app_id_ios", readString(is));
         m.put("sender_id", readString(is));
-        m.put("pushserverid_ios", readString(is));
+        m.put("pushserverid", readString(is));
         return m;
     }
 
