@@ -258,7 +258,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
 
     public void addTopic(String topic, int prio) {
         if (Utils.isEmpty(topic)) {
-            showEditDialog(mViewModel.lastEnteredTopic,MODE_ADD, getString(R.string.dlg_add_error_empty_str), prio);
+            showEditDialog(mViewModel.lastEnteredTopic,MODE_ADD, getString(R.string.error_empty_field), prio);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             PushAccount.Topic t = new PushAccount.Topic();
@@ -273,7 +273,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
 
     public void updateTopic(String topic, int prio) {
         if (Utils.isEmpty(topic)) {
-            showEditDialog(mViewModel.lastEnteredTopic,MODE_EDIT, getString(R.string.dlg_add_error_empty_str), prio);
+            showEditDialog(mViewModel.lastEnteredTopic,MODE_EDIT, getString(R.string.error_empty_field), prio);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             PushAccount.Topic t = new PushAccount.Topic();

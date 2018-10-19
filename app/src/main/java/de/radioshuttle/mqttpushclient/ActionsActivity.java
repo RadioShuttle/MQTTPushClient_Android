@@ -197,11 +197,11 @@ public class ActionsActivity extends AppCompatActivity {
 
     public void addAction(ActionsViewModel.Action a) {
         if (Utils.isEmpty(a.name)) {
-            showEditDialog(MODE_ADD, a, getString(R.string.dlg_actions_error_empty_str), 0);
+            showEditDialog(MODE_ADD, a, getString(R.string.error_empty_field), 0);
         } else if (Utils.isEmpty(a.topic)) {
-            showEditDialog(MODE_ADD, a, getString(R.string.dlg_actions_error_empty_str), 1);
+            showEditDialog(MODE_ADD, a, getString(R.string.error_empty_field), 1);
         } else if (Utils.isEmpty(a.content)) {
-            showEditDialog(MODE_ADD, a, getString(R.string.dlg_actions_error_empty_str), 2);
+            showEditDialog(MODE_ADD, a, getString(R.string.error_empty_field), 2);
         }  else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             mViewModel.addAction(this, a);
@@ -210,11 +210,11 @@ public class ActionsActivity extends AppCompatActivity {
 
     public void updateAction(ActionsViewModel.Action a) {
         if (Utils.isEmpty(a.name)) {
-            showEditDialog(MODE_EDIT, a, getString(R.string.dlg_actions_error_empty_str), 0);
+            showEditDialog(MODE_EDIT, a, getString(R.string.error_empty_field), 0);
         } else if (Utils.isEmpty(a.topic)) {
-            showEditDialog(MODE_EDIT, a, getString(R.string.dlg_actions_error_empty_str), 1);
+            showEditDialog(MODE_EDIT, a, getString(R.string.error_empty_field), 1);
         } else if (Utils.isEmpty(a.content)) {
-            showEditDialog(MODE_EDIT, a, getString(R.string.dlg_actions_error_empty_str), 2);
+            showEditDialog(MODE_EDIT, a, getString(R.string.error_empty_field), 2);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             mViewModel.updateAction(this, a);
