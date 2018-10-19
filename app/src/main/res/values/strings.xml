@@ -22,7 +22,7 @@
     <string name="action_update_topic">Update</string>
 
     <string name="dlg_remove_account_title">Remove Account</string>
-    <string name="dlg_remove_account_msg">Confirm removal of current selected account.</string>
+    <string name="dlg_remove_account_msg">Confirm removal of currently selected account.</string>
 
     <string name="dlg_delete_topic_title">Delete Topic</string>
     <string name="dlg_delete_topic_msg">Unsubscribe from selected topic.</string>
@@ -33,14 +33,12 @@
     <string name="dlg_edit_topic_label">Subscribe to topic:</string>
     <string name="dlg_edit_topic_label2">Topic:</string>
     <string name="dlg_add_topic_notif">Notifications:</string>
-    <string name="dlg_add_error_empty_str">Field topic must not be empty.</string>
 
     <string name="dlg_actions_title_add">Add MQTT Action</string>
     <string name="dlg_actions_title_update">Update MQTT Action</string>
     <string name="dlg_actions_name_label">Name:</string>
     <string name="dlg_actions_topic_label">Topic:</string>
     <string name="dlg_actions_content_label">Content:</string>
-    <string name="dlg_actions_error_empty_str">Field must not be empty.</string>
     <string name="dlg_actions_retain_label">Retain</string>
 
     <string name="dlg_delete_actions_title">Delete Action</string>
@@ -56,8 +54,8 @@
     <string name="error_loading_accounts">Error: Loading accounts failed.</string>
     <string name="error_saving_accounts">Error: Saving account list failed.</string>
 
-    <string name="notification_deleted">Pending messages deleted</string>
-    <string name="notification_show_messages">Tap to see messages</string>
+    <string name="notification_deleted">Pending Messages Deleted</string>
+    <string name="notification_show_messages">Too many messages stored on the FCM server or have expired (after 4 weeks)</string>
 
     <string name="action_cmd_exe">Executed %s</string>
     <!-- notification service -->
@@ -88,7 +86,7 @@
     <string name="info_data_saved">Data has been saved</string>
     <string name="dlg_back_without_save_title">Go back without saving?</string>
     <string name="dlg_back_without_save_msg">Server data has been modified.</string>
-    <string name="warning_back_pressed">Press back again to close this app</string>
+    <string name="warning_back_pressed">Press Back again to close this app</string>
     <string name="op_in_progress">Please wait until current action has been finished.</string>
 
     <string name="select_single_topic">Only one topic may be selected for editing</string>
@@ -121,9 +119,9 @@ to communicate with the MQTT broker and to receive push notifications
 
     <string name="errormsg_not_authorized">Bad user name or password or not authorized</string>
     <string name="errormsg_invalid_url">Invalid MQTT server URL."</string>
-    <string name="errormsg_unexpected_server_error">An unexprected error on the push server has occured.</string>
+    <string name="errormsg_unexpected_server_error">An unexpected error on the push server has occured.</string>
     <string name="errormsg_op_canceled">Request canceled.</string>
-    <string name="errormsg_fcm_id">Messaging token not received yet. Click refresh to retry.</string>
+    <string name="errormsg_fcm_id">Messaging token not received yet. Click Refresh to retry.</string>
 
     <string name="errormsg_incompatible_protocol" formatted="false">"Incompatible protocol version. Client: %d.%d, Server: %d.%d"</string>
     <string name="errormsg_unknown_host">IP address of push server could not be determined.</string>
