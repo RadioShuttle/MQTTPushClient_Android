@@ -8,36 +8,37 @@ package de.radioshuttle.net;
 
 
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 public class SSLUtils {
 
-    public static SSLSocketFactory createSslSocketFactory() throws Exception {
+    public static SSLSocketFactory getPushServerSSLSocketFactory() throws Exception {
+        if (pushServerSocketFactory == null) {
+            synchronized (lock) {
+                if (pushServerSocketFactory == null) {
+                    pushServerSocketFactory = createSslSocketFactory();
+                }
+            }
+        }
+        return pushServerSocketFactory;
+    }
+
+    public static HostnameVerifier getPushServeHostVerifier() {
+        // return HttpsURLConnection.getDefaultHostnameVerifier(); //TODO: see fix for document hub
+        return OkHostnameVerifier.INSTANCE;
+    }
+
+    private static SSLSocketFactory createSslSocketFactory() throws Exception {
         SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, new TrustManager[] {new X509TrustManager() {
-
-            @Override
-            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-
-            }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-
-            }
-
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return new X509Certificate[0];
-            }
-        }}, new SecureRandom());
+        sslContext.init(null, new TrustManager[] {new AppTrustManager()}, new SecureRandom());
         return sslContext.getSocketFactory();
     }
 
+    private static SSLSocketFactory pushServerSocketFactory = null;
+    private static Object lock = new Object();
 }
