@@ -109,6 +109,20 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     requestErrorTxt = mAppContext.getString(R.string.errormsg_connection_failed_SSL);
                     if (e.getCause() instanceof CertificateException) {
                         requestErrorTxt += ": " + mAppContext.getString(R.string.errormsg_certificate_error);
+                        if (e.getCause() instanceof CertException) {
+                            Log.d(TAG, "CertException 1"); //TODO raus
+                            mCertException = (CertException) e.getCause();
+                            /* host name may not be validated because exception already thrown, check host for more detailed error handling */
+                            if (!OkHostnameVerifier.INSTANCE.verify(mPushAccount.pushserver, mCertException.chain[0])) {
+                                mCertException.reason |= AppTrustManager.HOST_NOT_MATCHING;
+                            }
+                        }
+                    } else if (e instanceof HostVerificationError) {
+                        requestErrorTxt += ": " + mAppContext.getString(R.string.errormsg_certificate_error);
+                        mCertException = new CertException(
+                                null,
+                                AppTrustManager.HOST_NOT_MATCHING,
+                                ((HostVerificationError) e).chain);
                     }
                 } catch (IOException io) {
                     requestStatus = Connection.STATUS_CONNECTION_FAILED;
@@ -347,6 +361,17 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
     }
 
+    public boolean hasCertifiateException() {
+        return mCertException  != null && mCertException.chain != null && mCertException.chain.length > 0;
+    }
+
+    public void setCertificateExeption(CertException ex) {
+        mCertException = ex;
+    }
+
+    public CertException getCertificateException() {
+        return mCertException;
+    }
 
     /** override for additional commands after login and exchanging de.radioshuttle.fcm data  */
     public boolean perform() throws Exception {
@@ -363,6 +388,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected Context mAppContext;
     protected PushAccount mPushAccount;
     protected MutableLiveData<Request> mAccountLiveData;
+    volatile protected CertException mCertException;
 
     private final static String TAG = Request.class.getSimpleName();
 }
