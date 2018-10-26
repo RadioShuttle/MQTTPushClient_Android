@@ -9,6 +9,7 @@ package de.radioshuttle.mqttpushclient;
 import android.app.Activity;
 import android.app.Dialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.radioshuttle.net.ActionsRequest;
+import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.Request;
 
@@ -75,6 +77,32 @@ public class ActionsActivity extends AppCompatActivity {
                             mViewModel.confirmResultDelivered();
                             mSwipeRefreshLayout.setRefreshing(false);
                             invalidateOptionsMenu();
+
+                            /* handle cerificate exception */
+                            if (request.hasCertifiateException()) {
+                                /* only show dialog if the certificate has not already been denied */
+                                if (!AppTrustManager.isDenied(request.getCertificateException().chain[0])) {
+                                    FragmentManager fm = getSupportFragmentManager();
+
+                                    String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
+                                            AppTrustManager.getUniqueKey(request.getCertificateException().chain[0]);
+
+                                    /* check if a dialog is not already showing (for this certificate) */
+                                    if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                        CertificateErrorDialog dialog = new CertificateErrorDialog();
+                                        Bundle args = CertificateErrorDialog.createArgsFromEx(
+                                                request.getCertificateException(), request.getAccount().pushserver);
+                                        if (args != null) {
+                                            dialog.setArguments(args);
+                                            dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                            Log.d(TAG, "dialog show!!"); //TODO: remove
+                                        }
+                                    }
+                                }
+                            } /* end dialog already showing */
+                            request.setCertificateExeption(null); // mark es "processed"
+                            /* end handle cerificate exception */
+
                         }
                         if (b.requestStatus != Cmd.RC_OK) {
                             String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
