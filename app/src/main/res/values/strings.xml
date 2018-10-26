@@ -109,7 +109,7 @@ to communicate with the MQTT broker and to receive push notifications
     <!-- Connection failed -->
     <string name="errormsg_connection_failed">Connection failed</string>
     <string name="errormsg_connection_failed_SSL">Connection failed (SSL error)</string>
-    <string name="errormsg_certificate_error">Invalid or unknown certificate.</string>
+    <string name="errormsg_certificate_error">Invalid certificate.</string>
     <string name="errormsg_socket_timeout">Connection failed: Timeout</string>
     <string name="errormsg_econnrefused">Connection refused: The attempt to connect was ignored</string>
     <string name="errormsg_enetunreach">Connection failed: No network</string>
@@ -134,4 +134,15 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dlg_item_delete_all">All</string>
     <string name="dlg_item_delete_older_one_day">Older than one day</string>
 
+    <!-- Certificate Error Dialog -->
+    <string name="dlg_certerr_title">Security Warning</string>
+    <string name="dlg_certerr_intro">"Push Server %s uses an invalid certificate:"</string>
+
+    <string name="dlg_certerr_selfsigned">The certificate is not trusted because it is self-signed.</string>
+    <string name="dlg_certerr_invhost">The certificate is not valid for this push server.</string>
+    <string name="dlg_certerr_expired">The certificate has expired or is not valid yet.</string>
+    <string name="dlg_certerr_unknown_issuer">The issuer certificate is unknown.</string>
+    <string name="dlg_certerr_other">"Other:"</string>
+    <string name="action_deny">Deny</string>
+    <string name="action_add_ex">Add Exception</string>
 </resources>
