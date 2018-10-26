@@ -16,15 +16,18 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import de.radioshuttle.mqttpushclient.BuildConfig;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.Utils;
 
@@ -65,24 +68,29 @@ public class Connection {
         /* upgrade to ssl */
         if (reponse.rc == Cmd.RC_OK && (reponse.flags & Cmd.FLAG_SSL) > 0) {
             SSLSocketFactory sslSocketFactory = null;
-            if (BuildConfig.DEBUG) {
-                try {
-                    /* a customized socket factory which trust anyone (to allow testing ssl with self signed certificates) */
-                    sslSocketFactory = (SSLSocketFactory) SSLUtils.createSslSocketFactory();
-                } catch(Exception e) {
-                    Log.e(TAG, "error creating socket factory: ", e);
-                    throw new IOException("error creating socket factory", e);
-                }
-            } else {
-                sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            try {
+                sslSocketFactory = (SSLSocketFactory) SSLUtils.getPushServerSSLSocketFactory();
+            } catch(Exception e) {
+                Log.e(TAG, "error creating socket factory: ", e);
+                throw new IOException("error creating socket factory", e);
             }
 
             SSLSocket sslSocket = (SSLSocket)sslSocketFactory. createSocket(mClientSocket,
                     mClientSocket.getInetAddress().getHostAddress(),
                     mClientSocket.getPort(),
                     true);
+
             sslSocket.setUseClientMode(true);
             sslSocket.startHandshake();
+
+            Certificate[] certs = sslSocket.getSession().getPeerCertificates();
+            if (!AppTrustManager.isValidException((X509Certificate) certs[0])) {
+                HostnameVerifier hv = SSLUtils.getPushServeHostVerifier();
+                if (!hv.verify(mPushServer, sslSocket.getSession())) {
+                    throw new HostVerificationError("Invalid host", (X509Certificate[]) certs);
+                }
+            }
+
             mClientSocket = sslSocket;
             mCmd = new Cmd(
                     new DataInputStream(mClientSocket.getInputStream()),
