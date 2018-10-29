@@ -14,6 +14,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import de.radioshuttle.net.CertException;
 import de.radioshuttle.net.Connection;
 
 public class PushAccount {
@@ -34,6 +35,7 @@ public class PushAccount {
     public int requestErrorCode;
     public String requestErrorTxt;
     public int newMessages;
+    public CertException certException;
 
     public volatile ArrayList<Topic> topics;
 
@@ -130,6 +132,18 @@ public class PushAccount {
             name = "";
         }
         return name + ":" + getMqttAccountName();
+    }
+
+    public boolean hasCertifiateException() {
+        return certException  != null && certException.chain != null && certException.chain.length > 0;
+    }
+
+    public void setCertificateExeption(CertException ex) {
+        certException = ex;
+    }
+
+    public CertException getCertificateException() {
+        return certException;
     }
 
     public static PushAccount createAccountFormJSON(JSONObject o) throws JSONException {

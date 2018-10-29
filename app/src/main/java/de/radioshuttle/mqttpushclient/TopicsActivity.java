@@ -84,19 +84,19 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                             invalidateOptionsMenu();
 
                             /* handle cerificate exception */
-                            if (request.hasCertifiateException()) {
+                            if (b.hasCertifiateException()) {
                                 /* only show dialog if the certificate has not already been denied */
-                                if (!AppTrustManager.isDenied(request.getCertificateException().chain[0])) {
+                                if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
                                     FragmentManager fm = getSupportFragmentManager();
 
                                     String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
-                                            AppTrustManager.getUniqueKey(request.getCertificateException().chain[0]);
+                                            AppTrustManager.getUniqueKey(b.getCertificateException().chain[0]);
 
                                     /* check if a dialog is not already showing (for this certificate) */
                                     if (fm.findFragmentByTag(DLG_TAG) == null) {
                                         CertificateErrorDialog dialog = new CertificateErrorDialog();
                                         Bundle args = CertificateErrorDialog.createArgsFromEx(
-                                                request.getCertificateException(), request.getAccount().pushserver);
+                                                b.getCertificateException(), request.getAccount().pushserver);
                                         if (args != null) {
                                             dialog.setArguments(args);
                                             dialog.show(getSupportFragmentManager(), DLG_TAG);
@@ -105,7 +105,7 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                                     }
                                 }
                             } /* end dialog already showing */
-                            request.setCertificateExeption(null); // mark es "processed"
+                            b.setCertificateExeption(null); // mark es "processed"
                             /* end handle cerificate exception */
 
                         }
