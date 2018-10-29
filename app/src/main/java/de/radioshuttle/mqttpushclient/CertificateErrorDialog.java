@@ -10,6 +10,15 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
+
+import org.json.JSONException;
+
+import java.io.ByteArrayInputStream;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 
 import androidx.fragment.app.DialogFragment;
 import de.radioshuttle.net.AppTrustManager;
@@ -68,7 +77,11 @@ public class CertificateErrorDialog extends DialogFragment {
                     CertException t = AppTrustManager.mRequestMap.remove(key);
                     if (t != null && t.chain != null && t.chain.length > 0) {
                         AppTrustManager.addCertificate(t.chain[0], null, true);
-                        //TODO: save
+                        try {
+                            AppTrustManager.saveTrustedCerts(getContext());
+                        } catch (Exception e) {
+                            Log.e(TAG,"Saving certificates error: ", e);
+                        }
                         //TODO: consider calling callback function to refresh last action
                     }
                 }
@@ -109,5 +122,6 @@ public class CertificateErrorDialog extends DialogFragment {
             return b;
         }
 
+        private final static String TAG = CertificateErrorDialog.class.getSimpleName();
 
 }
