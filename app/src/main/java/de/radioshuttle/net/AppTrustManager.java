@@ -6,8 +6,17 @@
 
 package de.radioshuttle.net;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Base64;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayInputStream;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -15,16 +24,22 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.CertPathValidatorException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
+import androidx.annotation.MainThread;
 
 public class AppTrustManager implements X509TrustManager {
 
@@ -180,6 +195,64 @@ public class AppTrustManager implements X509TrustManager {
         return added;
     }
 
+    public static void saveTrustedCerts(Context context) throws JSONException, CertificateEncodingException {
+        Date now = new Date();
+        JSONArray jsonCerts = new JSONArray();
+
+        for(Iterator<Map.Entry<String, TrustedCert>> it = mCertMap.entrySet().iterator(); it.hasNext(); ) {
+            TrustedCert e = it.next().getValue();
+            if (e.allow && e.expires != null && e.expires.after(now) && e.cert != null) {
+                JSONObject cert = new JSONObject();
+                cert.put("expires", e.expires.getTime());
+                cert.put("certificate", Base64.encodeToString(e.cert.getEncoded(), Base64.NO_WRAP));
+                jsonCerts.put(cert);
+            }
+        }
+
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+
+        /* save message info */
+        SharedPreferences.Editor editor = settings.edit();
+        // Log.d(TAG, jsonCerts.toString());
+        editor.putString(PREFS_EXCEPTIONS, jsonCerts.toString());
+        editor.commit();
+
+    }
+
+    public static void readTrustedCerts(Context context) throws JSONException {
+        Date now = new Date();
+
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+        String certs = settings.getString(PREFS_EXCEPTIONS, null);
+        if (certs != null) {
+            JSONArray jsonCerts = new JSONArray(certs);
+            for(int i = 0; i < jsonCerts.length(); i++) {
+                JSONObject cert = jsonCerts.getJSONObject(i);
+
+                try {
+                    Date expires = new Date(cert.getLong("expires"));
+                    if (expires.after(now)) {
+                        String b64 = cert.getString("certificate");
+                        byte[] decoded = Base64.decode(b64, Base64.NO_WRAP);
+                        ByteArrayInputStream bis = new ByteArrayInputStream(decoded);
+                        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                        X509Certificate xcert = (X509Certificate) cf.generateCertificate(bis);
+                        TrustedCert trustedCert = new TrustedCert();
+                        trustedCert.allow = true;
+                        trustedCert.expires = expires;
+                        trustedCert.cert = xcert;
+                        mCertMap.put(getUniqueKey(xcert), trustedCert);
+
+                    }
+                } catch(Exception e) {
+                    Log.d(TAG, "Error reading certificate: ", e);
+                }
+
+            }
+        }
+
+    }
+
 
     public static void removeCertificateFromRequest(X509Certificate cert) {
         if (cert != null) {
@@ -250,6 +323,9 @@ public class AppTrustManager implements X509TrustManager {
     public static final int OTHER = 256;
 
     public final static long  CERT_EXPIRES_AFTER_MS = 24L * 1000l * 60l * 60l;
+
+    public final static String PREFS_NAME = "certificates";
+    public final static String PREFS_EXCEPTIONS = "exceptions";
 
     private final static String TAG = AppTrustManager.class.getSimpleName();
 }
