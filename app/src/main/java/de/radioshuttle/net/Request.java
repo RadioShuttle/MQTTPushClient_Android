@@ -110,7 +110,6 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     if (e.getCause() instanceof CertificateException) {
                         requestErrorTxt += ": " + mAppContext.getString(R.string.errormsg_certificate_error);
                         if (e.getCause() instanceof CertException) {
-                            Log.d(TAG, "CertException 1"); //TODO raus
                             mCertException = (CertException) e.getCause();
                             /* host name may not be validated because exception already thrown, check host for more detailed error handling */
                             if (!OkHostnameVerifier.INSTANCE.verify(mPushAccount.pushserver, mCertException.chain[0])) {
@@ -242,6 +241,9 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             if (mCancelled.get()) { // override error code which may be caused by cancellation
                 requestStatus = Connection.STATUS_CANCELED;
                 requestErrorTxt = mAppContext.getString(R.string.errormsg_op_canceled);
+                if (mAccountLiveData != null) {
+                    mAccountLiveData.postValue(this);
+                }
             }
 
             if (mConnection != null) {
@@ -251,14 +253,20 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             mPushAccount.requestStatus = requestStatus;
             mPushAccount.requestErrorCode = requestErrorCode;
             mPushAccount.requestErrorTxt = requestErrorTxt;
+            mPushAccount.certException = mCertException;
             mPushAccount.status = 0;
 
-            if (mAccountLiveData != null) {
-                mAccountLiveData.postValue(this);
-            }
         }
 
         return null;
+    }
+
+    @Override
+    protected void onPostExecute(PushAccount pushAccount) {
+        super.onPostExecute(pushAccount);
+        if (mAccountLiveData != null) {
+            mAccountLiveData.setValue(this);
+        }
     }
 
     protected void syncMessages() throws IOException, ServerError {
@@ -361,18 +369,6 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
     }
 
-    public boolean hasCertifiateException() {
-        return mCertException  != null && mCertException.chain != null && mCertException.chain.length > 0;
-    }
-
-    public void setCertificateExeption(CertException ex) {
-        mCertException = ex;
-    }
-
-    public CertException getCertificateException() {
-        return mCertException;
-    }
-
     /** override for additional commands after login and exchanging de.radioshuttle.fcm data  */
     public boolean perform() throws Exception {
         return true;
@@ -388,7 +384,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected Context mAppContext;
     protected PushAccount mPushAccount;
     protected MutableLiveData<Request> mAccountLiveData;
-    volatile protected CertException mCertException;
+    protected CertException mCertException;
 
     private final static String TAG = Request.class.getSimpleName();
 }
