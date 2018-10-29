@@ -64,6 +64,14 @@ public class AccountListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account_list);
 
+        if (savedInstanceState == null) {
+            try {
+                AppTrustManager.readTrustedCerts(getApplication());
+            } catch (Exception e) {
+                Log.d(TAG, "Error reading trusted certs (user): ", e);
+            }
+        }
+
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setEnabled(true);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
