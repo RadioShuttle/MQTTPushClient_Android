@@ -6,6 +6,8 @@
 
 package de.radioshuttle.mqttpushclient;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -135,7 +137,7 @@ public class PushAccount {
     }
 
     public boolean hasCertifiateException() {
-        return certException  != null && certException.chain != null && certException.chain.length > 0;
+        return status == 0 && requestStatus == Connection.STATUS_CONNECTION_FAILED && certException  != null && certException.chain != null && certException.chain.length > 0 ;
     }
 
     public void setCertificateExeption(CertException ex) {
@@ -196,6 +198,8 @@ public class PushAccount {
             return cmp;
         }
     }
+
+    private static String TAG = PushAccount.class.getSimpleName();
 
     public final static class Topic {
         public String name;
