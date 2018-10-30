@@ -70,7 +70,7 @@ public class CertificateErrorDialog extends DialogFragment {
 
         builder.setMessage(sb);
 
-        builder.setPositiveButton("Add Exception", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(getString(R.string.action_add_ex), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 CertException t = AppTrustManager.mRequestMap.remove(key);
