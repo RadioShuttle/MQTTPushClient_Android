@@ -47,7 +47,7 @@ import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_ACTIONS;
 import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_SUBSCRIPTIONS;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 
-public class MessagesActivity extends AppCompatActivity {
+public class MessagesActivity extends AppCompatActivity implements CertificateErrorDialog.Callback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +130,7 @@ public class MessagesActivity extends AppCompatActivity {
                                 invalidateOptionsMenu();
 
                                 /* handle cerificate exception */
-                                if (b.hasCertifiateException()) {
+                                if (b.hasCertifiateException() && !mActivityStarted) {
                                     /* only show dialog if the certificate has not already been denied */
                                     if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
                                         FragmentManager fm = getSupportFragmentManager();
@@ -144,9 +144,17 @@ public class MessagesActivity extends AppCompatActivity {
                                             Bundle args = CertificateErrorDialog.createArgsFromEx(
                                                     b.getCertificateException(), request.getAccount().pushserver);
                                             if (args != null) {
+                                                int cmd = ((ActionsRequest) request).mCmd;
+                                                if (cmd == Cmd.CMD_MQTT_PUBLISH) {
+                                                    args.putString("action_name", actionsRequest.mActionArg.name);
+                                                    args.putString("action_prevName",actionsRequest.mActionArg.prevName);
+                                                    args.putString("action_content",actionsRequest.mActionArg.content);
+                                                    args.putBoolean("action_retain",actionsRequest.mActionArg.retain);
+                                                    args.putString("action_topic",actionsRequest.mActionArg.topic);
+                                                }
+                                                args.putInt("cmd", cmd);
                                                 dialog.setArguments(args);
                                                 dialog.show(getSupportFragmentManager(), DLG_TAG);
-                                                Log.d(TAG, "dialog show!!"); //TODO: remove
                                             }
                                         }
                                     }
@@ -250,8 +258,10 @@ public class MessagesActivity extends AppCompatActivity {
 
         if (item.getGroupId() == ACTION_ITEM_GROUP_ID) {
             if (!mActivityStarted) {
+
                 String actionCmd = item.getTitle().toString();
                 Log.d(TAG, "action item clicked: " +  actionCmd);
+
                 ActionsRequest r = (ActionsRequest) mActionsViewModel.actionsRequest.getValue();
                 if (r != null) {
                     for(Iterator<ActionsViewModel.Action> it = r.mActions.iterator(); it.hasNext();) {
@@ -263,6 +273,7 @@ public class MessagesActivity extends AppCompatActivity {
                         }
                     }
                 }
+
             }
             return true;
         }
@@ -370,6 +381,24 @@ public class MessagesActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void retry(Bundle args) {
+        if (args != null) {
+            int cmd = args.getInt("cmd", 0);
+            if (cmd == 0) { // Cmd.CMD_GET_ACTIONS
+                refreshActions(true);
+            } else if (cmd == Cmd.CMD_MQTT_PUBLISH) {
+                ActionsViewModel.Action a = new ActionsViewModel.Action();
+                a.name = args.getString("action_name");
+                a.prevName = args.getString("action_prevName");
+                a.content = args.getString("action_content");
+                a.retain = args.getBoolean("action_retain");
+                a.topic = args.getString("action_topic");
+                mActionsViewModel.publish(getApplicationContext(), a);
+                Toast.makeText(this, getString(R.string.action_cmd_exe, a.name), Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 
     protected void handleBackPressed() {
         String name = mViewModel.pushAccount.getNotifcationChannelName();
@@ -402,4 +431,5 @@ public class MessagesActivity extends AppCompatActivity {
     private final static int ACTION_ITEM_GROUP_ID = Menu.FIRST + 1;
 
     private final static String TAG = MessagesActivity.class.getSimpleName();
+
 }

@@ -43,7 +43,7 @@ import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 
-public class EditAccountActivity extends AppCompatActivity {
+public class EditAccountActivity extends AppCompatActivity implements CertificateErrorDialog.Callback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +106,6 @@ public class EditAccountActivity extends AppCompatActivity {
                                         if (args != null) {
                                             dialog.setArguments(args);
                                             dialog.show(getSupportFragmentManager(), DLG_TAG);
-                                            Log.d(TAG, "dialog show!!"); //TODO: remove
                                         }
                                     }
                                 }
@@ -377,6 +376,11 @@ public class EditAccountActivity extends AppCompatActivity {
         }
 
         return ok;
+    }
+
+    @Override
+    public void retry(Bundle args) {
+        save();
     }
 
     public static class QuitWithoutSaveDlg extends DialogFragment {

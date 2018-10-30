@@ -57,7 +57,7 @@ import de.radioshuttle.net.Cmd;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
-public class AccountListActivity extends AppCompatActivity {
+public class AccountListActivity extends AppCompatActivity implements CertificateErrorDialog.Callback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +71,7 @@ public class AccountListActivity extends AppCompatActivity {
                 Log.d(TAG, "Error reading trusted certs (user): ", e);
             }
         }
+        mStartedFromNotificationTrayPS = null;
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setEnabled(true);
@@ -107,7 +108,6 @@ public class AccountListActivity extends AppCompatActivity {
             }
         });
 
-        //TODO: check observer: multiple accounts somtimes update events of previous record is skipped
         mViewModel.request.observe(this, new Observer<Request>() {
             @Override
             public void onChanged(@Nullable Request request) {
@@ -119,39 +119,38 @@ public class AccountListActivity extends AppCompatActivity {
                             if (request.getAccount().getKey().equals(pushAccounts.get(i).getKey())) {
                                 pushAccounts.set(i, pushAccount);
                                 mAdapter.setData(pushAccounts);
+
+                                /* handle cerificate exception */
+                                if (mStartedFromNotificationTrayPS == null || !mStartedFromNotificationTrayPS.equals(pushAccount.pushserver)) {
+                                    if (pushAccount.hasCertifiateException()) {
+                                        /* only show dialog if the certificate has not already been denied */
+                                        if (!AppTrustManager.isDenied(pushAccount.getCertificateException().chain[0])) {
+                                            FragmentManager fm = getSupportFragmentManager();
+
+                                            String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
+                                                    AppTrustManager.getUniqueKey(pushAccount.getCertificateException().chain[0]);
+
+                                            /* check if a dialog is not already showing (for this certificate) */
+                                            if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                                CertificateErrorDialog dialog = new CertificateErrorDialog();
+                                                Bundle args = CertificateErrorDialog.createArgsFromEx(
+                                                        pushAccount.getCertificateException(), pushAccount.pushserver);
+                                                if (args != null) {
+                                                    dialog.setArguments(args);
+                                                    dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                                }
+                                            }
+                                        }
+                                    } /* end dialog already showing */
+                                    pushAccount.setCertificateExeption(null); // mark es "processed"
+                                }
+                                /* end handle cerificate exception */
+
                                 if (mViewModel.isCurrentRequest(request)) {
                                     mSwipeRefreshLayout.setRefreshing(false);
                                     mViewModel.confirmResultDelivered();
+                                    mStartedFromNotificationTrayPS = null;
                                 }
-
-                                CertException x = pushAccount.getCertificateException();
-
-                                /* handle cerificate exception */
-                                Log.d(TAG, request.getAccount().getKey() +  " " +
-                                        (x == null ? "null" : x.reason) + " "); //TODO raus
-                                if (pushAccount.hasCertifiateException()) {
-                                    /* only show dialog if the certificate has not already been denied */
-                                    if (!AppTrustManager.isDenied(pushAccount.getCertificateException().chain[0])) {
-                                        FragmentManager fm = getSupportFragmentManager();
-
-                                        String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
-                                                AppTrustManager.getUniqueKey(pushAccount.getCertificateException().chain[0]);
-
-                                        /* check if a dialog is not already showing (for this certificate) */
-                                        if (fm.findFragmentByTag(DLG_TAG) == null) {
-                                            CertificateErrorDialog dialog = new CertificateErrorDialog();
-                                            Bundle args = CertificateErrorDialog.createArgsFromEx(
-                                                    pushAccount.getCertificateException(), pushAccount.pushserver);
-                                            if (args != null) {
-                                                dialog.setArguments(args);
-                                                dialog.show(getSupportFragmentManager(), DLG_TAG);
-                                                Log.d(TAG, "dialog show!!"); //TODO: remove
-                                            }
-                                        }
-                                    }
-                                } /* end dialog already showing */
-                                pushAccount.setCertificateExeption(null); // mark es "processed"
-                                /* end handle cerificate exception */
 
                                 break;
                             }
@@ -195,10 +194,6 @@ public class AccountListActivity extends AppCompatActivity {
         mListView.setAdapter(mAdapter);
         mViewModel.addNotificationUpdateListener(getApplication());
 
-        if (!accountsChecked) {
-            refresh();
-        }
-
         /* check if started via notification, if found a matching account open messaging activity to show latest mqtt messages */
         if (savedInstanceState == null) {
             String arg_account = getIntent().getStringExtra(ARG_MQTT_ACCOUNT);
@@ -220,6 +215,7 @@ public class AccountListActivity extends AppCompatActivity {
                     }
                 }
                 if (showMessagesForAcc != null) {
+                    mStartedFromNotificationTrayPS = showMessagesForAcc.pushserver;
                     mActivityStarted = true;
                     startMessagesActivity(showMessagesForAcc);
                 }
@@ -231,6 +227,10 @@ public class AccountListActivity extends AppCompatActivity {
             }
 
             checkGooglePlayServices();
+        }
+
+        if (!accountsChecked) {
+            refresh();
         }
 
     }
@@ -519,6 +519,11 @@ public class AccountListActivity extends AppCompatActivity {
         }
     };
 
+    @Override
+    public void retry(Bundle args) {
+        refresh();
+    }
+
     public static class ConfirmDeleteDlg extends DialogFragment {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -578,6 +583,7 @@ public class AccountListActivity extends AppCompatActivity {
 
     private long lastBackPressTime = 0;
     private boolean mActivityStarted;
+    private String mStartedFromNotificationTrayPS;
     private ActionMode mActionMode;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private AccountRecyclerViewAdapter mAdapter;

@@ -39,8 +39,10 @@ import android.widget.Toast;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Request;
@@ -52,7 +54,9 @@ import static de.radioshuttle.mqttpushclient.PushAccount.Topic.*;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
-public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerViewAdapter.RowSelectionListener {
+public class TopicsActivity extends AppCompatActivity
+        implements TopicsRecyclerViewAdapter.RowSelectionListener,
+        CertificateErrorDialog.Callback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,9 +102,21 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
                                         Bundle args = CertificateErrorDialog.createArgsFromEx(
                                                 b.getCertificateException(), request.getAccount().pushserver);
                                         if (args != null) {
+                                            int cmd = ((TopicsRequest) request).mCmd;
+                                            if (cmd == Cmd.CMD_ADD_TOPICS || cmd == Cmd.CMD_UPD_TOPICS) {
+                                                Iterator<Map.Entry<String, Integer>> it = topicsRequest.mTopics.entrySet().iterator();
+                                                if (it.hasNext()) {
+                                                    Map.Entry<String, Integer> e = it.next();
+                                                    args.putString("topic_name", e.getKey());
+                                                    args.putInt("topic_prio", e.getValue());
+                                                }
+                                            } else if (cmd == Cmd.CMD_DEL_TOPICS) {
+                                                args.putStringArrayList("topics_del", new ArrayList<>(topicsRequest.mDelTopics));
+                                            }
+                                            args.putInt("cmd", cmd);
+
                                             dialog.setArguments(args);
                                             dialog.show(getSupportFragmentManager(), DLG_TAG);
-                                            Log.d(TAG, "dialog show!!"); //TODO: remove
                                         }
                                     }
                                 }
@@ -393,6 +409,33 @@ public class TopicsActivity extends AppCompatActivity implements TopicsRecyclerV
             mActionMode = null;
         }
     };
+
+    @Override
+    public void retry(Bundle args) {
+        if (args != null) {
+            int cmd = args.getInt("cmd", 0);
+            if (cmd == 0) {
+                refresh();
+            } else if (cmd == Cmd.CMD_ADD_TOPICS || cmd == Cmd.CMD_UPD_TOPICS) {
+                PushAccount.Topic t = new PushAccount.Topic();
+                t.name = args.getString("topic_name");
+                t.prio = args.getInt("topic_prio");
+
+                if (!mViewModel.isRequestActive()) {
+                    mSwipeRefreshLayout.setRefreshing(true);
+                    if (cmd == Cmd.CMD_ADD_TOPICS) {
+                        mViewModel.addTopic(getApplicationContext(), t);
+                    } else {
+                        mViewModel.updateTopic(getApplicationContext(), t);
+                    }
+                }
+
+            } else if (cmd == Cmd.CMD_DEL_TOPICS && args.getStringArrayList("topics_del") != null) {
+                deleteTopics(args.getStringArrayList("topics_del"));
+            }
+        }
+
+    }
 
     public static class ConfirmDeleteDlg extends DialogFragment {
         @Override

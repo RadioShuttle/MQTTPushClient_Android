@@ -48,7 +48,7 @@ import static de.radioshuttle.mqttpushclient.ActionsActivity.EditActionDialog.*;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
-public class ActionsActivity extends AppCompatActivity {
+public class ActionsActivity extends AppCompatActivity implements CertificateErrorDialog.Callback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,9 +93,19 @@ public class ActionsActivity extends AppCompatActivity {
                                         Bundle args = CertificateErrorDialog.createArgsFromEx(
                                                 b.getCertificateException(), request.getAccount().pushserver);
                                         if (args != null) {
+                                            int cmd = ((ActionsRequest) request).mCmd;
+                                            if (cmd == Cmd.CMD_ADD_ACTION || cmd == Cmd.CMD_UPD_ACTION) { // Cmd.CMD_ADD_ACTION; Cmd.CMD_DEL_ACTIONS;
+                                                args.putString("action_name", actionsRequest.mActionArg.name);
+                                                args.putString("action_prevName",actionsRequest.mActionArg.prevName);
+                                                args.putString("action_content",actionsRequest.mActionArg.content);
+                                                args.putBoolean("action_retain",actionsRequest.mActionArg.retain);
+                                                args.putString("action_topic",actionsRequest.mActionArg.topic);
+                                            } else if (cmd == Cmd.CMD_DEL_ACTIONS) {
+                                                args.putStringArrayList("action_del", new ArrayList<>(actionsRequest.mActionListArg));
+                                            }
+                                            args.putInt("cmd", cmd);
                                             dialog.setArguments(args);
                                             dialog.show(getSupportFragmentManager(), DLG_TAG);
-                                            Log.d(TAG, "dialog show!!"); //TODO: remove
                                         }
                                     }
                                 }
@@ -502,6 +512,41 @@ public class ActionsActivity extends AppCompatActivity {
             mActionMode = null;
         }
     };
+
+    @Override
+    public void retry(Bundle args) {
+        if (args != null) {
+            int cmd = args.getInt("cmd", 0);
+            if (cmd == 0) { // Cmd.CMD_GET_ACTIONS
+                refresh();
+            } else if (cmd == Cmd.CMD_ADD_ACTION || cmd == Cmd.CMD_UPD_ACTION) {
+                ActionsViewModel.Action a = new ActionsViewModel.Action();
+                a.name = args.getString("action_name");
+                a.prevName = args.getString("action_prevName");
+                a.content = args.getString("action_content");
+                a.retain = args.getBoolean("action_retain");
+                a.topic = args.getString("action_topic");
+
+                if (!mViewModel.isRequestActive()) {
+                    mSwipeRefreshLayout.setRefreshing(true);
+
+                    if (cmd == Cmd.CMD_ADD_ACTION) {
+                        mViewModel.addAction(this, a);
+                    } else {
+                        mViewModel.updateAction(this, a);
+                    }
+                }
+            } else if (cmd == Cmd.CMD_DEL_ACTIONS) {
+                if (!mViewModel.isRequestActive()) {
+                    mSwipeRefreshLayout.setRefreshing(true);
+
+                    mViewModel.deleteActions(getApplicationContext(), args.getStringArrayList("action_del"));
+                }
+
+            }
+        }
+    }
+
 
     public static class ConfirmDeleteDlg extends DialogFragment {
         @Override
