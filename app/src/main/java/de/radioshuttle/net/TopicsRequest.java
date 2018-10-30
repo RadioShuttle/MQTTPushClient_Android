@@ -135,5 +135,5 @@ public class TopicsRequest extends Request {
 
     public int mCmd;
     public LinkedHashMap<String, Integer> mTopics;
-    protected List<String> mDelTopics;
+    public List<String> mDelTopics;
 }
