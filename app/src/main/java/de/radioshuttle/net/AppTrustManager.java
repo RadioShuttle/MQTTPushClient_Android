@@ -75,8 +75,8 @@ public class AppTrustManager implements X509TrustManager {
         try {
             defaultTrustManager.checkServerTrusted(chain ,authType);
         } catch(CertificateException e) {
-            // if (true) return; //TODO: remove
 
+            /*
             try {
                 for (int i = 0; i < chain.length; i++) {
                     // Log.d(TAG, "self signed: " + isSelfSigned(chain[i]));
@@ -95,6 +95,8 @@ public class AppTrustManager implements X509TrustManager {
             } catch (Exception e2) {
                 e2.printStackTrace();
             }
+            */
+
             Log.d(TAG, "checkServerTrusted", e);
 
             boolean ok = false;
