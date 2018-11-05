@@ -151,18 +151,24 @@ public class AppTrustManager implements X509TrustManager {
             /* cert path: missing ta, ... */
             Throwable cause = e.getCause();
             if (!selfSigned && cause instanceof CertPathValidatorException) {
+                boolean addError = true;
                 if (radioshuttle_ca != null && radioshuttle_ca.equals(chain[chain.length-1])) { // Build.VERSION.SDK_INT <= 23
                     try {
                         radioshuttle_ca.checkValidity();
                         cert.verify(radioshuttle_ca.getPublicKey()); //signed with own CA (assuemd only 2 entries in chain!)
-                        return;
+                        if (reason != 0) {
+                            addError = false; // no longer a CertPathValidatorException
+                        } else {
+                            return; // no other errors? consider this certificate as valid!
+                        }
                     } catch(Exception r) {
                         Log.d(TAG, "error validating ca: ", r);
                     }
                 }
-
                 CertPathValidatorException cpe = (CertPathValidatorException) cause;
-                reason |= INVALID_CERT_PATH;
+                if (addError) {
+                    reason |= INVALID_CERT_PATH;
+                }
                 Log.d(TAG, "cpe:" + cpe.toString());
             }
 
