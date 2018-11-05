@@ -9,6 +9,7 @@ package de.radioshuttle.net;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
 
@@ -17,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -30,8 +32,10 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,6 +59,7 @@ public class AppTrustManager implements X509TrustManager {
         for(int i = 0; i < tms.length; i++) {
             if (tms[i] instanceof X509TrustManager) {
                 defaultTrustManager = (X509TrustManager) tmf.getTrustManagers()[i];
+
                 found = true;
                 break;
             }
@@ -107,6 +112,7 @@ public class AppTrustManager implements X509TrustManager {
 
             /* already accepted? */
             String key = getUniqueKey(cert);
+
             if (mCertMap.containsKey(key)) {
                 TrustedCert cachedCert = mCertMap.get(key);
                 if (!cachedCert.allow) {
@@ -134,14 +140,6 @@ public class AppTrustManager implements X509TrustManager {
                 Log.d(TAG, "self signed test failed: " , e2);
             }
 
-            /* cert path: missing ta, ... */
-            Throwable cause = e.getCause();
-            if (!selfSigned && cause instanceof CertPathValidatorException) {
-                CertPathValidatorException cpe = (CertPathValidatorException) cause;
-                reason |= INVALID_CERT_PATH;
-                Log.d(TAG, "cpe:" + cpe.toString());
-            }
-
             /* expired? */
             try {
                 cert.checkValidity();
@@ -149,6 +147,25 @@ public class AppTrustManager implements X509TrustManager {
                 ex = e2;
                 reason |= EXPIRED;
             }
+
+            /* cert path: missing ta, ... */
+            Throwable cause = e.getCause();
+            if (!selfSigned && cause instanceof CertPathValidatorException) {
+                if (radioshuttle_ca != null && radioshuttle_ca.equals(chain[chain.length-1])) { // Build.VERSION.SDK_INT <= 23
+                    try {
+                        radioshuttle_ca.checkValidity();
+                        cert.verify(radioshuttle_ca.getPublicKey()); //signed with own CA (assuemd only 2 entries in chain!)
+                        return;
+                    } catch(Exception r) {
+                        Log.d(TAG, "error validating ca: ", r);
+                    }
+                }
+
+                CertPathValidatorException cpe = (CertPathValidatorException) cause;
+                reason |= INVALID_CERT_PATH;
+                Log.d(TAG, "cpe:" + cpe.toString());
+            }
+
 
             if (reason == 0) {
                 reason |= OTHER;
@@ -253,6 +270,27 @@ public class AppTrustManager implements X509TrustManager {
             }
         }
 
+        if (Build.VERSION.SDK_INT <= 23) {
+            try {
+                InputStream ins = context.getResources().openRawResource(
+                        context.getResources().getIdentifier("radioshuttle_ca",
+                                "raw", context.getPackageName()));
+                if (ins != null) {
+                    Log.d(TAG, "found ca");
+                    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                    X509Certificate xcert = (X509Certificate) cf.generateCertificate(ins);
+                    if (xcert != null) {
+                        radioshuttle_ca = xcert;
+                    }
+                }
+
+            } catch(Exception e) {
+                Log.d(TAG, "Error reading Radioshuttle CA", e);
+            }
+        }
+
+
+
     }
 
 
@@ -328,6 +366,8 @@ public class AppTrustManager implements X509TrustManager {
 
     public final static String PREFS_NAME = "certificates";
     public final static String PREFS_EXCEPTIONS = "exceptions";
+
+    private static X509Certificate radioshuttle_ca = null;
 
     private final static String TAG = AppTrustManager.class.getSimpleName();
 }
