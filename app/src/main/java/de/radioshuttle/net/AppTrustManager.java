@@ -32,10 +32,8 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -43,11 +41,10 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
-import androidx.annotation.MainThread;
-
 public class AppTrustManager implements X509TrustManager {
 
     private X509TrustManager defaultTrustManager;
+    private X509TrustManager myTrustManager;
 
     public AppTrustManager() throws Exception {
 
@@ -65,9 +62,15 @@ public class AppTrustManager implements X509TrustManager {
             }
         }
 
-
         if (!found)
             throw new Exception("Could not initialize default trust manager");
+
+        if (trustedCAs != null) {
+            tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(trustedCAs);
+            tms = tmf.getTrustManagers();
+            myTrustManager = (X509TrustManager) tms[0];
+        }
     }
 
     @Override
@@ -80,6 +83,15 @@ public class AppTrustManager implements X509TrustManager {
         try {
             defaultTrustManager.checkServerTrusted(chain ,authType);
         } catch(CertificateException e) {
+
+            if (myTrustManager != null) {
+                try {
+                    myTrustManager.checkServerTrusted(chain, authType);
+                    return;
+                } catch(CertificateException e2) {
+                    e = e2;
+                }
+            }
 
             /*
             try {
@@ -151,27 +163,10 @@ public class AppTrustManager implements X509TrustManager {
             /* cert path: missing ta, ... */
             Throwable cause = e.getCause();
             if (!selfSigned && cause instanceof CertPathValidatorException) {
-                boolean addError = true;
-                if (radioshuttle_ca != null && radioshuttle_ca.equals(chain[chain.length-1])) { // Build.VERSION.SDK_INT <= 23
-                    try {
-                        radioshuttle_ca.checkValidity();
-                        cert.verify(radioshuttle_ca.getPublicKey()); //signed with own CA (assuemd only 2 entries in chain!)
-                        if (reason != 0) {
-                            addError = false; // no longer a CertPathValidatorException
-                        } else {
-                            return; // no other errors? consider this certificate as valid!
-                        }
-                    } catch(Exception r) {
-                        Log.d(TAG, "error validating ca: ", r);
-                    }
-                }
                 CertPathValidatorException cpe = (CertPathValidatorException) cause;
-                if (addError) {
-                    reason |= INVALID_CERT_PATH;
-                }
+                reason |= INVALID_CERT_PATH;
                 Log.d(TAG, "cpe:" + cpe.toString());
             }
-
 
             if (reason == 0) {
                 reason |= OTHER;
@@ -286,8 +281,15 @@ public class AppTrustManager implements X509TrustManager {
                     CertificateFactory cf = CertificateFactory.getInstance("X.509");
                     X509Certificate xcert = (X509Certificate) cf.generateCertificate(ins);
                     if (xcert != null) {
-                        radioshuttle_ca = xcert;
+
+                        // Create a KeyStore containing our trusted CAs
+                        String keyStoreType = KeyStore.getDefaultType();
+                        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+                        keyStore.load(null, null);
+                        keyStore.setCertificateEntry("ca", xcert);
+                        trustedCAs = keyStore;
                     }
+
                 }
 
             } catch(Exception e) {
@@ -373,7 +375,7 @@ public class AppTrustManager implements X509TrustManager {
     public final static String PREFS_NAME = "certificates";
     public final static String PREFS_EXCEPTIONS = "exceptions";
 
-    private static X509Certificate radioshuttle_ca = null;
+    private static KeyStore trustedCAs = null;
 
     private final static String TAG = AppTrustManager.class.getSimpleName();
 }
