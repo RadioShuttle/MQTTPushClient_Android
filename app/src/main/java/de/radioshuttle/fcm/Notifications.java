@@ -171,7 +171,7 @@ public class Notifications extends BroadcastReceiver {
         int storedCounter = settings.getInt(MSG_CNT_PREFIX + account, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putInt(MSG_CNT_PREFIX + account, storedCounter + cnt);
-        if (receivedDate > storedReceivedDate) {
+        if (receivedDate > storedReceivedDate || (receivedDate == storedReceivedDate && seqNo > storedCounter)) {
             editor.putLong(RECEIVED_DATE_PREFIX + account, receivedDate);
             editor.putInt(SEQ_NO_PREFIX + account, seqNo);
         } else if (receivedDate == 0l) { // reset
