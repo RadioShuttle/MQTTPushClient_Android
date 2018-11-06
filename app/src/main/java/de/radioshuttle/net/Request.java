@@ -272,7 +272,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected void syncMessages() throws IOException, ServerError {
         long[] lastReceivedKey = Notifications.getMaxReceivedDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName());
         long lastReceived = lastReceivedKey[0];
-        int lastReceivedSeqNo = (int) lastReceivedKey[1] + 1;
+        int lastReceivedSeqNo = (int) lastReceivedKey[1];
 
         AppDatabase db = null;
         Long psCode = null;
