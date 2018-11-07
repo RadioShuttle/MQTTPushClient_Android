@@ -13,6 +13,8 @@ import android.util.Log;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLHandshakeException;
@@ -49,14 +52,43 @@ public class Connection {
             } catch(NumberFormatException e) { }
         }
 
-        mClientSocket = new Socket(pushserverArray[0], port) {
-            @Override
-            public void connect(SocketAddress endpoint, int timeout) throws IOException {
-                timeout = CONNECT_TIMEOUT;
-                super.connect(endpoint, timeout);
+        InetAddress lastValidIP = mLastValidIPMap.get(mPushServer);
+        InetAddress[] iaddr = InetAddress.getAllByName(pushserverArray[0]);
+        if (lastValidIP != null) {
+            for(int i = 0; i < iaddr.length; i++) {
+                if (lastValidIP.equals(iaddr[i])) {
+                    if (i > 0) {
+                        InetAddress tmp = iaddr[0];
+                        iaddr[0] = lastValidIP;
+                        iaddr[i] = tmp;
+                    }
+                    break;
+                }
             }
-        };
+        }
 
+        Socket socket = null;
+        for(int i = 0; i < iaddr.length; i++) {
+            try {
+                // Log.d(TAG, iaddr[i].toString());
+                socket = new Socket();
+                socket.connect(new InetSocketAddress(iaddr[i], port), CONNECT_TIMEOUT);
+                mLastValidIPMap.put(mPushServer, iaddr[i]);
+                break;
+            } catch(IOException | IllegalArgumentException | SecurityException e) {
+                try {
+                    if (socket != null)
+                        socket.close();
+                } catch(IOException e2) {}
+
+                if (i == iaddr.length - 1) {
+                    mLastValidIPMap.remove(mPushServer);
+                    throw e;
+                }
+            }
+        }
+
+        mClientSocket = socket;
         mClientSocket.setSoTimeout(READ_TIMEOUT);
 
         mCmd = new Cmd(
@@ -279,6 +311,8 @@ public class Connection {
     protected String mPushServer;
 
     public int lastReturnCode;
+
+    private static ConcurrentHashMap<String, InetAddress> mLastValidIPMap = new ConcurrentHashMap<>();
 
     public static volatile boolean debugMode = false;
 
