@@ -13,8 +13,8 @@ import android.util.Log;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -49,8 +49,14 @@ public class Connection {
             } catch(NumberFormatException e) { }
         }
 
-        mClientSocket = new Socket();
-        mClientSocket.connect(new InetSocketAddress(pushserverArray[0], port), CONNECT_TIMEOUT);
+        mClientSocket = new Socket(pushserverArray[0], port) {
+            @Override
+            public void connect(SocketAddress endpoint, int timeout) throws IOException {
+                timeout = CONNECT_TIMEOUT;
+                super.connect(endpoint, timeout);
+            }
+        };
+
         mClientSocket.setSoTimeout(READ_TIMEOUT);
 
         mCmd = new Cmd(
