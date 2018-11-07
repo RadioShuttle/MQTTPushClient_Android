@@ -55,6 +55,7 @@ public class Connection {
         InetAddress lastValidIP = mLastValidIPMap.get(mPushServer);
         InetAddress[] iaddr = InetAddress.getAllByName(pushserverArray[0]);
         if (lastValidIP != null) {
+            boolean found = false;
             for(int i = 0; i < iaddr.length; i++) {
                 if (lastValidIP.equals(iaddr[i])) {
                     if (i > 0) {
@@ -62,8 +63,12 @@ public class Connection {
                         iaddr[0] = lastValidIP;
                         iaddr[i] = tmp;
                     }
+                    found = true;
                     break;
                 }
+            }
+            if (!found) {
+                mLastValidIPMap.remove(mPushServer);
             }
         }
 
