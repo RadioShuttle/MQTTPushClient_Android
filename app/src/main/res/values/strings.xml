@@ -145,4 +145,9 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dlg_certerr_other">"Other:"</string>
     <string name="action_deny">Deny</string>
     <string name="action_add_ex">Add Exception</string>
+
+    <string name="errormsg_insecure">Connection aborted: Push server uses cleartext traffic</string>
+    <string name="dlg_insecure_txt">"Push Server %s uses cleartext traffic."</string>
+    <string name="action_allow">Allow</string>
+
 </resources>
