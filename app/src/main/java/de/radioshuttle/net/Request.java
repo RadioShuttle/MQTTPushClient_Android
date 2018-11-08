@@ -134,6 +134,13 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                         // default msg,
                         requestErrorTxt = mAppContext.getString(R.string.errormsg_connection_failed);
                     }
+                } catch(InsecureConnection ic) {
+                    requestStatus = Connection.STATUS_CONNECTION_FAILED;
+                    requestErrorTxt = mAppContext.getString(R.string.errormsg_insecure);
+                    Boolean allow = Connection.mInsecureConnection.get(mPushAccount.pushserver);
+                    if (allow == null) {
+                        mInsecureConnectionAsk = true;
+                    }
                 }
             }
 
@@ -254,6 +261,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             mPushAccount.requestErrorCode = requestErrorCode;
             mPushAccount.requestErrorTxt = requestErrorTxt;
             mPushAccount.certException = mCertException;
+            mPushAccount.inSecureConnectionAsk = mInsecureConnectionAsk;
             mPushAccount.status = 0;
 
         }
@@ -385,6 +393,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected PushAccount mPushAccount;
     protected MutableLiveData<Request> mAccountLiveData;
     protected CertException mCertException;
+    protected boolean mInsecureConnectionAsk;
 
     private final static String TAG = Request.class.getSimpleName();
 }
