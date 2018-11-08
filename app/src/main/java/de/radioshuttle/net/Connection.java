@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -27,7 +26,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -40,7 +38,7 @@ public class Connection {
         mContext = context.getApplicationContext();
     }
 
-    public void connect() throws IOException, InterruptedException {
+    public void connect() throws IOException, InterruptedException, InsecureConnection {
         if (mPushServer == null || Utils.isEmpty(mPushServer)) {
             throw new UnknownHostException("No push notification server specified.");
         }
@@ -108,36 +106,43 @@ public class Connection {
                     reponse.data[0], reponse.data[1], mContext);
         }
 
-        /* upgrade to ssl */
-        if (reponse.rc == Cmd.RC_OK && (reponse.flags & Cmd.FLAG_SSL) > 0) {
-            SSLSocketFactory sslSocketFactory = null;
-            try {
-                sslSocketFactory = (SSLSocketFactory) SSLUtils.getPushServerSSLSocketFactory();
-            } catch(Exception e) {
-                Log.e(TAG, "error creating socket factory: ", e);
-                throw new IOException("error creating socket factory", e);
-            }
+        if (reponse.rc == Cmd.RC_OK) {
+            if ((reponse.flags & Cmd.FLAG_SSL) > 0) {
+                /* upgrade to ssl */
+                SSLSocketFactory sslSocketFactory = null;
+                try {
+                    sslSocketFactory = (SSLSocketFactory) SSLUtils.getPushServerSSLSocketFactory();
+                } catch (Exception e) {
+                    Log.e(TAG, "error creating socket factory: ", e);
+                    throw new IOException("error creating socket factory", e);
+                }
 
-            SSLSocket sslSocket = (SSLSocket)sslSocketFactory. createSocket(mClientSocket,
-                    mClientSocket.getInetAddress().getHostAddress(),
-                    mClientSocket.getPort(),
-                    true);
+                SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(mClientSocket,
+                        mClientSocket.getInetAddress().getHostAddress(),
+                        mClientSocket.getPort(),
+                        true);
 
-            sslSocket.setUseClientMode(true);
-            sslSocket.startHandshake();
+                sslSocket.setUseClientMode(true);
+                sslSocket.startHandshake();
 
-            Certificate[] certs = sslSocket.getSession().getPeerCertificates();
-            if (!AppTrustManager.isValidException((X509Certificate) certs[0])) {
-                HostnameVerifier hv = SSLUtils.getPushServeHostVerifier();
-                if (!hv.verify(mPushServer, sslSocket.getSession())) {
-                    throw new HostVerificationError("Invalid host", (X509Certificate[]) certs);
+                Certificate[] certs = sslSocket.getSession().getPeerCertificates();
+                if (!AppTrustManager.isValidException((X509Certificate) certs[0])) {
+                    HostnameVerifier hv = SSLUtils.getPushServeHostVerifier();
+                    if (!hv.verify(mPushServer, sslSocket.getSession())) {
+                        throw new HostVerificationError("Invalid host", (X509Certificate[]) certs);
+                    }
+                }
+
+                mClientSocket = sslSocket;
+                mCmd = new Cmd(
+                        new DataInputStream(mClientSocket.getInputStream()),
+                        new DataOutputStream(mClientSocket.getOutputStream()));
+            } else if ((reponse.flags & Cmd.FLAG_SSL) == 0) {
+                Boolean allow = mInsecureConnection.get(mPushServer);
+                if (allow == null || !allow) {
+                    throw new InsecureConnection();
                 }
             }
-
-            mClientSocket = sslSocket;
-            mCmd = new Cmd(
-                    new DataInputStream(mClientSocket.getInputStream()),
-                    new DataOutputStream(mClientSocket.getOutputStream()));
         }
     }
 
@@ -318,6 +323,7 @@ public class Connection {
     public int lastReturnCode;
 
     private static ConcurrentHashMap<String, InetAddress> mLastValidIPMap = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String, Boolean> mInsecureConnection = new ConcurrentHashMap<>();
 
     public static volatile boolean debugMode = false;
 
