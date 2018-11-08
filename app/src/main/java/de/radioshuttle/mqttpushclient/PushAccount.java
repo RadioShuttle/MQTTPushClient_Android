@@ -38,6 +38,7 @@ public class PushAccount {
     public String requestErrorTxt;
     public int newMessages;
     public CertException certException;
+    public boolean inSecureConnectionAsk;
 
     public volatile ArrayList<Topic> topics;
 
