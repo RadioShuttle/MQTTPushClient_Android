@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import de.radioshuttle.net.AppTrustManager;
+import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 
@@ -112,6 +113,26 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
                             } /* end dialog already showing */
                             b.setCertificateExeption(null); // mark es "processed"
                             /* end handle cerificate exception */
+
+                            /* handle insecure connection */
+                            if (b.inSecureConnectionAsk) {
+                                if (Connection.mInsecureConnection.get(b.pushserver) == null) {
+                                    FragmentManager fm = getSupportFragmentManager();
+
+                                    String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
+
+                                    /* check if a dialog is not already showing (for this host) */
+                                    if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                        InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                                        Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
+                                        if (args != null) {
+                                            dialog.setArguments(args);
+                                            dialog.show(fm, DLG_TAG);
+                                        }
+                                    }
+                                }
+                            }
+                            b.inSecureConnectionAsk = false; // mark as "processed"
 
                         }
 

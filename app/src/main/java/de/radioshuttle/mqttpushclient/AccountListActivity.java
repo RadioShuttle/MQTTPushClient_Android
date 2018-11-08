@@ -11,6 +11,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -41,16 +42,17 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.AppTrustManager;
-import de.radioshuttle.net.CertException;
+import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 
@@ -137,12 +139,33 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                                         pushAccount.getCertificateException(), pushAccount.pushserver);
                                                 if (args != null) {
                                                     dialog.setArguments(args);
-                                                    dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                                    dialog.showNow(getSupportFragmentManager(), DLG_TAG);
                                                 }
                                             }
                                         }
                                     } /* end dialog already showing */
-                                    pushAccount.setCertificateExeption(null); // mark es "processed"
+                                    pushAccount.setCertificateExeption(null); // mark as "processed"
+
+                                    /* handle insecure connection */
+                                    if (pushAccount.inSecureConnectionAsk) {
+                                        if (Connection.mInsecureConnection.get(pushAccount.pushserver) == null) {
+                                            FragmentManager fm = getSupportFragmentManager();
+
+                                            String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + pushAccount.pushserver;
+
+                                            /* check if a dialog is not already showing (for this host) */
+                                            if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                                InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                                                Bundle args = InsecureConnectionDialog.createArgsFromEx(pushAccount.pushserver);
+                                                if (args != null) {
+                                                    Log.d(TAG, pushAccount.pushserver + " " + i);
+                                                    dialog.setArguments(args);
+                                                    dialog.showNow(getSupportFragmentManager(), DLG_TAG);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    pushAccount.inSecureConnectionAsk = false; // mark as "processed"
                                 }
                                 /* end handle cerificate exception */
 

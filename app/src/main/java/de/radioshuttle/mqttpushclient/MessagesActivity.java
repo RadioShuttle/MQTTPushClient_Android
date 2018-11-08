@@ -41,6 +41,7 @@ import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.ActionsRequest;
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Cmd;
+import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 
 import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_ACTIONS;
@@ -161,6 +162,27 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                                 } /* end dialog already showing */
                                 b.setCertificateExeption(null); // mark es "processed"
                                 /* end handle cerificate exception */
+
+                                /* handle insecure connection */
+                                if (b.inSecureConnectionAsk && !mActivityStarted) {
+                                    if (Connection.mInsecureConnection.get(b.pushserver) == null) {
+                                        FragmentManager fm = getSupportFragmentManager();
+
+                                        String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
+
+                                        /* check if a dialog is not already showing (for this host) */
+                                        if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                            InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                                            Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
+                                            if (args != null) {
+                                                dialog.setArguments(args);
+                                                dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                            }
+                                        }
+                                    }
+                                }
+                                b.inSecureConnectionAsk = false; // mark as "processed"
+
 
                             }
                             if (b.requestStatus != Cmd.RC_OK) {
