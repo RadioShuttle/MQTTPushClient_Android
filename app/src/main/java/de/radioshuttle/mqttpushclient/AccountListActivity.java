@@ -11,7 +11,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -73,7 +72,6 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 Log.d(TAG, "Error reading trusted certs (user): ", e);
             }
         }
-        mStartedFromNotificationTrayPS = null;
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setEnabled(true);
@@ -123,56 +121,53 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                 mAdapter.setData(pushAccounts);
 
                                 /* handle cerificate exception */
-                                if (mStartedFromNotificationTrayPS == null || !mStartedFromNotificationTrayPS.equals(pushAccount.pushserver)) {
-                                    if (pushAccount.hasCertifiateException()) {
-                                        /* only show dialog if the certificate has not already been denied */
-                                        if (!AppTrustManager.isDenied(pushAccount.getCertificateException().chain[0])) {
-                                            FragmentManager fm = getSupportFragmentManager();
+                                if (pushAccount.hasCertifiateException()) {
+                                    /* only show dialog if the certificate has not already been denied */
+                                    if (!AppTrustManager.isDenied(pushAccount.getCertificateException().chain[0])) {
+                                        FragmentManager fm = getSupportFragmentManager();
 
-                                            String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
-                                                    AppTrustManager.getUniqueKey(pushAccount.getCertificateException().chain[0]);
+                                        String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
+                                                AppTrustManager.getUniqueKey(pushAccount.getCertificateException().chain[0]);
 
-                                            /* check if a dialog is not already showing (for this certificate) */
-                                            if (fm.findFragmentByTag(DLG_TAG) == null) {
-                                                CertificateErrorDialog dialog = new CertificateErrorDialog();
-                                                Bundle args = CertificateErrorDialog.createArgsFromEx(
-                                                        pushAccount.getCertificateException(), pushAccount.pushserver);
-                                                if (args != null) {
-                                                    dialog.setArguments(args);
-                                                    dialog.showNow(getSupportFragmentManager(), DLG_TAG);
-                                                }
-                                            }
-                                        }
-                                    } /* end dialog already showing */
-                                    pushAccount.setCertificateExeption(null); // mark as "processed"
-
-                                    /* handle insecure connection */
-                                    if (pushAccount.inSecureConnectionAsk) {
-                                        if (Connection.mInsecureConnection.get(pushAccount.pushserver) == null) {
-                                            FragmentManager fm = getSupportFragmentManager();
-
-                                            String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + pushAccount.pushserver;
-
-                                            /* check if a dialog is not already showing (for this host) */
-                                            if (fm.findFragmentByTag(DLG_TAG) == null) {
-                                                InsecureConnectionDialog dialog = new InsecureConnectionDialog();
-                                                Bundle args = InsecureConnectionDialog.createArgsFromEx(pushAccount.pushserver);
-                                                if (args != null) {
-                                                    Log.d(TAG, pushAccount.pushserver + " " + i);
-                                                    dialog.setArguments(args);
-                                                    dialog.showNow(getSupportFragmentManager(), DLG_TAG);
-                                                }
+                                        /* check if a dialog is not already showing (for this certificate) */
+                                        if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                            CertificateErrorDialog dialog = new CertificateErrorDialog();
+                                            Bundle args = CertificateErrorDialog.createArgsFromEx(
+                                                    pushAccount.getCertificateException(), pushAccount.pushserver);
+                                            if (args != null) {
+                                                dialog.setArguments(args);
+                                                dialog.showNow(getSupportFragmentManager(), DLG_TAG);
                                             }
                                         }
                                     }
-                                    pushAccount.inSecureConnectionAsk = false; // mark as "processed"
+                                } /* end dialog already showing */
+                                pushAccount.setCertificateExeption(null); // mark as "processed"
+
+                                /* handle insecure connection */
+                                if (pushAccount.inSecureConnectionAsk) {
+                                    if (Connection.mInsecureConnection.get(pushAccount.pushserver) == null) {
+                                        FragmentManager fm = getSupportFragmentManager();
+
+                                        String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + pushAccount.pushserver;
+
+                                        /* check if a dialog is not already showing (for this host) */
+                                        if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                            InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                                            Bundle args = InsecureConnectionDialog.createArgsFromEx(pushAccount.pushserver);
+                                            if (args != null) {
+                                                Log.d(TAG, pushAccount.pushserver + " " + i);
+                                                dialog.setArguments(args);
+                                                dialog.showNow(getSupportFragmentManager(), DLG_TAG);
+                                            }
+                                        }
+                                    }
                                 }
+                                pushAccount.inSecureConnectionAsk = false; // mark as "processed"
                                 /* end handle cerificate exception */
 
                                 if (mViewModel.isCurrentRequest(request)) {
                                     mSwipeRefreshLayout.setRefreshing(false);
                                     mViewModel.confirmResultDelivered();
-                                    mStartedFromNotificationTrayPS = null;
                                 }
 
                                 break;
@@ -210,13 +205,14 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             public void onItemClicked(PushAccount b) {
                 if (!mActivityStarted && b != null) {
                     mActivityStarted = true;
-                    startMessagesActivity(b);
+                    startMessagesActivity(b, false);
                 }
             }
         });
         mListView.setAdapter(mAdapter);
         mViewModel.addNotificationUpdateListener(getApplication());
 
+        boolean startedFromNotificationTray = false;
         /* check if started via notification, if found a matching account open messaging activity to show latest mqtt messages */
         if (savedInstanceState == null) {
             String arg_account = getIntent().getStringExtra(ARG_MQTT_ACCOUNT);
@@ -238,9 +234,9 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                     }
                 }
                 if (showMessagesForAcc != null) {
-                    mStartedFromNotificationTrayPS = showMessagesForAcc.pushserver;
+                    startedFromNotificationTray = true;
                     mActivityStarted = true;
-                    startMessagesActivity(showMessagesForAcc);
+                    startMessagesActivity(showMessagesForAcc, true);
                 }
             }
             Boolean fcm_on_delete = getIntent().getBooleanExtra(MessagingService.FCM_ON_DELETE, false);
@@ -252,7 +248,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             checkGooglePlayServices();
         }
 
-        if (!accountsChecked) {
+        if (!accountsChecked && !startedFromNotificationTray) {
             refresh();
         }
 
@@ -262,11 +258,12 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
     }
 
-    protected void startMessagesActivity(PushAccount b) {
+    protected void startMessagesActivity(PushAccount b, boolean notifstart) {
         Intent intent = new Intent(AccountListActivity.this, MessagesActivity.class);
         intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
         try {
             intent.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
+            intent.putExtra(ARG_NOTIFSTART, notifstart);
         } catch(JSONException e) {
             Log.e(TAG, "push account (subscriptions) parse error", e);
         }
@@ -372,6 +369,12 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                             e.printStackTrace();
                         }
                     }
+                }
+            }
+        } else if (requestCode == RC_MESSAGES) {
+            if (data != null) {
+                if (data.getBooleanExtra(ARG_NOTIFSTART, false)) {
+                    refresh();
                 }
             }
         }
@@ -589,6 +592,8 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     public final static String ARG_MQTT_ACCOUNT = "ARG_MQTT_ACCOUNT";
     public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ADDR";
 
+    public final static String ARG_NOTIFSTART = "ARG_NOTIFSTART";
+
     /* keys for instance state */
     private final static String SEL_ROW = " SEL_ROW";
 
@@ -606,7 +611,6 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
     private long lastBackPressTime = 0;
     private boolean mActivityStarted;
-    private String mStartedFromNotificationTrayPS;
     private ActionMode mActionMode;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private AccountRecyclerViewAdapter mAdapter;
