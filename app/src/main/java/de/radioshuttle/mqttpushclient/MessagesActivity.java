@@ -427,7 +427,9 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         Notifications.cancelAll(this, name); // clear systen notification tray
         Notifications.cancelAll(this, name + ".a"); // clear systen notification tray
         Notifications.resetNewMessageCounter(this, mViewModel.pushAccount.pushserver, mViewModel.pushAccount.getMqttAccountName());
-        setResult(AppCompatActivity.RESULT_CANCELED); //TODO:
+        Intent intent = new Intent();
+        intent.putExtra(AccountListActivity.ARG_NOTIFSTART, getIntent().getBooleanExtra(AccountListActivity.ARG_NOTIFSTART, false));
+        setResult(AppCompatActivity.RESULT_OK, intent);
         finish();
     }
 
