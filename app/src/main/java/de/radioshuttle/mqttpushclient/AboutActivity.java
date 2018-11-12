@@ -58,7 +58,7 @@ public class AboutActivity extends AppCompatActivity {
             homeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Uri webpage = Uri.parse("http://www.radioshuttle.de");
+                    Uri webpage = Uri.parse("https://www.radioshuttle.de");
                     Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
                     startActivity(webIntent);
                 }
@@ -70,7 +70,7 @@ public class AboutActivity extends AppCompatActivity {
             helpButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Uri webpage = Uri.parse("http://www.radioshuttle.de/mqtt-push-client-hilfe/");
+                    Uri webpage = Uri.parse("https://www.radioshuttle.de/mqtt-push-client-hilfe/");
                     Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
                     startActivity(webIntent);
                 }
