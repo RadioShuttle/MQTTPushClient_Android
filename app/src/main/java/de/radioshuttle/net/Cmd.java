@@ -47,6 +47,7 @@ public class Cmd {
     public final static int CMD_GET_FCM_DATA_IOS = 18;
     public final static int CMD_GET_MESSAGES = 19;
     public final static int CMD_ADMIN = 20;
+    public final static int CMD_BACKUP = 21;
 
     public RawCmd helloRequest(int seqNo, boolean ssl) throws IOException {
         int flags = FLAG_REQUEST;
@@ -586,6 +587,10 @@ public class Cmd {
         Arrays.fill(charBuffer.array(), '\u0000'); // clear sensitive data
         Arrays.fill(byteBuffer.array(), (byte) 0); // clear sensitive data
         return chars;
+    }
+
+    public BufferedOutputStream getBufferedOutputStream() {
+        return bos;
     }
 
     protected DataInputStream dis;
