@@ -29,7 +29,7 @@ public class PrivacyActivity extends AppCompatActivity {
             privacyButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Uri webpage = Uri.parse("http://www.helios.de/web/EN/privacy.html");
+                    Uri webpage = Uri.parse("https://www.helios.de/web/EN/privacy.html");
                     Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
                     startActivity(webIntent);
                 }
