@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.paging.LivePagedListBuilder;
 import androidx.paging.PagedList;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -36,9 +37,12 @@ import org.json.JSONObject;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Iterator;
 
+import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessage;
+import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.ActionsRequest;
 import de.radioshuttle.net.AppTrustManager;
@@ -401,6 +405,18 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
             }
         });
         builder.setNegativeButton(getString(R.string.action_cancel), null);
+        builder.setNeutralButton(getString(R.string.resotre_action), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // get last date
+                if (mActionsViewModel != null && mActionsViewModel.pushAccount != null) {
+                    Notifications.resetLastReceivedDate(getApplication(),
+                            mActionsViewModel.pushAccount.pushserver, mActionsViewModel.pushAccount.getMqttAccountName());
+
+                    refreshActions(true);
+                }
+            }
+        });
         AlertDialog dlg = builder.create();
 
         dlg.show();
