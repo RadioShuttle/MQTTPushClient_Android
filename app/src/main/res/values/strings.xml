@@ -133,6 +133,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dlg_del_messages_title">Delete Messages</string>
     <string name="dlg_item_delete_all">All</string>
     <string name="dlg_item_delete_older_one_day">Older than one day</string>
+    <string name="resotre_action">Restore messages</string>
 
     <!-- Certificate Error Dialog -->
     <string name="dlg_certerr_title">Security Warning</string>
