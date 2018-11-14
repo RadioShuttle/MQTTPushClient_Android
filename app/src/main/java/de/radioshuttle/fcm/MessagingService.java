@@ -31,7 +31,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -313,7 +315,9 @@ public class MessagingService extends FirebaseMessagingService {
             }
 
             /* delete all messages older than 30 days */
-            long before = new Date().getTime() - (MqttMessage.MESSAGE_EXPIRE_MS);
+            GregorianCalendar cal = new GregorianCalendar();
+            cal.add(Calendar.DAY_OF_MONTH, -MqttMessage.MESSAGE_EXPIRE_DAYS);
+            long before = cal.getTimeInMillis();
             db.mqttMessageDao().deleteMessagesBefore(before);
 
             /*

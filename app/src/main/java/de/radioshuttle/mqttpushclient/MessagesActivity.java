@@ -33,7 +33,9 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 
 import de.radioshuttle.db.MqttMessage;
@@ -387,7 +389,9 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                 if (selection[0] == 0) {
                     before = null;
                 } else {
-                    before = new Date().getTime() - (24L * 1000L * 3600L);
+                    GregorianCalendar cal = new GregorianCalendar();
+                    cal.add(Calendar.DAY_OF_MONTH, -1);
+                    before = cal.getTimeInMillis();
                 }
                 MessagesPagedListAdapter a = (MessagesPagedListAdapter) mListView.getAdapter();
                 if (a != null) {

@@ -93,5 +93,5 @@ public class MqttMessage {
     public final static String ARG_CNT = "MQTT_MSG_CNT";
     public final static String ARG_IDS = "MQTT_MSG_UPDATE_IDS";
 
-    public static long MESSAGE_EXPIRE_MS = 30L * 24L * 1000L * 3600L;
+    public static int MESSAGE_EXPIRE_DAYS = 30;
 }

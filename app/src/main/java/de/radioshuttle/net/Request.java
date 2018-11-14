@@ -32,9 +32,14 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.security.cert.CertificateException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -318,7 +323,9 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         List<Object[]> messages =  mConnection.getCachedMessages(lastReceived / 1000L, lastReceivedSeqNo);
         ArrayList<Integer> ids = new ArrayList<>();
 
-        long expireDate = System.currentTimeMillis() - MqttMessage.MESSAGE_EXPIRE_MS;
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.add(Calendar.DAY_OF_MONTH, -MqttMessage.MESSAGE_EXPIRE_DAYS);
+        long expireDate = cal.getTimeInMillis();
 
         for(int i = 0; i < messages.size(); i++) {
             MqttMessage mqttMessage = new MqttMessage();
@@ -372,9 +379,11 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         }
 
         /* delete all messages older than 30 days */
-        long before = System.currentTimeMillis() - MqttMessage.MESSAGE_EXPIRE_MS;
+        cal = new GregorianCalendar();
+        cal.add(Calendar.DAY_OF_MONTH, -MqttMessage.MESSAGE_EXPIRE_DAYS);
+        long before = cal.getTimeInMillis();
         db.mqttMessageDao().deleteMessagesBefore(before);
-
+        
     }
 
     /** override for additional commands after login and exchanging de.radioshuttle.fcm data  */

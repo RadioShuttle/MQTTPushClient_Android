@@ -32,7 +32,9 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -195,7 +197,9 @@ public class AppTrustManager implements X509TrustManager {
         if (cert != null) {
             TrustedCert tc = new TrustedCert();
             if (expires == null) {
-                tc.expires = new Date(System.currentTimeMillis() + CERT_EXPIRES_AFTER_MS);
+                GregorianCalendar exp = new GregorianCalendar();
+                exp.add(Calendar.DAY_OF_MONTH, CERT_EXPIRES_AFTER_DAYS);
+                tc.expires = exp.getTime();
             }
             tc.allow = allow;
             tc.cert = cert;
@@ -370,7 +374,7 @@ public class AppTrustManager implements X509TrustManager {
     public static final int HOST_NOT_MATCHING = 8;
     public static final int OTHER = 256;
 
-    public final static long  CERT_EXPIRES_AFTER_MS = 24L * 1000l * 60l * 60l;
+    public final static int  CERT_EXPIRES_AFTER_DAYS = 1;
 
     public final static String PREFS_NAME = "certificates";
     public final static String PREFS_EXCEPTIONS = "exceptions";
