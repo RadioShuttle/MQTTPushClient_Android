@@ -186,6 +186,17 @@ public class Notifications extends BroadcastReceiver {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
+    public static void resetLastReceivedDate(Context context, String pushServerAddr, String mqttAccount) {
+        if (pushServerAddr != null && mqttAccount != null) {
+            String account = pushServerAddr + ":" + mqttAccount;
+            SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putLong(RECEIVED_DATE_PREFIX + account, 0L);
+            editor.putInt(SEQ_NO_PREFIX + account, 0);
+            editor.commit();
+        }
+    }
+
     public static void resetNewMessageCounter(Context context, String pushServerAddr, String mqttAccount) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
         String account = pushServerAddr + ":" + mqttAccount;
