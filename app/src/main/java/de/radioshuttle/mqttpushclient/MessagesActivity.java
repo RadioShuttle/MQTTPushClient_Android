@@ -11,7 +11,6 @@ import android.app.AlertDialog;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
-import androidx.paging.LivePagedListBuilder;
 import androidx.paging.PagedList;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -35,14 +34,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 import java.util.Iterator;
 
-import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessage;
-import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.ActionsRequest;
 import de.radioshuttle.net.AppTrustManager;
@@ -444,14 +439,22 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
 
     protected void handleBackPressed() {
         String name = mViewModel.pushAccount.getNotifcationChannelName();
-        Notifications.cancelAll(this, name); // clear systen notification tray
-        Notifications.cancelAll(this, name + ".a"); // clear systen notification tray
-        Notifications.resetNewMessageCounter(this, mViewModel.pushAccount.pushserver, mViewModel.pushAccount.getMqttAccountName());
         Intent intent = new Intent();
         intent.putExtra(AccountListActivity.ARG_NOTIFSTART, getIntent().getBooleanExtra(AccountListActivity.ARG_NOTIFSTART, false));
         setResult(AppCompatActivity.RESULT_OK, intent);
         finish();
     }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        String name = mViewModel.pushAccount.getNotifcationChannelName();
+        Notifications.cancelAll(this, name); // clear systen notification tray
+        Notifications.cancelAll(this, name + ".a"); // clear systen notification tray
+        Notifications.resetNewMessageCounter(this, mViewModel.pushAccount.pushserver, mViewModel.pushAccount.getMqttAccountName());
+        Log.d(TAG, "onPause() called");
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
