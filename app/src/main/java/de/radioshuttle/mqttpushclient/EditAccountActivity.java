@@ -44,6 +44,9 @@ import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 
+import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_ACTIONS;
+import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_SUBSCRIPTIONS;
+
 public class EditAccountActivity extends AppCompatActivity implements CertificateErrorDialog.Callback {
 
     @Override
@@ -58,6 +61,48 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
         mUser = findViewById(R.id.user);;
         mPassword = findViewById(R.id.password);
         mSaveButton = findViewById(R.id.save_button);
+        mTopicsButton = findViewById(R.id.topics_button);
+        mTopicsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mActivityStarted) {
+                    mActivityStarted = true;
+                    Bundle args = getIntent().getExtras();
+                    Intent intent = new Intent(EditAccountActivity.this, TopicsActivity.class);
+                    String acc;
+                    if (mSavedAccountJson == null) {
+                        acc = args.getString(PARAM_ACCOUNT_JSON);
+                    } else {
+                        acc = mSavedAccountJson;
+                    }
+                    intent.putExtra(PARAM_ACCOUNT_JSON, acc);
+                    intent.putExtra(MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
+                    startActivityForResult(intent, RC_SUBSCRIPTIONS);
+                }
+
+            }
+        });
+        mActionsButton = findViewById(R.id.actions_button);
+        mActionsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mActivityStarted) {
+                    mActivityStarted = true;
+                    Bundle args = getIntent().getExtras();
+                    Intent intent = new Intent(EditAccountActivity.this, ActionsActivity.class);
+                    String acc;
+                    if (mSavedAccountJson == null) {
+                        acc = args.getString(PARAM_ACCOUNT_JSON);
+                    } else {
+                        acc = mSavedAccountJson;
+                    }
+                    intent.putExtra(PARAM_ACCOUNT_JSON, acc);
+                    intent.putExtra(MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
+                    startActivityForResult(intent, RC_ACTIONS);
+                }
+            }
+        });
+
         mSaveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -144,7 +189,7 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
                             showErrorMsg(t);
                         } else {
                             mPushAccount = b;
-                            saveLocalAndFinish(b);
+                            saveLocal(b);
                         }
                     }
                 }
@@ -152,7 +197,13 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
         });
 
         Bundle args = getIntent().getExtras();
-        mMode = (args != null ? args.getInt(MODE, MODE_ADD) : MODE_ADD);
+        if (savedInstanceState == null) {
+            mMode = (args != null ? args.getInt(MODE, MODE_ADD) : MODE_ADD);
+        } else {
+            mMode = savedInstanceState.getInt(MODE, MODE_ADD);
+            mSavedAccountJson = savedInstanceState.getString(SAVED_ACCOUNT_JSON);
+        }
+
         if (mMode == MODE_EDIT) {
 
             setTitle(R.string.title_edit_account);
@@ -206,8 +257,7 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
     }
 
     protected void setUIEnabled(boolean fieldsEnabled, boolean buttonsEnabled) {
-        Bundle args = getIntent().getExtras();
-        boolean addMode = args == null || args.getInt(MODE, MODE_ADD) == MODE_ADD;
+        boolean addMode = mMode == MODE_ADD;
         mPushNotificationServer.setEnabled(fieldsEnabled && addMode);
         mMQTTHost.setEnabled(fieldsEnabled && addMode);
         mMQTTSSL.setEnabled(fieldsEnabled && addMode);
@@ -215,6 +265,8 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
         mUser.setEnabled(fieldsEnabled && addMode);
         mPassword.setEnabled(fieldsEnabled);
         mSaveButton.setEnabled(buttonsEnabled);
+        mTopicsButton.setEnabled(!addMode);
+        mActionsButton.setEnabled(!addMode);
         invalidateOptionsMenu();
     }
 
@@ -245,6 +297,10 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
                 Log.e(TAG, "parse error", e);
             }
         }
+        outState.putInt(MODE, mMode);
+        if (mSavedAccountJson != null) {
+            outState.putString(SAVED_ACCOUNT_JSON , mSavedAccountJson);
+        }
     }
 
     @Override
@@ -273,6 +329,12 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
             QuitWithoutSaveDlg dlg = new QuitWithoutSaveDlg();
             dlg.show(getSupportFragmentManager(), QuitWithoutSaveDlg.class.getSimpleName());
         } else {
+            if (mSavedAccountJson != null) {
+                Intent data = new Intent();
+                data.putExtra(PARAM_ACCOUNT_JSON, mSavedAccountJson);
+                setResult(AppCompatActivity.RESULT_OK, data);
+                finish();
+            }
             setResult(AppCompatActivity.RESULT_CANCELED);
             finish();
         }
@@ -341,7 +403,7 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
         }
     }
 
-    protected void saveLocalAndFinish(PushAccount checkedPushAccount) {
+    protected void saveLocal(PushAccount checkedPushAccount) {
         ArrayList<PushAccount> pushAccount = mViewModel.accountList.getValue();
         if (pushAccount == null)
             pushAccount = new ArrayList<>();
@@ -372,10 +434,12 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
             editor.putString(AccountListActivity.ACCOUNTS, mViewModel.getAccountsJSON());
             editor.commit();
             Toast.makeText(getApplicationContext(), R.string.info_data_saved, Toast.LENGTH_LONG).show();
-            Intent data = new Intent();
-            data.putExtra(PARAM_ACCOUNT_JSON, mPushAccount.getJSONObject().toString());
-            setResult(AppCompatActivity.RESULT_OK, data);
-            finish();
+
+            if (mMode == MODE_ADD) {
+                mMode = MODE_EDIT;
+                setUIEnabled(!mViewModel.isRequestActive(), !mViewModel.isRequestActive());
+            }
+            mSavedAccountJson = mPushAccount.getJSONObject().toString();
 
 
         } catch (JSONException e) {
@@ -403,6 +467,13 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
     public void retry(Bundle args) {
         save();
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mActivityStarted = false;
+    }
+
 
     public static class QuitWithoutSaveDlg extends DialogFragment {
         @Override
@@ -434,6 +505,9 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
         }
     }
 
+    /* keys instance state */
+    private final static String LAST_SAVED_ACC = "LAST_SAVED_ACC";
+
 
     public AccountViewModel mViewModel;
     public PushAccount mPushAccount;
@@ -444,7 +518,14 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
     public TextView mUser;
     public TextView mPassword;
     public Button mSaveButton;
+    public Button mTopicsButton;
+    public Button mActionsButton;
+
     public int mMode;
+
+    public final static String SAVED_ACCOUNT_JSON = "SAVED_ACCOUNT_JSON";
+    private String mSavedAccountJson;
+    private boolean mActivityStarted;
 
     private Snackbar mSnackbar;
     private SwipeRefreshLayout mSwipeRefreshLayout;
