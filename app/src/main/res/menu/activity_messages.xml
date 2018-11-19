@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/action_subscriptions"
-        android:orderInCategory="80"
-        android:icon="@drawable/ic_menu_topics"
-        android:title="@string/action_topics"
-        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menu_delete"
@@ -14,12 +8,5 @@
         android:icon="@drawable/ic_menu_delete"
         android:title="@string/action_delete_msgs"
         app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/menu_actions"
-        android:orderInCategory="120"
-        android:icon="@drawable/ic_menu_actions"
-        android:title="@string/action_actions"
-        app:showAsAction="never" />
 
 </menu>
