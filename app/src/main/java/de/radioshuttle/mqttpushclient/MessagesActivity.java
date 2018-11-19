@@ -132,7 +132,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                                 invalidateOptionsMenu();
 
                                 /* handle cerificate exception */
-                                if (b.hasCertifiateException() && !mActivityStarted) {
+                                if (b.hasCertifiateException()) {
                                     /* only show dialog if the certificate has not already been denied */
                                     if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
                                         FragmentManager fm = getSupportFragmentManager();
@@ -165,7 +165,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                                 /* end handle cerificate exception */
 
                                 /* handle insecure connection */
-                                if (b.inSecureConnectionAsk && !mActivityStarted) {
+                                if (b.inSecureConnectionAsk) {
                                     if (Connection.mInsecureConnection.get(b.pushserver) == null) {
                                         FragmentManager fm = getSupportFragmentManager();
 
@@ -275,28 +275,23 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         }
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (item.getGroupId() == ACTION_ITEM_GROUP_ID) {
-            if (!mActivityStarted) {
+            String actionCmd = item.getTitle().toString();
+            Log.d(TAG, "action item clicked: " +  actionCmd);
 
-                String actionCmd = item.getTitle().toString();
-                Log.d(TAG, "action item clicked: " +  actionCmd);
-
-                ActionsRequest r = (ActionsRequest) mActionsViewModel.actionsRequest.getValue();
-                if (r != null) {
-                    for(Iterator<ActionsViewModel.Action> it = r.mActions.iterator(); it.hasNext();) {
-                        ActionsViewModel.Action a = it.next();
-                        if (a.name.equals(actionCmd)) {
-                            mActionsViewModel.publish(getApplicationContext(), a);
-                            Toast.makeText(this, getString(R.string.action_cmd_exe, actionCmd), Toast.LENGTH_LONG).show();
-                            break;
-                        }
+            ActionsRequest r = (ActionsRequest) mActionsViewModel.actionsRequest.getValue();
+            if (r != null) {
+                for(Iterator<ActionsViewModel.Action> it = r.mActions.iterator(); it.hasNext();) {
+                    ActionsViewModel.Action a = it.next();
+                    if (a.name.equals(actionCmd)) {
+                        mActionsViewModel.publish(getApplicationContext(), a);
+                        Toast.makeText(this, getString(R.string.action_cmd_exe, actionCmd), Toast.LENGTH_LONG).show();
+                        break;
                     }
                 }
-
             }
             return true;
         }
@@ -305,30 +300,8 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
             case android.R.id.home :
                 handleBackPressed();
                 return true;
-            case R.id.action_subscriptions :
-                if (!mActivityStarted) {
-                    mActivityStarted = true;
-                    Bundle args = getIntent().getExtras();
-                    Intent intent = new Intent(this, TopicsActivity.class);
-                    intent.putExtra(PARAM_ACCOUNT_JSON, args.getString(PARAM_ACCOUNT_JSON));
-                    intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS));
-                    startActivityForResult(intent, RC_SUBSCRIPTIONS);
-                }
-                return true;
-            case R.id.menu_actions :
-                if (!mActivityStarted) {
-                    mActivityStarted = true;
-                    Bundle args = getIntent().getExtras();
-                    Intent intent = new Intent(this, ActionsActivity.class);
-                    intent.putExtra(PARAM_ACCOUNT_JSON, args.getString(PARAM_ACCOUNT_JSON));
-                    intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS));
-                    startActivityForResult(intent, RC_ACTIONS);
-                }
-                return true;
             case R.id.menu_delete :
-                if (!mActivityStarted) {
-                    showDeleteDialog();
-                }
+                showDeleteDialog();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -456,15 +429,6 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
     }
 
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_ACTIONS) {
-            refreshActions(true);
-        }
-        mActivityStarted = false;
-    }
-
     public final static String PARAM_MULTIPLE_PUSHSERVERS = "PARAM_MULTIPLE_PUSHSERVERS";
 
     private Snackbar mSnackbar;
@@ -473,7 +437,6 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
     private RecyclerView.AdapterDataObserver mAdapterObserver;
     private MessagesViewModel mViewModel;
     private ActionsViewModel mActionsViewModel;
-    private boolean mActivityStarted;
 
     private final static int ACTION_ITEM_GROUP_ID = Menu.FIRST + 1;
 
