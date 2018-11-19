@@ -127,10 +127,33 @@
                     <Button
                         android:id="@+id/save_button"
                         android:layout_column="1"
-                        android:layout_gravity="right"
+                        android:layout_gravity="end"
                         android:text="@string/action_save_account"/>
 
                 </TableRow>
+
+                <TableRow>
+                    <Button
+                        android:layout_height="wrap_content"
+                        android:id="@+id/topics_button"
+                        android:layout_width="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_span="2"
+                        android:enabled="false"
+                        android:text="@string/action_mqtt_topics"/>
+                </TableRow>
+
+                <TableRow>
+                    <Button
+                        android:layout_height="wrap_content"
+                        android:layout_span="2"
+                        android:id="@+id/actions_button"
+                        android:layout_width="wrap_content"
+                        android:layout_gravity="start"
+                        android:enabled="false"
+                        android:text="@string/action_mqtt_actions"/>
+                </TableRow>
+
 
             </TableLayout>
 
