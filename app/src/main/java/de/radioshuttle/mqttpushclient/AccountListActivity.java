@@ -254,10 +254,6 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
     }
 
-    protected void updateNoOfNewMsgs() {
-
-    }
-
     protected void startMessagesActivity(PushAccount b, boolean notifstart) {
         Intent intent = new Intent(AccountListActivity.this, MessagesActivity.class);
         intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
@@ -483,26 +479,6 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             boolean handled = false;
             switch (item.getItemId()) {
-                case R.id.action_subscriptions:
-                    Intent intent1 = new Intent(AccountListActivity.this, TopicsActivity.class);
-                    if (mAdapter != null) {
-                        int row = mAdapter.getSelectedRow();
-                        PushAccount b = mAdapter.getAccount(row);
-                        if (b != null) {
-                            try {
-                                intent1.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
-                                intent1.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
-                                if (!mActivityStarted) {
-                                    mActivityStarted = false;
-                                    startActivityForResult(intent1, RC_EDIT_ACCOUNT);
-                                }
-                            } catch(JSONException e) {
-                                Log.e(TAG, "edit server parse error", e);
-                            }
-                        }
-                    }
-                    handled = true;
-                    break;
                 case R.id.action_remove_account:
                     ConfirmDeleteDlg dlg = new ConfirmDeleteDlg();
                     Bundle args = new Bundle();
