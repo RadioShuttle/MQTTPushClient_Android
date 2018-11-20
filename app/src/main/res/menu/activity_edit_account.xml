@@ -7,4 +7,16 @@
         android:title="@string/action_save_account"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/menu_topics"
+        android:orderInCategory="15"
+        android:title="@string/action_mqtt_topics"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_actions"
+        android:orderInCategory="20"
+        android:title="@string/action_mqtt_actions"
+        app:showAsAction="never" />
+
 </menu>
