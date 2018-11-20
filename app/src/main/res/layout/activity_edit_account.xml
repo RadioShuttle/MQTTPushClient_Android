@@ -132,12 +132,11 @@
 
                 </TableRow>
 
-                <TableRow>
+                <TableRow android:layout_marginTop="16dp">
                     <Button
                         android:layout_height="wrap_content"
                         android:id="@+id/topics_button"
-                        android:layout_width="wrap_content"
-                        android:layout_gravity="start"
+                        android:layout_width="match_parent"
                         android:layout_span="2"
                         android:enabled="false"
                         android:text="@string/action_mqtt_topics"/>
@@ -148,8 +147,7 @@
                         android:layout_height="wrap_content"
                         android:layout_span="2"
                         android:id="@+id/actions_button"
-                        android:layout_width="wrap_content"
-                        android:layout_gravity="start"
+                        android:layout_width="match_parent"
                         android:enabled="false"
                         android:text="@string/action_mqtt_actions"/>
                 </TableRow>
