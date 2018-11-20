@@ -65,41 +65,14 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
         mTopicsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mActivityStarted) {
-                    mActivityStarted = true;
-                    Bundle args = getIntent().getExtras();
-                    Intent intent = new Intent(EditAccountActivity.this, TopicsActivity.class);
-                    String acc;
-                    if (mSavedAccountJson == null) {
-                        acc = args.getString(PARAM_ACCOUNT_JSON);
-                    } else {
-                        acc = mSavedAccountJson;
-                    }
-                    intent.putExtra(PARAM_ACCOUNT_JSON, acc);
-                    intent.putExtra(MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
-                    startActivityForResult(intent, RC_SUBSCRIPTIONS);
-                }
-
+                openTopicsActivity();
             }
         });
         mActionsButton = findViewById(R.id.actions_button);
         mActionsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mActivityStarted) {
-                    mActivityStarted = true;
-                    Bundle args = getIntent().getExtras();
-                    Intent intent = new Intent(EditAccountActivity.this, ActionsActivity.class);
-                    String acc;
-                    if (mSavedAccountJson == null) {
-                        acc = args.getString(PARAM_ACCOUNT_JSON);
-                    } else {
-                        acc = mSavedAccountJson;
-                    }
-                    intent.putExtra(PARAM_ACCOUNT_JSON, acc);
-                    intent.putExtra(MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
-                    startActivityForResult(intent, RC_ACTIONS);
-                }
+                openActionsActivity();
             }
         });
 
@@ -283,7 +256,14 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
         if (m != null) {
             m.setEnabled(!mViewModel.isRequestActive());
         }
-
+        m = menu.findItem(R.id.menu_topics);
+        if (m != null) {
+            m.setEnabled(!mViewModel.isRequestActive() && mMode == MODE_EDIT);
+        }
+        m = menu.findItem(R.id.menu_actions);
+        if (m != null) {
+            m.setEnabled(!mViewModel.isRequestActive() && mMode == MODE_EDIT);
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -312,7 +292,12 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
             case R.id.action_save :
                 save();
                 return true;
-
+            case R.id.menu_topics :
+                openTopicsActivity();
+                return true;
+            case R.id.menu_actions :
+                openActionsActivity();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -400,6 +385,40 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
             } else {
                 Toast.makeText(getApplicationContext(), R.string.error_data_unmodified, Toast.LENGTH_LONG).show();
             }
+        }
+    }
+
+    protected void openTopicsActivity() {
+        if (!mActivityStarted) {
+            mActivityStarted = true;
+            Bundle args = getIntent().getExtras();
+            Intent intent = new Intent(EditAccountActivity.this, TopicsActivity.class);
+            String acc;
+            if (mSavedAccountJson == null) {
+                acc = args.getString(PARAM_ACCOUNT_JSON);
+            } else {
+                acc = mSavedAccountJson;
+            }
+            intent.putExtra(PARAM_ACCOUNT_JSON, acc);
+            intent.putExtra(MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
+            startActivityForResult(intent, RC_SUBSCRIPTIONS);
+        }
+    }
+
+    protected void openActionsActivity() {
+        if (!mActivityStarted) {
+            mActivityStarted = true;
+            Bundle args = getIntent().getExtras();
+            Intent intent = new Intent(EditAccountActivity.this, ActionsActivity.class);
+            String acc;
+            if (mSavedAccountJson == null) {
+                acc = args.getString(PARAM_ACCOUNT_JSON);
+            } else {
+                acc = mSavedAccountJson;
+            }
+            intent.putExtra(PARAM_ACCOUNT_JSON, acc);
+            intent.putExtra(MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
+            startActivityForResult(intent, RC_ACTIONS);
         }
     }
 
