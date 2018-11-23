@@ -28,6 +28,7 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.google.firebase.messaging.FirebaseMessagingService;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -259,6 +260,20 @@ public class MessagingService extends FirebaseMessagingService {
                         m.msg = Base64.decode(base64, Base64.DEFAULT);
                         m.topic = t;
                         m.seqNo = seqNo;
+                        m.isSystemMsg = false;
+                        if (entryArray.length() >= 4) {
+                            if (!entryArray.isNull(3)) {
+                                m.isSystemMsg = true;
+                                /*
+                                try {
+                                    JSONObject sysObjec = entryArray.getJSONObject(3);
+                                    Log.d(TAG, "sys cmd: " + sysObjec.getInt("id"));
+                                } catch(JSONException e) {
+                                    Log.d(TAG, "Error parsing sysObject: " + e.getMessage() );
+                                }
+                                */
+                            }
+                        }
 
                         //TODO: consider removing Msg class and replace it with MqttMessage below
                         MqttMessage mqttMessage = new MqttMessage();
@@ -291,14 +306,14 @@ public class MessagingService extends FirebaseMessagingService {
                             Log.d(TAG, "constraint error: " + e.getMessage());
                             continue;
                         }
-                        if (prio == PushAccount.Topic.NOTIFICATION_MEDIUM) {
+                        if (prio == PushAccount.Topic.NOTIFICATION_MEDIUM && !m.isSystemMsg) {
                             if (latestMsg == null) {
                                 latestMsg = m;
                             } else if (latestMsg.when < (m.when)) {
                                 latestMsg = m;
                             }
                             cntNormal++;
-                        } else if (prio == PushAccount.Topic.NOTIFICATION_HIGH) {
+                        } else if (prio == PushAccount.Topic.NOTIFICATION_HIGH || m.isSystemMsg) {
                             if (latestAlarmMsg == null) {
                                 latestAlarmMsg = m;
                             } else if (latestAlarmMsg.when < (m.when)) {
@@ -418,7 +433,12 @@ public class MessagingService extends FirebaseMessagingService {
             b.setContentTitle(getString(R.string.notificaion_alarm) + " " + accountDisplayName);
         else
             b.setContentTitle(accountDisplayName);
-        b.setContentText(m.topic + ": " + new String(m.msg));
+        if (m.isSystemMsg) {
+            b.setContentText(new String(m.msg));
+        } else {
+            b.setContentText(m.topic + ": " + new String(m.msg));
+        }
+
         b.setWhen(m.when);
         if (messageInfo.messageId > 1) {
             String more = String.format("+%d", (messageInfo.messageId - 1));
@@ -504,6 +524,7 @@ public class MessagingService extends FirebaseMessagingService {
         String topic;
         byte[] msg;
         int seqNo;
+        boolean isSystemMsg;
     }
 
     public final static String FCM_ON_DELETE = "FCM_ON_DELETE";
