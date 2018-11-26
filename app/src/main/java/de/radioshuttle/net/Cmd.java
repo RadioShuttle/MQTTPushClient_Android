@@ -4,7 +4,6 @@
  *	30827 Garbsen, Germany.
  */
 
-
 package de.radioshuttle.net;
 
 import java.io.BufferedOutputStream;
@@ -144,7 +143,8 @@ public class Cmd {
         return m;
     }
 
-    public RawCmd setDeviceInfo(int seqNo, String clientOS, String osver, String device, String fcmToken, String extra)
+    public RawCmd setDeviceInfo(int seqNo, String clientOS, String osver, String device, String fcmToken, String extra,
+                                String country, String lang, int utcOffset)
             throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
@@ -152,6 +152,9 @@ public class Cmd {
         writeString(osver, os);
         writeString(device, os);
         writeString(fcmToken, os);
+        writeString(country, os);
+        writeString(lang, os);
+        os.writeInt(utcOffset);
         writeString(extra, os);
         writeCommand(CMD_SET_DEVICE_INFO, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
@@ -164,7 +167,13 @@ public class Cmd {
         m.put("os_ver", readString(is));
         m.put("device", readString(is));
         m.put("token", readString(is));
+        if (PROTOCOL_MAJOR != 1 || clientProtocolMinor >= 4) { // since 1.4 lang
+            m.put("country", readString(is));
+            m.put("lang", readString(is));
+            m.put("utc_offset", String.valueOf(is.readInt()));
+        }
         m.put("extra", readString(is));
+
         return m;
     }
 
@@ -631,7 +640,7 @@ public class Cmd {
     /* protocol */
     public final static String MAGIC = "MQTP";
     public final static byte PROTOCOL_MAJOR = 1;
-    public final static byte PROTOCOL_MINOR = 3;
+    public final static byte PROTOCOL_MINOR = 4;
     public final static int MAGIC_SIZE = 4;
     public final static byte[] MAGIC_BLOCK;
 
