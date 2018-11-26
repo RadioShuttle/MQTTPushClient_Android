@@ -22,8 +22,10 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.TimeZone;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocket;
@@ -179,8 +181,10 @@ public class Connection {
 
     public void setDeviceInfo(String fcmToken) throws IOException, ServerError {
 
+        Locale l = Locale.getDefault();
         Cmd.RawCmd response = mCmd.setDeviceInfo(++mSeqNo,
-                "Android", String.valueOf(Build.VERSION.SDK_INT), deviceInfo, fcmToken, null );
+                "Android", String.valueOf(Build.VERSION.SDK_INT), deviceInfo, fcmToken, null,
+                l.getCountry(), l.getLanguage(), TimeZone.getDefault().getRawOffset());
         handleError(response);
     }
 
