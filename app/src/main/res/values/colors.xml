@@ -15,5 +15,5 @@
     <color name="colorHeader">#e8eaf6</color>
     <color name="colorNewMessages">#ff1500</color>
     <color name="aboutBackground">#dedede</color>
-
+    <color name="aboutTextColor2">#444444</color>
 </resources>
