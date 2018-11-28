@@ -22,6 +22,7 @@
             android:layout_height="wrap_content"
             android:ems="15"
             android:inputType="text"
+            android:minHeight="48dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
             app:layout_constraintLeft_toLeftOf="@id/actionNameLabel"
             app:layout_constraintTop_toBottomOf="@id/actionNameLabel" />
@@ -41,6 +42,7 @@
             android:layout_height="wrap_content"
             android:ems="15"
             android:inputType="text"
+            android:minHeight="48dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
             app:layout_constraintLeft_toLeftOf="@id/actionTopicLabel"
             app:layout_constraintTop_toBottomOf="@id/actionTopicLabel" />
@@ -60,6 +62,7 @@
             android:layout_height="wrap_content"
             android:ems="15"
             android:inputType="text"
+            android:minHeight="48dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
             app:layout_constraintLeft_toLeftOf="@id/actionContentLabel"
             app:layout_constraintTop_toBottomOf="@id/actionContentLabel" />
@@ -70,6 +73,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/dlg_actions_retain_label"
+            android:minHeight="48dp"
+            android:minWidth="48dp"
             android:checked="false"
             android:textAppearance="?android:attr/textAppearanceMedium"
             app:layout_constraintLeft_toLeftOf="@id/actionContentText"

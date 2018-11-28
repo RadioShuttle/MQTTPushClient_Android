@@ -46,6 +46,7 @@
                         android:inputType="text"
                         android:ems="15"
                         android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:minHeight="48dp"
                         android:layout_marginLeft="4dp"
                         />
                 </TableRow>
@@ -67,6 +68,7 @@
                         android:inputType="text"
                         android:ems="15"
                         android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:minHeight="48dp"
                         android:layout_marginLeft="4dp"
                         />
                 </TableRow>
@@ -90,6 +92,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_column="1"
+                            android:minHeight="48dp"
+                            android:minWidth="48dp"
                             android:id="@+id/ssl"
                             android:text="@string/label_ssl"
                             android:checked="false" />
@@ -106,6 +110,7 @@
                         android:inputType="text"
                         android:ems="10"
                         android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:minHeight="48dp"
                         android:layout_marginLeft="4dp"
                         />
                 </TableRow>
@@ -119,6 +124,7 @@
                         android:inputType="textPassword"
                         android:ems="10"
                         android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:minHeight="48dp"
                         android:layout_marginLeft="4dp"
                         />
                 </TableRow>
@@ -128,6 +134,8 @@
                         android:id="@+id/save_button"
                         android:layout_column="1"
                         android:layout_gravity="end"
+                        android:minHeight="48dp"
+                        android:minWidth="48dp"
                         android:text="@string/action_save_account"/>
 
                 </TableRow>
@@ -139,6 +147,7 @@
                         android:layout_width="match_parent"
                         android:layout_span="2"
                         android:enabled="false"
+                        android:minHeight="48dp"
                         android:text="@string/action_mqtt_topics"/>
                 </TableRow>
 
@@ -149,6 +158,7 @@
                         android:id="@+id/actions_button"
                         android:layout_width="match_parent"
                         android:enabled="false"
+                        android:minHeight="48dp"
                         android:text="@string/action_mqtt_actions"/>
                 </TableRow>
 
