@@ -70,9 +70,11 @@ public class AboutActivity extends AppCompatActivity {
             helpButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Uri webpage = Uri.parse("https://www.radioshuttle.de/mqtt-push-client-hilfe/");
-                    Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
-                    startActivity(webIntent);
+                    if (!mActivityStarted) {
+                        mActivityStarted = true;
+                        Intent webIntent = new Intent(AboutActivity.this, HelpActivity.class);
+                        startActivityForResult(webIntent, 0);
+                    }
                 }
             });
         }
@@ -122,6 +124,12 @@ public class AboutActivity extends AppCompatActivity {
         finish();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mActivityStarted = false;
+    }
+
     public static class AboutViewModel extends AndroidViewModel {
         public AboutViewModel(Application app) {
             super(app);
@@ -130,6 +138,7 @@ public class AboutActivity extends AppCompatActivity {
         public int cnt;
     }
 
+    private boolean mActivityStarted;
     AboutViewModel mViewModel;
 
 }
