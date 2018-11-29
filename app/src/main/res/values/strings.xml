@@ -5,6 +5,7 @@
     <string name="menu_refresh">Refresh</string>
     <string name="menu_about">About</string>
     <string name="menu_privacy">Privacy Policy</string>
+    <string name="menu_reload">Reload</string>
 
     <string name="action_add_account">Add</string>
     <string name="action_edit_account">Edit</string>
@@ -72,6 +73,7 @@
     <string name="title_topics">Topics</string>
     <string name="title_actions">MQTT Actions</string>
     <string name="title_about">About</string>
+    <string name="title_help">Help</string>
     <string name="about_version" formatted="false">"Version: %s (%d)"</string>
 
     <string name="label_push_notification_server">Push Notification Server</string>
