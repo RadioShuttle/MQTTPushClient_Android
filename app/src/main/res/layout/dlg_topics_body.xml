@@ -9,6 +9,7 @@
         android:id="@+id/topicLabel"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/dlg_edit_topic_label"
+        android:labelFor="@+id/topic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
@@ -40,6 +41,7 @@
         android:layout_marginTop="8dp"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/dlg_add_topic_notif"
+        android:labelFor="@+id/notificationtype_spinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

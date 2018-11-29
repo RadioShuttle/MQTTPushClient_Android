@@ -13,6 +13,7 @@
             android:id="@+id/actionNameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:labelFor="@+id/actionNameEditText"
             android:text="@string/dlg_actions_name_label"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -29,6 +30,7 @@
 
         <TextView
             android:id="@+id/actionTopicLabel"
+            android:labelFor="@+id/actionTopicText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/dlg_actions_topic_label"
@@ -49,6 +51,7 @@
 
         <TextView
             android:id="@+id/actionContentLabel"
+            android:labelFor="@+id/actionContentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/dlg_actions_content_label"
