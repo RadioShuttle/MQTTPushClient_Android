@@ -86,6 +86,7 @@
                             android:layout_height="wrap_content"
                             android:id="@+id/mqtt_port"
                             android:inputType="numberDecimal"
+                            android:minHeight="48dp"
                             android:maxEms="5"
                             android:ems="5"
                             android:textAppearance="?android:attr/textAppearanceMedium"
