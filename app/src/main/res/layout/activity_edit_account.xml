@@ -138,7 +138,7 @@
                     <Button
                         android:id="@+id/save_button"
                         android:layout_column="1"
-                        android:layout_gravity="end"
+                        android:layout_gravity="right"
                         android:minHeight="48dp"
                         android:minWidth="48dp"
                         android:text="@string/action_save_account"/>
