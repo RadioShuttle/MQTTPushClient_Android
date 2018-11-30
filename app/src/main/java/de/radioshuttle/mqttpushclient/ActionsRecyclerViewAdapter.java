@@ -84,7 +84,11 @@ public class ActionsRecyclerViewAdapter extends RecyclerView.Adapter {
         /* if topics have been deleted the selected topics hashmap must be updated */
         if (mSelectedActions != null && mSelectedActions.size() > 0) {
             int o = mSelectedActions.size();
-            mSelectedActions.retainAll(data);
+            HashSet<String> dataKeys = new HashSet<>();
+            for (ActionsViewModel.Action a : data) {
+                dataKeys.add(a.name);
+            }
+            mSelectedActions.retainAll(dataKeys);
             int n = mSelectedActions.size();
             if (o != n) {
                 mRowSelectionListener.onSelectionChange(o, n);

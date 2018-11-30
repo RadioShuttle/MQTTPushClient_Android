@@ -109,7 +109,11 @@ public class TopicsRecyclerViewAdapter extends RecyclerView.Adapter {
         /* if topics have been deleted the selected topics hashmap must be updated */
         if (mSelectedTopics != null && mSelectedTopics.size() > 0) {
             int o = mSelectedTopics.size();
-            mSelectedTopics.retainAll(data);
+            HashSet<String> dataKeys = new HashSet<>();
+            for (PushAccount.Topic a : data) {
+                dataKeys.add(a.name);
+            }
+            mSelectedTopics.retainAll(dataKeys);
             int n = mSelectedTopics.size();
             if (o != n) {
                 mRowSelectionListener.onSelectionChange(o, n);
