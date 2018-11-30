@@ -22,6 +22,8 @@ import android.os.Bundle;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -45,8 +47,6 @@ import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 
-import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_ACTIONS;
-import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_SUBSCRIPTIONS;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 
 public class MessagesActivity extends AppCompatActivity implements CertificateErrorDialog.Callback {
@@ -236,7 +236,11 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         // mListView.setItemAnimator(null);
         mListView.setLayoutManager(new LinearLayoutManager(this));
 
-
+        if (savedInstanceState == null) {
+            mCurrentDay = System.currentTimeMillis();
+        } else {
+            mCurrentDay = savedInstanceState.getLong(CURRENT_DAY, 0l);
+        }
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
@@ -428,6 +432,22 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         Log.d(TAG, "onPause() called");
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(CURRENT_DAY, mCurrentDay);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!DateUtils.isToday(mCurrentDay)) {
+            mCurrentDay = System.currentTimeMillis();
+            if (mListView != null && mListView.getAdapter() != null) {
+                mListView.getAdapter().notifyDataSetChanged();
+            }
+        }
+    }
 
     public final static String PARAM_MULTIPLE_PUSHSERVERS = "PARAM_MULTIPLE_PUSHSERVERS";
 
@@ -437,6 +457,9 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
     private RecyclerView.AdapterDataObserver mAdapterObserver;
     private MessagesViewModel mViewModel;
     private ActionsViewModel mActionsViewModel;
+
+    private long mCurrentDay;
+    private static String CURRENT_DAY = "CURRENT_DAY";
 
     private final static int ACTION_ITEM_GROUP_ID = Menu.FIRST + 1;
 
