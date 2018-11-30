@@ -190,7 +190,7 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
         mListView.setLayoutManager(new LinearLayoutManager(this));
 
         if (mViewModel.selectedActions != null && mViewModel.selectedActions.size() > 0) {
-            // mActionMode = startSupportActionMode(mActionModeCallback);
+            mActionMode = startSupportActionMode(mActionModeCallback);
         }
 
         mAdapter = new ActionsRecyclerViewAdapter(this, mViewModel.selectedActions, new ActionsRecyclerViewAdapter.RowSelectionListener() {
