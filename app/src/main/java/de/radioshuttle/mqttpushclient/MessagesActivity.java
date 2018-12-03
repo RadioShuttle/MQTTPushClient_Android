@@ -382,8 +382,8 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
             public void onClick(DialogInterface dialog, int which) {
                 // get last date
                 if (mActionsViewModel != null && mActionsViewModel.pushAccount != null) {
-                    Notifications.resetLastReceivedDate(getApplication(),
-                            mActionsViewModel.pushAccount.pushserver, mActionsViewModel.pushAccount.getMqttAccountName());
+                    Notifications.setLastSyncDate(getApplication(),
+                            mActionsViewModel.pushAccount.pushserver, mActionsViewModel.pushAccount.getMqttAccountName(), 0L, 0);
 
                     refreshActions(true);
                 }
