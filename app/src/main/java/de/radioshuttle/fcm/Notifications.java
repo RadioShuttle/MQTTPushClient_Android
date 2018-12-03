@@ -164,20 +164,12 @@ public class Notifications extends BroadcastReceiver {
         notificationManager.cancel(MessagingService.FCM_ON_DELETE, 0);
     }
 
-    public static void addToNewMessageCounter(Context context, String pushServerAddr, String mqttAccount, int cnt , long receivedDate, int seqNo) {
+    public static void addToNewMessageCounter(Context context, String pushServerAddr, String mqttAccount, int cnt) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
         String account = pushServerAddr + ":" + mqttAccount;
-        long storedReceivedDate = settings.getLong(RECEIVED_DATE_PREFIX + account, 0L);
         int storedCounter = settings.getInt(MSG_CNT_PREFIX + account, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putInt(MSG_CNT_PREFIX + account, storedCounter + cnt);
-        if (receivedDate > storedReceivedDate || (receivedDate == storedReceivedDate && seqNo > storedCounter)) {
-            editor.putLong(RECEIVED_DATE_PREFIX + account, receivedDate);
-            editor.putInt(SEQ_NO_PREFIX + account, seqNo);
-        } else if (receivedDate == 0l) { // reset
-            editor.putLong(RECEIVED_DATE_PREFIX + account, 0L);
-            editor.putInt(SEQ_NO_PREFIX + account, 0);
-        }
         editor.commit();
         Intent intent = new Intent(MqttMessage.MSG_CNT_INTENT);
         intent.putExtra(MqttMessage.ARG_PUSHSERVER_ADDR, pushServerAddr);
@@ -186,13 +178,13 @@ public class Notifications extends BroadcastReceiver {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    public static void resetLastReceivedDate(Context context, String pushServerAddr, String mqttAccount) {
+    public static void setLastSyncDate(Context context, String pushServerAddr, String mqttAccount, long date, int seqNo) {
         if (pushServerAddr != null && mqttAccount != null) {
             String account = pushServerAddr + ":" + mqttAccount;
             SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = settings.edit();
-            editor.putLong(RECEIVED_DATE_PREFIX + account, 0L);
-            editor.putInt(SEQ_NO_PREFIX + account, 0);
+            editor.putLong(SYNC_DATE_PREFIX + account, date);
+            editor.putInt(SYNC_SEQ_NO_PREFIX + account, seqNo);
             editor.commit();
         }
     }
@@ -220,8 +212,8 @@ public class Notifications extends BroadcastReceiver {
         /* save message info */
         SharedPreferences.Editor editor = settings.edit();
         editor.remove(MSG_CNT_PREFIX + account);
-        editor.remove(RECEIVED_DATE_PREFIX + account);
-        editor.remove(SEQ_NO_PREFIX + account);
+        editor.remove(SYNC_DATE_PREFIX + account);
+        editor.remove(SYNC_SEQ_NO_PREFIX + account);
         editor.commit();
     }
 
@@ -231,12 +223,12 @@ public class Notifications extends BroadcastReceiver {
         return settings.getInt(MSG_CNT_PREFIX + account, 0);
     }
 
-    public static long[] getMaxReceivedDate(Context context, String pushServerAddr, String mqttAccount) {
+    public static long[] getLastSyncDate(Context context, String pushServerAddr, String mqttAccount) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
         String account = pushServerAddr + ":" + mqttAccount;
         long[] re = new long[] {
-                settings.getLong(RECEIVED_DATE_PREFIX + account, 0L),
-                (long) settings.getInt(SEQ_NO_PREFIX + account, 0)
+                settings.getLong(SYNC_DATE_PREFIX + account, 0L),
+                (long) settings.getInt(SYNC_SEQ_NO_PREFIX + account, 0)
         };
         return re;
     }
@@ -285,8 +277,8 @@ public class Notifications extends BroadcastReceiver {
     private final static String GROUP_ID = "group_id";
 
     private final static String MSG_CNT_PREFIX = "MSG_CNT_";
-    private final static String RECEIVED_DATE_PREFIX = "MSG_RECEIVED_";
-    private final static String SEQ_NO_PREFIX = "MSG_SEQ_NO_";
+    private final static String SYNC_DATE_PREFIX = "MSG_RECEIVED_";
+    private final static String SYNC_SEQ_NO_PREFIX = "MSG_SEQ_NO_";
 
 
     private final static String TAG = Notifications.class.getSimpleName();
