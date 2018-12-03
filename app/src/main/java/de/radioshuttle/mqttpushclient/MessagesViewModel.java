@@ -24,11 +24,14 @@ import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.db.MqttMessageDao;
+import de.radioshuttle.fcm.Notifications;
 
 public class MessagesViewModel extends AndroidViewModel {
     public LiveData<PagedList<MqttMessage>> messagesPagedList;
@@ -64,6 +67,26 @@ public class MessagesViewModel extends AndroidViewModel {
                 MqttMessageDao dao = db.mqttMessageDao();
                 long psid = dao.getCode(pushAccount.pushserverID);
                 long accountID = dao.getCode(pushAccount.getMqttAccountName());
+
+                List<MqttMessage> msgs = dao.loadReceivedMessages(psid, accountID);
+                if (msgs != null && msgs.size() > 0) {
+                    MqttMessage msg = msgs.get(0);
+                    if (since == null || msg.getWhen() < since) {
+                        Notifications.setLastSyncDate(getApplication(), pushAccount.pushserver, pushAccount.getMqttAccountName(),
+                                msg.getWhen(), msg.getSeqno());
+                        // Log.d(TAG, "last sync date (delete): " + new Date(msg.getWhen()) + " " + (msg.getWhen() / 1000L) + " " + msg.getSeqno());
+                    } else {
+                        // msg.getWhen() > 0
+                        // make sure sync date is not lower than now - 1 day (since)
+                        long[] lastSyncDate = Notifications.getLastSyncDate(getApplication(), pushAccount.pushserver, pushAccount.getMqttAccountName());
+                        if (lastSyncDate[0] < since) {
+                            Notifications.setLastSyncDate(getApplication(), pushAccount.pushserver, pushAccount.getMqttAccountName(),
+                                    since, 0);
+                            // Log.d(TAG, "last sync date (delete 1 day): " + new Date(since) + " " + (since / 1000L) + " " + 0);
+                        }
+                    }
+                }
+
                 if (since != null) {
                     dao.deleteMessagesForAccountBefore(psid, accountID, since);
                 } else {
