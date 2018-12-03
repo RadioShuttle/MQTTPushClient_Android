@@ -35,8 +35,8 @@ public interface MqttMessageDao {
     @Query("SELECT * FROM mqtt_messages, codes c1, codes c2 WHERE c2.name = :pushServer and c2.id = push_server_id and c1.name = :account and mqtt_accont_id = c1.id  ORDER BY `when` DESC")
     public abstract DataSource.Factory<Integer, MqttMessage> getReceivedMessages(String pushServer, String account);
 
-    @Query("SELECT * FROM mqtt_messages ORDER BY `when` DESC")
-    public List<MqttMessage> loadReceivedMessages();
+    @Query("SELECT * FROM mqtt_messages WHERE push_server_id = :pushID and mqtt_accont_id = :accountID  ORDER BY `when` DESC LIMIT 10")
+    public List<MqttMessage> loadReceivedMessages(long pushID, long accountID);
 
     @Query("DELETE FROM mqtt_messages WHERE push_server_id = :pushServerID AND mqtt_accont_id = :mqttAccountID")
     public void deleteMessagesForAccount(long pushServerID, long mqttAccountID);
