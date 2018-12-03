@@ -32,14 +32,11 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.security.cert.CertificateException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -283,9 +280,17 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     }
 
     protected void syncMessages() throws IOException, ServerError {
-        long[] lastReceivedKey = Notifications.getMaxReceivedDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName());
-        long lastReceived = lastReceivedKey[0];
-        int lastReceivedSeqNo = (int) lastReceivedKey[1];
+        long[] lastSyncKey = Notifications.getLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName());
+        long lastReceived = lastSyncKey[0];
+        int lastReceivedSeqNo = (int) lastSyncKey[1];
+
+        //if last received older than 30 days, set it to 30daysAgo
+        GregorianCalendar monthAgo = new GregorianCalendar();
+        monthAgo.add(Calendar.DAY_OF_MONTH, -30);
+        if (lastReceived < monthAgo.getTimeInMillis()) {
+            lastReceived = monthAgo.getTimeInMillis();
+            lastReceivedSeqNo = 0;
+        }
 
         AppDatabase db = null;
         Long psCode = null;
@@ -319,7 +324,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             // Log.d(TAG, " (before null) mqttAccountCode: " + mqttAccountCode);
         }
 
-        Log.d(TAG, "getCachedMessages: " + (lastReceived / 1000L) + " / " + lastReceivedSeqNo);
+        Log.d(TAG, "getCachedMessages: last sync date used: " + new Date(lastReceived) + " " + (lastReceived / 1000L) + " / " + lastReceivedSeqNo);
         List<Object[]> messages =  mConnection.getCachedMessages(lastReceived / 1000L, lastReceivedSeqNo);
         ArrayList<Integer> ids = new ArrayList<>();
 
@@ -341,6 +346,15 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             }
             mqttMessage.setSeqno((Integer) messages.get(i)[3]);
 
+            if (mqttMessage.getWhen() > lastReceived) {
+                lastReceived = mqttMessage.getWhen();
+                lastReceivedSeqNo = mqttMessage.getSeqno();
+            } else if (mqttMessage.getWhen() == lastReceived) {
+                if (mqttMessage.getSeqno() > lastReceivedSeqNo) {
+                    lastReceivedSeqNo = mqttMessage.getSeqno();
+                }
+            }
+
             if (mqttMessage.getWhen() < expireDate)
                 continue;
 
@@ -351,14 +365,6 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 Long k = db.mqttMessageDao().insertMqttMessage(mqttMessage);
                 if (k != null && k >= 0) {
                     ids.add(k.intValue());
-                    if (mqttMessage.getWhen() > lastReceived) {
-                        lastReceived = mqttMessage.getWhen();
-                        lastReceivedSeqNo = mqttMessage.getSeqno();
-                    } else if (mqttMessage.getWhen() == lastReceived) {
-                        if (mqttMessage.getSeqno() > lastReceivedSeqNo) {
-                            lastReceivedSeqNo = mqttMessage.getSeqno();
-                        }
-                    }
                 }
             } catch(SQLiteConstraintException e) {
                 /* this error may occur, if the message has already been added by sync operation */
@@ -367,9 +373,14 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             }
         }
 
+        if (lastReceived > lastSyncKey[0] || (lastReceived == lastSyncKey[0] && lastReceivedSeqNo >  (int) lastSyncKey[1])) {
+            Notifications.setLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(), lastReceived, lastReceivedSeqNo);
+            // Log.d(TAG, "last sync date set: " + new Date(lastReceived) + " " + (lastReceived / 1000L) + " / " + lastReceivedSeqNo);
+        }
+
         if (ids.size() > 0) {
             Notifications.addToNewMessageCounter(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(),
-                    ids.size(), lastReceived, lastReceivedSeqNo);
+                    ids.size());
             Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
             intent.putExtra(MqttMessage.ARG_PUSHSERVER_ADDR, mPushAccount.pushserver);
             intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mPushAccount.getMqttAccountName());
