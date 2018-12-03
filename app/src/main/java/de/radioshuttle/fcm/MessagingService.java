@@ -196,8 +196,6 @@ public class MessagingService extends FirebaseMessagingService {
         int cntAlarm = 0;
         int cntNormal = 0;
         int cnt = 0;
-        long maxReceivedDate = 0L;
-        int sequenzNo = 0;
         try {
             JSONArray msgsArray = new JSONArray(msg);
             AppDatabase db = null;
@@ -292,14 +290,6 @@ public class MessagingService extends FirebaseMessagingService {
                             Long k = db.mqttMessageDao().insertMqttMessage(mqttMessage);
                             if (k != null && k >= 0) {
                                 ids.add(k.intValue());
-                                if (d > maxReceivedDate) {
-                                    maxReceivedDate = d;
-                                    sequenzNo = seqNo;
-                                } else if (d == maxReceivedDate) {
-                                    if (seqNo > sequenzNo) {
-                                        sequenzNo = seqNo;
-                                    }
-                                }
                             }
                         } catch(SQLiteConstraintException e) {
                             /* this error may occur, if the message has already been added by sync operation */
@@ -359,7 +349,7 @@ public class MessagingService extends FirebaseMessagingService {
 
             int total = cntAlarm + cntNormal + cnt;
             if (total > 0) {
-                Notifications.addToNewMessageCounter(getApplicationContext(), pushServerLocalAddr, mqttAccountName, total, maxReceivedDate, sequenzNo);
+                Notifications.addToNewMessageCounter(getApplicationContext(), pushServerLocalAddr, mqttAccountName, total);
             }
 
             /* inform about database changes, if app is running it can update its views */
