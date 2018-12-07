@@ -382,6 +382,9 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
             if (hasDataChanged()) {
                 setUIEnabled(false, false);
                 mViewModel.saveAccount(this, getUserInput());
+                if (mSnackbar != null) {
+                    mSnackbar.dismiss();
+                }
             } else {
                 Toast.makeText(getApplicationContext(), R.string.error_data_unmodified, Toast.LENGTH_LONG).show();
             }
