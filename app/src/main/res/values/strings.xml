@@ -122,7 +122,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="errormsg_timeout">Timeout</string>
 
     <string name="errormsg_not_authorized">Bad user name or password or not authorized</string>
-    <string name="errormsg_not_permitted">License error: this account has not been activated/permitted by %s. Contact sales.</string>
+    <string name="errormsg_not_permitted">License error: this account is not activated/permitted by %s. Contact sales.</string>
     <string name="errormsg_invalid_url">Invalid MQTT server URL."</string>
     <string name="errormsg_unexpected_server_error">An unexpected error on the push server has occured.</string>
     <string name="errormsg_op_canceled">Request canceled.</string>
