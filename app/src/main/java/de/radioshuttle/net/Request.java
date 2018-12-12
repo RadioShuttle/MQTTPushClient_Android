@@ -149,7 +149,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             /* login */
             if (cont) {
                 cont = false;
-                mConnection.login(mPushAccount);
+                Cmd.RawCmd rawCmd = mConnection.login(mPushAccount);
                 requestStatus = mConnection.lastReturnCode;
                 if (mConnection.lastReturnCode == Cmd.RC_OK) {
                     requestErrorTxt = mAppContext.getString(R.string.status_ok);
@@ -157,7 +157,13 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                         cont = true;
                     }
                 } else if (mConnection.lastReturnCode == Cmd.RC_NOT_AUTHORIZED) {
-                    requestErrorTxt = mAppContext.getString(R.string.errormsg_not_authorized);
+                    Map<String, Object> m = mConnection.mCmd.readErrorData(rawCmd.data);
+                    requestErrorCode = (m.containsKey("err_code") ? (short) m.get("err_code") : 0);
+                    if (requestErrorCode == 0) {
+                        requestErrorTxt = mAppContext.getString(R.string.errormsg_not_permitted, mPushAccount.pushserver);
+                    } else {
+                        requestErrorTxt = mAppContext.getString(R.string.errormsg_not_authorized);
+                    }
                 } else if (mConnection.lastReturnCode == Cmd.RC_INVALID_ARGS) {
                     requestStatus = Cmd.RC_INVALID_ARGS;
                     requestErrorTxt = mAppContext.getString(R.string.errormsg_invalid_url);
