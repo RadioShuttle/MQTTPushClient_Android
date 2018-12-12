@@ -188,7 +188,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                             }
                             if (b.requestStatus != Cmd.RC_OK) {
                                 String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
-                                if (b.requestStatus == Cmd.RC_MQTT_ERROR || b.requestStatus == Cmd.RC_NOT_AUTHORIZED) {
+                                if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
                                     t = MessagesActivity.this.getString(R.string.errormsg_mqtt_prefix) + " " + t;
                                 }
                                 showErrorMsg(t);
