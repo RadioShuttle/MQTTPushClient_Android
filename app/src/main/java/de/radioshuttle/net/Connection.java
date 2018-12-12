@@ -148,10 +148,11 @@ public class Connection {
         }
     }
 
-    public void login(PushAccount b) throws IOException, ServerError, InterruptedException {
+    public Cmd.RawCmd login(PushAccount b) throws IOException, ServerError, InterruptedException {
         Cmd.RawCmd response = mCmd.loginRequest(++mSeqNo, b.uri, b.user, b.password);
 
         handleError(response);
+        return response;
     }
 
     public Map<String, String> getFCMData() throws IOException, ServerError {
