@@ -38,6 +38,9 @@ public interface MqttMessageDao {
     @Query("SELECT * FROM mqtt_messages WHERE push_server_id = :pushID and mqtt_accont_id = :accountID  ORDER BY `when` DESC LIMIT 10")
     public List<MqttMessage> loadReceivedMessages(long pushID, long accountID);
 
+    @Query("SELECT * FROM mqtt_messages WHERE push_server_id = :pushID and mqtt_accont_id = :accountID AND `when` < :before ORDER BY `when` DESC LIMIT 10")
+    public List<MqttMessage> loadReceivedMessagesBefore(long pushID, long accountID, long before);
+
     @Query("DELETE FROM mqtt_messages WHERE push_server_id = :pushServerID AND mqtt_accont_id = :mqttAccountID")
     public void deleteMessagesForAccount(long pushServerID, long mqttAccountID);
 
