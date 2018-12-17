@@ -381,7 +381,7 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
         if (checkData()) {
             if (hasDataChanged()) {
                 setUIEnabled(false, false);
-                mViewModel.saveAccount(this, getUserInput());
+                mViewModel.saveAccount(this, getUserInput(), mMode == MODE_ADD);
                 if (mSnackbar != null) {
                     mSnackbar.dismiss();
                 }
