@@ -51,6 +51,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         mAppContext = context.getApplicationContext();
         mPushAccount = pushAccount;
         mAccountLiveData = accountLiveData;
+        mSync = false;
         mCancelled = new AtomicBoolean(false);
     }
 
@@ -183,7 +184,9 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 mPushAccount.pushserverID = m.get("pushserverid");
 
                 /* get last messages from server */
-                syncMessages();
+                if (mSync) {
+                    syncMessages();
+                }
 
                 FirebaseApp app = null;
                 String firebaseOptionsName = m.get("sender_id");
@@ -283,6 +286,10 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         if (mAccountLiveData != null) {
             mAccountLiveData.setValue(this);
         }
+    }
+
+    public void setSync(boolean sync) {
+        mSync = sync;
     }
 
     protected void syncMessages() throws IOException, ServerError {
@@ -413,6 +420,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     }
 
 
+    protected boolean mSync;
     protected Connection mConnection;
     protected AtomicBoolean mCancelled;
     protected Context mAppContext;
