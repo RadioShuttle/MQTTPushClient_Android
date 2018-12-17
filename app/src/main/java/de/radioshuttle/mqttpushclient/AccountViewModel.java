@@ -141,6 +141,7 @@ public class AccountViewModel extends ViewModel {
             requestCnt++;
             for(int i = 0; i < pushAccounts.size(); i++) {
                 Request request = new Request(context, pushAccounts.get(i), this.request);
+                request.setSync(true);
                 currentRequests.add(request);
                 request.execute();
             }
@@ -148,7 +149,7 @@ public class AccountViewModel extends ViewModel {
     }
 
     /* add or uodate account */
-    public void saveAccount(Context context, PushAccount pushAccount) {
+    public void saveAccount(Context context, PushAccount pushAccount, boolean sync) {
 
         if (currentRequests == null) {
             currentRequests = new ArrayList<>();
@@ -161,6 +162,7 @@ public class AccountViewModel extends ViewModel {
         }
         requestCnt++;
         Request request = new Request(context, pushAccount, this.request);
+        request.setSync(sync);
         currentRequests.add(request);
         request.execute();
     }

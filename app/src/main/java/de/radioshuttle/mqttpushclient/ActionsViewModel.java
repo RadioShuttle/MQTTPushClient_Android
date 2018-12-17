@@ -36,9 +36,10 @@ public class ActionsViewModel extends ViewModel {
         }
     }
 
-    public void getActions(Context context) {
+    public void getActions(Context context, boolean sync) {
         requestCnt++;
         currentRequest = new ActionsRequest(context, pushAccount, actionsRequest);
+        currentRequest.setSync(true);
         currentRequest.execute();
     }
 

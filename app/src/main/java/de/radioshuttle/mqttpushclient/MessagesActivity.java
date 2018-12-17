@@ -322,7 +322,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         if (!mActionsViewModel.isRequestActive()) {
             if (setRefreshing)
                 mSwipeRefreshLayout.setRefreshing(true);
-            mActionsViewModel.getActions(this);
+            mActionsViewModel.getActions(this, true);
         }
     }
 

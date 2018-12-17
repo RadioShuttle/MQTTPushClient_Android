@@ -428,7 +428,7 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
     protected void refresh() {
         if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
-            mViewModel.getActions(this);
+            mViewModel.getActions(this, false);
         }
     }
 
