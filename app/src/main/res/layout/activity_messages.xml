@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rView"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -37,16 +38,44 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/noTopicsWarning"
+        android:layout_below="@+id/header"
+        android:visibility="gone"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_gravity="center_vertical"
+            app:srcCompat="@drawable/ic_warning"
+            android:layout_width="24dp"
+            android:layout_height="24dp" />
+
+        <TextView
+            android:layout_marginLeft="16dp"
+            android:text="@string/info_no_topics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        </TextView>
+
+    </LinearLayout>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/swiperefresh"
-        android:layout_below="@+id/header"
+        android:layout_below="@+id/noTopicsWarning"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
     <androidx.recyclerview.widget.RecyclerView
         android:layout_marginTop="4dp"
-        android:layout_below="@+id/header"
+        android:layout_below="@+id/noTopicsWarning"
         android:id="@+id/messagesListView"
         android:scrollbars="vertical"
         android:layout_width="match_parent"
