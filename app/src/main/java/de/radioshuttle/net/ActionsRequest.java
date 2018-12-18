@@ -8,6 +8,7 @@ package de.radioshuttle.net;
 
 import androidx.lifecycle.MutableLiveData;
 import android.content.Context;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,12 @@ public class ActionsRequest extends Request {
         super(context, pushAccount, accountLiveData);
         mActions = new ArrayList<>();
         tmpRes = new ArrayList<>();
+        mCheckHasTopics = false;
+        mHasTopics = null;
+    }
+
+    public void setCheckHasTopics(boolean b) {
+        mCheckHasTopics = b;
     }
 
     public void addAction(ActionsViewModel.Action a) {
@@ -110,6 +117,16 @@ public class ActionsRequest extends Request {
             };
             Collections.sort(tmpRes, c);
             mActions = tmpRes;
+            if (mCheckHasTopics) {
+                mHasTopics = null;
+                try {
+                    LinkedHashMap<String, Integer> topics = mConnection.getTopics();
+                    mHasTopics = topics != null && topics.size() > 0;
+                } catch(Exception e) {
+                    //ignore error, which should be rare if previous actions succeeded
+                    Log.d(TAG, "check for topics failed: " + e.getMessage());
+                }
+            }
         } else {
             //TODO: rare case: removeActions ok, but getActions() failed. see TopicsRequest
         }
@@ -126,8 +143,11 @@ public class ActionsRequest extends Request {
     public ActionsViewModel.Action mActionArg;
 
     private ArrayList<ActionsViewModel.Action> tmpRes;
+    private boolean mCheckHasTopics;
+    public Boolean mHasTopics;
 
     /** contains the reuslt if request was successful  */
     public volatile ArrayList<ActionsViewModel.Action> mActions;
 
+    private final static String TAG = ActionsRequest.class.getSimpleName();
 }
