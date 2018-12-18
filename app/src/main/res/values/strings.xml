@@ -6,6 +6,9 @@
     <string name="menu_about">About</string>
     <string name="menu_privacy">Privacy Policy</string>
     <string name="menu_reload">Reload</string>
+    <string name="menu_noactions">No actions defined</string>
+
+    <string name="info_no_topics">To receive notifications, at least one topic must be added. Navigate into the server account edit mode and tap on MQTT Topics.</string>
 
     <string name="action_add_account">Add</string>
     <string name="action_edit_account">Edit</string>
