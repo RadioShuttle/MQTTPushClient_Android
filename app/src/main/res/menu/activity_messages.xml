@@ -9,4 +9,13 @@
         android:title="@string/action_delete_msgs"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/menu_noactions"
+        android:enabled="false"
+        android:visible="false"
+        android:orderInCategory="101"
+        android:title="@string/menu_noactions"
+        app:showAsAction="never" />
+
+
 </menu>
