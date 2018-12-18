@@ -8,7 +8,7 @@
     <string name="menu_reload">Reload</string>
     <string name="menu_noactions">No actions defined</string>
 
-    <string name="info_no_topics">To receive notifications, at least one topic must be added. Navigate into the server account edit mode and tap on MQTT Topics.</string>
+    <string name="info_no_topics">Add at least one topic to receive notifications. Navigate into the server account edit mode and tap on MQTT TOPICS.</string>
 
     <string name="action_add_account">Add</string>
     <string name="action_edit_account">Edit</string>
