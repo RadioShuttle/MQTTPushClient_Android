@@ -130,6 +130,18 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                                 mActionsViewModel.confirmResultDelivered();
                                 mSwipeRefreshLayout.setRefreshing(false);
                                 invalidateOptionsMenu();
+                                View v = findViewById(R.id.noTopicsWarning);
+                                if (v != null) {
+                                    if (actionsRequest.mHasTopics != null && !actionsRequest.mHasTopics) {
+                                        if (v.getVisibility() != View.VISIBLE) {
+                                            v.setVisibility(View.VISIBLE);
+                                        }
+                                    } else {
+                                        if (v.getVisibility() != View.GONE) {
+                                            v.setVisibility(View.GONE);
+                                        }
+                                    }
+                                }
 
                                 /* handle cerificate exception */
                                 if (b.hasCertifiateException()) {
@@ -257,6 +269,19 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         ActionsRequest r = (ActionsRequest) mActionsViewModel.actionsRequest.getValue();
         if (r != null)
         {
+            MenuItem noActions = menu.findItem(R.id.menu_noactions);
+            if (noActions != null) {
+                if (r.requestStatus == Cmd.RC_OK && (r.mActions == null || r.mActions.size() == 0)) {
+                    if (!noActions.isVisible()) {
+                        noActions.setVisible(true);
+                    }
+                } else {
+                    if (noActions.isVisible()) {
+                        noActions.setVisible(false);
+                    }
+                }
+            }
+
             if (r.mActions != null) {
                 menu.removeGroup(ACTION_ITEM_GROUP_ID);
                 MenuItem item;
@@ -322,7 +347,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         if (!mActionsViewModel.isRequestActive()) {
             if (setRefreshing)
                 mSwipeRefreshLayout.setRefreshing(true);
-            mActionsViewModel.getActions(this, true);
+            mActionsViewModel.getActions(this, true, true);
         }
     }
 
