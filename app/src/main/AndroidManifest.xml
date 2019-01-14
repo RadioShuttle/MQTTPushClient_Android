@@ -52,7 +52,8 @@
         <activity android:name=".ActionsActivity" />
         <activity android:name=".AboutActivity" />
         <activity android:name=".PrivacyActivity" />
-        <activity android:name=".HelpActivity"></activity>
+        <activity android:name=".HelpActivity" />
+        <activity android:name=".JavaScriptEditorActivity"></activity>
     </application>
 
 </manifest>
