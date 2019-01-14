@@ -59,6 +59,7 @@
         android:layout_height="wrap_content" />
 
     <TextView
+        android:visibility="gone"
         android:id="@+id/filterLabel"
         app:layout_constraintTop_toBottomOf="@id/notificationtype_spinner"
         android:layout_marginTop="8dp"
@@ -69,6 +70,7 @@
         android:layout_height="wrap_content" />
 
     <Button
+        android:visibility="gone"
         android:id="@+id/filterButton"
         android:layout_marginTop="4dp"
         android:minHeight="48dp"
