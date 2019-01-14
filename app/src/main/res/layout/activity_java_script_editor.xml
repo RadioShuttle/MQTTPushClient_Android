@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".JavaScriptEditorActivity">
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:background="@color/colorHeader"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ProgressBar
+            android:id="@+id/runProgressBar"
+            style="@android:style/Widget.ProgressBar.Small"
+            android:layout_marginRight="4dp"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/headerText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            />
+
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        app:layout_constraintTop_toBottomOf="@+id/header"
+        android:paddingTop="8dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/functionPrefix"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:typeface="monospace"
+                android:labelFor="@+id/functionEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/functionEditText"
+                app:layout_constraintTop_toBottomOf="@id/functionPrefix"
+                android:paddingLeft="8dp"
+                android:minEms="3"
+                android:inputType="text|textMultiLine|textNoSuggestions"
+                android:typeface="monospace"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                app:layout_constraintTop_toBottomOf="@id/functionEditText"
+                android:id="@+id/functionSuffix"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:typeface="monospace"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/saveJSButton"
+                android:text="@string/action_save"
+                app:layout_constraintTop_toBottomOf="@id/functionSuffix"
+                app:layout_constraintRight_toRightOf="parent"
+                android:minHeight="48dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/testJSButton"
+                android:text="@string/action_test"
+                app:layout_constraintTop_toBottomOf="@id/functionSuffix"
+                app:layout_constraintRight_toLeftOf="@+id/saveJSButton"
+                android:minHeight="48dp"
+                android:layout_marginRight="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/runJSButton"
+                android:text="@string/action_run"
+                app:layout_constraintTop_toBottomOf="@id/functionSuffix"
+                app:layout_constraintRight_toLeftOf="@+id/testJSButton"
+                android:layout_marginRight="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </androidx.core.widget.NestedScrollView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

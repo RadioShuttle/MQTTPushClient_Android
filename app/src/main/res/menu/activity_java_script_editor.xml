@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu_save"
+        android:orderInCategory="10"
+        android:icon="@drawable/ic_menu_save"
+        android:title="@string/action_save_account"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menu_test"
+        android:orderInCategory="15"
+        android:title="@string/action_test"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_run"
+        android:orderInCategory="17"
+        android:title="@string/action_run"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_clear"
+        android:orderInCategory="20"
+        android:title="@string/action_clear"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_help"
+        android:orderInCategory="25"
+        android:title="@string/title_help"
+        app:showAsAction="never" />
+
+</menu>
