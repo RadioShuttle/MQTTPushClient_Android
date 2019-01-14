@@ -19,6 +19,8 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.fragment.app.DialogFragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Intent;
 import android.os.Bundle;
 import androidx.appcompat.view.ActionMode;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -31,6 +33,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -267,8 +270,10 @@ public class TopicsActivity extends AppCompatActivity
         if (mViewModel.isRequestActive()) {
             Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
         } else {
+            Bundle topicArgs = getIntent().getExtras();
             EditTopicDlg dlg = new EditTopicDlg();
             Bundle args = new Bundle();
+            args.putString(PARAM_ACCOUNT_JSON, topicArgs.getString(PARAM_ACCOUNT_JSON));
             args.putInt(ARG_EDIT_MODE, mode);
             if (topic != null) {
                 args.putString(ARG_TOPIC, topic);
@@ -594,6 +599,49 @@ public class TopicsActivity extends AppCompatActivity
                 }
             });
 
+            //TODO: readd from args
+            mJavaScriptSrc = null;
+
+            // filter script button
+            jsButton = body.findViewById(R.id.filterButton);
+            // final String javaScriptSrc = null;
+            if (jsButton != null) {
+                jsButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (!mActivityStarted) {
+                            Bundle args = getArguments();
+                            String topic = args.getString(ARG_TOPIC);
+
+                            Intent intent = new Intent(getContext(), JavaScriptEditorActivity.class);
+                            if (Utils.isEmpty(mJavaScriptSrc)) {
+                                intent.putExtra(JavaScriptEditorActivity.ARG_TITLE, getString(R.string.title_add_javascript));
+                            } else {
+                                intent.putExtra(JavaScriptEditorActivity.ARG_TITLE, getString(R.string.title_edit_javascript));
+                                intent.putExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT, mJavaScriptSrc);
+                            }
+
+                            String header = getString(R.string.dlg_filter_header);
+                            if (!Utils.isEmpty(topic)) {
+                                intent.putExtra(JavaScriptEditorActivity.ARG_TOPIC, topic);
+                                header += " " + topic;
+                            }
+                            header += ":";
+                            intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
+                            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg) {\n var content = msg.content;");
+                            intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
+                            intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER);
+
+                            String acc = args.getString(PARAM_ACCOUNT_JSON);
+                            if (!Utils.isEmpty(acc)) {
+                                intent.putExtra(JavaScriptEditorActivity.ARG_ACCOUNT, acc);
+                            }
+                            startActivityForResult(intent, 1);
+                        }
+                    }
+                });
+            }
+
             AlertDialog dlg = builder.create();
             dlg.setCanceledOnTouchOutside(false);
 
@@ -611,8 +659,32 @@ public class TopicsActivity extends AppCompatActivity
             return prio;
         }
 
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+            mActivityStarted = false;
+            // requestCode == 1 for JavaScriptEditor
+            if (requestCode == 1 && resultCode == AppCompatActivity.RESULT_OK) {
+                mJavaScriptSrc = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
+                //TODO:
+                Log.d(TAG, "updated js source: " + mJavaScriptSrc);
+                String buttonLabel = jsButton.getText().toString();
+                boolean emptyCode = Utils.isEmpty(mJavaScriptSrc);
+                if (emptyCode && !buttonLabel.equals(getString(R.string.dlg_filter_button_add))) {
+                    jsButton.setText(R.string.dlg_filter_button_add);
+                }
+                if (!emptyCode && !buttonLabel.equals(getString(R.string.dlg_filter_button_edit))) {
+                    jsButton.setText(R.string.dlg_filter_button_edit);
+                }
 
+            }
+        }
+
+        String mJavaScriptSrc;
+        Button jsButton;
+        boolean mActivityStarted;
     }
+
 
 
     private TopicsViewModel mViewModel;
