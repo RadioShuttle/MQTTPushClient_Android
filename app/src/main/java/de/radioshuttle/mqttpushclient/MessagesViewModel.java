@@ -7,7 +7,10 @@
 package de.radioshuttle.mqttpushclient;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Application;
+
+import androidx.arch.core.util.Function;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
@@ -19,31 +22,104 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
-import java.util.Date;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.net.URI;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.Notifications;
+import de.radioshuttle.utils.JavaScript;
+import de.radioshuttle.utils.ModifyPagedList;
+import de.radioshuttle.utils.Utils;
 
 public class MessagesViewModel extends AndroidViewModel {
     public LiveData<PagedList<MqttMessage>> messagesPagedList;
     public PushAccount pushAccount;
     public HashSet<Integer> newItems;
 
-    public MessagesViewModel(String pushServer, String account, Application app) {
+    protected volatile HashMap<String, JavaScript.Context> currJSContextMap;
+    protected HashMap<String, JavaScript.Context> prevJSContextMap;
+    protected volatile boolean jsDisabled;
+    protected volatile String jsErrorTxt;
+
+    public MessagesViewModel(final PushAccount account, final Application app) {
         super(app);
+        pushAccount = account;
+
         MqttMessageDao dao = AppDatabase.getInstance(app).mqttMessageDao();
         newItems = new HashSet<>();
+
+        jsDisabled = false;
+        jsErrorTxt = null;
+        currJSContextMap = null;
+        prevJSContextMap = null;
+        initJavaScript();
+
+        /* function executed for every page */
+        Function<List<MqttMessage>, List<MqttMessage>> f = new Function<List<MqttMessage>, List<MqttMessage>>() {
+            @Override
+            public List<MqttMessage> apply(List<MqttMessage> input) {
+                // long start = System.currentTimeMillis();
+
+                HashMap<String, JavaScript.Context> jsContextMap = currJSContextMap;
+
+                if (jsDisabled) {
+                    /* javascript was disabled in a previous run, add error msg to all entries */
+                    for(int i = 0; i < input.size(); i++) {
+                        input.get(i).setMsg(jsErrorTxt + "\n" + input.get(i).getMsg());
+                    }
+                } else if (!jsContextMap.isEmpty()) {
+                    /* */
+                    ModifyPagedList jsModify = new ModifyPagedList(input, jsContextMap, app.getString(R.string.filterscript_err));
+                    Future future = Utils.executor.submit(jsModify);
+                    int itemsProcessed = 0;
+
+                    try {
+                        future.get(JavaScript.TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                    } catch (Exception e) {
+                        jsDisabled = true; // disable java script
+                        jsModify.stop();
+                        itemsProcessed = jsModify.itemsProcessed();
+                        if (e instanceof TimeoutException) {
+                            jsErrorTxt = app.getString(R.string.filterscript_err) + " " + app.getString(R.string.filterscript_err_timeout);
+                        } else {
+                            jsErrorTxt = app.getString(R.string.filterscript_err) + " " + e.getMessage();
+                        }
+                        for(int i = itemsProcessed; i < input.size(); i++) {
+                            input.get(i).setMsg(jsErrorTxt + "\n" + input.get(i).getMsg());
+                        }
+                    }
+                }
+                // long exeTime = (System.currentTimeMillis() - start);
+                // Log.d(TAG, "execution time: " + exeTime + "ms " + input.size());
+
+                return input;
+            }
+        };
+
+        DataSource.Factory<Integer, MqttMessage> ds = dao.getReceivedMessages(account.pushserverID, account.getMqttAccountName());
+        ds = ds.mapByPage(f);
+
         messagesPagedList = new LivePagedListBuilder<>(
-                dao.getReceivedMessages(pushServer, account), 20).build(); //TODO: page size
+                ds, 40).build();
+
         IntentFilter intentFilter = new IntentFilter(MqttMessage.UPDATE_INTENT);
         LocalBroadcastManager.getInstance(app).registerReceiver(broadcastReceiver, intentFilter);
 
@@ -55,6 +131,54 @@ public class MessagesViewModel extends AndroidViewModel {
             if (ds != null) {
                 ds.invalidate();
             }
+        }
+    }
+
+
+    protected void initJavaScript() {
+        // long start = System.currentTimeMillis();
+        if (prevJSContextMap != null) {
+            /* release JS resrouces */
+            Iterator<JavaScript.Context> it = prevJSContextMap.values().iterator();
+            while(it.hasNext()) {
+                it.next().close();
+            }
+        }
+        prevJSContextMap = currJSContextMap;
+
+        SharedPreferences settings = getApplication().getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+        String accountsJson = settings.getString(AccountListActivity.ACCOUNTS, null);
+
+        JavaScript interpreter = JavaScript.getInstance();
+        HashMap<String, JavaScript.Context> jsContextMap = new HashMap<>();
+        try {
+            if (accountsJson != null) {
+                JSONArray jarray = new JSONArray(accountsJson);
+                PushAccount found = null;
+                for (int i = 0; i < jarray.length(); i++) {
+                    JSONObject b = jarray.getJSONObject(i);
+                    PushAccount acc = PushAccount.createAccountFormJSON(b);
+                    if (pushAccount.getKey().equals(acc.getKey())) {
+                        found = acc;
+                        break;
+                    }
+                }
+                if (found != null) {
+                    final String mqttServer = new URI(pushAccount.uri).getAuthority();
+                    for(PushAccount.Topic t : found.topicJavaScript) {
+                        if (!Utils.isEmpty(t.jsSrc)) {
+                            /* init javascript function for every topic which has java script code */
+                            jsContextMap.put(t.name, interpreter.initFormatter(t.jsSrc, pushAccount.user, mqttServer, pushAccount.pushserver));
+                        }
+                    }
+                }
+
+            }
+            currJSContextMap = jsContextMap;
+            // Log.d(TAG, "init javasc: " + (System.currentTimeMillis() - start) + "ms");
+
+        } catch(Exception e) {
+            Log.e(TAG, "Error loading accounts (javascript code): " + e.getMessage(), e );
         }
     }
 
@@ -113,25 +237,38 @@ public class MessagesViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
+        if (prevJSContextMap != null) {
+            /* release JS resrouces */
+            Iterator<JavaScript.Context> it = prevJSContextMap.values().iterator();
+            while(it.hasNext()) {
+                it.next().close();
+            }
+        }
+        if (currJSContextMap != null) {
+            /* release JS resrouces */
+            Iterator<JavaScript.Context> it = currJSContextMap.values().iterator();
+            while(it.hasNext()) {
+                it.next().close();
+            }
+        }
+
         LocalBroadcastManager.getInstance(getApplication()).unregisterReceiver(broadcastReceiver);
     }
 
     public static class Factory implements ViewModelProvider.Factory {
 
-        public Factory(String pushServer, String account, Application app) {
-            this.pushServer = pushServer;
-            this.account = account;
+        public Factory(PushAccount pushAccount, Application app) {
             this.app = app;
+            this.pushAccount = pushAccount;
         }
 
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            return (T) new MessagesViewModel(pushServer, account, app);
+            return (T) new MessagesViewModel(pushAccount, app);
         }
 
-        String pushServer;
-        String account;
+        PushAccount pushAccount;
         Application app;
     }
 
