@@ -71,7 +71,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                 server.setVisibility(View.GONE);
             }
             mViewModel = ViewModelProviders.of(
-                    this, new MessagesViewModel.Factory(b.pushserverID, b.getMqttAccountName(), getApplication()))
+                    this, new MessagesViewModel.Factory(b, getApplication()))
                     .get(MessagesViewModel.class);
             if (mViewModel.pushAccount == null)
                 mViewModel.pushAccount = b;
