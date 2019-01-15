@@ -174,9 +174,12 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dlg_testdata_title">Test Data</string>
     <string name="dlg_testdata_import_button">Import last received message</string>
     <string name="dlg_testdata_err_not_found">No messages found for this topic</string>
-    <string name="javascript_result">JavaScript Result</string>
-    <string name="javascript_err">JavaScript Error</string>
+    <string name="javascript_result">JavaScript result:</string>
+    <string name="javascript_err">JavaScript error:</string>
     <string name="javascript_err_timeout">Timeout</string>
+
+    <string name="filterscript_err">Filter script error:</string>
+    <string name="filterscript_err_timeout">Timeout</string>
 
     <string name="action_run">Run</string>
     <string name="action_set">Set</string>
