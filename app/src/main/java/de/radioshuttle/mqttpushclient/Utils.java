@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient;
 
+@Deprecated
 public class Utils {
     public static boolean isEmpty(String s) {
         return s == null || s.trim().length() == 0;
