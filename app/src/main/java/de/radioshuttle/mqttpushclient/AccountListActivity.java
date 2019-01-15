@@ -42,9 +42,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessageDao;
@@ -54,6 +52,7 @@ import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
+import de.radioshuttle.utils.Utils;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;

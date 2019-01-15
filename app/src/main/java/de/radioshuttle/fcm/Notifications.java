@@ -21,7 +21,7 @@ import org.json.JSONObject;
 import java.util.Iterator;
 
 import de.radioshuttle.db.MqttMessage;
-import de.radioshuttle.mqttpushclient.Utils;
+import de.radioshuttle.utils.Utils;
 
 
 public class Notifications extends BroadcastReceiver {

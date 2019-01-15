@@ -32,7 +32,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
-import de.radioshuttle.mqttpushclient.Utils;
+import de.radioshuttle.utils.Utils;
 
 public class Connection {
     public Connection(String pushServer, Context context) {

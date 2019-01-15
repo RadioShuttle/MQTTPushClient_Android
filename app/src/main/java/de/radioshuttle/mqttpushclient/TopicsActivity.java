@@ -12,7 +12,6 @@ import android.app.Dialog;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import androidx.annotation.Nullable;
@@ -55,6 +54,7 @@ import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.TopicsRequest;
+import de.radioshuttle.utils.Utils;
 
 import static de.radioshuttle.mqttpushclient.PushAccount.Topic.*;
 

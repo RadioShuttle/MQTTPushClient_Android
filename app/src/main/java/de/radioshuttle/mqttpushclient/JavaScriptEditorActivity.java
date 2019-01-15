@@ -11,6 +11,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import de.radioshuttle.utils.Utils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;

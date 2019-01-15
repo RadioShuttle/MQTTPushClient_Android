@@ -7,7 +7,6 @@
 package de.radioshuttle.mqttpushclient;
 
 import android.app.Application;
-import android.util.Log;
 
 import java.util.HashMap;
 import java.util.List;
