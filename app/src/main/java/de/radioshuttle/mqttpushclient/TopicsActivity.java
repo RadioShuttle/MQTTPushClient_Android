@@ -12,6 +12,7 @@ import android.app.Dialog;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import androidx.annotation.Nullable;
@@ -21,6 +22,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.appcompat.view.ActionMode;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -39,7 +41,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -257,7 +261,7 @@ public class TopicsActivity extends AppCompatActivity
                 handled = true;
                 break;
             case R.id.action_add:
-                showEditDialog(mViewModel.lastEnteredTopic, MODE_ADD,null, null);
+                showEditDialog(mViewModel.lastEnteredTopic, MODE_ADD,null, null, null);
                 handled = true;
                 break;
             default:
@@ -266,7 +270,7 @@ public class TopicsActivity extends AppCompatActivity
         return handled;
     }
 
-    protected void showEditDialog(String topic, int mode, String errorMsg, Integer notificationType) {
+    protected void showEditDialog(String topic, int mode, String errorMsg, Integer notificationType, String javaScriptSr) {
         if (mViewModel.isRequestActive()) {
             Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
         } else {
@@ -274,6 +278,7 @@ public class TopicsActivity extends AppCompatActivity
             EditTopicDlg dlg = new EditTopicDlg();
             Bundle args = new Bundle();
             args.putString(PARAM_ACCOUNT_JSON, topicArgs.getString(PARAM_ACCOUNT_JSON));
+            args.putString(ARG_JAVASCRIPT, javaScriptSr);
             args.putInt(ARG_EDIT_MODE, mode);
             if (topic != null) {
                 args.putString(ARG_TOPIC, topic);
@@ -326,14 +331,16 @@ public class TopicsActivity extends AppCompatActivity
         }
     }
 
-    public void addTopic(String topic, int prio) {
+    public void addTopic(String topic, int prio, String javaScriptSrc) {
         if (Utils.isEmpty(topic)) {
-            showEditDialog(mViewModel.lastEnteredTopic,MODE_ADD, getString(R.string.error_empty_field), prio);
+            showEditDialog(mViewModel.lastEnteredTopic,MODE_ADD, getString(R.string.error_empty_field), prio, javaScriptSrc);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             PushAccount.Topic t = new PushAccount.Topic();
             t.name = topic;
             t.prio = prio;
+            t.jsSrc = javaScriptSrc;
+            saveJSLocally(topic, javaScriptSrc);
             mViewModel.addTopic(this, t);
         }
         if (!Utils.isEmpty(topic)) {
@@ -341,19 +348,106 @@ public class TopicsActivity extends AppCompatActivity
         }
     }
 
-    public void updateTopic(String topic, int prio) {
+    public void updateTopic(String topic, int prio, String javaScriptSrc) {
         if (Utils.isEmpty(topic)) {
-            showEditDialog(mViewModel.lastEnteredTopic,MODE_EDIT, getString(R.string.error_empty_field), prio);
+            showEditDialog(mViewModel.lastEnteredTopic,MODE_EDIT, getString(R.string.error_empty_field), prio, javaScriptSrc);
         } else if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             PushAccount.Topic t = new PushAccount.Topic();
             t.name = topic;
             t.prio = prio;
+            t.jsSrc = javaScriptSrc;
+            saveJSLocally(topic, javaScriptSrc);
             mViewModel.updateTopic(this, t);
         }
         if (!Utils.isEmpty(topic)) {
             mViewModel.lastEnteredTopic = topic;
         }
+    }
+
+    protected void saveJSLocally(String topic, String javascript) {
+        if (topic != null) {
+            if (javascript == null) {
+                javascript = "";
+            }
+            SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+            String accountsJson = settings.getString(AccountListActivity.ACCOUNTS, null);
+
+            try {
+                ArrayList<PushAccount> pushAccounts = new ArrayList<PushAccount>();
+                if (accountsJson != null) {
+                    JSONArray jarray = new JSONArray(accountsJson);
+                    for (int i = 0; i < jarray.length(); i++) {
+                        JSONObject b = jarray.getJSONObject(i);
+                        PushAccount acc = PushAccount.createAccountFormJSON(b);
+                        if (acc.getKey().equals(mViewModel.pushAccount.getKey())) {
+                            PushAccount.Topic found = null;
+                            for(int j = 0; j < acc.topicJavaScript.size(); j++) {
+                                if (topic.equals(acc.topicJavaScript.get(j).name)) {
+                                    found = acc.topicJavaScript.get(j);
+                                    break;
+                                }
+                            }
+                            if (found != null) {
+                                found.jsSrc = javascript;
+                            } else {
+                                found = new PushAccount.Topic();
+                                found.name = topic;
+                                found.jsSrc = javascript;
+                                acc.topicJavaScript.add(found);
+                            }
+
+                        }
+                        pushAccounts.add(acc);
+                    }
+                    JSONArray accountList = new JSONArray();
+                    for(PushAccount b : pushAccounts) {
+                        accountList.put(b.getJSONObject());
+                    }
+                    Log.d(TAG, "accounts js: " + accountList.toString()); //TODO: remove
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putString(AccountListActivity.ACCOUNTS, accountList.toString());
+                    editor.commit();
+
+                }
+            } catch(Exception e) {
+                Log.d(TAG, "Error saving accounts (javascript code): " + e.getMessage() );
+            }
+        }
+    }
+
+    protected String loadLocalJS(String topic) {
+        String javascript = null;
+        if (topic != null) {
+            PushAccount.Topic found = null;
+
+            SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+            String accountsJson = settings.getString(AccountListActivity.ACCOUNTS, null);
+
+            try {
+                if (accountsJson != null) {
+                    JSONArray jarray = new JSONArray(accountsJson);
+                    for (int i = 0; i < jarray.length(); i++) {
+                        JSONObject b = jarray.getJSONObject(i);
+                        PushAccount acc = PushAccount.createAccountFormJSON(b);
+                        if (acc.getKey().equals(mViewModel.pushAccount.getKey())) {
+                            for(int j = 0; j < acc.topicJavaScript.size(); j++) {
+                                if (topic.equals(acc.topicJavaScript.get(j).name)) {
+                                    found = acc.topicJavaScript.get(j);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (found != null) {
+                    javascript = found.jsSrc;
+                }
+            } catch(Exception e) {
+                Log.d(TAG, "Error loading accounts (javascript code): " + e.getMessage() );
+            }
+        }
+        return javascript;
     }
 
     protected void showErrorMsg(String msg) {
@@ -411,7 +505,11 @@ public class TopicsActivity extends AppCompatActivity
                                     if (list != null) {
                                         for(PushAccount.Topic topic : list) {
                                             if (topic.name.equals(t)) {
-                                                showEditDialog(topic.name, MODE_EDIT, null, topic.prio);
+                                                /* if no java script found, check if there is a local script */
+                                                if (Utils.isEmpty(topic.jsSrc)) {
+                                                    topic.jsSrc = loadLocalJS(topic.name);
+                                                }
+                                                showEditDialog(topic.name, MODE_EDIT, null, topic.prio, topic.jsSrc);
                                                 break;
                                             }
                                         }
@@ -564,7 +662,7 @@ public class TopicsActivity extends AppCompatActivity
                             EditText v = getDialog().findViewById(R.id.topic);
                             if (v != null) {
                                 int prio = getSelectedNotificationType(s);
-                                ((TopicsActivity) a).addTopic(v.getText().toString(), prio);
+                                ((TopicsActivity) a).addTopic(v.getText().toString(), prio, mJavaScriptSrc);
                             }
                         }
                     }
@@ -587,7 +685,7 @@ public class TopicsActivity extends AppCompatActivity
                         Activity a = getActivity();
                         if (a instanceof TopicsActivity) {
                             int prio = getSelectedNotificationType(s);
-                            ((TopicsActivity) a).updateTopic(args.getString(ARG_TOPIC), prio);
+                            ((TopicsActivity) a).updateTopic(args.getString(ARG_TOPIC), prio, mJavaScriptSrc);
                         }
                     }
                 });
@@ -599,13 +697,13 @@ public class TopicsActivity extends AppCompatActivity
                 }
             });
 
-            //TODO: readd from args
-            mJavaScriptSrc = null;
+            mJavaScriptSrc = args.getString(ARG_JAVASCRIPT);
 
             // filter script button
             jsButton = body.findViewById(R.id.filterButton);
             // final String javaScriptSrc = null;
             if (jsButton != null) {
+                setFilterButtonLabel();
                 jsButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -659,6 +757,18 @@ public class TopicsActivity extends AppCompatActivity
             return prio;
         }
 
+        protected void setFilterButtonLabel() {
+            // Log.d(TAG, "updated js source: " + mJavaScriptSrc);
+            String buttonLabel = jsButton.getText().toString();
+            boolean emptyCode = Utils.isEmpty(mJavaScriptSrc);
+            if (emptyCode && !buttonLabel.equals(getString(R.string.dlg_filter_button_add))) {
+                jsButton.setText(R.string.dlg_filter_button_add);
+            }
+            if (!emptyCode && !buttonLabel.equals(getString(R.string.dlg_filter_button_edit))) {
+                jsButton.setText(R.string.dlg_filter_button_edit);
+            }
+        }
+
         @Override
         public void onActivityResult(int requestCode, int resultCode, Intent data) {
             super.onActivityResult(requestCode, resultCode, data);
@@ -666,17 +776,7 @@ public class TopicsActivity extends AppCompatActivity
             // requestCode == 1 for JavaScriptEditor
             if (requestCode == 1 && resultCode == AppCompatActivity.RESULT_OK) {
                 mJavaScriptSrc = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
-                //TODO:
-                Log.d(TAG, "updated js source: " + mJavaScriptSrc);
-                String buttonLabel = jsButton.getText().toString();
-                boolean emptyCode = Utils.isEmpty(mJavaScriptSrc);
-                if (emptyCode && !buttonLabel.equals(getString(R.string.dlg_filter_button_add))) {
-                    jsButton.setText(R.string.dlg_filter_button_add);
-                }
-                if (!emptyCode && !buttonLabel.equals(getString(R.string.dlg_filter_button_edit))) {
-                    jsButton.setText(R.string.dlg_filter_button_edit);
-                }
-
+                setFilterButtonLabel();
             }
         }
 
@@ -698,6 +798,7 @@ public class TopicsActivity extends AppCompatActivity
     private final static String SEL_ROWS = "SEL_ROWS";
     private final static String ARG_EDIT_MODE = "ARG_EDIT_MODE";
     private final static String ARG_TOPIC = "ARG_TOPIC";
+    private final static String ARG_JAVASCRIPT = "ARG_JAVASCRIPT";
     private final static int MODE_ADD = 0;
     private final static int MODE_EDIT = 2;
     private final static String ARG_TOPIC_ERROR = "ARG_TOPIC_ERROR";
