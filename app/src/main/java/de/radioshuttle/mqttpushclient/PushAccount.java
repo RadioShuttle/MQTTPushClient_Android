@@ -6,15 +6,12 @@
 
 package de.radioshuttle.mqttpushclient;
 
-import android.util.Log;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import de.radioshuttle.net.CertException;
 import de.radioshuttle.net.Connection;
@@ -22,6 +19,7 @@ import de.radioshuttle.net.Connection;
 public class PushAccount {
     public PushAccount() {
         topics = new ArrayList<>();
+        topicJavaScript = new ArrayList<>();
     }
 
     public String uri;
@@ -30,6 +28,8 @@ public class PushAccount {
     public String clientID;
     public String pushserver;
     public String pushserverID;
+
+    public ArrayList<Topic> topicJavaScript;
 
     // transient
     public int status;
@@ -40,7 +40,7 @@ public class PushAccount {
     public CertException certException;
     public boolean inSecureConnectionAsk;
 
-    public volatile ArrayList<Topic> topics;
+    public volatile ArrayList<Topic> topics; // result of getTopics
 
     public JSONObject getJSONObject() throws JSONException {
         JSONObject account = new JSONObject();
@@ -52,6 +52,17 @@ public class PushAccount {
         account.put("clientID", clientID);
         account.put("pushserver", pushserver);
         account.put("pushserverID", pushserverID == null ? "" : pushserverID);
+
+        JSONArray topicsJS = new JSONArray();
+        JSONObject js;
+        for(Topic t : topicJavaScript) {
+            js = new JSONObject();
+            js.put("topic", t.name);
+            js.put("jsSrc", t.jsSrc == null ? "" : t.jsSrc);
+            js.put("jsStatus", t.jsStatus);
+            topicsJS.put(js);
+        }
+        account.put("topicJavaScript", topicsJS);
 
         return account;
     };
@@ -165,6 +176,19 @@ public class PushAccount {
         if (o.has("pushserverID")) {
             pushAccount.pushserverID = o.getString("pushserverID");
         }
+        if (o.has("topicJavaScript")) {
+            JSONArray tpJs = o.getJSONArray("topicJavaScript");
+            JSONObject to;
+            Topic t;
+            for(int i = 0; i < tpJs.length(); i++) {
+                to = tpJs.getJSONObject(i);
+                t = new Topic();
+                t.name = to.optString("topic");
+                t.jsSrc = to.optString("jsSrc");
+                t.jsStatus = to.optInt("jsStatus");
+                pushAccount.topicJavaScript.add(t);
+            }
+        }
 
         return pushAccount;
     }
@@ -205,6 +229,8 @@ public class PushAccount {
     public final static class Topic {
         public String name;
         public int prio;
+        public String jsSrc;
+        public int jsStatus;
 
         public final static int NOTIFICATION_HIGH = 3;
         public final static int NOTIFICATION_MEDIUM = 2;
