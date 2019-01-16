@@ -30,11 +30,16 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.Code;
@@ -42,6 +47,7 @@ import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.JavaScript;
 import de.radioshuttle.utils.Utils;
 
 import static de.radioshuttle.mqttpushclient.AccountListActivity.ARG_MQTT_ACCOUNT;
@@ -151,6 +157,8 @@ public class MessagingService extends FirebaseMessagingService {
         /* read accpimt */
         SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
         String accountsJSON = settings.getString(AccountListActivity.ACCOUNTS, null);
+
+        JSInfo jsInfo = null;
         int mc = 0;
         if (accountsJSON != null) {
             try {
@@ -160,12 +168,29 @@ public class MessagingService extends FirebaseMessagingService {
                     PushAccount pushAccount = PushAccount.createAccountFormJSON(b);
                     if (mqttAccountName.equals(pushAccount.getMqttAccountName())) {
                         mc++;
-                        if (pushAccount.pushserverID.equals(pushServerID)){
+                        if (pushAccount.pushserverID.equals(pushServerID)) {
                             pushServerLocalAddr = pushAccount.pushserver;
+                            final String mqttServer = new URI(pushAccount.uri).getAuthority();
+                            if (!pushAccount.topicJavaScript.isEmpty()) {
+                                jsInfo = new JSInfo();
+                                jsInfo.user = pushAccount.user;
+                                jsInfo.mqttServer = mqttServer;
+                                jsInfo.pushServer = pushAccount.pushserver;
+                                jsInfo.jsCode = new HashMap<>();
+                                for (PushAccount.Topic t : pushAccount.topicJavaScript) {
+                                    if (!Utils.isEmpty(t.jsSrc)) {
+                                        jsInfo.jsCode.put(t.name, t.jsSrc);
+                                    }
+                                }
+                                if (jsInfo.jsCode.isEmpty()) {
+                                    jsInfo = null;
+                                }
+                            }
+
                         }
                     }
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "Error parsing JSON: ", e);
             }
         }
@@ -207,9 +232,9 @@ public class MessagingService extends FirebaseMessagingService {
                     c.setName(pushServerID);
                     try {
                         psCode = db.mqttMessageDao().insertCode(c);
-                    } catch(SQLiteConstraintException e) {
+                    } catch (SQLiteConstraintException e) {
                         // rare case: sync messages has just inserted this pushServerID
-                        Log.d(TAG,"insert pushserver id into code table: ", e);
+                        Log.d(TAG, "insert pushserver id into code table: ", e);
                         psCode = db.mqttMessageDao().getCode(pushServerID); // reread
                     }
                     // Log.d(TAG, " (before null) code: " + psCode);
@@ -220,29 +245,29 @@ public class MessagingService extends FirebaseMessagingService {
                     c.setName(mqttAccountName);
                     try {
                         mqttAccountCode = db.mqttMessageDao().insertCode(c);
-                    } catch(SQLiteConstraintException e) {
+                    } catch (SQLiteConstraintException e) {
                         // rare case: sync messages has just inserted this accountname
-                        Log.d(TAG,"insert accountname into code table: ", e);
+                        Log.d(TAG, "insert accountname into code table: ", e);
                         mqttAccountCode = db.mqttMessageDao().getCode(mqttAccountName);
                     }
                     // Log.d(TAG, " (before null) mqttAccountCode: " + mqttAccountCode);
                 }
             }
             ArrayList<Integer> ids = new ArrayList<>();
-            for(int i = 0; i < msgsArray.length(); i++) {
+            for (int i = 0; i < msgsArray.length(); i++) {
                 JSONObject topic = msgsArray.getJSONObject(i);
                 Iterator<String> it = topic.keys();
                 long d;
                 String base64;
                 int seqNo = 0;
-                while(it.hasNext()) {
+                while (it.hasNext()) {
                     String t = it.next();
                     JSONObject dataPerTopic = topic.getJSONObject(t);
                     int prio = dataPerTopic.getInt("prio");
                     JSONArray msgsArrayPerTopic = dataPerTopic.getJSONArray("mdata");
 
                     // JSONArray msgsArrayPerTopic = topic.getJSONArray(t);
-                    for(int j = 0; j < msgsArrayPerTopic.length(); j++) {
+                    for (int j = 0; j < msgsArrayPerTopic.length(); j++) {
                         JSONArray entryArray = msgsArrayPerTopic.getJSONArray(j);
                         d = entryArray.getLong(0) * 1000L;
                         base64 = entryArray.getString(1);
@@ -260,14 +285,14 @@ public class MessagingService extends FirebaseMessagingService {
                         if (entryArray.length() >= 4) {
                             if (!entryArray.isNull(3)) {
                                 m.isSystemMsg = true;
-                                /*
-                                try {
-                                    JSONObject sysObjec = entryArray.getJSONObject(3);
-                                    Log.d(TAG, "sys cmd: " + sysObjec.getInt("id"));
-                                } catch(JSONException e) {
-                                    Log.d(TAG, "Error parsing sysObject: " + e.getMessage() );
-                                }
-                                */
+                            /*
+                            try {
+                                JSONObject sysObjec = entryArray.getJSONObject(3);
+                                Log.d(TAG, "sys cmd: " + sysObjec.getInt("id"));
+                            } catch(JSONException e) {
+                                Log.d(TAG, "Error parsing sysObject: " + e.getMessage() );
+                            }
+                            */
                             }
                         }
 
@@ -280,7 +305,7 @@ public class MessagingService extends FirebaseMessagingService {
                         mqttMessage.setSeqno(m.seqNo);
                         try {
                             mqttMessage.setMsg(new String(m.msg));
-                        } catch(Exception e) {
+                        } catch (Exception e) {
                             // decoding error or payload not utf-8
                             mqttMessage.setMsg(base64); //TODO: error should be rare but consider using hex
                         }
@@ -289,7 +314,7 @@ public class MessagingService extends FirebaseMessagingService {
                             if (k != null && k >= 0) {
                                 ids.add(k.intValue());
                             }
-                        } catch(SQLiteConstraintException e) {
+                        } catch (SQLiteConstraintException e) {
                             /* this error may occur, if the message has already been added by sync operation */
                             Log.d(TAG, "constraint error: " + e.getMessage());
                             continue;
@@ -323,26 +348,11 @@ public class MessagingService extends FirebaseMessagingService {
             long before = cal.getTimeInMillis();
             db.mqttMessageDao().deleteMessagesBefore(before);
 
-            /*
-            long l = System.currentTimeMillis() - (1000L * 60L * 60L * 24 * 365);
-            for(int i = 200; i > 0; i--) {
-                MqttMessage m = new MqttMessage();
-                m.setPushServerID(psCode.intValue());
-                m.setMqttAccountID(mqttAccountCode.intValue());
-                l += 1000L;
-                m.setWhen(l);
-                m.setTopic("autogerneated test data");
-                m.setMsg("Test text: " + i);
-                db.mqttMessageDao().insertMqttMessage(m);
-            }
-            */
-
-
             if (cntAlarm > 0 && latestAlarmMsg != null) {
-                showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, latestAlarmMsg, PushAccount.Topic.NOTIFICATION_HIGH, cntAlarm);
+                showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, latestAlarmMsg, PushAccount.Topic.NOTIFICATION_HIGH, cntAlarm, jsInfo);
             }
             if (cntNormal > 0 && latestMsg != null) {
-                showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, latestMsg, PushAccount.Topic.NOTIFICATION_MEDIUM, cntNormal);
+                showNotification(pushServerLocalAddr, mqttAccountName, pushServerID, multiMqttAccounts, latestMsg, PushAccount.Topic.NOTIFICATION_MEDIUM, cntNormal, jsInfo);
             }
 
             int total = cntAlarm + cntNormal + cnt;
@@ -363,14 +373,14 @@ public class MessagingService extends FirebaseMessagingService {
                 Log.d(TAG, "Messaging notify called.");
             }
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             //TODO: error handling for db errors
             Log.d(TAG, "error parsing messages", e);
         }
 
     }
 
-    protected void showNotification(String pushServerAddr, String mqttAccount, String pushServerID, boolean multiMqttAccounts , Msg m, int prio, int cnt) {
+    protected void showNotification(String pushServerAddr, String mqttAccount, String pushServerID, boolean multiMqttAccounts , final Msg m, int prio, int cnt, final JSInfo jsInfo) {
         String account = pushServerAddr + ":" + mqttAccount;
 
         String group = account;
@@ -387,6 +397,44 @@ public class MessagingService extends FirebaseMessagingService {
 
         if (m == null) {
             return;
+        }
+
+        if (jsInfo != null && jsInfo.jsCode.containsKey(m.topic)) {
+            boolean validFormat = true;
+            final MqttMessage mqttMessage = new MqttMessage();
+            final String code = jsInfo.jsCode.get(m.topic);
+            mqttMessage.setWhen(m.when);
+            mqttMessage.setTopic(m.topic);
+            try {
+                mqttMessage.setMsg(new String(m.msg));
+            } catch (Exception e) {
+                // decoding error or payload not utf-8
+                validFormat = false;
+            }
+            if (validFormat) {
+                Future<String> future = Utils.executor.submit(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return JavaScript.getInstance().formatMsg(
+                                code,
+                                mqttMessage,
+                                0,
+                                jsInfo.user,
+                                jsInfo.mqttServer,
+                                jsInfo.pushServer);
+                    }
+                });
+                try {
+                    String result = future.get(500, TimeUnit.MILLISECONDS);
+                    if (result == null) {
+                        result = "";
+                    }
+                    m.msg = result.getBytes("UTF-8");
+                } catch (Exception e) {
+                    // ignore errors
+                    Log.d(TAG, "FilterScript Error: " + e.getMessage());
+                }
+            }
         }
 
         Intent intent = new Intent(this, AccountListActivity.class);
@@ -491,7 +539,6 @@ public class MessagingService extends FirebaseMessagingService {
         if (ch == null) {
             String groupDisplayName = pushServerAddr + ": " + mqttAccount;
             nm.createNotificationChannelGroup(new NotificationChannelGroup(groupID, groupDisplayName));
-            //TODO: localize user visible channel names
             NotificationChannel nc = new NotificationChannel(channelID, context.getString(R.string.notificaion_channel_alarm), NotificationManager.IMPORTANCE_DEFAULT);
             nc.setGroup(groupID);
             nm.createNotificationChannel(nc);
@@ -505,6 +552,13 @@ public class MessagingService extends FirebaseMessagingService {
             nm.createNotificationChannel(nc);
         }
         Log.d(TAG, "notification channel created.");
+    }
+
+    private static class JSInfo {
+        String user;
+        String mqttServer;
+        String pushServer;
+        Map<String, String> jsCode;
     }
 
     private static class Msg {
