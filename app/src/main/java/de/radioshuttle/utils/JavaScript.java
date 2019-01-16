@@ -21,9 +21,13 @@ public class JavaScript {
 
     /** formatter - interpreter resources are release after call */
     public String formatMsg(String jsBody, MqttMessage m, int notificationType, String accUser, String accMqttServer, String accPushServer) throws Exception {
+        String res = null;
         Context context = initFormatter(jsBody, accUser, accPushServer, accMqttServer);
-        String res = formatMsg(context, m, notificationType);
-        context.close();
+        try {
+            res = formatMsg(context, m, notificationType);
+        } finally {
+            context.close();
+        }
         return res;
     }
 
