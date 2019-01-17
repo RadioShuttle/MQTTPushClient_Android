@@ -99,6 +99,8 @@ public class Connection {
         mCmd = new Cmd(
                 new DataInputStream(mClientSocket.getInputStream()),
                 new DataOutputStream(mClientSocket.getOutputStream()));
+        mCmd.clientProtocolMinor = Cmd.PROTOCOL_MINOR;
+
 
         boolean requestSSL = !debugMode;
         Cmd.RawCmd reponse = mCmd.helloRequest(++mSeqNo, requestSSL);
@@ -139,6 +141,7 @@ public class Connection {
                 mCmd = new Cmd(
                         new DataInputStream(mClientSocket.getInputStream()),
                         new DataOutputStream(mClientSocket.getOutputStream()));
+                mCmd.clientProtocolMinor = Cmd.PROTOCOL_MINOR;
             } else if ((reponse.flags & Cmd.FLAG_SSL) == 0) {
                 Boolean allow = mInsecureConnection.get(mPushServer);
                 if (allow == null || !allow) {
