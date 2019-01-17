@@ -40,7 +40,6 @@ public class ActionsViewModel extends ViewModel {
         requestCnt++;
         currentRequest = new ActionsRequest(context, pushAccount, actionsRequest);
         currentRequest.setSync(true);
-        ((ActionsRequest) currentRequest).setCheckHasTopics(checkHasTopics);
         currentRequest.execute();
     }
 
