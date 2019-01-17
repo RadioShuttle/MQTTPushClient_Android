@@ -343,7 +343,6 @@ public class TopicsActivity extends AppCompatActivity
             t.name = topic;
             t.prio = prio;
             t.jsSrc = javaScriptSrc;
-            saveJSLocally(topic, javaScriptSrc);
             mViewModel.addTopic(this, t);
         }
         if (!Utils.isEmpty(topic)) {
@@ -360,97 +359,11 @@ public class TopicsActivity extends AppCompatActivity
             t.name = topic;
             t.prio = prio;
             t.jsSrc = javaScriptSrc;
-            saveJSLocally(topic, javaScriptSrc);
             mViewModel.updateTopic(this, t);
         }
         if (!Utils.isEmpty(topic)) {
             mViewModel.lastEnteredTopic = topic;
         }
-    }
-
-    protected void saveJSLocally(String topic, String javascript) {
-        if (topic != null) {
-            if (javascript == null) {
-                javascript = "";
-            }
-            SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
-            String accountsJson = settings.getString(AccountListActivity.ACCOUNTS, null);
-
-            try {
-                ArrayList<PushAccount> pushAccounts = new ArrayList<PushAccount>();
-                if (accountsJson != null) {
-                    JSONArray jarray = new JSONArray(accountsJson);
-                    for (int i = 0; i < jarray.length(); i++) {
-                        JSONObject b = jarray.getJSONObject(i);
-                        PushAccount acc = PushAccount.createAccountFormJSON(b);
-                        if (acc.getKey().equals(mViewModel.pushAccount.getKey())) {
-                            PushAccount.Topic found = null;
-                            for(int j = 0; j < acc.topicJavaScript.size(); j++) {
-                                if (topic.equals(acc.topicJavaScript.get(j).name)) {
-                                    found = acc.topicJavaScript.get(j);
-                                    break;
-                                }
-                            }
-                            if (found != null) {
-                                found.jsSrc = javascript;
-                            } else {
-                                found = new PushAccount.Topic();
-                                found.name = topic;
-                                found.jsSrc = javascript;
-                                acc.topicJavaScript.add(found);
-                            }
-
-                        }
-                        pushAccounts.add(acc);
-                    }
-                    JSONArray accountList = new JSONArray();
-                    for(PushAccount b : pushAccounts) {
-                        accountList.put(b.getJSONObject());
-                    }
-                    Log.d(TAG, "accounts js: " + accountList.toString()); //TODO: remove
-                    SharedPreferences.Editor editor = settings.edit();
-                    editor.putString(AccountListActivity.ACCOUNTS, accountList.toString());
-                    editor.commit();
-
-                }
-            } catch(Exception e) {
-                Log.d(TAG, "Error saving accounts (javascript code): " + e.getMessage() );
-            }
-        }
-    }
-
-    protected String loadLocalJS(String topic) {
-        String javascript = null;
-        if (topic != null) {
-            PushAccount.Topic found = null;
-
-            SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
-            String accountsJson = settings.getString(AccountListActivity.ACCOUNTS, null);
-
-            try {
-                if (accountsJson != null) {
-                    JSONArray jarray = new JSONArray(accountsJson);
-                    for (int i = 0; i < jarray.length(); i++) {
-                        JSONObject b = jarray.getJSONObject(i);
-                        PushAccount acc = PushAccount.createAccountFormJSON(b);
-                        if (acc.getKey().equals(mViewModel.pushAccount.getKey())) {
-                            for(int j = 0; j < acc.topicJavaScript.size(); j++) {
-                                if (topic.equals(acc.topicJavaScript.get(j).name)) {
-                                    found = acc.topicJavaScript.get(j);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                if (found != null) {
-                    javascript = found.jsSrc;
-                }
-            } catch(Exception e) {
-                Log.d(TAG, "Error loading accounts (javascript code): " + e.getMessage() );
-            }
-        }
-        return javascript;
     }
 
     protected void showErrorMsg(String msg) {
@@ -508,10 +421,6 @@ public class TopicsActivity extends AppCompatActivity
                                     if (list != null) {
                                         for(PushAccount.Topic topic : list) {
                                             if (topic.name.equals(t)) {
-                                                /* if no java script found, check if there is a local script */
-                                                if (Utils.isEmpty(topic.jsSrc)) {
-                                                    topic.jsSrc = loadLocalJS(topic.name);
-                                                }
                                                 showEditDialog(topic.name, MODE_EDIT, null, topic.prio, topic.jsSrc);
                                                 break;
                                             }
