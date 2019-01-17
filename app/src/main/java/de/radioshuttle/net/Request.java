@@ -7,8 +7,11 @@
 package de.radioshuttle.net;
 
 import androidx.lifecycle.MutableLiveData;
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteConstraintException;
 import android.os.AsyncTask;
 
@@ -23,10 +26,14 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.Code;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.fcm.Notifications;
+import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.R;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -36,6 +43,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.net.ssl.SSLHandshakeException;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.utils.Utils;
 
 public class Request extends AsyncTask<Void, Void, PushAccount> {
 
@@ -52,6 +62,9 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         mPushAccount = pushAccount;
         mAccountLiveData = accountLiveData;
         mSync = false;
+        mGetTopicFilterScripts = true;
+        mAccountUpdated = false;
+        mHasTopics = null;
         mCancelled = new AtomicBoolean(false);
     }
 
@@ -219,6 +232,13 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 } else {
                     throw new ClientError("Initializing cloud messaging failed."); //TODO: add to resources, check for fcmlib
                 }
+
+                /* get stored filter scripts. local stored scripts may not be up to date */
+                if (mGetTopicFilterScripts) {
+                    LinkedHashMap<String, Cmd.Topic> topics = mConnection.getTopics();
+                    updateLocalStoredScripts(topics);
+                }
+
             }
 
             if (cont) {
@@ -273,6 +293,77 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         }
 
         return null;
+    }
+
+    protected void updateLocalStoredScripts(LinkedHashMap<String, Cmd.Topic> receivedTopics) throws Exception {
+        if (receivedTopics == null) {
+            receivedTopics = new LinkedHashMap<>();
+        }
+        mHasTopics = receivedTopics.size() > 0;
+
+        SharedPreferences settings = mAppContext.getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+        String accountsJson = settings.getString(AccountListActivity.ACCOUNTS, null);
+
+        boolean updateTopicsFilterScripts = false;
+
+        ArrayList<PushAccount> pushAccounts = new ArrayList<PushAccount>();
+        if (accountsJson != null) {
+            PushAccount pushAccount;
+            JSONArray jarray = new JSONArray(accountsJson);
+            for(int i = 0 ; i < jarray.length(); i++) {
+                JSONObject b = jarray.getJSONObject(i);
+                pushAccount = PushAccount.createAccountFormJSON(b);
+                pushAccounts.add(pushAccount);
+
+                if (mPushAccount.getKey().equals(pushAccount.getKey())) {
+                    Cmd.Topic e;
+                    if (receivedTopics.size() != pushAccount.topicJavaScript.size()) {
+                        updateTopicsFilterScripts = true;
+                    } else {
+                        for(PushAccount.Topic t : pushAccount.topicJavaScript) {
+                            if (!receivedTopics.containsKey(t.name)) {
+                                updateTopicsFilterScripts = true;
+                                break;
+                            } else  {
+                                e = receivedTopics.get(t.name);
+                                if (!Utils.equals(e.script, t.jsSrc)) {
+                                    updateTopicsFilterScripts = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (updateTopicsFilterScripts) {
+                        pushAccount.topicJavaScript.clear();
+                        Iterator<Map.Entry<String, Cmd.Topic>> it = receivedTopics.entrySet().iterator();
+                        Map.Entry<String, Cmd.Topic> val;
+                        Cmd.Topic to;
+                        PushAccount.Topic t;
+                        while(it.hasNext()) {
+                            val = it.next();
+                            to = val.getValue();
+                            t = new PushAccount.Topic();
+                            t.name = val.getKey();
+                            t.prio = to.type;
+                            t.jsSrc = to.script;
+                            pushAccount.topicJavaScript.add(t);
+                        }
+                    }
+                }
+            }
+            if (updateTopicsFilterScripts) {
+                JSONArray accountList = new JSONArray();
+                for(PushAccount acc : pushAccounts) {
+                    accountList.put(acc.getJSONObject());
+                }
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString(AccountListActivity.ACCOUNTS, accountList.toString());
+                editor.commit();
+                mAccountUpdated = true;
+            }
+
+        }
+        Log.d(TAG, "topic js updated: " + updateTopicsFilterScripts);
     }
 
     @Override
@@ -414,7 +505,22 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         return mPushAccount;
     }
 
+    public boolean hasAccountUpdated() {
+        return mAccountUpdated;
+    }
 
+    public void setAccountUpdated(boolean updated) {
+        mAccountUpdated = updated;
+    }
+
+    /* true, if this account has topics, if null: getTopics() was not called in this request */
+    public Boolean hasTopics() {
+        return mHasTopics;
+    }
+
+    protected Boolean mHasTopics;
+    protected volatile boolean mAccountUpdated;
+    protected boolean mGetTopicFilterScripts;
     protected boolean mSync;
     protected Connection mConnection;
     protected AtomicBoolean mCancelled;
