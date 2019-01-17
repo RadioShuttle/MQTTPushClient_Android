@@ -27,12 +27,15 @@ public class TopicsRequest extends Request {
     }
 
     public void addTopic(PushAccount.Topic topic) {
-        LinkedHashMap<String, Integer> topics = new LinkedHashMap<>();
-        topics.put(topic.name, topic.prio);
+        LinkedHashMap<String, Cmd.Topic> topics = new LinkedHashMap<>();
+        Cmd.Topic t = new Cmd.Topic();
+        t.script = topic.jsSrc;
+        t.type = topic.prio;
+        topics.put(topic.name, t);
         addTopics(topics);
     }
 
-    public void addTopics(LinkedHashMap<String, Integer> topics) {
+    public void addTopics(LinkedHashMap<String, Cmd.Topic> topics) {
         mCmd = Cmd.CMD_ADD_TOPICS;
         mTopics = topics;
     }
@@ -43,12 +46,15 @@ public class TopicsRequest extends Request {
     }
 
     public void updateTopic(PushAccount.Topic topic) {
-        LinkedHashMap<String, Integer> topics = new LinkedHashMap<>();
-        topics.put(topic.name, topic.prio);
+        LinkedHashMap<String, Cmd.Topic> topics = new LinkedHashMap<>();
+        Cmd.Topic t = new Cmd.Topic();
+        t.script = topic.jsSrc;
+        t.type = topic.prio;
+        topics.put(topic.name, t);
         updateTopics(topics);
     }
 
-    public void updateTopics(LinkedHashMap<String, Integer> topics) {
+    public void updateTopics(LinkedHashMap<String, Cmd.Topic> topics) {
         mCmd = Cmd.CMD_UPD_TOPICS;
         mTopics = topics;
     }
@@ -87,18 +93,20 @@ public class TopicsRequest extends Request {
             requestStatus = mConnection.lastReturnCode;
         }
 
-        LinkedHashMap<String, Integer> result = mConnection.getTopics();
+        LinkedHashMap<String, Cmd.Topic> result = mConnection.getTopics();
         ArrayList<PushAccount.Topic> tmpRes = new ArrayList<>();
 
         if (mConnection.lastReturnCode == Cmd.RC_OK) {
             if (result == null)
                 result = new LinkedHashMap<>();
 
-            for(Iterator<Map.Entry<String, Integer>> it = result.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, Integer> e = it.next();
+            for(Iterator<Map.Entry<String, Cmd.Topic>> it = result.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, Cmd.Topic> e = it.next();
                 PushAccount.Topic t = new PushAccount.Topic();
                 t.name = e.getKey();
-                t.prio = e.getValue();
+                Cmd.Topic val = e.getValue();
+                t.prio = val.type;
+                t.jsSrc = val.script;
                 tmpRes.add(t);
             }
             Collections.sort(tmpRes, new Comparator<PushAccount.Topic>() {
@@ -134,6 +142,6 @@ public class TopicsRequest extends Request {
     public String requestErrorTxt;
 
     public int mCmd;
-    public LinkedHashMap<String, Integer> mTopics;
+    public LinkedHashMap<String, Cmd.Topic> mTopics;
     public List<String> mDelTopics;
 }

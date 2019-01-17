@@ -275,12 +275,20 @@ public class Cmd {
         return readCommand();
     }
 
-    public LinkedHashMap<String, Integer> readTopics(byte[] data) throws IOException {
-        LinkedHashMap<String, Integer> subs = new LinkedHashMap<>();
+    public LinkedHashMap<String, Topic> readTopics(byte[] data) throws IOException {
+        LinkedHashMap<String, Topic> subs = new LinkedHashMap<>();
         DataInputStream is = getDataInputStream(data);
         int size = is.readUnsignedShort();
+        String topic;
+        Topic rec;
         for (int i = 0; i < size; i++) {
-            subs.put(readString(is), is.read());
+            rec = new Topic();
+            topic = readString(is);
+            rec.type = is.read();
+            if (PROTOCOL_MAJOR != 1 || clientProtocolMinor > 4) { // since 1.5: script
+                rec.script = readString(is);
+            }
+            subs.put(topic, rec);
         }
         return subs;
     }
@@ -300,21 +308,24 @@ public class Cmd {
         return new DataInputStream(bi);
     }
 
-    public RawCmd addTopicsRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
+    public RawCmd addTopicsRequest(int seqNo, LinkedHashMap<String, Topic> topics) throws IOException {
         return writeTopics(CMD_ADD_TOPICS, seqNo, topics);
     }
 
-    public void getTopicsResponse(RawCmd request, Map<String, Integer> topics) throws IOException {
+    public void getTopicsResponse(RawCmd request, Map<String, Topic> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
             os.writeShort(0);
         } else {
             os.writeShort(topics.size());
-            for (Iterator<Entry<String, Integer>> it = topics.entrySet().iterator(); it.hasNext();) {
-                Entry<String, Integer> e = it.next();
+            for (Iterator<Entry<String, Topic>> it = topics.entrySet().iterator(); it.hasNext();) {
+                Entry<String, Topic> e = it.next();
                 writeString(e.getKey(), os);
-                os.writeByte(e.getValue());
+                os.writeByte(e.getValue().type);
+                if (Cmd.PROTOCOL_MAJOR != 1 || clientProtocolMinor > 4) { // since 1.5: script
+                    writeString(e.getValue().script, os);
+                }
             }
         }
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
@@ -379,21 +390,24 @@ public class Cmd {
         return messages;
     }
 
-    public RawCmd updateTopicsRequest(int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
+    public RawCmd updateTopicsRequest(int seqNo, LinkedHashMap<String, Topic> topics) throws IOException {
         return writeTopics(CMD_UPD_TOPICS, seqNo, topics);
     }
 
-    public RawCmd writeTopics(int cmd, int seqNo, LinkedHashMap<String, Integer> topics) throws IOException {
+    public RawCmd writeTopics(int cmd, int seqNo, LinkedHashMap<String, Topic> topics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (topics == null || topics.size() == 0) {
             os.writeShort(0);
         } else {
             os.writeShort(topics.size());
-            for (Iterator<Entry<String, Integer>> it = topics.entrySet().iterator(); it.hasNext();) {
-                Entry<String, Integer> e = it.next();
+            Topic val;
+            for (Iterator<Entry<String, Topic>> it = topics.entrySet().iterator(); it.hasNext();) {
+                Entry<String, Topic> e = it.next();
                 writeString(e.getKey(), os);
-                os.writeByte(e.getValue());
+                val = e.getValue();
+                os.writeByte(val.type);
+                writeString(val.script, os);
             }
         }
         writeCommand(cmd, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
@@ -624,6 +638,11 @@ public class Cmd {
         public final static int ERR_INVALID_FORMAT = 2;
     }
 
+    public static class Topic {
+        public int type;
+        public String script;
+    }
+
     /* return codes */
     public final static int RC_OK = 0;
     public final static int RC_INVALID_ARGS = 400;
@@ -640,7 +659,7 @@ public class Cmd {
     /* protocol */
     public final static String MAGIC = "MQTP";
     public final static byte PROTOCOL_MAJOR = 1;
-    public final static byte PROTOCOL_MINOR = 4;
+    public final static byte PROTOCOL_MINOR = 5;
     public final static int MAGIC_SIZE = 4;
     public final static byte[] MAGIC_BLOCK;
 

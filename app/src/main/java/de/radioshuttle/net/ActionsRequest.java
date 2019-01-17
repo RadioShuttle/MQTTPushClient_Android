@@ -120,7 +120,7 @@ public class ActionsRequest extends Request {
             if (mCheckHasTopics) {
                 mHasTopics = null;
                 try {
-                    LinkedHashMap<String, Integer> topics = mConnection.getTopics();
+                    LinkedHashMap<String, Cmd.Topic> topics = mConnection.getTopics();
                     mHasTopics = topics != null && topics.size() > 0;
                 } catch(Exception e) {
                     //ignore error, which should be rare if previous actions succeeded

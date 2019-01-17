@@ -194,10 +194,10 @@ public class Connection {
         handleError(response);
     }
 
-    public LinkedHashMap<String, Integer> getTopics() throws IOException, ServerError {
+    public LinkedHashMap<String, Cmd.Topic> getTopics() throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_TOPICS, ++mSeqNo);
         handleError(response);
-        LinkedHashMap<String, Integer> topics;
+        LinkedHashMap<String, Cmd.Topic> topics;
         if (lastReturnCode == Cmd.RC_OK) {
             topics = mCmd.readTopics(response.data);
         } else {
@@ -207,13 +207,13 @@ public class Connection {
         return topics;
     }
 
-    public int[] addTopics(LinkedHashMap<String, Integer> topics) throws IOException, ServerError  {
+    public int[] addTopics(LinkedHashMap<String, Cmd.Topic> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.addTopicsRequest(++mSeqNo, topics);
         handleError(response);
         return mCmd.readIntArray(response.data);
     }
 
-    public int[] updateTopics(LinkedHashMap<String, Integer> topics) throws IOException, ServerError  {
+    public int[] updateTopics(LinkedHashMap<String, Cmd.Topic> topics) throws IOException, ServerError  {
         Cmd.RawCmd response = mCmd.updateTopicsRequest(++mSeqNo, topics);
         handleError(response);
         return mCmd.readIntArray(response.data);

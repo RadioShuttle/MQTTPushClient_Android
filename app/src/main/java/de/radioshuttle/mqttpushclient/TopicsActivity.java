@@ -111,11 +111,14 @@ public class TopicsActivity extends AppCompatActivity
                                         if (args != null) {
                                             int cmd = ((TopicsRequest) request).mCmd;
                                             if (cmd == Cmd.CMD_ADD_TOPICS || cmd == Cmd.CMD_UPD_TOPICS) {
-                                                Iterator<Map.Entry<String, Integer>> it = topicsRequest.mTopics.entrySet().iterator();
+                                                Cmd.Topic val;
+                                                Iterator<Map.Entry<String, Cmd.Topic>> it = topicsRequest.mTopics.entrySet().iterator();
                                                 if (it.hasNext()) {
-                                                    Map.Entry<String, Integer> e = it.next();
+                                                    Map.Entry<String, Cmd.Topic> e = it.next();
                                                     args.putString("topic_name", e.getKey());
-                                                    args.putInt("topic_prio", e.getValue());
+                                                    val = e.getValue();
+                                                    args.putInt("topic_prio", val.type);
+                                                    args.putString("topic_script", val.script);
                                                 }
                                             } else if (cmd == Cmd.CMD_DEL_TOPICS) {
                                                 args.putStringArrayList("topics_del", new ArrayList<>(topicsRequest.mDelTopics));
@@ -543,6 +546,7 @@ public class TopicsActivity extends AppCompatActivity
                 PushAccount.Topic t = new PushAccount.Topic();
                 t.name = args.getString("topic_name");
                 t.prio = args.getInt("topic_prio");
+                t.jsSrc = args.getString("topic_script");
 
                 if (!mViewModel.isRequestActive()) {
                     mSwipeRefreshLayout.setRefreshing(true);
