@@ -24,6 +24,7 @@ public class TopicsRequest extends Request {
 
     public TopicsRequest(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
         super(context, pushAccount, accountLiveData);
+        mGetTopicFilterScripts = false; // disable getTopics in super class
     }
 
     public void addTopic(PushAccount.Topic topic) {
@@ -94,6 +95,7 @@ public class TopicsRequest extends Request {
         }
 
         LinkedHashMap<String, Cmd.Topic> result = mConnection.getTopics();
+        updateLocalStoredScripts(result);
         ArrayList<PushAccount.Topic> tmpRes = new ArrayList<>();
 
         if (mConnection.lastReturnCode == Cmd.RC_OK) {
