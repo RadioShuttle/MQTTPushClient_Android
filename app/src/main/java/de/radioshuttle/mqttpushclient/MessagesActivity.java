@@ -205,6 +205,16 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                                 }
                                 showErrorMsg(t);
                             } else {
+                                /* filter scripts updated? */
+                                if (actionsRequest.hasAccountUpdated()) {
+                                    /* mark as processed */
+                                    actionsRequest.setAccountUpdated(false);
+                                    /* reinit filter scripts */
+                                    mViewModel.initJavaScript();
+                                    /* rerun filter scripts */
+                                    doRefresh();
+                                }
+
                                 if (actionsRequest.requestStatus != Cmd.RC_OK) { // getActions() or publish failed
                                     String t = (actionsRequest.requestErrorTxt == null ? "" : actionsRequest.requestErrorTxt);
                                     if (actionsRequest.requestStatus == Cmd.RC_MQTT_ERROR) {
