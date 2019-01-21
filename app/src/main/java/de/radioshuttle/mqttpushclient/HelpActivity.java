@@ -8,6 +8,7 @@ package de.radioshuttle.mqttpushclient;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import de.radioshuttle.utils.Utils;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -40,8 +41,7 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         String url;
         Bundle args = getIntent().getExtras();
-        if (args != null && args.containsKey(CONTEXT_HELP)) {
-            //TODO: may be used in future, see also buildURL
+        if (args != null && args.containsKey(CONTEXT_HELP) && !Utils.isEmpty(args.getString(CONTEXT_HELP))) {
             url = buildURL(HELP_URL, args.getString(CONTEXT_HELP));
         } else {
             url = HELP_URL;
@@ -209,4 +209,8 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     public final static String CONTEXT_HELP = "CONTEXT_HELP";
     public final static String HELP_URL = "https://help.radioshuttle.de/mqttapp/1.0/";
+
+    public final static String HELP_TOPICS = "register.html";
+    public final static String HELP_TOPIC_FILTER_SCRIPTS = HELP_TOPICS;  //TODO: change, if help has been added for filter script
+
 }
