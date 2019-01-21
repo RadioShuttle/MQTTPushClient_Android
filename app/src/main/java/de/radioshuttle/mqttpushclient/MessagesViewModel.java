@@ -84,7 +84,7 @@ public class MessagesViewModel extends AndroidViewModel {
                     for(int i = 0; i < input.size(); i++) {
                         input.get(i).setMsg(jsErrorTxt + "\n" + input.get(i).getMsg());
                     }
-                } else if (!jsContextMap.isEmpty()) {
+                } else if (jsContextMap != null && !jsContextMap.isEmpty()) {
                     /* */
                     ModifyPagedList jsModify = new ModifyPagedList(input, jsContextMap, app.getString(R.string.filterscript_err));
                     Future future = Utils.executor.submit(jsModify);
@@ -167,17 +167,25 @@ public class MessagesViewModel extends AndroidViewModel {
                     for(PushAccount.Topic t : found.topicJavaScript) {
                         if (!Utils.isEmpty(t.jsSrc)) {
                             /* init javascript function for every topic which has java script code */
-                            jsContextMap.put(t.name, interpreter.initFormatter(t.jsSrc, pushAccount.user, mqttServer, pushAccount.pushserver));
+                            try {
+                                jsContextMap.put(t.name, interpreter.initFormatter(t.jsSrc, pushAccount.user, mqttServer, pushAccount.pushserver));
+                            } catch(Exception e) {
+                                /* init failed */
+                                ModifyPagedList.JSInitError je = new ModifyPagedList.JSInitError();
+                                je.errorText = "" + e.getMessage();
+                                jsContextMap.put(t.name, je);
+                            }
                         }
                     }
                 }
 
             }
-            currJSContextMap = jsContextMap;
             // Log.d(TAG, "init javasc: " + (System.currentTimeMillis() - start) + "ms");
 
         } catch(Exception e) {
             Log.e(TAG, "Error loading accounts (javascript code): " + e.getMessage(), e );
+        } finally {
+            currJSContextMap = jsContextMap;
         }
     }
 
