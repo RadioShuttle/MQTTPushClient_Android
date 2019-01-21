@@ -104,6 +104,7 @@ public class MessagingService extends FirebaseMessagingService {
             //TODO: consider using an own unique ringtone
             // Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         }
+        b.setStyle(new NotificationCompat.BigTextStyle());
 
         b.setContentTitle(title);
         b.setContentText(message);
@@ -463,6 +464,7 @@ public class MessagingService extends FirebaseMessagingService {
         } else {
             b = new NotificationCompat.Builder(this);
         }
+        b.setStyle(new NotificationCompat.BigTextStyle());
 
         String accountDisplayName = (multiMqttAccounts ? pushServerAddr + ": " + mqttAccount : mqttAccount);
         if (prio == PushAccount.Topic.NOTIFICATION_HIGH)
