@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
@@ -199,6 +200,11 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
         return super.onPrepareOptionsMenu(menu);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mActivityStarted = false;
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -248,7 +254,14 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     }
 
     protected void help() {
-        //TODO
+        if (!mActivityStarted) {
+            mActivityStarted = true;
+            if (mComponentType == CONTENT_FILTER) {
+                Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
+                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_FILTER_SCRIPTS);
+                startActivityForResult(webIntent, 0);
+            }
+        }
     }
 
     protected void runJS() {
@@ -466,6 +479,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
         JavaScriptViewModel model;
     }
 
+    private boolean mActivityStarted;
     protected JavaScriptViewModel mViewModel;
     protected int mComponentType;
     protected EditText mEditor;
