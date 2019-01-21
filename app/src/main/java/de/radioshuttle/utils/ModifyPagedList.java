@@ -29,10 +29,14 @@ public class ModifyPagedList implements Callable {
                 msg = mPagedList.get(i);
                 jsContext = mJavaScript.get(msg.getTopic());
                 if (jsContext != null) {
-                    try {
-                        formatedContent = interpreter.formatMsg(jsContext, msg, 0);
-                    } catch(Exception e) {
-                        formatedContent = mErrPrefix + " " + e.getMessage() + "\n" + msg.getMsg();
+                    if (jsContext instanceof JSInitError) {
+                        formatedContent = mErrPrefix + " " + ((JSInitError) jsContext).getMessage() + "\n" + msg.getMsg();
+                    } else {
+                        try {
+                            formatedContent = interpreter.formatMsg(jsContext, msg, 0);
+                        } catch(Exception e) {
+                            formatedContent = mErrPrefix + " " + e.getMessage() + "\n" + msg.getMsg();
+                        }
                     }
                     if (!mStopped.get()) {
                         msg.setMsg(formatedContent);
@@ -46,6 +50,26 @@ public class ModifyPagedList implements Callable {
 
     public int itemsProcessed() {
         return cnt;
+    }
+
+    public static class JSInitError implements JavaScript.Context {
+
+        @Override
+        public Object getInterpreter() {
+            return null;
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        public String getMessage() {
+            return errorText;
+        }
+
+        public int errorCode;
+        public String errorText;
     }
 
     // if time out occured prevent further processing
