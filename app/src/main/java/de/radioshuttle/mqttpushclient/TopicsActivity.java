@@ -621,6 +621,7 @@ public class TopicsActivity extends AppCompatActivity
                     @Override
                     public void onClick(View v) {
                         if (!mActivityStarted) {
+                            mActivityStarted = true;
                             Bundle args = getArguments();
                             String topic = args.getString(ARG_TOPIC);
 
