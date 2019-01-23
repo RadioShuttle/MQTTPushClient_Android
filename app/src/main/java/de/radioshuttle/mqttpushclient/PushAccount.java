@@ -15,6 +15,7 @@ import java.util.ArrayList;
 
 import de.radioshuttle.net.CertException;
 import de.radioshuttle.net.Connection;
+import de.radioshuttle.utils.Utils;
 
 public class PushAccount {
     public PushAccount() {
@@ -58,8 +59,8 @@ public class PushAccount {
         for(Topic t : topicJavaScript) {
             js = new JSONObject();
             js.put("topic", t.name);
+            js.put("prio", t.prio);
             js.put("jsSrc", t.jsSrc == null ? "" : t.jsSrc);
-            js.put("jsStatus", t.jsStatus);
             topicsJS.put(js);
         }
         account.put("topicJavaScript", topicsJS);
@@ -184,8 +185,8 @@ public class PushAccount {
                 to = tpJs.getJSONObject(i);
                 t = new Topic();
                 t.name = to.optString("topic");
+                t.prio = to.optInt("prio");
                 t.jsSrc = to.optString("jsSrc");
-                t.jsStatus = to.optInt("jsStatus");
                 pushAccount.topicJavaScript.add(t);
             }
         }
@@ -224,13 +225,34 @@ public class PushAccount {
         }
     }
 
+    public static class TopicComparator implements java.util.Comparator<Topic> {
+
+        @Override
+        public int compare(Topic o1, Topic o2) {
+            int cmp = 0;
+            if (o1 == null) {
+                if (o2 == null)
+                    cmp = 0;
+                else
+                    cmp = -1;
+            } else if (o2 == null) {
+                cmp = 1;
+            } else {
+                String s1 = o1.name == null ? "" : o1.name;
+                String s2 = o2.name == null ? "" : o2.name;
+                cmp = s1.compareTo(s2);
+            }
+
+            return cmp;
+        }
+    }
+
     private static String TAG = PushAccount.class.getSimpleName();
 
     public final static class Topic {
         public String name;
         public int prio;
         public String jsSrc;
-        public int jsStatus;
 
         public final static int NOTIFICATION_HIGH = 3;
         public final static int NOTIFICATION_MEDIUM = 2;
