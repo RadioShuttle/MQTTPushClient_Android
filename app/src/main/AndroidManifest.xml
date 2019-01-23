@@ -14,6 +14,8 @@
         android:roundIcon="@mipmap/ic_radioshuttle_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".EditTopicActivity"></activity>
+
         <meta-data
             android:name="firebase_analytics_collection_deactivated"
             android:value="true" />
@@ -53,7 +55,7 @@
         <activity android:name=".AboutActivity" />
         <activity android:name=".PrivacyActivity" />
         <activity android:name=".HelpActivity" />
-        <activity android:name=".JavaScriptEditorActivity"></activity>
+        <activity android:name=".JavaScriptEditorActivity" />
     </application>
 
 </manifest>
