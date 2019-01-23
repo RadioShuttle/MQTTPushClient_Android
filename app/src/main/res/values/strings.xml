@@ -37,13 +37,15 @@
     <string name="dlg_delete_topic_msg_pl">Unsubscribe from selected topics.</string>
 
     <string name="dlg_add_topic_title">Add Topic</string>
-    <string name="dlg_update_topic_title">Update topic</string>
+    <string name="dlg_update_topic_title">Update Topic</string>
     <string name="dlg_edit_topic_label">Subscribe to topic:</string>
     <string name="dlg_edit_topic_label2">Topic:</string>
     <string name="dlg_add_topic_notif">Notifications:</string>
     <string name="dlg_filter_label">Filter Script:</string>
     <string name="dlg_filter_button_add">Add</string>
     <string name="dlg_filter_button_edit">Edit</string>
+    <string name="dlg_back_without_save_msg_topics">Topic data has been modified.</string>
+
 
     <string name="dlg_actions_title_add">Add MQTT Action</string>
     <string name="dlg_actions_title_update">Update MQTT Action</string>
