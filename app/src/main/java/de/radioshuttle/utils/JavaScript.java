@@ -74,14 +74,14 @@ public class JavaScript {
             duktape.evaluate(sb.toString());
 
             duktape.evaluate(""
-                    + "var DuktapeMsgFormatter = {\n"
-                    + "  formatMsg: function(receivedDateMillis, topic, content, notificationType) {\n"
-                    + "  var msg = new Object();\n"
-                    + "  if (!content) content = '';\n"
-                    + "  msg.receivedDate = new Date(Number(receivedDateMillis));\n"
-                    + "  msg.topic = topic;\n"
-                    + "  msg.content = content;\n"
-                    + "  msg.notificationType = notificationType;\n"
+                    + "var DuktapeMsgFormatter = { "
+                    + "  formatMsg: function(receivedDateMillis, topic, content, notificationType) { "
+                    + "  var msg = new Object(); "
+                    + "  if (!content) content = ''; "
+                    + "  msg.receivedDate = new Date(Number(receivedDateMillis)); "
+                    + "  msg.topic = topic; "
+                    + "  msg.content = content; "
+                    + "  msg.notificationType = notificationType; "
                     + jsBody + "\n"
                     + "  return content;}"
                     + "};");
