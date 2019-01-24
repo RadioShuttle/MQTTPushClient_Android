@@ -415,7 +415,6 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
         return changed;
     }
 
-
     protected void handleBackPressed() {
         if (hasDataChanged()) {
             QuitWithoutSaveDlg dlg = new QuitWithoutSaveDlg();
@@ -534,7 +533,7 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     Bundle args = getArguments();
-                    if (args != null && !Utils.isEmpty(args.getString(ARG_TOPIC))) {
+                    if (args != null && !Utils.isEmpty(args.getString(RESULT_TOPICS))) {
                         Intent data = new Intent();
                         data.putExtra(RESULT_TOPICS, args.getString(RESULT_TOPICS));
                         getActivity().setResult(AppCompatActivity.RESULT_OK, data);
