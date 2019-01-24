@@ -56,8 +56,6 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
         setContentView(R.layout.activity_edit_topic);
 
         Bundle args = getIntent().getExtras();
-        String topic;
-        int notificationType;
 
         mViewModel = ViewModelProviders.of(this).get(TopicsViewModel.class);
         try {
@@ -65,29 +63,6 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
             mViewModel.init(json);
         } catch (JSONException e) {
             Log.e(TAG, "parse error", e);
-        }
-
-        if (savedInstanceState == null) {
-            mMode = (args != null ? args.getInt(MODE, MODE_ADD) : MODE_ADD);
-            topic = (args != null ? args.getString(ARG_TOPIC) : null);
-            mTopic = topic;
-            notificationType = args.getInt(ARG_TOPIC_NTYPE, NOTIFICATION_HIGH);
-            mNotificationType = notificationType;
-            mJavascript = args.getString(ARG_JAVASCRIPT);
-            mEditedJavascript = mJavascript;
-            mSaved = false;
-            mResultTopics = null;
-        } else {
-            mMode = savedInstanceState.getInt(MODE, MODE_ADD);
-            topic = savedInstanceState.getString(ARG_TOPIC);
-            notificationType = savedInstanceState.getInt(ARG_TOPIC_NTYPE, -1);
-            mEditedJavascript = savedInstanceState.getString(ARG_JAVASCRIPT);
-
-            mTopic = savedInstanceState.getString(IS_TOPIC);
-            mNotificationType = savedInstanceState.getInt(IS_TOPIC_NTYPE, -1);
-            mJavascript = savedInstanceState.getString(IS_JAVASCRIPT);
-            mSaved = savedInstanceState.getBoolean(IS_SAVED, false);
-            mResultTopics = savedInstanceState.getString(RESULT_TOPICS);
         }
 
         mNotificationsSpinner = findViewById(R.id.notificationtype_spinner);
@@ -106,14 +81,35 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
                 }
             });
         }
-        if (notificationType != -1) {
-            NotificationTypeAdapter a = (NotificationTypeAdapter) mNotificationsSpinner.getAdapter();
-            for (int i = 0; i < mNotificationsSpinner.getAdapter().getCount(); i++) {
-                if (a.getItem(i).getKey() == notificationType) {
-                    mNotificationsSpinner.setSelection(i);
-                    break;
+
+        if (savedInstanceState == null) {
+            mMode = (args != null ? args.getInt(MODE, MODE_ADD) : MODE_ADD);
+            mTopic = (args != null ? args.getString(ARG_TOPIC) : null);
+            mNotificationType = args.getInt(ARG_TOPIC_NTYPE, NOTIFICATION_HIGH);
+            mJavascript = args.getString(ARG_JAVASCRIPT);
+            mEditedJavascript = mJavascript;
+            mSaved = false;
+            mSavedTopics = null;
+
+            if (mNotificationType != -1) {
+                NotificationTypeAdapter a = (NotificationTypeAdapter) mNotificationsSpinner.getAdapter();
+                for (int i = 0; i < mNotificationsSpinner.getAdapter().getCount(); i++) {
+                    if (a.getItem(i).getKey() == mNotificationType) {
+                        mNotificationsSpinner.setSelection(i);
+                        break;
+                    }
                 }
             }
+
+        } else {
+            mMode = savedInstanceState.getInt(MODE, MODE_ADD);
+            mEditedJavascript = savedInstanceState.getString(ARG_JAVASCRIPT);
+
+            mTopic = savedInstanceState.getString(IS_TOPIC);
+            mNotificationType = savedInstanceState.getInt(IS_TOPIC_NTYPE, -1);
+            mJavascript = savedInstanceState.getString(IS_JAVASCRIPT);
+            mSaved = savedInstanceState.getBoolean(IS_SAVED, false);
+            mSavedTopics = savedInstanceState.getString(RESULT_TOPICS);
         }
 
         mTopicsEditText = findViewById(R.id.topic);
@@ -254,7 +250,7 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
                                                 te.put("jsSrc", t.jsSrc == null ? "" : t.jsSrc);
                                                 resultTopics.put(te);
                                             }
-                                            mResultTopics = resultTopics.toString();
+                                            mSavedTopics = resultTopics.toString();
                                         } catch (Exception e1) {
                                             Log.d(TAG, "onChanged(): Error parsing json object", e1);
                                         }
@@ -321,16 +317,10 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
         super.onSaveInstanceState(outState);
         outState.putInt(MODE, mMode);
 
-        String topic = mTopicsEditText.getText().toString();
-        if (!Utils.isEmpty(topic)) {
-            outState.putString(ARG_TOPIC, topic);
-        }
         if (!Utils.isEmpty(mTopic)) {
             outState.putString(IS_TOPIC, mTopic);
         }
 
-        int notificationType = getSelectedNotificationType(mNotificationsSpinner);
-        outState.putInt(ARG_TOPIC_NTYPE, notificationType);
         outState.putInt(IS_TOPIC_NTYPE, mNotificationType);
 
 
@@ -342,8 +332,8 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
         }
         outState.putBoolean(IS_SAVED, mSaved);
 
-        if (!Utils.isEmpty(mResultTopics)) {
-            outState.putString(RESULT_TOPICS, mResultTopics);
+        if (!Utils.isEmpty(mSavedTopics)) {
+            outState.putString(RESULT_TOPICS, mSavedTopics);
         }
     }
 
@@ -400,7 +390,6 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
 
     protected boolean hasDataChanged() {
         boolean changed = false;
-        //TODO: edited java script
         String topic = mTopicsEditText.getText().toString();
         int notificationType = getSelectedNotificationType(mNotificationsSpinner);
         if (!Utils.equals(topic, mTopic)) {
@@ -419,14 +408,14 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
             QuitWithoutSaveDlg dlg = new QuitWithoutSaveDlg();
             if (mSaved) {
                 Bundle args = new Bundle();
-                args.putString(RESULT_TOPICS, mResultTopics);
+                args.putString(RESULT_TOPICS, mSavedTopics);
                 dlg.setArguments(args);
             }
             dlg.show(getSupportFragmentManager(), QuitWithoutSaveDlg.class.getSimpleName());
         } else {
             if (mSaved) {
                 Intent data = new Intent();
-                data.putExtra(RESULT_TOPICS, mResultTopics);
+                data.putExtra(RESULT_TOPICS, mSavedTopics);
                 setResult(AppCompatActivity.RESULT_OK, data);
                 finish();
             }
@@ -495,7 +484,7 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
             }
             header += ":";
             intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
-            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg) {\n var content = msg.content;");
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc) {\n var content = msg.content;");
             intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
             intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER);
 
@@ -564,12 +553,12 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
     protected int mMode;
-    protected String mEditedJavascript;
+    protected String mEditedJavascript; // filter script of last edit operaion
 
     protected boolean mSaved;
-    protected String mResultTopics;
-    protected String mJavascript; // last saved state
-    protected int mNotificationType;
+    protected String mSavedTopics; // json of saved topics
+    protected String mJavascript; // last saved script code
+    protected int mNotificationType; // last saved notification type
     protected String mTopic;
 
     protected EditText mTopicsEditText;
