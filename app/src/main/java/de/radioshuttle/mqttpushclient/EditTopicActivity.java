@@ -198,6 +198,19 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
                                         InsecureConnectionDialog dialog = new InsecureConnectionDialog();
                                         Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
                                         if (args != null) {
+                                            int cmd = ((TopicsRequest) request).mCmd;
+                                            if (cmd == Cmd.CMD_ADD_TOPICS || cmd == Cmd.CMD_UPD_TOPICS) {
+                                                Cmd.Topic val;
+                                                Iterator<Map.Entry<String, Cmd.Topic>> it = topicsRequest.mTopics.entrySet().iterator();
+                                                if (it.hasNext()) {
+                                                    Map.Entry<String, Cmd.Topic> e = it.next();
+                                                    args.putString("topic_name", e.getKey());
+                                                    val = e.getValue();
+                                                    args.putInt("topic_prio", val.type);
+                                                    args.putString("topic_script", val.script);
+                                                }
+                                            }
+                                            args.putInt("cmd", cmd);
                                             dialog.setArguments(args);
                                             dialog.show(getSupportFragmentManager(), DLG_TAG);
                                         }
