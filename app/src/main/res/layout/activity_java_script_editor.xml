@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -36,7 +36,7 @@
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
-        app:layout_constraintTop_toBottomOf="@+id/header"
+        android:layout_below="@+id/header"
         android:paddingTop="8dp"
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
@@ -105,4 +105,4 @@
     </androidx.core.widget.NestedScrollView>
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</RelativeLayout>
