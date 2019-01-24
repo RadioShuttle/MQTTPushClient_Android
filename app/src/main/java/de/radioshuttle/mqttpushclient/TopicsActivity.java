@@ -498,13 +498,6 @@ public class TopicsActivity extends AppCompatActivity
     private RecyclerView mListView;
 
     private final static String SEL_ROWS = "SEL_ROWS";
-    private final static String ARG_EDIT_MODE = "ARG_EDIT_MODE";
-    private final static String ARG_TOPIC = "ARG_TOPIC";
-    private final static String ARG_JAVASCRIPT = "ARG_JAVASCRIPT";
-    private final static int MODE_ADD = 0;
-    private final static int MODE_EDIT = 2;
-    private final static String ARG_TOPIC_ERROR = "ARG_TOPIC_ERROR";
-    private final static String ARG_TOPIC_NTYPE = "ARG_NOTIFICATION_TYPE";
 
     private final static String TAG = TopicsActivity.class.getSimpleName();
 
