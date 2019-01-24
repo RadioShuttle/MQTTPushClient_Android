@@ -95,13 +95,10 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
             mTestDataMsgContent = findViewById(R.id.testDataEditText);
             String jsSrc = args.getString(ARG_JAVASCRIPT); // mJavaScriptSource
             if (savedInstanceState == null) {
-                mJavaScriptSource = jsSrc;
-                if (!Utils.isEmpty(mJavaScriptSource)) {
-                    mEditor.setText(mJavaScriptSource);
-                }
+                mEditor.setText(jsSrc);
                 mEditor.requestFocus();
             } else {
-                mJavaScriptSource = savedInstanceState.getString(ARG_JAVASCRIPT);
+                mTestDataLoaded = savedInstanceState.getBoolean("mTestDataLoaded", mTestDataLoaded);
             }
             mResultTextView = findViewById(R.id.headerText);
             mViewModel.javaScriptResult.observe(this, new Observer<JavaScriptViewModel.JSResult>() {
@@ -133,6 +130,20 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                     }
                 }
             });
+            if (!mTestDataLoaded) {
+                mViewModel.latestMessage.observe(this, new Observer<JavaScriptViewModel.Request>() {
+                    @Override
+                    public void onChanged(JavaScriptViewModel.Request request) {
+                        if (!mTestDataLoaded) {
+                            mTestDataLoaded = true;
+                            if (request != null && request.result != null) {
+                                mTestDataMsgContent.setText(request.result.getMsg());
+                            }
+                        }
+                    }
+                });
+                mViewModel.loadLastReceivedMsg(getApplication(), mViewModel.mContentFilterCache.get("msg.topic"));
+            }
         }
 
         Button runButton = findViewById(R.id.runJSButton);
@@ -144,8 +155,6 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 }
             });
         }
-
-        //TODO: load test data for the given topic and fill test data field
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
@@ -159,8 +168,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     protected void handleBackPressed() {
         if (hasDataChanged()) {
             Intent data = new Intent();
-            mJavaScriptSource = mEditor.getText().toString();
-            data.putExtra(ARG_JAVASCRIPT, mJavaScriptSource);
+            data.putExtra(ARG_JAVASCRIPT, mEditor.getText().toString());
             setResult(AppCompatActivity.RESULT_OK, data);
             finish();
         } else {
@@ -174,18 +182,6 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.activity_java_script_editor, menu);
         return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        /*
-        MenuItem m = menu.findItem(R.id.menu_refresh);
-        if (m != null) {
-            m.setEnabled(!mViewModel.isRequestActive());
-        }
-        */
-
-        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -249,22 +245,21 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (mJavaScriptSource != null) {
-            outState.putString(ARG_JAVASCRIPT, mJavaScriptSource);
-        }
+        outState.putBoolean("mTestDataLoaded", mTestDataLoaded);
     }
 
     protected boolean hasDataChanged() {
         boolean changed = false;
         if (mEditor != null) {
-            String prev = (mJavaScriptSource == null ? "" : mJavaScriptSource);
-            changed = !mEditor.getText().toString().equals(prev);
+            Bundle args = getIntent().getExtras();
+            String org = null;
+            if (args != null) {
+                org = args.getString(ARG_JAVASCRIPT);
+            }
+            String current = mEditor.getText().toString();
+            changed = Utils.equals(org, current);
         }
         return changed;
-    }
-
-    protected boolean checkData() {
-        return true;
     }
 
     public static class ConfirmClearDlg extends DialogFragment {
@@ -301,14 +296,14 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
         }
     }
 
-    private boolean mActivityStarted;
+    protected boolean mActivityStarted;
+    protected boolean mTestDataLoaded;
     protected JavaScriptViewModel mViewModel;
     protected int mComponentType;
     protected EditText mEditor;
     protected EditText mTestDataMsgContent;
     protected TextView mResultTextView;
     protected ProgressBar mProgressBar;
-    private String mJavaScriptSource;
 
     public final static String ARG_TITLE = "ARG_TITLE";
     public final static String ARG_HEADER = "ARG_HEADER";
