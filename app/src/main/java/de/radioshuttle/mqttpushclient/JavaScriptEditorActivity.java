@@ -257,7 +257,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 org = args.getString(ARG_JAVASCRIPT);
             }
             String current = mEditor.getText().toString();
-            changed = Utils.equals(org, current);
+            changed = !Utils.equals(org, current);
         }
         return changed;
     }
