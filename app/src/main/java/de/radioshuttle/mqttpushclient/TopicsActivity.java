@@ -136,6 +136,11 @@ public class TopicsActivity extends AppCompatActivity
                                         InsecureConnectionDialog dialog = new InsecureConnectionDialog();
                                         Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
                                         if (args != null) {
+                                            int cmd = ((TopicsRequest) request).mCmd;
+                                            if (cmd == Cmd.CMD_DEL_TOPICS) {
+                                                args.putStringArrayList("topics_del", new ArrayList<>(topicsRequest.mDelTopics));
+                                            }
+                                            args.putInt("cmd", cmd);
                                             dialog.setArguments(args);
                                             dialog.show(getSupportFragmentManager(), DLG_TAG);
                                         }
