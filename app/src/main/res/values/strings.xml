@@ -44,8 +44,6 @@
     <string name="dlg_filter_label">Filter Script:</string>
     <string name="dlg_filter_button_add">Add</string>
     <string name="dlg_filter_button_edit">Edit</string>
-    <string name="dlg_back_without_save_msg_topics">Topic data has been modified.</string>
-
 
     <string name="dlg_actions_title_add">Add MQTT Action</string>
     <string name="dlg_actions_title_update">Update MQTT Action</string>
@@ -100,7 +98,7 @@
     <string name="error_js_unmodified">JavaScript was not modified.</string>
     <string name="info_data_saved">Data has been saved</string>
     <string name="dlg_back_without_save_title">Go back without saving?</string>
-    <string name="dlg_back_without_save_msg">Server data has been modified.</string>
+    <string name="dlg_back_without_save_msg">Data has been modified.</string>
     <string name="warning_back_pressed">Press Back again to close this app</string>
     <string name="op_in_progress">Please wait until current action has been finished.</string>
 
