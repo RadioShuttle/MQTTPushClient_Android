@@ -527,7 +527,7 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(getString(R.string.dlg_back_without_save_title));
-            builder.setMessage(getString(R.string.dlg_back_without_save_msg_topics));
+            builder.setMessage(getString(R.string.dlg_back_without_save_msg));
 
             builder.setPositiveButton(R.string.action_back, new DialogInterface.OnClickListener() {
                 @Override
