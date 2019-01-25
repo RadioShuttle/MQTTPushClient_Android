@@ -17,7 +17,6 @@ import android.content.Intent;
 import androidx.annotation.Nullable;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.appcompat.view.ActionMode;
@@ -25,18 +24,19 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import de.radioshuttle.net.ActionsRequest;
@@ -46,7 +46,6 @@ import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.Utils;
 
-import static de.radioshuttle.mqttpushclient.ActionsActivity.EditActionDialog.*;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
@@ -96,13 +95,7 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
                                                 b.getCertificateException(), request.getAccount().pushserver);
                                         if (args != null) {
                                             int cmd = ((ActionsRequest) request).mCmd;
-                                            if (cmd == Cmd.CMD_ADD_ACTION || cmd == Cmd.CMD_UPD_ACTION) { // Cmd.CMD_ADD_ACTION; Cmd.CMD_DEL_ACTIONS;
-                                                args.putString("action_name", actionsRequest.mActionArg.name);
-                                                args.putString("action_prevName",actionsRequest.mActionArg.prevName);
-                                                args.putString("action_content",actionsRequest.mActionArg.content);
-                                                args.putBoolean("action_retain",actionsRequest.mActionArg.retain);
-                                                args.putString("action_topic",actionsRequest.mActionArg.topic);
-                                            } else if (cmd == Cmd.CMD_DEL_ACTIONS) {
+                                            if (cmd == Cmd.CMD_DEL_ACTIONS) {
                                                 args.putStringArrayList("action_del", new ArrayList<>(actionsRequest.mActionListArg));
                                             }
                                             args.putInt("cmd", cmd);
@@ -127,6 +120,11 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
                                         InsecureConnectionDialog dialog = new InsecureConnectionDialog();
                                         Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
                                         if (args != null) {
+                                            int cmd = ((ActionsRequest) request).mCmd;
+                                            if (cmd == Cmd.CMD_DEL_ACTIONS) {
+                                                args.putStringArrayList("action_del", new ArrayList<>(actionsRequest.mActionListArg));
+                                            }
+                                            args.putInt("cmd", cmd);
                                             dialog.setArguments(args);
                                             dialog.show(getSupportFragmentManager(), DLG_TAG);
                                         }
@@ -225,172 +223,11 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
 
     }
 
-    protected void showEditDialog(int mode, ActionsViewModel.Action a, String errorTxt, int errorIdx) {
-        if (mViewModel.isRequestActive()) {
-            Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
-        } else {
-            EditActionDialog dlg = new EditActionDialog();
-            Bundle args = new Bundle();
-            args.putInt(EditActionDialog.ARG_EDIT_MODE, mode);
-            if (a != null) {
-                args.putString(ARG_NAME, a.name);
-                args.putString(ARG_TOPIC, a.topic);
-                args.putString(ARG_CONTENT, a.content);
-                args.putBoolean(ARG_RETIAN, a.retain);
-                if (mode == MODE_EDIT) {
-                    if (!Utils.isEmpty(a.prevName)) {
-                        args.putString(ARG_PREV, a.prevName);
-                    } else {
-                        args.putString(ARG_PREV, a.name);
-                    }
-                }
-            }
-            if (!Utils.isEmpty(errorTxt)) {
-                args.putString(ARG_ERROR, errorTxt);
-                args.putInt(ARG_IDX, errorIdx);
-            }
-            dlg.setArguments(args);
-
-            dlg.show(getSupportFragmentManager(), ActionsActivity.EditActionDialog.class.getSimpleName());
-        }
-    }
-
-    public void addAction(ActionsViewModel.Action a) {
-        if (Utils.isEmpty(a.name)) {
-            showEditDialog(MODE_ADD, a, getString(R.string.error_empty_field), 0);
-        } else if (Utils.isEmpty(a.topic)) {
-            showEditDialog(MODE_ADD, a, getString(R.string.error_empty_field), 1);
-        } else if (Utils.isEmpty(a.content)) {
-            showEditDialog(MODE_ADD, a, getString(R.string.error_empty_field), 2);
-        }  else if (!mViewModel.isRequestActive()) {
-            mSwipeRefreshLayout.setRefreshing(true);
-            mViewModel.addAction(this, a);
-        }
-    }
-
-    public void updateAction(ActionsViewModel.Action a) {
-        if (Utils.isEmpty(a.name)) {
-            showEditDialog(MODE_EDIT, a, getString(R.string.error_empty_field), 0);
-        } else if (Utils.isEmpty(a.topic)) {
-            showEditDialog(MODE_EDIT, a, getString(R.string.error_empty_field), 1);
-        } else if (Utils.isEmpty(a.content)) {
-            showEditDialog(MODE_EDIT, a, getString(R.string.error_empty_field), 2);
-        } else if (!mViewModel.isRequestActive()) {
-            mSwipeRefreshLayout.setRefreshing(true);
-            mViewModel.updateAction(this, a);
-        }
-    }
-
     public void deleteActions(List<String> actions) {
         if (!mViewModel.isRequestActive()) {
             mSwipeRefreshLayout.setRefreshing(true);
             mViewModel.deleteActions(this, actions);
         }
-    }
-
-    public static class EditActionDialog extends DialogFragment {
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
-            final Bundle args = getArguments();
-            final int mode = args.getInt(ARG_EDIT_MODE);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            LayoutInflater inflater = (LayoutInflater) builder.getContext().getSystemService(LAYOUT_INFLATER_SERVICE);
-            View body = inflater.inflate(R.layout.dlg_actions_body, null);
-
-            String errorTxt = args.getString(ARG_ERROR);
-            int idx = args.getInt(ARG_IDX, -1);
-
-            final TextView actionName = body.findViewById(R.id.actionNameEditText);
-            if (actionName != null) {
-                actionName.setText(args.getString(ARG_NAME));
-                if (idx == 0 && !Utils.isEmpty(errorTxt)) {
-                    actionName.setError(errorTxt);
-                }
-            }
-            final TextView actionTopic = body.findViewById(R.id.actionTopicText);
-            if (actionTopic != null) {
-                actionTopic.setText(args.getString(ARG_TOPIC));
-                if (idx == 1 && !Utils.isEmpty(errorTxt)) {
-                    actionTopic.setError(errorTxt);
-                }
-            }
-
-            final TextView actionContent = body.findViewById(R.id.actionContentText);
-            if (actionContent != null) {
-                actionContent.setText(args.getString(ARG_CONTENT));
-                if (idx == 2 && !Utils.isEmpty(errorTxt)) {
-                    actionContent.setError(errorTxt);
-                }
-            }
-            final CheckBox retainCheckBox = body.findViewById(R.id.retain);
-            if (retainCheckBox != null) {
-                retainCheckBox.setChecked(args.getBoolean(ARG_RETIAN, false));
-            }
-
-            builder.setView(body);
-
-            if (mode == MODE_ADD) {
-                builder.setTitle(R.string.dlg_actions_title_add);
-
-                builder.setPositiveButton(R.string.action_add, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ActionsViewModel.Action a = new ActionsViewModel.Action();
-                        a.name = actionName.getText().toString();
-                        a.topic = actionTopic.getText().toString();
-                        a.content = actionContent.getText().toString();
-                        a.retain = retainCheckBox.isChecked();
-                        Activity ac =  getActivity();
-                        if (ac instanceof ActionsActivity) {
-                            ((ActionsActivity) ac).addAction(a);
-                        }
-                    }
-                });
-            } else {
-                builder.setTitle(R.string.dlg_actions_title_update);
-
-                builder.setPositiveButton(R.string.action_update, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ActionsViewModel.Action a = new ActionsViewModel.Action();
-                        a.name = actionName.getText().toString();
-                        a.topic = actionTopic.getText().toString();
-                        a.content = actionContent.getText().toString();
-                        a.prevName = args.getString(ARG_PREV);
-                        a.retain = retainCheckBox.isChecked();
-                        Activity ac =  getActivity();
-                        if (ac instanceof ActionsActivity) {
-                            ((ActionsActivity) ac).updateAction(a);
-                        }
-                    }
-                });
-            }
-
-            builder.setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-
-            AlertDialog dlg = builder.create();
-            dlg.setCanceledOnTouchOutside(false);
-
-            return dlg;
-        }
-
-        final static String ARG_EDIT_MODE = "ARG_EDIT_MODE";
-        final static String ARG_NAME = "ARG_NAME";
-        final static String ARG_TOPIC = "ARG_TOPIC";
-        final static String ARG_CONTENT = "ARG_CONTENT";
-        final static String ARG_PREV = "ARG_PREV";
-        final static String ARG_ERROR = "ARG_ERROR";
-        final static String ARG_IDX = "ARG_IDX";
-        final static String ARG_RETIAN = "ARG_RETIAN";
-        final static int MODE_ADD = 0;
-        final static int MODE_EDIT = 1;
-
     }
 
     @Override
@@ -406,7 +243,7 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
                 handled = true;
                 break;
             case R.id.action_add:
-                showEditDialog(EditActionDialog.MODE_ADD, null, null, -1);
+                showEditActivity(EditActionActivity.MODE_ADD, null);
                 handled = true;
                 break;
             default:
@@ -458,12 +295,6 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        mActivityStarted = false;
-    }
-
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
         @Override
@@ -511,7 +342,7 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
                                     if (list != null) {
                                         for(ActionsViewModel.Action ac : list) {
                                             if (ac.name.equals(t)) {
-                                                showEditDialog(MODE_EDIT, ac, null, -1);
+                                                showEditActivity(EditActionActivity.MODE_EDIT, ac);
                                                 break;
                                             }
                                         }
@@ -541,23 +372,6 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
             int cmd = args.getInt("cmd", 0);
             if (cmd == 0) { // Cmd.CMD_GET_ACTIONS
                 refresh();
-            } else if (cmd == Cmd.CMD_ADD_ACTION || cmd == Cmd.CMD_UPD_ACTION) {
-                ActionsViewModel.Action a = new ActionsViewModel.Action();
-                a.name = args.getString("action_name");
-                a.prevName = args.getString("action_prevName");
-                a.content = args.getString("action_content");
-                a.retain = args.getBoolean("action_retain");
-                a.topic = args.getString("action_topic");
-
-                if (!mViewModel.isRequestActive()) {
-                    mSwipeRefreshLayout.setRefreshing(true);
-
-                    if (cmd == Cmd.CMD_ADD_ACTION) {
-                        mViewModel.addAction(this, a);
-                    } else {
-                        mViewModel.updateAction(this, a);
-                    }
-                }
             } else if (cmd == Cmd.CMD_DEL_ACTIONS) {
                 if (!mViewModel.isRequestActive()) {
                     mSwipeRefreshLayout.setRefreshing(true);
@@ -565,6 +379,73 @@ public class ActionsActivity extends AppCompatActivity implements CertificateErr
                     mViewModel.deleteActions(getApplicationContext(), args.getStringArrayList("action_del"));
                 }
 
+            }
+        }
+    }
+
+    protected void showEditActivity(int mode, ActionsViewModel.Action a) {
+        if (mViewModel.isRequestActive()) {
+            Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
+        } else {
+            if (!mActivityStarted) {
+                mActivityStarted = true;
+                Bundle activityArgs = getIntent().getExtras();
+                if (activityArgs == null || activityArgs.getString(PARAM_ACCOUNT_JSON) == null) {
+                    return;
+                }
+                Bundle args = new Bundle();
+                args.putString(PARAM_ACCOUNT_JSON, activityArgs.getString(PARAM_ACCOUNT_JSON));
+                args.putInt(EditActionActivity.ARG_EDIT_MODE, mode);
+                if (a != null) {
+                    args.putString(EditActionActivity.ARG_NAME, a.name);
+                    args.putString(EditActionActivity.ARG_TOPIC, a.topic);
+                    args.putString(EditActionActivity.ARG_CONTENT, a.content);
+                    args.putBoolean(EditActionActivity.ARG_RETAIN, a.retain);
+                }
+                Intent intent = new Intent(this, EditActionActivity.class);
+                intent.putExtras(args);
+                startActivityForResult(intent, 0);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mActivityStarted = false;
+        if (resultCode == AppCompatActivity.RESULT_OK && data != null) {
+            if (!mViewModel.isRequestActive()) {
+                try {
+                    String resultActions = data.getStringExtra(EditActionActivity.RESULT_ACTIONS);
+                    if (Utils.isEmpty(resultActions)) {
+                        return;
+                    }
+                    JSONArray resultArr = new JSONArray(resultActions);
+                    ArrayList<ActionsViewModel.Action> actionList = new ArrayList<>();
+                    ActionsViewModel.Action e;
+                    JSONObject jt;
+                    for(int i = 0; i < resultArr.length(); i++) {
+                        e = new ActionsViewModel.Action();
+                        jt = resultArr.getJSONObject(i);
+                        e.name = jt.optString("actionname");
+                        e.prevName = jt.optString("prev_actionname");
+                        e.topic = jt.optString("topic");
+                        e.content = jt.optString("content");
+                        e.retain = jt.optBoolean("retain");
+                        actionList.add(e);
+                    }
+                    Collections.sort(actionList, new ActionsViewModel.ActionComparator());
+
+                    ActionsRequest request = (ActionsRequest) mViewModel.actionsRequest.getValue();
+                    if (request == null) {
+                        request = new ActionsRequest(getApplication(), mViewModel.pushAccount, mViewModel.actionsRequest);
+                    }
+                    request.mActions = actionList;
+                    mViewModel.actionsRequest.setValue(request);
+
+                } catch(Exception e) {
+                    Log.d(TAG, "onActivityResult(): error: ", e);
+                }
             }
         }
     }
