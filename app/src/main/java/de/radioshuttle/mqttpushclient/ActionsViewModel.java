@@ -13,6 +13,7 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
@@ -93,6 +94,19 @@ public class ActionsViewModel extends ViewModel {
         public String content;
         public String prevName;
         public boolean retain;
+    }
+
+    public static class ActionComparator implements Comparator<Action> {
+
+        @Override
+        public int compare(Action o1, Action o2) {
+            String a1 = o1 == null ? "" : o1.name;
+            String a2 = o2 == null ? "" : o2.name;
+
+            String s1 = a1 == null ? "" : a1;
+            String s2 = a2 == null ? "" : a2;
+            return s1.compareTo(s2);
+        }
     }
 
 
