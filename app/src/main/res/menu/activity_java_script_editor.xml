@@ -14,8 +14,34 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/menu_help"
+        android:visible="false"
+        android:id="@+id/menu_topicfilter"
         android:orderInCategory="25"
+        android:title="@string/menu_topcifilter_example_title"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/menu_topicfilter_json"
+                android:orderInCategory="26"
+                android:title="@string/menu_topicfilter_json_title"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/menu_topicfilter_split"
+                android:orderInCategory="26"
+                android:title="@string/menu_topicfilter_split_title"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/menu_topicfilter_regexp"
+                android:orderInCategory="26"
+                android:title="@string/menu_topicfilter_regexp_title"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+
+
+    <item
+        android:id="@+id/menu_help"
+        android:orderInCategory="50"
         android:title="@string/title_help"
         app:showAsAction="never" />
 
