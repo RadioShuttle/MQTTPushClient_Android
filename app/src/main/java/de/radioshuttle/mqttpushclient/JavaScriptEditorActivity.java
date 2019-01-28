@@ -181,6 +181,12 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.activity_java_script_editor, menu);
+        if (mComponentType == CONTENT_FILTER) {
+            MenuItem mi = menu.findItem(R.id.menu_topicfilter);
+            if (mi != null) {
+                mi.setVisible(true);
+            }
+        }
         return true;
     }
 
@@ -210,12 +216,39 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 help();
                 handled = true;
                 break;
+            /* filter topic examples */
+            case R.id.menu_topicfilter_json:
+                insertExample(getString(R.string.code_topicfilter_json));
+                handled = true;
+                break;
+            case R.id.menu_topicfilter_regexp:
+                insertExample(getString(R.string.code_topicfilter_regexp));
+                handled = true;
+                break;
+            case R.id.menu_topicfilter_split:
+                insertExample(getString(R.string.code_topicfilter_split));
+                handled = true;
+                break;
             default:
                 handled = super.onOptionsItemSelected(item);
         }
         return handled;
     }
 
+    protected void insertExample(String code) {
+        if (!Utils.isEmpty(code)) {
+            mEditor.requestFocus();
+            String content = mEditor.getText().toString();
+            int setStart = content.length();
+            if (!Utils.isEmpty(content) && !content.endsWith("\n")) {
+                content += "\n";
+            }
+            content += code;
+            mEditor.setText(content);
+            mEditor.setSelection(setStart, content.length());
+        }
+        // Log.d(TAG, "sel start: " + s);
+    }
 
     protected void clear() {
         ConfirmClearDlg dlg = new ConfirmClearDlg();
