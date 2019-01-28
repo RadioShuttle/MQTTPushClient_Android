@@ -244,7 +244,6 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
                                     if (it.hasNext()) {
                                         if (mMode == MODE_ADD) {
                                             mMode = MODE_EDIT;
-                                            updateUI(true);
                                         }
                                         Map.Entry<String, Cmd.Topic> e = it.next();
                                         Cmd.Topic ct = e.getValue();
@@ -252,7 +251,7 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
                                         // mEditedJavascript = ct.script;
                                         mNotificationType = ct.type;
                                         mTopic = e.getKey();
-
+                                        updateUI(true);
                                         try {
                                             JSONArray resultTopics = new JSONArray();
                                             JSONObject te;
@@ -296,7 +295,11 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
         }
         if (mScriptButton != null) {
             if (!Utils.isEmpty(mEditedJavascript)) {
-                mScriptButton.setText(R.string.dlg_filter_button_edit);
+                if (Utils.equals(mJavascript, mEditedJavascript)) {
+                    mScriptButton.setText(R.string.dlg_filter_button_edit);
+                } else {
+                    mScriptButton.setText(R.string.dlg_filter_button_edit_modified);
+                }
             } else {
                 mScriptButton.setText(R.string.dlg_filter_button_add);
             }
