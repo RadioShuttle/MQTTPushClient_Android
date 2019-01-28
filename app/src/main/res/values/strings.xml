@@ -44,6 +44,7 @@
     <string name="dlg_filter_label">Filter Script:</string>
     <string name="dlg_filter_button_add">Add</string>
     <string name="dlg_filter_button_edit">Edit</string>
+    <string name="dlg_filter_button_edit_modified">Edit (modified)</string>
 
     <string name="dlg_actions_title_add">Add MQTT Action</string>
     <string name="dlg_actions_title_update">Update MQTT Action</string>
