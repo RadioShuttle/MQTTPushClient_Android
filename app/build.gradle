@@ -3,10 +3,10 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         config {
-            keyAlias 'RadioShuttleKey'
-            keyPassword 'XXXXXXXXXXXXXXX'
+            keyAlias 'upload'
+            keyPassword 'XXXXXXXXXXX'
             storeFile file('../android.jks')
-            storePassword 'XXXXXXXXXXXXX'
+            storePassword 'XXXXXXXXXX'
         }
     }
     compileSdkVersion 28
@@ -14,7 +14,7 @@ android {
         applicationId "de.radioshuttle.mqttpushclient"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 32
+        versionCode 34
         versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
