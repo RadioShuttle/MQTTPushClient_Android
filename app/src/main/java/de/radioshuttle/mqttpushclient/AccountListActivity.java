@@ -48,6 +48,7 @@ import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.fcm.Notifications;
+import de.radioshuttle.mqttpushclient.dash.ViewState;
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
@@ -254,7 +255,16 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     }
 
     protected void startMessagesActivity(PushAccount b, boolean notifstart) {
-        Intent intent = new Intent(AccountListActivity.this, MessagesActivity.class);
+
+        Class<?> m = MessagesActivity.class;
+        if (!notifstart && b != null) {
+            int lastState = ViewState.getInstance(getApplication()).getLastState(b.getKey());
+            if (lastState == ViewState.VIEWSTATE_DASHBOARD) {
+                m = DashBoardActivity.class;
+            }
+        }
+
+        Intent intent = new Intent(AccountListActivity.this, m);
         intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
         try {
             intent.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
@@ -274,6 +284,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                     try {
                         SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
+                        ViewState.getInstance(getApplication()).removeAccount(b.getKey());
                         editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
                         editor.commit();
                         ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
