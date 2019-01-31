@@ -41,6 +41,7 @@ import java.util.Iterator;
 
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.fcm.Notifications;
+import de.radioshuttle.mqttpushclient.dash.ViewState;
 import de.radioshuttle.net.ActionsRequest;
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Cmd;
@@ -63,6 +64,9 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         mListView = findViewById(R.id.messagesListView);
         try {
             PushAccount b = PushAccount.createAccountFormJSON(new JSONObject(json));
+            if (savedInstanceState == null) {
+                ViewState.getInstance(getApplication()).setLastState(b.getKey(), ViewState.VIEWSTATE_MESSAGES);
+            }
             TextView server = findViewById(R.id.push_notification_server);
             TextView key = findViewById(R.id.account_display_name);
             server.setText(b.pushserver);
@@ -342,10 +346,30 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
             case R.id.menu_delete :
                 showDeleteDialog();
                 return true;
+            case R.id.menu_change_view :
+                if (!mActivityStarted) {
+                    mActivityStarted = true;
+                    switchToDashboardActivity();
+                    finish();
+                }
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    protected void switchToDashboardActivity() {
+        Intent intent = new Intent(this, DashBoardActivity.class);
+        Bundle args = getIntent().getExtras();
+        String json = args.getString(PARAM_ACCOUNT_JSON);
+        boolean notifStart = args.getBoolean(AccountListActivity.ARG_NOTIFSTART, false);
+        boolean hastMultipleServer = args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS);
+        intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, hastMultipleServer);
+        intent.putExtra(PARAM_ACCOUNT_JSON, json);
+        intent.putExtra(AccountListActivity.ARG_NOTIFSTART, notifStart);
+        startActivityForResult(intent, AccountListActivity.RC_MESSAGES);
+    }
+
 
     protected void doRefresh() {
         if (mViewModel != null) {
@@ -486,6 +510,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
 
     public final static String PARAM_MULTIPLE_PUSHSERVERS = "PARAM_MULTIPLE_PUSHSERVERS";
 
+    private boolean mActivityStarted;
     private Snackbar mSnackbar;
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
