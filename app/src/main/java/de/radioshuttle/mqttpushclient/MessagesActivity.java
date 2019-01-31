@@ -350,7 +350,6 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                 if (!mActivityStarted) {
                     mActivityStarted = true;
                     switchToDashboardActivity();
-                    finish();
                 }
                 return true;
             default:
@@ -368,6 +367,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         intent.putExtra(PARAM_ACCOUNT_JSON, json);
         intent.putExtra(AccountListActivity.ARG_NOTIFSTART, notifStart);
         startActivityForResult(intent, AccountListActivity.RC_MESSAGES);
+        finish();
     }
 
 
