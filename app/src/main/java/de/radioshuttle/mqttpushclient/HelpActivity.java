@@ -173,8 +173,8 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     public void onRefresh() {
         showProgressBar();
-        webView.reload();
         webView.clearCache(true);
+        webView.reload();
     }
 
     protected void showProgressBar() {
