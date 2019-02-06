@@ -191,8 +191,4 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="menu_topicfilter_json_title">JSON</string>
     <string name="menu_topicfilter_split_title">Split</string>
     <string name="menu_topicfilter_regexp_title">Regular Expression</string>
-
-    <string name="code_topicfilter_json">"/* {\"t\" : 24, \"h\" : 30} */\nvar j = JSON.parse(content);\nif (j.t &amp;&amp; j.h) {\n  content = \"Temperature: \" + j.t + \"°, Humidity: \" + j.h + \"%\";\n}"</string>
-    <string name="code_topicfilter_split">/* 23.1 30.5 */\nvar s = content.split(\" \");\nif (s.length >= 2) {  \ncontent = \"Temperature: \" + s[0] + \"°, Humidity: \" + s[1] + \"%\";\n}</string>
-    <string name="code_topicfilter_regexp">/* t=24.2,h=30 */\nvar res = content.match(/[+-]?\\d+(\\.\\d+)?/g);\nif (res &amp;&amp; res.length >= 2) {\n content = \"Temperature: \" + res[0] + \"°, Humidity: \" + res[1] + \"%\";\n}</string>
 </resources>
