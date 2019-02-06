@@ -41,7 +41,7 @@ public class JavaScriptViewModel extends ViewModel {
             executed = true;
             runState.setValue(true);
             final MqttMessage para = new MqttMessage();
-            para.setMsg(mContentFilterCache.get("msg.content"));
+            para.setPayload(mContentFilterCache.get("msg.content").getBytes(Utils.UTF_8));
             para.setTopic(mContentFilterCache.get("msg.topic"));
             para.setWhen(System.currentTimeMillis());
             final String accUser = mContentFilterCache.get("acc.user");

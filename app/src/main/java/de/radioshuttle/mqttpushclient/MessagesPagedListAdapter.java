@@ -8,10 +8,10 @@ package de.radioshuttle.mqttpushclient;
 
 import androidx.paging.PagedList;
 import androidx.paging.PagedListAdapter;
+
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Locale;
 
 import de.radioshuttle.db.MqttMessage;
+import de.radioshuttle.utils.Utils;
 
 public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, MessagesPagedListAdapter.ViewHolder>{
 
@@ -68,7 +69,7 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
             sb.append(m.getTopic());
             holder.subject.setText(sb.toString());
 
-            holder.msg.setText(m.getMsg());
+            holder.msg.setText(new String(m.getPayload(), Utils.UTF_8));
 
             holder.itemView.setSelected(selectedItems.contains(m.getId()));
         } else {

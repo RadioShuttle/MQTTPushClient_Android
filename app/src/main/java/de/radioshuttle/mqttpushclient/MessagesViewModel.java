@@ -79,10 +79,12 @@ public class MessagesViewModel extends AndroidViewModel {
 
                 HashMap<String, JavaScript.Context> jsContextMap = currJSContextMap;
 
+                String pl;
                 if (jsDisabled) {
                     /* javascript was disabled in a previous run, add error msg to all entries */
                     for(int i = 0; i < input.size(); i++) {
-                        input.get(i).setMsg(jsErrorTxt + "\n" + input.get(i).getMsg());
+                        pl = jsErrorTxt + "\n" + new String(input.get(i).getPayload(), Utils.UTF_8);
+                        input.get(i).setPayload((pl.getBytes(Utils.UTF_8)));
                     }
                 } else if (jsContextMap != null && !jsContextMap.isEmpty()) {
                     /* */
@@ -102,7 +104,8 @@ public class MessagesViewModel extends AndroidViewModel {
                             jsErrorTxt = app.getString(R.string.filterscript_err) + " " + e.getMessage();
                         }
                         for(int i = itemsProcessed; i < input.size(); i++) {
-                            input.get(i).setMsg(jsErrorTxt + "\n" + input.get(i).getMsg());
+                            pl = jsErrorTxt + "\n" + new String(input.get(i).getPayload(), Utils.UTF_8);
+                            input.get(i).setPayload((pl.getBytes(Utils.UTF_8)));
                         }
                     }
                 }
