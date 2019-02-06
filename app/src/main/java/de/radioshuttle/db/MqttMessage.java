@@ -12,7 +12,7 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 @Entity (tableName = "mqtt_messages",
-        indices = {@Index(value = {"push_server_id", "mqtt_accont_id", "when", "seqno"}, unique = true)})
+        indices = {@Index(value = {"push_server_id", "mqtt_accont_id", "when", "seqno"}, unique = true, name = "message_idx")})
 public class MqttMessage {
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -24,7 +24,8 @@ public class MqttMessage {
 
     private long when;
     private String topic;
-    private String msg;
+    private byte[] payload;
+
     private int seqno;
 
     public int getId() {
@@ -67,12 +68,12 @@ public class MqttMessage {
         this.topic = topic;
     }
 
-    public String getMsg() {
-        return msg;
+    public void setPayload(byte[] payload) {
+        this.payload = (payload == null ? new byte[0] : payload);
     }
 
-    public void setMsg(String msg) {
-        this.msg = msg;
+    public byte[] getPayload() {
+        return (payload == null ? new byte[0] : payload);
     }
 
     public void setSeqno(int seqNo) {
