@@ -499,7 +499,7 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
             }
             header += ":";
             intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
-            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc) {\n var content = msg.content;");
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc) {\n var content = msg.text;");
             intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
             intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER);
 
@@ -594,6 +594,28 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
     private final static String IS_JAVASCRIPT = "IS_JAVASCRIPT";
     private final static String IS_TOPIC_NTYPE = "IS_NOTIFICATION_TYPE";
     private final static String IS_SAVED = "IS_SAVED";
+
+
+    public final static String JS_EXAMPLE_JSON = ""
+        + "/* {\"t\" : 24, \"h\" : 30} */\n"
+        + "var j = JSON.parse(content);\n"
+        + "if (j.t && j.h) {\n"
+        + " content = \"Temperature: \" + j.t + \"°, Humidity: \" + j.h + \"%\";\n"
+        + "};";
+
+    public final static String JS_EXAMPLE_SPLIT = ""
+            + "/* 23.1 30.5 */\n"
+            + "var s = content.split(\" \");\n"
+            + "if (s.length >= 2) {  \n"
+            + " content = \"Temperature: \" + s[0] + \"°, Humidity: \" + s[1] + \"%\";\n" +
+            "};";
+
+    public final static String JS_EXAMPLE_REGEX = ""
+            + "/* t=24.2,h=30 */\n"
+            + "var res = content.match(/[+-]?\\d+(\\.\\d+)?/g);\n"
+            + "if (res && res.length >= 2) {\n"
+            + " content = \"Temperature: \" + res[0] + \"°, Humidity: \" + res[1] + \"%\";"
+            + "\n}";
 
 
     private final static String TAG = EditTopicActivity.class.getSimpleName();
