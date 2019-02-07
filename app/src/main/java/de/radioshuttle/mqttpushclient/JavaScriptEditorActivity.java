@@ -20,7 +20,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,7 +28,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -137,7 +135,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                         if (!mTestDataLoaded) {
                             mTestDataLoaded = true;
                             if (request != null && request.result != null) {
-                                mTestDataMsgContent.setText(request.result.getMsg());
+                                mTestDataMsgContent.setText(new String(request.result.getPayload(), Utils.UTF_8));
                             }
                         }
                     }
@@ -218,15 +216,15 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 break;
             /* filter topic examples */
             case R.id.menu_topicfilter_json:
-                insertExample(getString(R.string.code_topicfilter_json));
+                insertExample(EditTopicActivity.JS_EXAMPLE_JSON);
                 handled = true;
                 break;
             case R.id.menu_topicfilter_regexp:
-                insertExample(getString(R.string.code_topicfilter_regexp));
+                insertExample(EditTopicActivity.JS_EXAMPLE_REGEX);
                 handled = true;
                 break;
             case R.id.menu_topicfilter_split:
-                insertExample(getString(R.string.code_topicfilter_split));
+                insertExample(EditTopicActivity.JS_EXAMPLE_SPLIT);
                 handled = true;
                 break;
             default:

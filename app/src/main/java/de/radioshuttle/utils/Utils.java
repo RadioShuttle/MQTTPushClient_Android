@@ -6,6 +6,7 @@
 
 package de.radioshuttle.utils;
 
+import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,5 +25,7 @@ public class Utils {
     public static boolean equals(String a, String b) {
         return equals((Object) a, b) || (isEmpty(a) && isEmpty(b));
     }
+
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
 
 }

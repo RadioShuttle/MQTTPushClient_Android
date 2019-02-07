@@ -16,7 +16,6 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.os.AsyncTask;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import android.util.Base64;
 import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
@@ -438,11 +437,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
             mqttMessage.setWhen((Long) messages.get(i)[0] * 1000L);
             mqttMessage.setTopic((String) messages.get(i)[1]);
-            try {
-                mqttMessage.setMsg(new String((byte[]) messages.get(i)[2]));
-            } catch(Exception e) {
-                mqttMessage.setMsg(Base64.encodeToString((byte[]) messages.get(i)[2], Base64.DEFAULT)); //TODO: error should be rare but consider using hex
-            }
+            mqttMessage.setPayload((byte[]) messages.get(i)[2]);
             mqttMessage.setSeqno((Integer) messages.get(i)[3]);
 
             if (mqttMessage.getWhen() > lastReceived) {
@@ -458,7 +453,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 continue;
 
             Log.i(TAG, "entry: " + new Date(mqttMessage.getWhen()) + " " + (mqttMessage.getWhen() / 1000L)  + " "
-                    +  mqttMessage.getSeqno() + " " + mqttMessage.getTopic() + " " + mqttMessage.getMsg());
+                    +  mqttMessage.getSeqno() + " " + mqttMessage.getTopic() + " " + new String(mqttMessage.getPayload(), Utils.UTF_8));
 
             try {
                 Long k = db.mqttMessageDao().insertMqttMessage(mqttMessage);

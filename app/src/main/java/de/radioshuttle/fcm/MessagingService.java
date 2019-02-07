@@ -304,12 +304,8 @@ public class MessagingService extends FirebaseMessagingService {
                         mqttMessage.setWhen(m.when);
                         mqttMessage.setTopic(m.topic);
                         mqttMessage.setSeqno(m.seqNo);
-                        try {
-                            mqttMessage.setMsg(new String(m.msg));
-                        } catch (Exception e) {
-                            // decoding error or payload not utf-8
-                            mqttMessage.setMsg(base64); //TODO: error should be rare but consider using hex
-                        }
+                        mqttMessage.setPayload(m.msg);
+
                         try {
                             Long k = db.mqttMessageDao().insertMqttMessage(mqttMessage);
                             if (k != null && k >= 0) {
@@ -338,7 +334,7 @@ public class MessagingService extends FirebaseMessagingService {
                             cnt++;
                         }
 
-                        Log.d(TAG, t + ": " + prio + " " + m.when + " " + m.seqNo + " " + new String(m.msg));
+                        Log.d(TAG, t + ": " + prio + " " + m.when + " " + m.seqNo + " " + new String(m.msg, Utils.UTF_8));
                     }
                 }
             }
@@ -401,40 +397,32 @@ public class MessagingService extends FirebaseMessagingService {
         }
 
         if (jsInfo != null && jsInfo.jsCode.containsKey(m.topic)) {
-            boolean validFormat = true;
             final MqttMessage mqttMessage = new MqttMessage();
             final String code = jsInfo.jsCode.get(m.topic);
             mqttMessage.setWhen(m.when);
             mqttMessage.setTopic(m.topic);
-            try {
-                mqttMessage.setMsg(new String(m.msg));
-            } catch (Exception e) {
-                // decoding error or payload not utf-8
-                validFormat = false;
-            }
-            if (validFormat) {
-                Future<String> future = Utils.executor.submit(new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        return JavaScript.getInstance().formatMsg(
-                                code,
-                                mqttMessage,
-                                0,
-                                jsInfo.user,
-                                jsInfo.mqttServer,
-                                jsInfo.pushServer);
-                    }
-                });
-                try {
-                    String result = future.get(500, TimeUnit.MILLISECONDS);
-                    if (result == null) {
-                        result = "";
-                    }
-                    m.msg = result.getBytes("UTF-8");
-                } catch (Exception e) {
-                    // ignore errors
-                    Log.d(TAG, "FilterScript Error: " + e.getMessage());
+            mqttMessage.setPayload(m.msg);
+            Future<String> future = Utils.executor.submit(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return JavaScript.getInstance().formatMsg(
+                            code,
+                            mqttMessage,
+                            0,
+                            jsInfo.user,
+                            jsInfo.mqttServer,
+                            jsInfo.pushServer);
                 }
+            });
+            try {
+                String result = future.get(500, TimeUnit.MILLISECONDS);
+                if (result == null) {
+                    result = "";
+                }
+                m.msg = result.getBytes(Utils.UTF_8);
+            } catch (Exception e) {
+                // ignore errors
+                Log.d(TAG, "FilterScript Error: " + e.getMessage());
             }
         }
 
@@ -472,9 +460,9 @@ public class MessagingService extends FirebaseMessagingService {
         else
             b.setContentTitle(accountDisplayName);
         if (m.isSystemMsg) {
-            b.setContentText(new String(m.msg));
+            b.setContentText(new String(m.msg, Utils.UTF_8));
         } else {
-            b.setContentText(m.topic + ": " + new String(m.msg));
+            b.setContentText(m.topic + ": " + new String(m.msg, Utils.UTF_8));
         }
 
         b.setWhen(m.when);

@@ -173,6 +173,7 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     public void onRefresh() {
         showProgressBar();
+        webView.clearCache(true);
         webView.reload();
     }
 
@@ -210,7 +211,6 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
     public final static String CONTEXT_HELP = "CONTEXT_HELP";
     public final static String HELP_URL = "https://help.radioshuttle.de/mqttapp/1.0/";
 
-    public final static String HELP_TOPICS = "register.html";
-    public final static String HELP_TOPIC_FILTER_SCRIPTS = HELP_TOPICS;  //TODO: change, if help has been added for filter script
+    public final static String HELP_TOPIC_FILTER_SCRIPTS = "filter-scripts.html";
 
 }

@@ -1,3 +1,9 @@
+/*
+ * $Id$
+ * This is an unpublished work copyright (c) 2019 HELIOS Software GmbH
+ * 30827 Garbsen, Germany
+ */
+
 package de.radioshuttle.utils;
 
 import java.util.HashMap;
@@ -25,21 +31,28 @@ public class ModifyPagedList implements Callable {
             JavaScript.Context jsContext;
             JavaScript interpreter = JavaScript.getInstance();
             String formatedContent;
+            String orgPayload;
+
             for(int i = 0; i < mPagedList.size() && !mStopped.get(); i++) {
                 msg = mPagedList.get(i);
                 jsContext = mJavaScript.get(msg.getTopic());
                 if (jsContext != null) {
                     if (jsContext instanceof JSInitError) {
-                        formatedContent = mErrPrefix + " " + ((JSInitError) jsContext).getMessage() + "\n" + msg.getMsg();
+                        orgPayload = new String(msg.getPayload(), Utils.UTF_8);
+                        formatedContent = mErrPrefix + " " + ((JSInitError) jsContext).getMessage() + "\n" + orgPayload;
                     } else {
                         try {
                             formatedContent = interpreter.formatMsg(jsContext, msg, 0);
+                            if (formatedContent == null) {
+                                formatedContent = "";
+                            }
                         } catch(Exception e) {
-                            formatedContent = mErrPrefix + " " + e.getMessage() + "\n" + msg.getMsg();
+                            orgPayload = new String(msg.getPayload(), Utils.UTF_8);
+                            formatedContent = mErrPrefix + " " + e.getMessage() + "\n" + orgPayload;
                         }
                     }
                     if (!mStopped.get()) {
-                        msg.setMsg(formatedContent);
+                        msg.setPayload(formatedContent.getBytes(Utils.UTF_8));
                     }
                 }
                 cnt++;
