@@ -191,4 +191,6 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="menu_topicfilter_json_title">JSON</string>
     <string name="menu_topicfilter_split_title">Split</string>
     <string name="menu_topicfilter_regexp_title">Regular Expression</string>
+    <string name="menu_topicfilter_binary_title">Binary</string>
+    <string name="menu_topicfilter_hexdump_title">Hex Dump</string>
 </resources>

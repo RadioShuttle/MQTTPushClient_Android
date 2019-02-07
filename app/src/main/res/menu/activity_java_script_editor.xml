@@ -35,6 +35,16 @@
                 android:orderInCategory="26"
                 android:title="@string/menu_topicfilter_regexp_title"
                 app:showAsAction="never" />
+            <item
+                android:id="@+id/menu_topicfilter_binary"
+                android:orderInCategory="26"
+                android:title="@string/menu_topicfilter_binary_title"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/menu_topicfilter_hexdump"
+                android:orderInCategory="26"
+                android:title="@string/menu_topicfilter_hexdump_title"
+                app:showAsAction="never" />
         </menu>
     </item>
 
