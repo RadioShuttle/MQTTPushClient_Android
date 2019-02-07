@@ -227,6 +227,14 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 insertExample(EditTopicActivity.JS_EXAMPLE_SPLIT);
                 handled = true;
                 break;
+            case R.id.menu_topicfilter_binary:
+                insertExample(EditTopicActivity.JS_EXAMPLE_BINARY);
+                handled = true;
+                break;
+            case R.id.menu_topicfilter_hexdump:
+                insertExample(EditTopicActivity.JS_EXAMPLE_HEXDUMP);
+                handled = true;
+                break;
             default:
                 handled = super.onOptionsItemSelected(item);
         }
