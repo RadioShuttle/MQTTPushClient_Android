@@ -185,6 +185,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="action_run">Run</string>
     <string name="action_set">Set</string>
     <string name="action_test">Test Data</string>
+    <string name="test_data_label">Test Data (msg.text):</string>
 
     <!-- Filter Content Templates -->
     <string name="menu_topcifilter_example_title">Insert Example</string>
