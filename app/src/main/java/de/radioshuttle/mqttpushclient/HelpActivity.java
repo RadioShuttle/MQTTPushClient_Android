@@ -169,6 +169,16 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
         return true;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+
+        // Save the state of the WebView
+        if (webView != null)
+            webView.saveState(outState);
+    }
+
 
     @Override
     public void onRefresh() {
