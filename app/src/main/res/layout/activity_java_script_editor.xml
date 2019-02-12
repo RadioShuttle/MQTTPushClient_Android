@@ -75,7 +75,7 @@
 
             <TextView
                 android:id="@+id/testDataLabel"
-                android:text="Test Data (msg.content):"
+                android:text="@string/test_data_label"
                 android:layout_marginTop="16dp"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/runJSButton"

@@ -218,15 +218,14 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     Task<InstanceIdResult> t = id.getInstanceId();
 
                     try {
-                        Tasks.await(t, 3, TimeUnit.SECONDS);
+                        Tasks.await(t, 5, TimeUnit.SECONDS);
                     } catch (Exception e) {
                         // Log.d(TAG, "task exception ", e);
                     }
 
-                    if (!t.isSuccessful()) {
-                        throw new ClientError(mAppContext.getString(R.string.errormsg_fcm_id));
+                    if (t.isSuccessful()) {
+                        mConnection.setDeviceInfo(t.getResult().getToken());
                     }
-                    mConnection.setDeviceInfo(t.getResult().getToken());
                     cont = true;
                 } else {
                     throw new ClientError("Initializing cloud messaging failed."); //TODO: add to resources, check for fcmlib

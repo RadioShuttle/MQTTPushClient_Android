@@ -617,6 +617,46 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
             + " content = \"Temperature: \" + res[0] + \"°, Humidity: \" + res[1] + \"%\";"
             + "\n}";
 
+    public final static String JS_EXAMPLE_BINARY = ""
+            + "/* 12 bytes: uint16, uint16, float32, float32 (little endian) */\n"
+            + "if (msg.raw.length >= 12) {\n"
+            + "  var dv = new DataView(msg.raw.buffer);\n"
+            + "  if (dv.getUint16(0, true) == 33841) {\n"
+            + "    var t = dv.getFloat32(4, true);\n"
+            + "    var h = dv.getFloat32(8, true);\n"
+            + "    content = 'Temperature: ' + t.toFixed(1) + '° , Humidity: ' + h.toFixed(1) + '%';\n"
+            + "  }\n"
+            + "}\n";
+
+    public final static String JS_EXAMPLE_HEXDUMP = ""
+            + "var b = new Uint8Array(msg.raw);\n"
+            + "var width = 8;\n"
+            + "content = '';\n"
+            + "var hexStr, lineHex, lineAsc, offset;\n"
+            + "for(var i = 0; i < b.length; i += width) {\n"
+            + "  lineHex = ''; lineAsc = '';\n"
+            + "  for(var j = 0; j < width && j + i < b.length; j++) {\n"
+            + "    hexStr = b[i + j].toString(16);\n"
+            + "    if (hexStr.length % 2) {\n"
+            + "      hexStr = '0' + hexStr;\n"
+            + "    }\n"
+            + "    lineHex += hexStr +  ' ';\n"
+            + "    if (b[i + j] >= 32 && b[i + j] <= 126) {\n"
+            + "      lineAsc += String.fromCharCode(b[i + j]);\n"
+            + "    } else {\n"
+            + "      lineAsc += '.';\n"
+            + "    }\n"
+            + "  }\n"
+            + "  for(var z = 0; z < width - j; z++) {\n"
+            + "    lineHex += '   ';\n"
+            + "  }\n"
+            + "  offset = i.toString(16);\n"
+            + "  if (offset.length % 2) {\n"
+            + "    offset = '0' + offset;\n"
+            + "  }\n"
+            + "  content += offset + ': ' + lineHex + lineAsc + '\\n';\n"
+            + "}\n";
+
 
     private final static String TAG = EditTopicActivity.class.getSimpleName();
 
