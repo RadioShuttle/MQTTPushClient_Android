@@ -469,6 +469,7 @@ public class MessagingService extends FirebaseMessagingService {
         if (messageInfo.messageId > 1) {
             String more = String.format("+%d", (messageInfo.messageId - 1));
             b.setSubText(more);
+            b.setNumber(messageInfo.messageId);
         }
         if (Build.VERSION.SDK_INT >= 25) {
             b.setGroup(account);
