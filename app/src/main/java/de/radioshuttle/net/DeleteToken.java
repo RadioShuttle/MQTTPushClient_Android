@@ -31,13 +31,13 @@ public class DeleteToken extends Request {
     public boolean perform() throws Exception {
         FirebaseApp app = null;
         for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
-            if (a.getName().equals(mPushAccount.pushserver)) {
-                app = FirebaseApp.getInstance(mPushAccount.pushserver);
+            if (a.getName().equals(mSenderID)) {
+                app = FirebaseApp.getInstance(mSenderID);
                 FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
 
                 Task<InstanceIdResult> t = id.getInstanceId();
                 try {
-                    Tasks.await(t, 3, TimeUnit.SECONDS);
+                    Tasks.await(t, 5, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     Log.d(TAG, "Deletion of token for push server " +  mPushAccount.pushserver + "  failed: " + e.getMessage());
                 }
@@ -45,7 +45,7 @@ public class DeleteToken extends Request {
                 if (t.isSuccessful()) {
                     try {
                         id.deleteInstanceId();
-                        Log.d(TAG, "token delteded");
+                        Log.d(TAG, "token delered");
                     } catch (IOException e) {
                         Log.d(TAG, "deleteInstanceId() failed for " +  mPushAccount.pushserver + ": " + t.getResult().getToken());
                         throw new ClientError(e);
