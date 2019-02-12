@@ -196,11 +196,11 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 }
 
                 FirebaseApp app = null;
-                String firebaseOptionsName = m.get("sender_id");
+                mSenderID = m.get("sender_id");
 
                 for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
-                    if (a.getName().equals(firebaseOptionsName)) {
-                        app = FirebaseApp.getInstance(firebaseOptionsName);
+                    if (a.getName().equals(mSenderID)) {
+                        app = FirebaseApp.getInstance(mSenderID);
                         break;
                     }
                 }
@@ -209,7 +209,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     FirebaseOptions options = new FirebaseOptions.Builder()
                             .setApplicationId(m.get("app_id"))
                             .build();
-                    app = FirebaseApp.initializeApp(mAppContext, options, firebaseOptionsName);
+                    app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
                 }
 
                 if (app != null) {
@@ -511,6 +511,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     public Boolean hasTopics() {
         return mHasTopics;
     }
+
+    protected String mSenderID;
 
     protected Boolean mHasTopics;
     protected volatile boolean mAccountUpdated;
