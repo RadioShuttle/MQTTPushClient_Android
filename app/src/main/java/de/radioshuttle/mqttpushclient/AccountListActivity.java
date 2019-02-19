@@ -91,6 +91,15 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
         String accountsJSON = settings.getString(ACCOUNTS, null);
 
+        /* create uuid, if not already exists */
+        String uuid = settings.getString(UUID, null);
+        if (uuid == null) {
+            SharedPreferences.Editor e = settings.edit();
+            e.putString(UUID, Utils.byteArrayToHex(Utils.randomUUID()));
+            e.commit();
+        }
+
+
         mViewModel = ViewModelProviders.of(this).get(AccountViewModel.class);
         boolean accountsChecked = mViewModel.initialized;
         try {
@@ -563,6 +572,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     /* preferneces */
     public final static String PREFS_NAME = "mqttpushclient_prefs";
     public final static String ACCOUNTS = "accounts";
+    public final static String UUID = "uuid";
 
     public final static String ARG_MQTT_ACCOUNT = "ARG_MQTT_ACCOUNT";
     public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ADDR";
