@@ -45,17 +45,17 @@ public class DeleteToken extends Request {
                 if (t.isSuccessful()) {
                     try {
                         id.deleteInstanceId();
-                        Log.d(TAG, "token delered");
+                        Log.d(TAG, "token deleted");
                     } catch (IOException e) {
                         Log.d(TAG, "deleteInstanceId() failed for " +  mPushAccount.pushserver + ": " + t.getResult().getToken());
-                        throw new ClientError(e);
+                        // throw new ClientError(e);
                     }
-                    mConnection.removeFCMToken(t.getResult().getToken());
                     Log.d(TAG, "Token deleted for " +  mPushAccount.pushserver + ": " + t.getResult().getToken());
                 } else {
                     Log.d(TAG, "Deletion of token for push server " +  mPushAccount.pushserver + "  failed.");
-                    throw new ClientError("Deletion of token failed.");
+                    // throw new ClientError("Deletion of token failed.");
                 }
+                mConnection.removeDevice();
                 break;
             }
         }
