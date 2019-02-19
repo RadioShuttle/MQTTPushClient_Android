@@ -87,12 +87,15 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         int requestStatus = 0;
         int requestErrorCode = 0;
         String requestErrorTxt = "";
-        
+
         try {
             boolean cont = false;
             if (!mCancelled.get()) {
                 cont = true;
             }
+
+            SharedPreferences settings = mAppContext.getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+            String uuid = settings.getString(AccountListActivity.UUID, "");
 
             /* connect */
             if (cont) {
@@ -162,7 +165,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             /* login */
             if (cont) {
                 cont = false;
-                Cmd.RawCmd rawCmd = mConnection.login(mPushAccount);
+                Cmd.RawCmd rawCmd = mConnection.login(mPushAccount, uuid);
                 requestStatus = mConnection.lastReturnCode;
                 if (mConnection.lastReturnCode == Cmd.RC_OK) {
                     requestErrorTxt = mAppContext.getString(R.string.status_ok);
@@ -213,6 +216,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 }
 
                 if (app != null) {
+                    //TODO: move getInstanceID to separate task.
                     FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
 
                     Task<InstanceIdResult> t = id.getInstanceId();
