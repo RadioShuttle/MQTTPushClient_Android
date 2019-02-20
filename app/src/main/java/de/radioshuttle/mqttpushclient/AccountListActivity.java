@@ -92,9 +92,10 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
         String accountsJSON = settings.getString(ACCOUNTS, null);
 
         /* create uuid, if not already exists */
-        String uuid = settings.getString(UUID, null);
+        SharedPreferences isettings = getSharedPreferences(PREFS_INST, Activity.MODE_PRIVATE);
+        String uuid = isettings.getString(UUID, null);
         if (uuid == null) {
-            SharedPreferences.Editor e = settings.edit();
+            SharedPreferences.Editor e = isettings.edit();
             e.putString(UUID, Utils.byteArrayToHex(Utils.randomUUID()));
             e.commit();
         }
@@ -571,6 +572,8 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
     /* preferneces */
     public final static String PREFS_NAME = "mqttpushclient_prefs";
+    public final static String PREFS_INST = "instance_prefs";
+
     public final static String ACCOUNTS = "accounts";
     public final static String UUID = "uuid";
 
