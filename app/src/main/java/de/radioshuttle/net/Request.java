@@ -94,7 +94,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 cont = true;
             }
 
-            SharedPreferences settings = mAppContext.getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+            SharedPreferences settings = mAppContext.getSharedPreferences(AccountListActivity.PREFS_INST, Activity.MODE_PRIVATE);
             String uuid = settings.getString(AccountListActivity.UUID, "");
 
             /* connect */
