@@ -222,7 +222,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     instanceIdTask = id.getInstanceId();
                     cont = true;
                 } else {
-                    throw new ClientError("Initializing cloud messaging failed."); //TODO: add to resources, check for fcmlib
+                    throw new ClientError(mAppContext.getString(R.string.errormsg_firebase_init_failed));
                 }
 
                 /* get last messages from server */

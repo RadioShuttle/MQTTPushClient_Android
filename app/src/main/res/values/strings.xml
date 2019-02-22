@@ -127,6 +127,8 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="errormsg_socket_timeout">Connection failed: Timeout</string>
     <string name="errormsg_econnrefused">Connection refused: The attempt to connect was ignored</string>
     <string name="errormsg_enetunreach">Connection failed: No network</string>
+    <string name="errormsg_firebase_init_failed">Initializing cloud messaging API failed.</string>
+
 
     <string name="errormsg_io_error">Failed I/O operation</string>
     <string name="errormsg_timeout">Timeout</string>
