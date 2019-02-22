@@ -142,7 +142,7 @@ public final class FirebaseTokens {
     public final static String TOKEN_UPDATE_ACCOUNT = "TOKEN_UPDATE_ACCOUNT";
 
     private ReentrantReadWriteLock rwLock;
-    private HashMap<String, String> tokens; // account -> token mapping (if key exists, but value is null means request is running
+    private HashMap<String, String> tokens; // account -> token mapping
     private Context context;
 
     private static Object lock = new Object();
