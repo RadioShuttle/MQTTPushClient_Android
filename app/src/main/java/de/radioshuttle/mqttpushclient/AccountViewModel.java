@@ -27,6 +27,7 @@ import java.util.Iterator;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.DeleteToken;
+import de.radioshuttle.utils.FirebaseTokens;
 
 public class AccountViewModel extends ViewModel {
 
@@ -51,6 +52,7 @@ public class AccountViewModel extends ViewModel {
         if (this.app == null) {
             this.app = app;
             IntentFilter intentFilter = new IntentFilter(MqttMessage.MSG_CNT_INTENT);
+            intentFilter.addAction(FirebaseTokens.TOKEN_UPDATED);
             LocalBroadcastManager.getInstance(app).registerReceiver(broadcastReceiver, intentFilter);
         }
     }
@@ -167,8 +169,8 @@ public class AccountViewModel extends ViewModel {
         request.execute();
     }
 
-    public void deleteToken(Context context, PushAccount pushAccount) {
-        DeleteToken deleteRequest = new DeleteToken(context, pushAccount, null);
+    public void deleteAccount(Context context, boolean deleteToken, PushAccount pushAccount) {
+        DeleteToken deleteRequest = new DeleteToken(context, deleteToken, pushAccount, null);
         deleteRequest.execute();
     }
 
@@ -213,11 +215,22 @@ public class AccountViewModel extends ViewModel {
                 Log.d(TAG, "received upd intent: " + arg + " / " + argID);
                 ArrayList<PushAccount> pushAccounts = accountList.getValue();
                 if (pushAccounts != null) {
-                    Log.d(TAG, "push accounts size: " + pushAccounts.size());
                     for(PushAccount pushAccount : pushAccounts) {
                         Log.d(TAG, "check: " + pushAccount.getMqttAccountName() + " " + pushAccount.pushserver);
                         if (arg != null && argID != null && pushAccount != null && pushAccount.getMqttAccountName().equals(arg) &&
                                 pushAccount.pushserver != null && pushAccount.pushserver.equals(argID)) {
+                            accountList.setValue(pushAccounts); // notify about update change
+                            break;
+                        }
+                    }
+                }
+            } else if (intent.getAction().equals(FirebaseTokens.TOKEN_UPDATED)) {
+                String arg = intent.getStringExtra(FirebaseTokens.TOKEN_UPDATE_ACCOUNT);
+                Log.d(TAG, "received token updated intent: " + arg);
+                ArrayList<PushAccount> pushAccounts = accountList.getValue();
+                if (pushAccounts != null) {
+                    for(PushAccount pushAccount : pushAccounts) {
+                        if (arg != null && arg.equals(pushAccount.getKey())) {
                             accountList.setValue(pushAccounts); // notify about update change
                             break;
                         }
