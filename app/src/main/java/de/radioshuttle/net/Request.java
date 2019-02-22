@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.net.ssl.SSLHandshakeException;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.utils.FirebaseTokens;
 import de.radioshuttle.utils.Utils;
 
 public class Request extends AsyncTask<Void, Void, PushAccount> {
@@ -90,6 +91,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
         try {
             boolean cont = false;
+
             if (!mCancelled.get()) {
                 cont = true;
             }
@@ -100,13 +102,12 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             /* connect */
             if (cont) {
                 cont = false;
-                if (mPushAccount.status != 1) {
-                    mPushAccount.status = 1;
-                    if (mAccountLiveData != null) {
+                if (mAccountLiveData != null) {
+                    if (mPushAccount.status != 1) {
+                        mPushAccount.status = 1;
                         mAccountLiveData.postValue(this);
                     }
                 }
-
                 try {
                     mConnection = new Connection(mPushAccount.pushserver, mAppContext);
                     mConnection.connect();
@@ -186,17 +187,14 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 }
             }
 
+            Task<InstanceIdResult> instanceIdTask = null;
+
             /* de.radioshuttle.fcm data*/
             if (cont) {
                 cont = false;
 
                 Map<String, String> m = mConnection.getFCMData();
                 mPushAccount.pushserverID = m.get("pushserverid");
-
-                /* get last messages from server */
-                if (mSync) {
-                    syncMessages();
-                }
 
                 FirebaseApp app = null;
                 mSenderID = m.get("sender_id");
@@ -212,27 +210,24 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     FirebaseOptions options = new FirebaseOptions.Builder()
                             .setApplicationId(m.get("app_id"))
                             .build();
-                    app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
+                    try {
+                        app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
+                    } catch(Exception e) {
+                        Log.d(TAG, "Error initializing firebase for "+ mSenderID, e);
+                    }
                 }
 
                 if (app != null) {
-                    //TODO: move getInstanceID to separate task.
                     FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
-
-                    Task<InstanceIdResult> t = id.getInstanceId();
-
-                    try {
-                        Tasks.await(t, 5, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                        // Log.d(TAG, "task exception ", e);
-                    }
-
-                    if (t.isSuccessful()) {
-                        mConnection.setDeviceInfo(t.getResult().getToken());
-                    }
+                    instanceIdTask = id.getInstanceId();
                     cont = true;
                 } else {
                     throw new ClientError("Initializing cloud messaging failed."); //TODO: add to resources, check for fcmlib
+                }
+
+                /* get last messages from server */
+                if (mSync) {
+                    syncMessages();
                 }
 
                 /* get stored filter scripts. local stored scripts may not be up to date */
@@ -245,6 +240,23 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
             if (cont) {
                 cont = perform();
+
+                /* if the fcm token was not set as request argument, get fcm token from instanceid task */
+                if (mToken == null && instanceIdTask != null) {
+                    if (instanceIdTask.isSuccessful()) {
+                        mToken = instanceIdTask.getResult().getToken();
+                    } else if (!instanceIdTask.isComplete()) {
+                        /* "get token" is still in progress? then wait and notify (async) */
+                        FirebaseTokens.getInstance(mAppContext)
+                                .waitForTokenAndNotifyPushServer(mPushAccount, instanceIdTask);
+                    }
+                }
+
+                mConnection.setDeviceInfo(mToken);
+                /* set info that token was send to pushserver for the given account */
+                if (mToken != null) {
+                    FirebaseTokens.getInstance(mAppContext).setTokenSent(mPushAccount.getKey(), mToken);
+                }
             }
 
             if (requestStatus == Cmd.RC_OK) {
@@ -291,7 +303,6 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             mPushAccount.certException = mCertException;
             mPushAccount.inSecureConnectionAsk = mInsecureConnectionAsk;
             mPushAccount.status = 0;
-
         }
 
         return null;
@@ -511,6 +522,13 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         mAccountUpdated = updated;
     }
 
+    public void setTokenRequest(String token) {
+        mToken = token;
+        // disable actions:
+        mSync = false;
+        mGetTopicFilterScripts = false;
+    }
+
     /* true, if this account has topics, if null: getTopics() was not called in this request */
     public Boolean hasTopics() {
         return mHasTopics;
@@ -518,6 +536,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
     protected String mSenderID;
 
+    protected String mToken;
     protected Boolean mHasTopics;
     protected volatile boolean mAccountUpdated;
     protected boolean mGetTopicFilterScripts;
