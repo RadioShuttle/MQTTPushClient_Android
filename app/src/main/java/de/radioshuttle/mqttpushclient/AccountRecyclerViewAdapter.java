@@ -22,6 +22,7 @@ import java.util.HashSet;
 
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.Cmd;
+import de.radioshuttle.utils.FirebaseTokens;
 
 public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
 
@@ -56,7 +57,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
         holder.neutralImage = view.findViewById(R.id.neutralImage);
         holder.progressBar = view.findViewById(R.id.progressBar);
         holder.newMessages = view.findViewById(R.id.messageCnt);
-
+        holder.warningImage = view.findViewById(R.id.warningImage);
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             // Called when the user long-clicks on someView
@@ -123,6 +124,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
         } else if (vh.pushServer.getVisibility() != View.GONE) {
             vh.pushServer.setVisibility(View.GONE);
         }
+        boolean accountHasToken = FirebaseTokens.getInstance(mInflater.getContext()).hasToken(b.getKey());
 
         vh.displayName.setText(b.getDisplayName());
 
@@ -154,10 +156,17 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
             vh.errorImage.setVisibility(View.GONE);
         }
 
-        if (b.status == 0 && b.requestStatus == 0 && vh.okImage.getVisibility() != View.VISIBLE) {
+        if (b.status == 0 && b.requestStatus == 0 && !accountHasToken && vh.warningImage.getVisibility() != View.VISIBLE) {
+            vh.warningImage.setVisibility(View.VISIBLE);
+        }
+        if (!(b.status == 0 && b.requestStatus == 0 && !accountHasToken) && vh.warningImage.getVisibility() != View.GONE) {
+            vh.warningImage.setVisibility(View.GONE);
+        }
+
+        if (b.status == 0 && b.requestStatus == 0 && accountHasToken && vh.okImage.getVisibility() != View.VISIBLE) {
             vh.okImage.setVisibility(View.VISIBLE);
         }
-        if (!(b.status == 0 && b.requestStatus == 0) && vh.okImage.getVisibility() != View.GONE) {
+        if (!(b.status == 0 && b.requestStatus == 0 && accountHasToken) && vh.okImage.getVisibility() != View.GONE) {
             vh.okImage.setVisibility(View.GONE);
         }
 
@@ -246,6 +255,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
         ImageView errorImage;
         ImageView okImage;
         ImageView neutralImage;
+        ImageView warningImage;
         ProgressBar progressBar;
     }
 

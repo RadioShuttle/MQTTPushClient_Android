@@ -35,6 +35,7 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
         setTitle(R.string.title_help);
 
         webView = (WebView) findViewById(R.id.helpWebView);
+        webView.getSettings().setJavaScriptEnabled(true);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         // mSwipeRefreshLayout.setSize(SwipeRefreshLayout.LARGE);
         mSwipeRefreshLayout.setOnRefreshListener(this);
@@ -89,8 +90,6 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
             }
         });
         if (webView.getOriginalUrl() == null) {
-            webView.getSettings().setJavaScriptEnabled(true);
-
             load(url);
         }
 
@@ -172,11 +171,10 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
-        super.onSaveInstanceState(outState);
-
         // Save the state of the WebView
         if (webView != null)
             webView.saveState(outState);
+        super.onSaveInstanceState(outState);
     }
 
 

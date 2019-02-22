@@ -151,8 +151,8 @@ public class Connection {
         }
     }
 
-    public Cmd.RawCmd login(PushAccount b) throws IOException, ServerError, InterruptedException {
-        Cmd.RawCmd response = mCmd.loginRequest(++mSeqNo, b.uri, b.user, b.password);
+    public Cmd.RawCmd login(PushAccount b, String uuid) throws IOException, ServerError, InterruptedException {
+        Cmd.RawCmd response = mCmd.loginRequest(++mSeqNo, b.uri, b.user, b.password, uuid);
 
         handleError(response);
         return response;
@@ -192,8 +192,8 @@ public class Connection {
         handleError(response);
     }
 
-    public void removeFCMToken(String token) throws IOException, ServerError {
-        Cmd.RawCmd response = mCmd.removeFCMTokenRequest(++mSeqNo, token);
+    public void removeDevice() throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.request(Cmd.CMD_REMOVE_DEVICE, ++mSeqNo);
         handleError(response);
     }
 

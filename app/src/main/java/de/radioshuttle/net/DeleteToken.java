@@ -20,24 +20,46 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.utils.Utils;
 
 public class DeleteToken extends Request {
 
-    public DeleteToken(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
+    public DeleteToken(Context context, boolean deleteToken, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
         super(context, pushAccount, accountLiveData);
+        mDeleteToken = deleteToken;
     }
 
     @Override
     public boolean perform() throws Exception {
+        mConnection.removeDevice();
+
+
+        return true;
+    }
+
+    @Override
+    protected void onPostExecute(PushAccount pushAccount) {
+        super.onPostExecute(pushAccount);
+        if (mDeleteToken) {
+            Utils.executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    deleteToken();
+                }
+            });
+        }
+    }
+
+    protected void deleteToken() {
         FirebaseApp app = null;
         for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
-            if (a.getName().equals(mPushAccount.pushserver)) {
-                app = FirebaseApp.getInstance(mPushAccount.pushserver);
+            if (a.getName().equals(mSenderID)) {
+                app = FirebaseApp.getInstance(mSenderID);
                 FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
 
                 Task<InstanceIdResult> t = id.getInstanceId();
                 try {
-                    Tasks.await(t, 3, TimeUnit.SECONDS);
+                    Tasks.await(t);
                 } catch (Exception e) {
                     Log.d(TAG, "Deletion of token for push server " +  mPushAccount.pushserver + "  failed: " + e.getMessage());
                 }
@@ -45,23 +67,24 @@ public class DeleteToken extends Request {
                 if (t.isSuccessful()) {
                     try {
                         id.deleteInstanceId();
-                        Log.d(TAG, "token delteded");
+                        Log.d(TAG, "token deleted");
                     } catch (IOException e) {
                         Log.d(TAG, "deleteInstanceId() failed for " +  mPushAccount.pushserver + ": " + t.getResult().getToken());
-                        throw new ClientError(e);
+                        // throw new ClientError(e);
                     }
-                    mConnection.removeFCMToken(t.getResult().getToken());
                     Log.d(TAG, "Token deleted for " +  mPushAccount.pushserver + ": " + t.getResult().getToken());
                 } else {
                     Log.d(TAG, "Deletion of token for push server " +  mPushAccount.pushserver + "  failed.");
-                    throw new ClientError("Deletion of token failed.");
+                    // throw new ClientError("Deletion of token failed.");
                 }
                 break;
             }
         }
 
-        return true;
     }
+
+
+    private boolean mDeleteToken;
 
     private final static String TAG = DeleteToken.class.getSimpleName();
 }

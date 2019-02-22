@@ -43,6 +43,15 @@
         android:layout_width="12dp"
         android:layout_height="12dp" />
 
+    <ImageView
+        android:id="@+id/warningImage"
+        app:srcCompat="@drawable/ic_circle_warning"
+        android:visibility="gone"
+        android:layout_gravity="center_vertical"
+        android:layout_width="12dp"
+        android:layout_height="12dp" />
+
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_marginLeft="16dp"
         android:orientation="vertical"

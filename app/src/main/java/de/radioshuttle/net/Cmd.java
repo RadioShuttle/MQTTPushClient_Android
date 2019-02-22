@@ -35,7 +35,7 @@ public class Cmd {
     public final static int CMD_DEL_TOPICS = 6;
     public final static int CMD_UPD_TOPICS = 7;
     public final static int CMD_SET_DEVICE_INFO = 8;
-    public final static int CMD_REMOVE_TOKEN = 9;
+    public final static int CMD_REMOVE_DEVICE = 9;
     public final static int CMD_GET_ACTIONS = 10;
     public final static int CMD_ADD_ACTION = 11;
     public final static int CMD_UPD_ACTION = 12;
@@ -61,7 +61,7 @@ public class Cmd {
         return readCommand();
     }
 
-    public RawCmd loginRequest(int seqNo, String uri, String user, char[] password) throws IOException {
+    public RawCmd loginRequest(int seqNo, String uri, String user, char[] password, String uuid) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(uri, os);
@@ -71,6 +71,7 @@ public class Cmd {
         byte[] buf = toByteArray(password); // convert to UTF-8 bytes
         os.writeShort(buf.length);
         os.write(buf);
+        writeString(uuid, os);
         writeCommand(CMD_LOGIN, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
@@ -97,6 +98,16 @@ public class Cmd {
             pwd = toCharArray(buf); // convert to UTF-16 chars
         }
         m.put("password", pwd);
+
+        byte[] uuid = null;
+        if (is.available() >= 2) { // extended in 1.5
+            n = is.readShort();
+            uuid = new byte[n];
+            is.readFully(uuid);
+        } else {
+            uuid = new byte[0];
+        }
+        m.put("uuid", new String(uuid, "UTF-8"));
         return m;
     }
 
@@ -451,11 +462,6 @@ public class Cmd {
             rc[i] = is.readShort();
         }
         return rc;
-    }
-
-    public RawCmd removeFCMTokenRequest(int seqNo, String token) throws IOException {
-        writeCommandStrPara(CMD_REMOVE_TOKEN, seqNo, token);
-        return readCommand();
     }
 
     public RawCmd request(int cmd, int seq) throws IOException {

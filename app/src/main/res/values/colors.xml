@@ -10,6 +10,7 @@
     <color name="circle_ok">#2b932f</color>
     <color name="gray">#E0E0E0</color>
     <color name="circle_progress">#ffb846</color>
+    <color name="circle_warning">#ffb846</color>
     <color name="highlight_newitem">#FFEE58</color>
 
     <color name="colorHeader">#e8eaf6</color>

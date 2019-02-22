@@ -53,6 +53,7 @@ import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
+import de.radioshuttle.utils.FirebaseTokens;
 import de.radioshuttle.utils.Utils;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
@@ -91,6 +92,16 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
         String accountsJSON = settings.getString(ACCOUNTS, null);
+
+        /* create uuid, if not already exists */
+        SharedPreferences isettings = getSharedPreferences(PREFS_INST, Activity.MODE_PRIVATE);
+        String uuid = isettings.getString(UUID, null);
+        if (uuid == null) {
+            SharedPreferences.Editor e = isettings.edit();
+            e.putString(UUID, Utils.byteArrayToHex(Utils.randomUUID()));
+            e.commit();
+        }
+
 
         mViewModel = ViewModelProviders.of(this).get(AccountViewModel.class);
         boolean accountsChecked = mViewModel.initialized;
@@ -282,15 +293,20 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 b = mViewModel.removeBorker(b.getKey());
                 if (b != null) {
                     try {
+                        FirebaseTokens.getInstance(getApplication()).removeAccount(b.getKey());
                         SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
                         ViewState.getInstance(getApplication()).removeAccount(b.getKey());
                         editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
                         editor.commit();
                         ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
+                        int cnt = 0;
                         boolean found = false;
                         if (pushAccounts != null) {
                             for(PushAccount br : mViewModel.accountList.getValue()) {
+                                if (Utils.equals(br.pushserverID, b.pushserverID)) {
+                                    cnt++;
+                                }
                                 if (br.getKey().equals(b.getKey())) {
                                     found = true;
                                 }
@@ -314,7 +330,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                             };
                             t.execute(new String[] {b.pushserverID, b.getMqttAccountName()});
 
-                            mViewModel.deleteToken(this, b);
+                            mViewModel.deleteAccount(this, cnt == 0,  b);
                         }
                     } catch (JSONException e) {
                         Log.e(TAG, "saving deleted account failed", e);
@@ -573,7 +589,10 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
     /* preferneces */
     public final static String PREFS_NAME = "mqttpushclient_prefs";
+    public final static String PREFS_INST = "instance_prefs";
+
     public final static String ACCOUNTS = "accounts";
+    public final static String UUID = "uuid";
 
     public final static String ARG_MQTT_ACCOUNT = "ARG_MQTT_ACCOUNT";
     public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ADDR";
