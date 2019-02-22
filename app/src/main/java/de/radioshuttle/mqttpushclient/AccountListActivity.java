@@ -52,6 +52,7 @@ import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
+import de.radioshuttle.utils.FirebaseTokens;
 import de.radioshuttle.utils.Utils;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
@@ -282,14 +283,19 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 b = mViewModel.removeBorker(b.getKey());
                 if (b != null) {
                     try {
+                        FirebaseTokens.getInstance(getApplication()).removeAccount(b.getKey());
                         SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
                         editor.commit();
                         ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
+                        int cnt = 0;
                         boolean found = false;
                         if (pushAccounts != null) {
                             for(PushAccount br : mViewModel.accountList.getValue()) {
+                                if (Utils.equals(br.pushserverID, b.pushserverID)) {
+                                    cnt++;
+                                }
                                 if (br.getKey().equals(b.getKey())) {
                                     found = true;
                                 }
@@ -313,7 +319,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                             };
                             t.execute(new String[] {b.pushserverID, b.getMqttAccountName()});
 
-                            mViewModel.deleteToken(this, b);
+                            mViewModel.deleteAccount(this, cnt == 0,  b);
                         }
                     } catch (JSONException e) {
                         Log.e(TAG, "saving deleted account failed", e);
