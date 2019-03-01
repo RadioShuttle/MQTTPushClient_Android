@@ -438,6 +438,8 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
                 PushAccount n = getUserInput();
                 b.pushserver = n.pushserver;
                 b.pushserverID = checkedPushAccount.pushserverID; // received from server
+                b.fcm_app_id = checkedPushAccount.fcm_app_id; // received from server
+                b.fcm_sender_id = checkedPushAccount.fcm_sender_id; // received from server
                 b.uri = n.uri;
                 b.user = n.user;
                 b.password = n.password;
