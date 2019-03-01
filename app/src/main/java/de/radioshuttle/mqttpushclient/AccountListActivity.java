@@ -50,6 +50,7 @@ import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
+import de.radioshuttle.net.DeleteToken;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.utils.FirebaseTokens;
@@ -128,7 +129,25 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                             PushAccount pushAccount = request.getAccount();
                             if (request.getAccount().getKey().equals(pushAccounts.get(i).getKey())) {
                                 pushAccounts.set(i, pushAccount);
+                                boolean requestFinished = (pushAccount.status == 0);
                                 mAdapter.setData(pushAccounts);
+                                Log.d(TAG, "status: " + pushAccount.status + " requestStatus: " + pushAccount.requestStatus
+                                        + " request: " + (request instanceof DeleteToken ? "deleteDevice"  : "check"));
+
+                                if (requestFinished) {
+                                    if (mViewModel.isCurrentRequest(request)) {
+                                        mSwipeRefreshLayout.setRefreshing(false);
+                                        mViewModel.confirmResultDelivered();
+                                    }
+                                    if (request instanceof DeleteToken) {
+                                        /* success */
+                                        DeleteToken dt = (DeleteToken) request;
+                                        if (dt.deviceRemoved) {
+                                            removeAccountData(pushAccount);
+                                            return;
+                                        }
+                                    }
+                                }
 
                                 /* handle cerificate exception */
                                 if (pushAccount.hasCertifiateException()) {
@@ -145,6 +164,9 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                             Bundle args = CertificateErrorDialog.createArgsFromEx(
                                                     pushAccount.getCertificateException(), pushAccount.pushserver);
                                             if (args != null) {
+                                                if (request instanceof DeleteToken) {
+                                                    args.putString("removeAccount", pushAccount.getKey());
+                                                }
                                                 dialog.setArguments(args);
                                                 dialog.showNow(getSupportFragmentManager(), DLG_TAG);
                                             }
@@ -166,6 +188,9 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                             Bundle args = InsecureConnectionDialog.createArgsFromEx(pushAccount.pushserver);
                                             if (args != null) {
                                                 Log.d(TAG, pushAccount.pushserver + " " + i);
+                                                if (request instanceof DeleteToken) {
+                                                    args.putString("removeAccount", pushAccount.getKey());
+                                                }
                                                 dialog.setArguments(args);
                                                 dialog.showNow(getSupportFragmentManager(), DLG_TAG);
                                             }
@@ -174,11 +199,6 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                 }
                                 pushAccount.inSecureConnectionAsk = false; // mark as "processed"
                                 /* end handle cerificate exception */
-
-                                if (mViewModel.isCurrentRequest(request)) {
-                                    mSwipeRefreshLayout.setRefreshing(false);
-                                    mViewModel.confirmResultDelivered();
-                                }
 
                                 break;
                             }
@@ -276,57 +296,74 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
         startActivityForResult(intent, RC_MESSAGES);
     }
 
-    public void deleteAccount(int sel) {
-        if (mAdapter != null) {
-            PushAccount b = mAdapter.getAccount(sel);
-            if (b != null) {
-                b = mViewModel.removeBorker(b.getKey());
-                if (b != null) {
-                    try {
-                        FirebaseTokens.getInstance(getApplication()).removeAccount(b.getKey());
-                        SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = settings.edit();
-                        editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
-                        editor.commit();
-                        ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
-                        int cnt = 0;
-                        boolean found = false;
-                        if (pushAccounts != null) {
-                            for(PushAccount br : mViewModel.accountList.getValue()) {
-                                if (Utils.equals(br.pushserverID, b.pushserverID)) {
-                                    cnt++;
-                                }
-                                if (br.getKey().equals(b.getKey())) {
-                                    found = true;
-                                }
+    protected void removeAccountData(PushAccount account) {
+        if (account != null) {
+            account = mViewModel.removeBorker(account.getKey());
+            if (account != null) {
+                try {
+                    /* save account data locally without */
+                    FirebaseTokens.getInstance(getApplication()).removeAccount(account.getKey());
+                    SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
+                    editor.commit();
+                    ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
+                    boolean found = false;
+                    if (pushAccounts != null) {
+                        for(PushAccount br : mViewModel.accountList.getValue()) {
+                            if (br.getKey().equals(account.getKey())) {
+                                found = true;
                             }
                         }
-                        if (!found) {
-                            Notifications.deleteMessageCounter(this, b.pushserver, b.getMqttAccountName());
+                    }
+                    if (!found) {
+                        Notifications.deleteMessageCounter(this, account.pushserver, account.getMqttAccountName());
 
-                            @SuppressLint("StaticFieldLeak")
-                            AsyncTask<String, Object, Object> t = new AsyncTask<String, Object, Object>() {
-                                @Override
-                                protected Object doInBackground(String[] objects) {
-                                    AppDatabase db = AppDatabase.getInstance(getApplication());
-                                    MqttMessageDao dao = db.mqttMessageDao();
-                                    long psid = dao.getCode(objects[0]);
-                                    long accountID = dao.getCode(objects[1]);
-                                    dao.deleteMessagesForAccount(psid, accountID);
-                                    return null;
-                                }
+                        @SuppressLint("StaticFieldLeak")
+                        AsyncTask<String, Object, Object> t = new AsyncTask<String, Object, Object>() {
+                            @Override
+                            protected Object doInBackground(String[] objects) {
+                                AppDatabase db = AppDatabase.getInstance(getApplication());
+                                MqttMessageDao dao = db.mqttMessageDao();
+                                long psid = dao.getCode(objects[0]);
+                                long accountID = dao.getCode(objects[1]);
+                                dao.deleteMessagesForAccount(psid, accountID);
+                                return null;
+                            }
 
-                            };
-                            t.execute(new String[] {b.pushserverID, b.getMqttAccountName()});
+                        };
+                        t.execute(new String[] {account.pushserverID, account.getMqttAccountName()});
+                        // Log.d(TAG, "deleteDevice: account data removed!!"); //TODO: remove
+                    }
 
-                            mViewModel.deleteAccount(this, cnt == 0,  b);
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "saving deleted account failed", e);
-                        Toast.makeText(getApplicationContext(), R.string.error_saving_accounts, Toast.LENGTH_LONG).show();
+                } catch (JSONException e) {
+                    Log.e(TAG, "saving deleted account failed", e);
+                    Toast.makeText(getApplicationContext(), R.string.error_saving_accounts, Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    public void deleteAccount(PushAccount b) {
+        if (b != null) {
+            ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
+            int cnt = 0;
+            if (pushAccounts != null) {
+                /* determine if firbase token may be removed */
+                for(PushAccount br : mViewModel.accountList.getValue()) {
+                    if (Utils.equals(br.pushserverID, b.pushserverID)) {
+                        cnt++;
                     }
                 }
             }
+            mViewModel.deleteAccount(this, cnt == 1,  b);
+        }
+    }
+
+    /** trigger account deletion */
+    public void deleteAccount(int sel) {
+        if (mAdapter != null) {
+            deleteAccount(mAdapter.getAccount(sel));
         }
     }
 
@@ -429,13 +466,18 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     }
 
     protected void refresh() {
-        ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
-        if (pushAccounts != null && pushAccounts.size() > 0) { // only allow refresh if an account exists
-            if (!mSwipeRefreshLayout.isRefreshing())
-                mSwipeRefreshLayout.setRefreshing(true);
-            mViewModel.checkAccounts(this);
-        } else if (!mViewModel.isRequestActive() && mSwipeRefreshLayout.isRefreshing()) {
-            mSwipeRefreshLayout.setRefreshing(false);
+        /* if a delete operation is running, refresh is not allowed */
+        if (mViewModel.isDeleteRequestActive()) {
+            Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
+        } else {
+            ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
+            if (pushAccounts != null && pushAccounts.size() > 0) { // only allow refresh if an account exists
+                if (!mSwipeRefreshLayout.isRefreshing())
+                    mSwipeRefreshLayout.setRefreshing(true);
+                mViewModel.checkAccounts(this);
+            } else if (!mViewModel.isRequestActive() && mSwipeRefreshLayout.isRefreshing()) {
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
         }
     }
 
@@ -495,12 +537,16 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             boolean handled = false;
             switch (item.getItemId()) {
                 case R.id.action_remove_account:
-                    ConfirmDeleteDlg dlg = new ConfirmDeleteDlg();
-                    Bundle args = new Bundle();
+                    if (mViewModel.isRequestActive()) {
+                        Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
+                    } else {
+                        ConfirmDeleteDlg dlg = new ConfirmDeleteDlg();
+                        Bundle args = new Bundle();
 
-                    args.putInt(SEL_ROW, mAdapter.getSelectedRow());
-                    dlg.setArguments(args);
-                    dlg.show(getSupportFragmentManager(), ConfirmDeleteDlg.class.getSimpleName());
+                        args.putInt(SEL_ROW, mAdapter.getSelectedRow());
+                        dlg.setArguments(args);
+                        dlg.show(getSupportFragmentManager(), ConfirmDeleteDlg.class.getSimpleName());
+                    }
                     handled = true;
                     break;
                 case R.id.action_edit_account:
@@ -538,7 +584,20 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
     @Override
     public void retry(Bundle args) {
-        refresh();
+        if (args.containsKey("removeAccount")) {
+            String accKey = args.getString("removeAccount");
+            for(PushAccount p : mViewModel.accountList.getValue()) {
+                if (p.getKey().equals(accKey)) {
+                    if (!mViewModel.isRequestActive()) {
+                        // Log.d(TAG, "deleteDevice: retry"); //TODO: remove
+                        deleteAccount(p);
+                    }
+                    break;
+                }
+            }
+        } else {
+            refresh();
+        }
     }
 
     public static class ConfirmDeleteDlg extends DialogFragment {
