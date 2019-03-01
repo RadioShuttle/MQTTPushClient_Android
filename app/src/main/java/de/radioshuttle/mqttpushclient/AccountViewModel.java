@@ -170,12 +170,30 @@ public class AccountViewModel extends ViewModel {
     }
 
     public void deleteAccount(Context context, boolean deleteToken, PushAccount pushAccount) {
-        DeleteToken deleteRequest = new DeleteToken(context, deleteToken, pushAccount, null);
+        if (currentRequests == null) {
+            currentRequests = new ArrayList<>();
+        }
+        DeleteToken deleteRequest = new DeleteToken(context, deleteToken, pushAccount, this.request);
+        requestCnt++;
+        currentRequests.add(deleteRequest);
         deleteRequest.execute();
     }
 
     public boolean isRequestActive() {
         return requestCnt > 0;
+    }
+
+    public boolean isDeleteRequestActive() {
+        boolean active = false;
+        if (requestCnt > 0) {
+            for(Request r : currentRequests) {
+                if (r instanceof DeleteToken) {
+                    active = true;
+                    break;
+                }
+            }
+        }
+        return active;
     }
 
     public void confirmResultDelivered() {
