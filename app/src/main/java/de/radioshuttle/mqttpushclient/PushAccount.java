@@ -30,6 +30,9 @@ public class PushAccount {
     public String pushserver;
     public String pushserverID;
 
+    public String fcm_sender_id;
+    public String fcm_app_id;
+
     public ArrayList<Topic> topicJavaScript;
 
     // transient
@@ -53,6 +56,8 @@ public class PushAccount {
         account.put("clientID", clientID);
         account.put("pushserver", pushserver);
         account.put("pushserverID", pushserverID == null ? "" : pushserverID);
+        account.putOpt("fcm_sender_id", fcm_sender_id);
+        account.putOpt("fcm_app_id", fcm_app_id);
 
         JSONArray topicsJS = new JSONArray();
         JSONObject js;
@@ -190,6 +195,8 @@ public class PushAccount {
                 pushAccount.topicJavaScript.add(t);
             }
         }
+        pushAccount.fcm_sender_id = o.optString("fcm_sender_id");
+        pushAccount.fcm_app_id = o.optString("fcm_app_id");
 
         return pushAccount;
     }
