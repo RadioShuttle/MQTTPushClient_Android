@@ -194,10 +194,16 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 cont = false;
 
                 Map<String, String> m = mConnection.getFCMData();
+
                 mPushAccount.pushserverID = m.get("pushserverid");
 
                 FirebaseApp app = null;
                 mSenderID = m.get("sender_id");
+                if (!Utils.equals(mSenderID, mPushAccount.fcm_sender_id) || !Utils.equals(m.get("app_id"), mPushAccount.fcm_app_id)) {
+                    mPushAccount.fcm_app_id = m.get("app_id");
+                    mPushAccount.fcm_sender_id = mSenderID;
+                    updateAccountFCMData();
+                }
 
                 for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
                     if (a.getName().equals(mSenderID)) {
@@ -307,6 +313,37 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
         return null;
     }
+
+    protected void updateAccountFCMData() throws Exception{
+
+        SharedPreferences settings = mAppContext.getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+        String accountsJson = settings.getString(AccountListActivity.ACCOUNTS, null);
+
+        ArrayList<PushAccount> pushAccounts = new ArrayList<PushAccount>();
+        if (accountsJson != null) {
+            PushAccount pushAccount;
+            JSONArray jarray = new JSONArray(accountsJson);
+            for (int i = 0; i < jarray.length(); i++) {
+                JSONObject b = jarray.getJSONObject(i);
+                pushAccount = PushAccount.createAccountFormJSON(b);
+                if (mPushAccount.getKey().equals(pushAccount.getKey())) {
+                    pushAccount.fcm_sender_id = mPushAccount.fcm_sender_id;
+                    pushAccount.fcm_app_id = mPushAccount.fcm_app_id;
+                    Log.d(TAG, "updateAccountFCMData: " + pushAccount.getKey() + " " + pushAccount.fcm_sender_id + " " + pushAccount.fcm_app_id);
+                }
+                pushAccounts.add(pushAccount);
+            }
+            JSONArray accountList = new JSONArray();
+            for(PushAccount acc : pushAccounts) {
+                accountList.put(acc.getJSONObject());
+            }
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putString(AccountListActivity.ACCOUNTS, accountList.toString());
+            editor.commit();
+        }
+    }
+
+
 
     protected void updateLocalStoredScripts(LinkedHashMap<String, Cmd.Topic> receivedTopics) throws Exception {
         if (receivedTopics == null) {
