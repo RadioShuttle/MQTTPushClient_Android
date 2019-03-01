@@ -33,7 +33,7 @@ public class PushAccount {
     public ArrayList<Topic> topicJavaScript;
 
     // transient
-    public int status;
+    volatile public int status;
     public int requestStatus;
     public int requestErrorCode;
     public String requestErrorTxt;
