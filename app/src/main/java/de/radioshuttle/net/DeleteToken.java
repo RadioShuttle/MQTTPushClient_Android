@@ -13,6 +13,7 @@ import android.util.Log;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
@@ -62,9 +63,24 @@ public class DeleteToken extends Request {
     protected void deleteToken() {
         FirebaseApp app = null;
         try {
-            for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
-                if (a.getName().equals(mSenderID)) {
-                    app = FirebaseApp.getInstance(mSenderID);
+            if (Utils.isEmpty(mSenderID)) Log.d(TAG, "deleteToken(): no sender id. using mPushAccount.fcm_sender_id.");
+
+            String senderID = Utils.isEmpty(mSenderID) ? mPushAccount.fcm_sender_id : mSenderID;
+            if (!Utils.isEmpty(senderID)) {
+                for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
+                    if (a.getName().equals(senderID)) {
+                        app = FirebaseApp.getInstance(senderID);
+                        break;
+                    }
+                }
+                if (app == null && !Utils.isEmpty(senderID)) {
+                    Log.d(TAG, "deleteToken(): init firebase app with mPushAccount.fcm_app_id");
+                    FirebaseOptions options = new FirebaseOptions.Builder()
+                            .setApplicationId(mPushAccount.fcm_app_id)
+                            .build();
+                    app = FirebaseApp.initializeApp(mAppContext, options, senderID);
+                }
+                if (app != null) {
                     FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
 
                     Task<InstanceIdResult> t = id.getInstanceId();
@@ -88,7 +104,6 @@ public class DeleteToken extends Request {
                         Log.d(TAG, "Deletion of token for push server " + mPushAccount.pushserver + "  failed.");
                         // throw new ClientError("Deletion of token failed.");
                     }
-                    break;
                 }
             }
         } catch (Exception e) {
