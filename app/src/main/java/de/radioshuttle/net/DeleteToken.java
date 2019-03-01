@@ -73,7 +73,7 @@ public class DeleteToken extends Request {
                         break;
                     }
                 }
-                if (app == null && !Utils.isEmpty(senderID)) {
+                if (app == null) {
                     Log.d(TAG, "deleteToken(): init firebase app with mPushAccount.fcm_app_id");
                     FirebaseOptions options = new FirebaseOptions.Builder()
                             .setApplicationId(mPushAccount.fcm_app_id)
