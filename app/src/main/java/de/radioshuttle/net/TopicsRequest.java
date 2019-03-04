@@ -111,14 +111,7 @@ public class TopicsRequest extends Request {
                 t.jsSrc = val.script;
                 tmpRes.add(t);
             }
-            Collections.sort(tmpRes, new Comparator<PushAccount.Topic>() {
-                @Override
-                public int compare(PushAccount.Topic o1, PushAccount.Topic o2) {
-                    String s1 = (o1.name == null ? "" : o1.name);
-                    String s2 = (o2.name == null ? "" : o2.name);
-                    return s1.compareTo(s2);
-                }
-            });
+            Collections.sort(tmpRes, new PushAccount.TopicComparator());
 
             mPushAccount.topics = tmpRes;
         } else {
