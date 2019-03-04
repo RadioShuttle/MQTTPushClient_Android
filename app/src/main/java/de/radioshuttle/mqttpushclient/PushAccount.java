@@ -247,7 +247,7 @@ public class PushAccount {
             } else {
                 String s1 = o1.name == null ? "" : o1.name;
                 String s2 = o2.name == null ? "" : o2.name;
-                cmp = s1.compareTo(s2);
+                cmp = s1.compareToIgnoreCase(s2);
             }
 
             return cmp;
