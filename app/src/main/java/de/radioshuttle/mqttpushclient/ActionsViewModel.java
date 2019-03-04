@@ -105,7 +105,7 @@ public class ActionsViewModel extends ViewModel {
 
             String s1 = a1 == null ? "" : a1;
             String s2 = a2 == null ? "" : a2;
-            return s1.compareTo(s2);
+            return s1.compareToIgnoreCase(s2);
         }
     }
 

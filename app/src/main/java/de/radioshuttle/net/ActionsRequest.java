@@ -102,15 +102,7 @@ public class ActionsRequest extends Request {
                 a.retain = e.getValue().retain;
                 tmpRes.add(a);
             }
-            Comparator c = new Comparator<ActionsViewModel.Action>() {
-                @Override
-                public int compare(ActionsViewModel.Action o1, ActionsViewModel.Action o2) {
-                    String s1 = o1.name == null ? "" : o1.name;
-                    String s2 = o2.name == null ? "" : o2.name;
-                    return s1.compareTo(s2);
-                }
-            };
-            Collections.sort(tmpRes, c);
+            Collections.sort(tmpRes, new ActionsViewModel.ActionComparator());
             mActions = tmpRes;
         } else {
             //TODO: rare case: removeActions ok, but getActions() failed. see TopicsRequest
