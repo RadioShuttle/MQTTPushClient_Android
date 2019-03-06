@@ -28,6 +28,7 @@
     <string name="action_update_topic">Update</string>
     <string name="action_mqtt_topics">MQTT Topics</string>
     <string name="action_mqtt_actions">MQTT Actions</string>
+    <string name="action_zoom">Zoom</string>
 
     <string name="dlg_remove_account_title">Remove Account</string>
     <string name="dlg_remove_account_msg">Confirm removal of currently selected account.</string>
