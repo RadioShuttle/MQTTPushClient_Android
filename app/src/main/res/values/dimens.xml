@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dashboard_padding">8dp</dimen>
+    <dimen name="dashboard_zoom_1">116dp</dimen>
+    <dimen name="dashboard_zoom_2">166dp</dimen>
+    <dimen name="dashboard_zoom_3">216dp</dimen>
+</resources>
