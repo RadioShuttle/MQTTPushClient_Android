@@ -4,19 +4,17 @@
  *	30827 Garbsen, Germany.
  */
 
-package de.radioshuttle.mqttpushclient;
+package de.radioshuttle.mqttpushclient.dash;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import de.radioshuttle.mqttpushclient.dash.DashBoardAdapter;
-import de.radioshuttle.mqttpushclient.dash.Item;
-import de.radioshuttle.mqttpushclient.dash.DashBoardViewModel;
-import de.radioshuttle.mqttpushclient.dash.TextItem;
-import de.radioshuttle.mqttpushclient.dash.ViewState;
+import de.radioshuttle.mqttpushclient.AccountListActivity;
+import de.radioshuttle.mqttpushclient.MessagesActivity;
+import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.mqttpushclient.R;
 
 import android.content.Intent;
 import android.os.Bundle;
