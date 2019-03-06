@@ -15,7 +15,7 @@
         android:roundIcon="@mipmap/ic_radioshuttle_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".DashBoardActivity"></activity>
+        <activity android:name=".dash.DashBoardActivity"></activity>
         <activity android:name=".EditActionActivity" />
         <activity android:name=".EditTopicActivity" />
 

@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".DashBoardActivity">
+    tools:context=".dash.DashBoardActivity">
 
     <TextView
         android:id="@+id/push_notification_server"

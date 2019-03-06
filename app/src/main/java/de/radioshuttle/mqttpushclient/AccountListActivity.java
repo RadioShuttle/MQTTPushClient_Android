@@ -48,6 +48,7 @@ import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.fcm.Notifications;
+import de.radioshuttle.mqttpushclient.dash.DashBoardActivity;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
