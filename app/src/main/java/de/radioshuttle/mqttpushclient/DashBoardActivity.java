@@ -7,10 +7,20 @@
 package de.radioshuttle.mqttpushclient;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import de.radioshuttle.mqttpushclient.dash.DashBoardAdapter;
+import de.radioshuttle.mqttpushclient.dash.Item;
+import de.radioshuttle.mqttpushclient.dash.DashBoardViewModel;
+import de.radioshuttle.mqttpushclient.dash.TextItem;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,6 +30,9 @@ import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
+import java.util.Random;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
@@ -31,15 +44,29 @@ public class DashBoardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dash_board);
 
+        mViewModel = ViewModelProviders.of(this).get(DashBoardViewModel.class);
         Bundle args = getIntent().getExtras();
         String json = args.getString(PARAM_ACCOUNT_JSON);
         boolean hastMultipleServer = args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS);
 
+        if (ZOOM_LEVEL_1 == 0) {
+            ZOOM_LEVEL_1 = (int) getResources().getDimension(R.dimen.dashboard_zoom_1);
+            ZOOM_LEVEL_2 = (int) getResources().getDimension(R.dimen.dashboard_zoom_2);
+            ZOOM_LEVEL_3 = (int) getResources().getDimension(R.dimen.dashboard_zoom_3);
+        }
+
         PushAccount b = null;
         try {
             b = PushAccount.createAccountFormJSON(new JSONObject(json));
+            mViewModel.setPushAccount(b);
             if (savedInstanceState == null) {
-                ViewState.getInstance(getApplication()).setLastState(b.getKey(), ViewState.VIEWSTATE_DASHBOARD);
+                mZoomLevel = ViewState.getInstance(getApplication()).getLastZoomLevel(b.getKey());
+                if (mZoomLevel == 0) {
+                    mZoomLevel = 1;
+                }
+                ViewState.getInstance(getApplication()).setLastState(b.getKey(), ViewState.VIEW_DASHBOARD);
+            } else {
+                mZoomLevel = savedInstanceState.getInt(KEY_ZOOM_LEVEL, 1);
             }
             TextView server = findViewById(R.id.push_notification_server);
             TextView key = findViewById(R.id.account_display_name);
@@ -52,9 +79,62 @@ public class DashBoardActivity extends AppCompatActivity {
             Log.e(TAG, "parse error", e);
         }
 
+        mControllerList = findViewById(R.id.controllerList);
+        if (mControllerList != null) {
+            int spanCount = calcSpanCount();
+            // Log.d(TAG, "item width: " + itemWidth + ", width dpi: " + widthDPI + ", span count:  " + spanCount);
+
+            final GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
+            // layoutManager.setMeasurementCacheEnabled(true);
+            layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    int spanCount = layoutManager.getSpanCount();
+                    int spanSize = 1;
+                    RecyclerView.Adapter a = mControllerList.getAdapter();
+                    if (a instanceof DashBoardAdapter) {
+                        if (a.getItemViewType(position) == Item.TYPE_HEADER) {
+                            spanSize = spanCount;
+                        } else {
+                            List<Item> list = ((DashBoardAdapter) a).getData();
+                            if (list != null && position + 1 < list.size()) {
+                                if (list.get(position).groupIdx != list.get(position + 1).groupIdx) {
+                                    int z = 1;
+                                    for(int i = position - 1; i >= 0 && list.get(i).groupIdx == list.get(position).groupIdx && list.get(i).getType() != Item.TYPE_HEADER; i--) {
+                                        z++;
+                                    }
+                                    if (z % spanCount > 0) {
+                                        spanSize = spanCount - (z % spanCount) + 1;
+                                    }
+                                    Log.d(TAG, "position: " + position + ", z: " + z + ", span size: " + spanSize);
+                                }
+                            }
+                        }
+                    }
+                    return spanSize;
+                }
+
+            });
+            mControllerList.setLayoutManager(layoutManager);
+
+            mControllerList.setAdapter(new DashBoardAdapter(this, getWidthPixel(), layoutManager.getSpanCount()));
+
+            mViewModel.dashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
+                @Override
+                public void onChanged(List<Item> dashBoardItems) {
+                    RecyclerView.Adapter a = mControllerList.getAdapter();
+                    if (a instanceof DashBoardAdapter) {
+                        ((DashBoardAdapter) a).setData(dashBoardItems);
+                    }
+                }
+            });
+        }
+
         setTitle(getString(R.string.title_dashboard));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
+
+    Random random = new Random(); //TODO: remove
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -68,6 +148,17 @@ public class DashBoardActivity extends AppCompatActivity {
                     switchToMessagesActivity();
                 }
                 return true;
+            case R.id.action_add :
+                //TODO: remove test data
+                TextItem ti = new TextItem();
+                ti.groupIdx = random.nextInt(3);
+                ti.orderInGroup = random.nextInt(7);
+                ti.label = "ID: " + ti.groupIdx + " " + ti.orderInGroup;
+                mViewModel.addItem(ti);
+                return true;
+            case R.id.action_zoom :
+                zoom();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -78,6 +169,12 @@ public class DashBoardActivity extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.activity_dash_board, menu);
         return true;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_ZOOM_LEVEL, mZoomLevel);
     }
 
     protected void switchToMessagesActivity() {
@@ -106,7 +203,84 @@ public class DashBoardActivity extends AppCompatActivity {
         setResult(AppCompatActivity.RESULT_OK, intent);
         finish();
     }
-    boolean mActivityStarted;
+
+    protected void zoom() {
+        mZoomLevel++;
+        if (mZoomLevel > 3) {
+            mZoomLevel = 1;
+        }
+        if (mViewModel != null && mViewModel.getPushAccount() != null) {
+            ViewState.getInstance(getApplication()).setLastZoomLevel(mViewModel.getPushAccount().getKey(), mZoomLevel);
+        }
+
+        int spanCount = calcSpanCount();
+        Log.d(TAG, "new zoomlevel: " + mZoomLevel + " span count: " + spanCount + " width pixel: " + getWidthPixel() + " width dpi: " + getWidthDPI());
+        RecyclerView.LayoutManager lm = mControllerList.getLayoutManager();
+        if (lm instanceof GridLayoutManager) {
+            RecyclerView.Adapter adapter = mControllerList.getAdapter();
+            if (adapter instanceof DashBoardAdapter) {
+                ((GridLayoutManager) lm).setSpanCount(spanCount);
+                ((DashBoardAdapter) adapter).setItemWidth(getWidthPixel(), spanCount);
+            }
+        }
+    }
+
+    protected int calcSpanCount() {
+        int itemWidth = getWidthDPI(); // item width in dpi
+        int spanCount = 0;
+
+        Log.d(TAG, "width px: " + getWidthPixel() + " width dpi: " + getWidthDPI());
+
+        // calc number of columns depending on width
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        float widthDPI = (float) dm.widthPixels * (160f / (float) dm.xdpi);
+        widthDPI -= 16; // subtract left and right margin (include item padding)
+
+        if ((float) itemWidth > widthDPI) {
+            itemWidth = (int) widthDPI;
+            switch (mZoomLevel) {
+                case 1 : ZOOM_LEVEL_1 = itemWidth; break;
+                case 2 : ZOOM_LEVEL_2 = itemWidth; break;
+                case 3 : ZOOM_LEVEL_3 = itemWidth; break;
+            }
+            spanCount = 1;
+        } else {
+            // spanCount = ((int) widthDPI + spacing) / (itemWidth + spacing);
+            spanCount = (int) widthDPI /  itemWidth;
+        }
+        return spanCount;
+    }
+
+    protected int getWidthDPI() {
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        int widthPixel = getWidthPixel();
+        return (int) ((float) widthPixel * (160f / (float) dm.xdpi));
+    }
+
+    protected int getWidthPixel() {
+        int itemWidth; // item width in dpi
+        if (mZoomLevel == 2) {
+            itemWidth = ZOOM_LEVEL_2;
+        } else if (mZoomLevel == 3) {
+            itemWidth = ZOOM_LEVEL_3;
+        } else {
+            itemWidth = ZOOM_LEVEL_1;
+        }
+        return itemWidth;
+    }
+
+    private RecyclerView mControllerList;
+
+    private PushAccount mPushAccount;
+    private int mZoomLevel;
+    private boolean mActivityStarted;
+    private DashBoardViewModel mViewModel;
+
+    private int ZOOM_LEVEL_1 = 0; // dpi including 16 vertical margin (8dp left, right)
+    private int ZOOM_LEVEL_2 = 0;
+    private int ZOOM_LEVEL_3 = 0;
+
+    private final static String KEY_ZOOM_LEVEL = "ZOOM_LEVEL";
 
     private final static String TAG = DashBoardActivity.class.getSimpleName();
 }
