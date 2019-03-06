@@ -50,9 +50,9 @@ public class DashBoardActivity extends AppCompatActivity {
         boolean hastMultipleServer = args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS);
 
         if (ZOOM_LEVEL_1 == 0) {
-            ZOOM_LEVEL_1 = (int) getResources().getDimension(R.dimen.dashboard_zoom_1);
-            ZOOM_LEVEL_2 = (int) getResources().getDimension(R.dimen.dashboard_zoom_2);
-            ZOOM_LEVEL_3 = (int) getResources().getDimension(R.dimen.dashboard_zoom_3);
+            ZOOM_LEVEL_1 = getResources().getDimensionPixelSize(R.dimen.dashboard_zoom_1);
+            ZOOM_LEVEL_2 = getResources().getDimensionPixelSize(R.dimen.dashboard_zoom_2);
+            ZOOM_LEVEL_3 = getResources().getDimensionPixelSize(R.dimen.dashboard_zoom_3);
         }
 
         PushAccount b = null;
@@ -101,7 +101,7 @@ public class DashBoardActivity extends AppCompatActivity {
                                 if (list.get(position).groupIdx != list.get(position + 1).groupIdx) {
                                     int z = 1;
                                     for(int i = position - 1; i >= 0 && list.get(i).groupIdx == list.get(position).groupIdx && list.get(i).getType() != Item.TYPE_HEADER; i--) {
-                                        z++;
+                                        z++; //TODO: this can be calculated in viewModel when "building" adapter data
                                     }
                                     if (z % spanCount > 0) {
                                         spanSize = spanCount - (z % spanCount) + 1;
