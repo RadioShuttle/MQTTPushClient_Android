@@ -65,7 +65,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
         try {
             PushAccount b = PushAccount.createAccountFormJSON(new JSONObject(json));
             if (savedInstanceState == null) {
-                ViewState.getInstance(getApplication()).setLastState(b.getKey(), ViewState.VIEWSTATE_MESSAGES);
+                ViewState.getInstance(getApplication()).setLastState(b.getKey(), ViewState.VIEW_MESSAGES);
             }
             TextView server = findViewById(R.id.push_notification_server);
             TextView key = findViewById(R.id.account_display_name);

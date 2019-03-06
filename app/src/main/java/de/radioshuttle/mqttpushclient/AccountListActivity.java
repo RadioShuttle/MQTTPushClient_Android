@@ -290,7 +290,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
         Class<?> m = MessagesActivity.class;
         if (!notifstart && b != null) {
             int lastState = ViewState.getInstance(getApplication()).getLastState(b.getKey());
-            if (lastState == ViewState.VIEWSTATE_DASHBOARD) {
+            if (lastState == ViewState.VIEW_DASHBOARD) {
                 m = DashBoardActivity.class;
             }
         }
