@@ -32,19 +32,53 @@ public class ViewState {
     }
 
     public int getLastState(String account) {
-        int state = -1;
+        ViewInfo vi = getViewInfo(account);
+        return vi == null ? VIEW_MESSAGES : vi.lastView;
+    }
+
+    public int getLastZoomLevel(String account) {
+        ViewInfo vi = getViewInfo(account);
+        return vi == null ? 1 : vi.lastZoomLevel;
+    }
+
+    protected ViewInfo getViewInfo(String account) {
+        ViewInfo vi;
         if (account != null && mState.containsKey(account)) {
-            state = mState.get(account);
+            vi = mState.get(account);
+        } else {
+            vi = null;
         }
-        return state;
+        return vi;
     }
 
     public void setLastState(String account, int newState) {
         Log.d(VIEW_STATE, "set state: " + account + " " + newState);
         if (account != null) {
-            int last = getLastState(account);
-            mState.put(account, newState);
-            if (last != newState) {
+            ViewInfo vi = getViewInfo(account);
+            if (vi == null) {
+                vi = new ViewInfo();
+                vi.lastView = 0;
+                vi.lastZoomLevel = 0;
+            }
+            if (vi.lastView != newState) {
+                vi.lastView = newState;
+                mState.put(account, vi);
+                writeState();
+            }
+        }
+    }
+
+    public void setLastZoomLevel(String account, int newZoomLevel) {
+        if (account != null) {
+            ViewInfo vi = getViewInfo(account);
+            if (vi == null) {
+                vi = new ViewInfo();
+                vi.lastView = 0;
+                vi.lastZoomLevel = 0;
+            }
+            if (vi.lastZoomLevel != newZoomLevel) {
+                vi.lastZoomLevel = newZoomLevel;
+                mState.put(account, vi);
                 writeState();
             }
         }
@@ -64,19 +98,23 @@ public class ViewState {
 
     private void readStates() {
         mState = new HashMap<>();
-        SharedPreferences settings = mApp.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+        SharedPreferences settings = mApp.getSharedPreferences(DASHBOARD_PREFS, Activity.MODE_PRIVATE);
         String json = settings.getString(VIEW_STATE, null);
         if (!Utils.isEmpty(json)) {
             try {
                 JSONObject vs = new JSONObject(json);
                 Iterator<String> it = vs.keys();
-                int state;
+                JSONObject viewInfo;
                 String account;
                 while(it.hasNext()) {
                     account = it.next();
-                    state = vs.optInt(account, -1);
-                    if (state != -1) {
-                        mState.put(account, state);
+                    vs.opt(account);
+                    viewInfo = vs.optJSONObject(account);
+                    if (viewInfo != null) {
+                        ViewInfo vi = new ViewInfo();
+                        vi.lastView = viewInfo.optInt("last_view", VIEW_MESSAGES);
+                        vi.lastZoomLevel = viewInfo.optInt("last_zoom_level", 1);
+                        mState.put(account, vi);
                     }
                 }
             } catch (JSONException e) {
@@ -87,13 +125,17 @@ public class ViewState {
 
     private void writeState() {
         JSONObject vs = new JSONObject();
+        JSONObject val;
         String out = null;
-        Iterator<Map.Entry<String, Integer>> it;
-        Map.Entry<String, Integer> entry;
+        Iterator<Map.Entry<String, ViewInfo>> it;
+        Map.Entry<String, ViewInfo> entry;
         for(it = mState.entrySet().iterator(); it.hasNext();) {
             entry = it.next();
             try {
-                vs.put(entry.getKey(), entry.getValue());
+                val = new JSONObject();
+                val.put("last_view", entry.getValue().lastView);
+                val.put("last_zoom_level", entry.getValue().lastZoomLevel);
+                vs.put(entry.getKey(), val);
             } catch (JSONException e) {
                 Log.e(VIEW_STATE, "Setting view states failed." , e);
             }
@@ -101,7 +143,7 @@ public class ViewState {
         if (vs.length() > 0) {
             out = vs.toString();
         }
-        SharedPreferences settings = mApp.getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+        SharedPreferences settings = mApp.getSharedPreferences(DASHBOARD_PREFS, Activity.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(VIEW_STATE, out);
@@ -109,11 +151,18 @@ public class ViewState {
 
     }
 
-    private HashMap<String, Integer> mState;
+    private HashMap<String, ViewInfo> mState;
     private Application mApp;
     static ViewState mViewState;
 
-    public final static int VIEWSTATE_MESSAGES = 1;
-    public final static int VIEWSTATE_DASHBOARD = 2;
+    private static class ViewInfo {
+        int lastView;
+        int lastZoomLevel;
+    }
+
+    public final static int VIEW_MESSAGES = 1;
+    public final static int VIEW_DASHBOARD = 2;
     public final static String VIEW_STATE = "VIEW_STATE";
+
+    public final static String DASHBOARD_PREFS = "dashboard_prefs";
 }
