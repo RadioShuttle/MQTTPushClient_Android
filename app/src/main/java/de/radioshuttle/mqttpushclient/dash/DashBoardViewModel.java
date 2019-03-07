@@ -6,8 +6,6 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +42,7 @@ public class DashBoardViewModel extends ViewModel {
             for(int i = 0; i < mItems.size(); i++) {
                 // if a header does not exists, add group
                 if (mItems.get(i).getType() != Item.TYPE_HEADER && ((i == 0) || mItems.get(i-1).groupIdx != mItems.get(i).groupIdx)) {
-                    Item header = new HeaderItem();
+                    Item header = new GroupItem();
                     header.groupIdx = mItems.get(i).groupIdx;
                     header.orderInGroup = Integer.MIN_VALUE; // always first pos
                     header.label = "Header " + (header.groupIdx + 0); //TODO 1
