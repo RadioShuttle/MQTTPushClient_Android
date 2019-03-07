@@ -36,6 +36,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         mSpanCnt = spanCount;
     }
 
+    public void addListener(DashBoardActionListener listener) {
+        mListener = listener;
+    }
+
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -50,8 +54,22 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             label = view.findViewById(R.id.name);
         }
 
+
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label;
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos = holder.getAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION) {
+                    if (mListener != null && mData != null && pos < mData.size()) {
+                        Item item = mData.get(pos);
+                        mListener.onItemClicked(item);
+                    }
+                }
+            }
+        });
 
 
         return holder;
@@ -124,6 +142,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         return type;
     }
 
+    private DashBoardActionListener mListener;
     private int mDefaultBackground;
     private int mWidth;
     private int mSpanCnt;
