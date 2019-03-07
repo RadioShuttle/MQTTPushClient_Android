@@ -17,4 +17,6 @@
     <color name="colorNewMessages">#ff1500</color>
     <color name="aboutBackground">#dedede</color>
     <color name="aboutTextColor2">#444444</color>
+
+    <color name="dashboad_item_background">#d7d7d7</color>
 </resources>
