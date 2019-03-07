@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -37,7 +38,7 @@ import java.util.Random;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
-public class DashBoardActivity extends AppCompatActivity {
+public class DashBoardActivity extends AppCompatActivity implements DashBoardActionListener{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +131,9 @@ public class DashBoardActivity extends AppCompatActivity {
                     outRect.bottom = spacing;
                 }
             });
-            mControllerList.setAdapter(new DashBoardAdapter(this, getWidthPixel(), layoutManager.getSpanCount()));
+            DashBoardAdapter adapter = new DashBoardAdapter(this, getWidthPixel(), layoutManager.getSpanCount());
+            adapter.addListener(this);
+            mControllerList.setAdapter(adapter);
 
             mViewModel.dashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
                 @Override
@@ -284,6 +287,13 @@ public class DashBoardActivity extends AppCompatActivity {
         return itemWidth;
     }
 
+    @Override
+    public void onItemClicked(int adapterPos, Item item) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(item.label + " clicked.");
+        builder.create().show();
+    }
+
     private RecyclerView mControllerList;
 
     private PushAccount mPushAccount;
@@ -298,4 +308,5 @@ public class DashBoardActivity extends AppCompatActivity {
     private final static String KEY_ZOOM_LEVEL = "ZOOM_LEVEL";
 
     private final static String TAG = DashBoardActivity.class.getSimpleName();
+
 }
