@@ -6,7 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
-public class HeaderItem extends Item {
+public class GroupItem extends Item {
     @Override
     public int getType() {
         return Item.TYPE_HEADER;
