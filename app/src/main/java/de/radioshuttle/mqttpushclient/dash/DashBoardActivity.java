@@ -38,7 +38,7 @@ import java.util.Random;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
-public class DashBoardActivity extends AppCompatActivity implements DashBoardActionListener{
+public class DashBoardActivity extends AppCompatActivity implements DashBoardActionListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -288,7 +288,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     }
 
     @Override
-    public void onItemClicked(int adapterPos, Item item) {
+    public void onItemClicked(Item item) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(item.label + " clicked.");
         builder.create().show();
