@@ -50,7 +50,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
         } else {
-            view = mInflater.inflate(R.layout.activity_dash_board_header, parent, false);
+            view = mInflater.inflate(R.layout.activity_dash_board_item_group, parent, false);
             label = view.findViewById(R.id.name);
         }
 
