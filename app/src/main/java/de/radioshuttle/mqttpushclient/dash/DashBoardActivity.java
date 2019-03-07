@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -17,6 +18,7 @@ import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -113,8 +115,21 @@ public class DashBoardActivity extends AppCompatActivity {
                 }
 
             });
-            mControllerList.setLayoutManager(layoutManager);
 
+            final int spacing = getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
+            Log.d(TAG, "spacing: " + spacing + " dpi " + (int) ((float) spacing * (160f / (float) getResources().getDisplayMetrics().densityDpi)));
+
+            mControllerList.setLayoutManager(layoutManager);
+            mControllerList.addItemDecoration(new RecyclerView.ItemDecoration() {
+                @Override
+                public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                    super.getItemOffsets(outRect, view, parent, state);
+                    outRect.top = spacing;
+                    outRect.left = spacing;
+                    outRect.right = spacing;
+                    outRect.bottom = spacing;
+                }
+            });
             mControllerList.setAdapter(new DashBoardAdapter(this, getWidthPixel(), layoutManager.getSpanCount()));
 
             mViewModel.dashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
@@ -226,13 +241,15 @@ public class DashBoardActivity extends AppCompatActivity {
     protected int calcSpanCount() {
         int itemWidth = getWidthDPI(); // item width in dpi
         int spanCount = 0;
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+
+        float spacingDPI = getResources().getDimension(R.dimen.dashboard_spacing) * (160f / (float) dm.densityDpi) ;
 
         Log.d(TAG, "width px: " + getWidthPixel() + " width dpi: " + getWidthDPI());
 
         // calc number of columns depending on width
-        DisplayMetrics dm = getResources().getDisplayMetrics();
-        float widthDPI = (float) dm.widthPixels * (160f / (float) dm.xdpi);
-        widthDPI -= 16; // subtract left and right margin (include item padding)
+        float widthDPI = (float) dm.widthPixels * (160f / (float) dm.densityDpi);
+        widthDPI -= 24; // subtract left and right margin (not including spacing for most left and most right cell)
 
         if ((float) itemWidth > widthDPI) {
             itemWidth = (int) widthDPI;
@@ -244,7 +261,7 @@ public class DashBoardActivity extends AppCompatActivity {
             spanCount = 1;
         } else {
             // spanCount = ((int) widthDPI + spacing) / (itemWidth + spacing);
-            spanCount = (int) widthDPI /  itemWidth;
+            spanCount = (int) widthDPI /  (itemWidth + (int)(spacingDPI * 2f));
         }
         return spanCount;
     }
@@ -252,7 +269,7 @@ public class DashBoardActivity extends AppCompatActivity {
     protected int getWidthDPI() {
         DisplayMetrics dm = getResources().getDisplayMetrics();
         int widthPixel = getWidthPixel();
-        return (int) ((float) widthPixel * (160f / (float) dm.xdpi));
+        return (int) ((float) widthPixel * (160f / (float) dm.density));
     }
 
     protected int getWidthPixel() {
@@ -274,7 +291,7 @@ public class DashBoardActivity extends AppCompatActivity {
     private boolean mActivityStarted;
     private DashBoardViewModel mViewModel;
 
-    private int ZOOM_LEVEL_1 = 0; // dpi including 16 vertical margin (8dp left, right)
+    private int ZOOM_LEVEL_1 = 0; // dpi
     private int ZOOM_LEVEL_2 = 0;
     private int ZOOM_LEVEL_3 = 0;
 

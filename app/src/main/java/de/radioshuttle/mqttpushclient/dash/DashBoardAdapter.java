@@ -6,8 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
-import android.util.DisplayMetrics;
-import android.util.Log;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,9 +27,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         mData = new ArrayList<>();
         mWidth = width;
 
-        mDisplayMetrics = activity.getResources().getDisplayMetrics();
-        mHeight = (int) ((float) width / mDisplayMetrics.xdpi * mDisplayMetrics.ydpi);
-
+        if (Build.VERSION.SDK_INT >= 23) {
+            mDefaultBackground = activity.getResources().getColor(R.color.dashboad_item_background, null);
+        } else {
+            mDefaultBackground = activity.getResources().getColor(R.color.dashboad_item_background);
+        }
+        spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
     }
 
@@ -64,16 +66,18 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.label.setText(item.label);
         }
 
+        h.itemView.setBackgroundColor(mDefaultBackground); // default background color
+
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
-        if (item.getType() != Item.TYPE_HEADER && (lp.width != mWidth || lp.height != mHeight)) {
+        if (item.getType() != Item.TYPE_HEADER && (lp.width != mWidth || lp.height != mWidth)) {
             lp.width = mWidth;
-            lp.height = mHeight;
+            lp.height = mWidth;
             h.itemView.setLayoutParams(lp);
         }
 
         if (item.getType() == Item.TYPE_HEADER ) {
             if (lp.width != mSpanCnt * mWidth) {
-                lp.width = mSpanCnt * mWidth;
+                lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
                 h.itemView.setLayoutParams(lp);
             }
         }
@@ -101,7 +105,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     public void setItemWidth(int width, int spanCnt) {
         mSpanCnt = spanCnt;
         mWidth = width;
-        mHeight = (int) ((float) width / mDisplayMetrics.xdpi * mDisplayMetrics.ydpi);
         notifyDataSetChanged();
     }
 
@@ -121,10 +124,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         return type;
     }
 
-    private DisplayMetrics mDisplayMetrics;
+    private int mDefaultBackground;
     private int mWidth;
-    private int mHeight;
     private int mSpanCnt;
+    private int spacing;
     private LayoutInflater mInflater;
     private List<Item> mData;
 
