@@ -3,7 +3,6 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="@dimen/dashboard_padding"
-    android:background="@drawable/dashboard_cell_bg"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <TextView
