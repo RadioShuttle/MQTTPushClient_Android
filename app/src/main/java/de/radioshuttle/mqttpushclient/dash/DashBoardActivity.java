@@ -245,7 +245,7 @@ public class DashBoardActivity extends AppCompatActivity {
 
         float spacingDPI = getResources().getDimension(R.dimen.dashboard_spacing) * (160f / (float) dm.densityDpi) ;
 
-        Log.d(TAG, "width px: " + getWidthPixel() + " width dpi: " + getWidthDPI());
+        // Log.d(TAG, "width px: " + getWidthPixel() + " width dpi: " + getWidthDPI());
 
         // calc number of columns depending on width
         float widthDPI = (float) dm.widthPixels * (160f / (float) dm.densityDpi);
@@ -269,7 +269,7 @@ public class DashBoardActivity extends AppCompatActivity {
     protected int getWidthDPI() {
         DisplayMetrics dm = getResources().getDisplayMetrics();
         int widthPixel = getWidthPixel();
-        return (int) ((float) widthPixel * (160f / (float) dm.density));
+        return (int) ((float) widthPixel * (160f / (float) dm.densityDpi));
     }
 
     protected int getWidthPixel() {
