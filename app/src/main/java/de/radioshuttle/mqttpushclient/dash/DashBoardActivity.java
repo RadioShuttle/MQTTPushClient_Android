@@ -30,6 +30,8 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
@@ -92,9 +94,17 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
             mControllerList.setLayoutManager(layoutManager);
             mControllerList.addItemDecoration(new Utils.ItemDecoration(getApplication()));
-            DashBoardAdapter adapter = new DashBoardAdapter(this, getWidthPixel(), layoutManager.getSpanCount());
-            adapter.addListener(this);
-            mControllerList.setAdapter(adapter);
+            HashSet<Integer> selectedItems = new HashSet<>();
+            if (savedInstanceState != null) {
+                List<Integer> itemsList= savedInstanceState.getIntegerArrayList(KEY_SELECTED_ITEMS);
+                if (itemsList != null && itemsList.size() > 0) {
+                    selectedItems.addAll(itemsList);
+                }
+            }
+
+            mAdapter = new DashBoardAdapter(this, getWidthPixel(), layoutManager.getSpanCount(), selectedItems);
+            mAdapter.addListener(this);
+            mControllerList.setAdapter(mAdapter);
 
             mViewModel.dashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
                 @Override
@@ -154,6 +164,12 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_ZOOM_LEVEL, mZoomLevel);
+        if (mAdapter != null) {
+            HashSet<Integer> selectedItems = mAdapter.getSelectedItems();
+            if (selectedItems != null && selectedItems.size() > 0) {
+                outState.putIntegerArrayList(KEY_SELECTED_ITEMS, new ArrayList<Integer>(selectedItems));
+            }
+        }
     }
 
     protected void switchToMessagesActivity() {
@@ -257,8 +273,14 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         builder.create().show();
     }
 
+    @Override
+    public void onSelectionChange(int noBefore, int no) {
+
+    }
+
     private RecyclerView mControllerList;
 
+    private DashBoardAdapter mAdapter;
     private PushAccount mPushAccount;
     private int mZoomLevel;
     private boolean mActivityStarted;
@@ -269,6 +291,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     private int ZOOM_LEVEL_3 = 0;
 
     private final static String KEY_ZOOM_LEVEL = "ZOOM_LEVEL";
+    private final static String KEY_SELECTED_ITEMS = "KEY_SELECTED_ITEMS";
 
     private final static String TAG = DashBoardActivity.class.getSimpleName();
 
