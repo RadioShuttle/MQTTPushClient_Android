@@ -21,10 +21,12 @@
     <string name="action_clear">Clear</string>
     <string name="action_delete_topics">Delete</string>
     <string name="action_delete_msgs">Delete</string>
+    <string name="action_delete_dashboard_items">Delete</string>
     <string name="action_actions">MQTT Actions</string>
     <string name="action_add">Add</string>
     <string name="action_update">Update</string>
     <string name="action_edit_topic">Edit</string>
+    <string name="action_edit_dashboard_item">Edit</string>
     <string name="action_update_topic">Update</string>
     <string name="action_mqtt_topics">MQTT Topics</string>
     <string name="action_mqtt_actions">MQTT Actions</string>
