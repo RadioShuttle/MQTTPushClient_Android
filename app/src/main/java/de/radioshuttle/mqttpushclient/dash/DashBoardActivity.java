@@ -8,6 +8,7 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -26,6 +27,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -115,6 +117,10 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                     }
                 }
             });
+
+            if (selectedItems != null && selectedItems.size() > 0) {
+                mActionMode = startSupportActionMode(mActionModeCallback);
+            }
         }
 
         setTitle(getString(R.string.title_dashboard));
@@ -192,7 +198,6 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     }
 
     protected void handleBackPressed() {
-
         Intent intent = new Intent();
         intent.putExtra(AccountListActivity.ARG_NOTIFSTART, getIntent().getBooleanExtra(AccountListActivity.ARG_NOTIFSTART, false));
         setResult(AppCompatActivity.RESULT_OK, intent);
@@ -274,12 +279,67 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     }
 
     @Override
-    public void onSelectionChange(int noBefore, int no) {
-
+    public void onSelectionChange(int noOfSelectedItemsBefore, int noOfSelectedItems) {
+        if (noOfSelectedItemsBefore == 0 && noOfSelectedItems > 0) {
+            mActionMode = startSupportActionMode(mActionModeCallback);
+        } else if (noOfSelectedItemsBefore > 0 && noOfSelectedItems == 0) {
+            if (mActionMode != null)
+                mActionMode.finish();
+        }
     }
+
+    public void onItemEdit() {
+        Log.d(TAG, "edit item: ");
+    }
+
+    public void onItemsDelete() {
+        Log.d(TAG, "delete item: ");
+    }
+
+    private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // Inflate a menu resource providing context menu items
+            MenuInflater inflater = mode.getMenuInflater();
+            inflater.inflate(R.menu.activity_dash_board_action, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            boolean handled = false;
+            switch (item.getItemId()) {
+                case R.id.action_delete_items:
+                    onItemsDelete();
+                    handled = true;
+                    break;
+                case R.id.action_edit_item:
+                    onItemEdit();
+                    handled = true;
+                    break;
+            }
+
+            return handled;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            if (mAdapter != null)
+                mAdapter.clearSelection();
+            mActionMode = null;
+        }
+    };
+
 
     private RecyclerView mControllerList;
 
+    private ActionMode mActionMode;
     private DashBoardAdapter mAdapter;
     private PushAccount mPushAccount;
     private int mZoomLevel;
