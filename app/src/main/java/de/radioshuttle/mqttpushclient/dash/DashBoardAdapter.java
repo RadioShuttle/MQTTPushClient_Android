@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -22,10 +23,11 @@ import de.radioshuttle.mqttpushclient.R;
 
 public class DashBoardAdapter extends RecyclerView.Adapter {
 
-    public DashBoardAdapter(AppCompatActivity activity, int width, int spanCount) {
+    public DashBoardAdapter(AppCompatActivity activity, int width, int spanCount, HashSet<Integer> selectedItems) {
         mInflater = activity.getLayoutInflater();
         mData = new ArrayList<>();
         mWidth = width;
+        // setHasStableIds(true);
 
         if (Build.VERSION.SDK_INT >= 23) {
             mDefaultBackground = activity.getResources().getColor(R.color.dashboad_item_background, null);
@@ -34,6 +36,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
+        mSelectedItems = selectedItems;
     }
 
     public void addListener(DashBoardActionListener listener) {
@@ -58,20 +61,33 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label;
 
-        view.setOnClickListener(new View.OnClickListener() {
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (mListener != null) {
+                    int pos = holder.getAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        toggleSelection(pos);
+                    }
+                }
+                return true;
+            }
+        });
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int pos = holder.getAdapterPosition();
-                if (pos != RecyclerView.NO_POSITION) {
-                    if (mListener != null && mData != null && pos < mData.size()) {
-                        Item item = mData.get(pos);
-                        mListener.onItemClicked(item);
+                if (mListener != null) {
+                    if (mSelectedItems.size() > 0) {
+                        int pos = holder.getAdapterPosition();
+                        if (pos != RecyclerView.NO_POSITION) {
+                            toggleSelection(pos);
+                        }
+                    } else {
+                        mListener.onItemClicked(getItem(holder.getAdapterPosition()));
                     }
                 }
             }
         });
-
-
         return holder;
     }
 
@@ -84,7 +100,15 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.label.setText(item.label);
         }
 
-        h.itemView.setBackgroundColor(mDefaultBackground); // default background color
+        int background = mDefaultBackground;
+        if (mSelectedItems.contains(item.id)) {
+            h.itemView.setActivated(true);
+            background = 0xFFBBDEFB; //TODO
+        } else {
+            h.itemView.setActivated(false);
+        }
+
+        h.itemView.setBackgroundColor(background); // default background color
 
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
         if (item.getType() != Item.TYPE_HEADER && (lp.width != mWidth || lp.height != mWidth)) {
@@ -113,6 +137,22 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         if (mData == null) {
             mData = new ArrayList<>();
         }
+
+        /* if topics have been deleted the selected topics hashmap must be updated */
+        if (mSelectedItems != null && mSelectedItems.size() > 0) {
+            int o = mSelectedItems.size();
+            HashSet<Integer> dataKeys = new HashSet<>();
+            for (Item a : data) {
+                dataKeys.add(a.id);
+            }
+            mSelectedItems.retainAll(dataKeys);
+            int n = mSelectedItems.size();
+            if (o != n && mListener != null) {
+                mListener.onSelectionChange(o, n);
+            }
+        }
+
+
         notifyDataSetChanged();
     }
 
@@ -120,13 +160,14 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         return mData;
     }
 
+
     public void setItemWidth(int width, int spanCnt) {
         mSpanCnt = spanCnt;
         mWidth = width;
         notifyDataSetChanged();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         public ViewHolder(View v) {
             super(v);
         }
@@ -142,6 +183,58 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         return type;
     }
 
+    @Override
+    public long getItemId(int position) {
+        return mData.get(position).id;
+    }
+
+
+    public Item getItem(int position) {
+        Item item = null;
+        if (mData != null && position < mData.size()) {
+            item = mData.get(position);
+        }
+        return item;
+    }
+
+    protected void toggleSelection(int pos) {
+        int noOfSelectedItemsBefore = mSelectedItems.size();
+        int noOfSelectedItems = noOfSelectedItemsBefore;
+
+        Integer e = mData.get(pos).id;
+        if (mSelectedItems.contains(e)) {
+            mSelectedItems.remove(e);
+            noOfSelectedItems--;
+        } else {
+            mSelectedItems.add(e);
+            noOfSelectedItems++;
+        }
+        notifyItemChanged(pos);
+        if (mListener != null) {
+            mListener.onSelectionChange(noOfSelectedItemsBefore, noOfSelectedItems);
+        }
+    }
+
+    public void clearSelection() {
+        int noOfSelectedItemsBefore = mSelectedItems.size();
+        mSelectedItems.clear();
+
+        if (mListener != null) {
+            mListener.onSelectionChange(noOfSelectedItemsBefore, 0);
+        }
+        notifyDataSetChanged();
+    }
+
+    public boolean isSelectionMode() {
+        return mSelectedItems != null && mSelectedItems.size() > 0;
+    }
+
+    public HashSet<Integer> getSelectedItems() {
+        return mSelectedItems;
+    }
+
+
+    private HashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
     private int mDefaultBackground;
     private int mWidth;
