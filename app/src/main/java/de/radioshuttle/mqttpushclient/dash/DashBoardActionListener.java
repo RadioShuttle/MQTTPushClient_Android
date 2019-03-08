@@ -8,4 +8,5 @@ package de.radioshuttle.mqttpushclient.dash;
 
 public interface DashBoardActionListener {
     void onItemClicked(Item item);
+    void onSelectionChange(int noBefore, int no);
 }
