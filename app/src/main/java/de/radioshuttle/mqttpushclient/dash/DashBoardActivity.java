@@ -6,7 +6,6 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
@@ -19,7 +18,6 @@ import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 
 import android.content.Intent;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -87,50 +85,13 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
             final GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
             // layoutManager.setMeasurementCacheEnabled(true);
-            layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-                @Override
-                public int getSpanSize(int position) {
-                    int spanCount = layoutManager.getSpanCount();
-                    int spanSize = 1;
-                    RecyclerView.Adapter a = mControllerList.getAdapter();
-                    if (a instanceof DashBoardAdapter) {
-                        if (a.getItemViewType(position) == Item.TYPE_HEADER) {
-                            spanSize = spanCount;
-                        } else {
-                            List<Item> list = ((DashBoardAdapter) a).getData();
-                            if (list != null && position + 1 < list.size()) {
-                                if (list.get(position).groupIdx != list.get(position + 1).groupIdx) {
-                                    int z = 1;
-                                    for(int i = position - 1; i >= 0 && list.get(i).groupIdx == list.get(position).groupIdx && list.get(i).getType() != Item.TYPE_HEADER; i--) {
-                                        z++; //TODO: this can be calculated in viewModel when "building" adapter data
-                                    }
-                                    if (z % spanCount > 0) {
-                                        spanSize = spanCount - (z % spanCount) + 1;
-                                    }
-                                    Log.d(TAG, "position: " + position + ", z: " + z + ", span size: " + spanSize);
-                                }
-                            }
-                        }
-                    }
-                    return spanSize;
-                }
-
-            });
+            layoutManager.setSpanSizeLookup(new Utils.SpanSizeLookup(mControllerList));
 
             final int spacing = getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
             Log.d(TAG, "spacing: " + spacing + " dpi " + (int) ((float) spacing * (160f / (float) getResources().getDisplayMetrics().densityDpi)));
 
             mControllerList.setLayoutManager(layoutManager);
-            mControllerList.addItemDecoration(new RecyclerView.ItemDecoration() {
-                @Override
-                public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
-                    super.getItemOffsets(outRect, view, parent, state);
-                    outRect.top = spacing;
-                    outRect.left = spacing;
-                    outRect.right = spacing;
-                    outRect.bottom = spacing;
-                }
-            });
+            mControllerList.addItemDecoration(new Utils.ItemDecoration(getApplication()));
             DashBoardAdapter adapter = new DashBoardAdapter(this, getWidthPixel(), layoutManager.getSpanCount());
             adapter.addListener(this);
             mControllerList.setAdapter(adapter);
@@ -150,8 +111,6 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
-    Random random = new Random(); //TODO: remove
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -165,12 +124,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                 }
                 return true;
             case R.id.action_add :
-                //TODO: remove test data
-                TextItem ti = new TextItem();
-                ti.groupIdx = random.nextInt(3);
-                ti.orderInGroup = random.nextInt(7);
-                ti.label = "ID: " + ti.groupIdx + " " + ti.orderInGroup;
-                mViewModel.addItem(ti);
+                addTestItem();
                 return true;
             case R.id.action_zoom :
                 zoom();
@@ -178,6 +132,15 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    Random random = new Random();
+    protected void addTestItem() {
+        TextItem ti = new TextItem();
+        ti.groupIdx = random.nextInt(3);
+        ti.orderInGroup = random.nextInt(7);
+        ti.label = "ID: " + ti.groupIdx + " " + ti.orderInGroup;
+        mViewModel.addItem(ti);
     }
 
     @Override
