@@ -8,6 +8,12 @@ package de.radioshuttle.mqttpushclient.dash;
 
 
 public abstract class Item {
+    public Item() {
+        id = cnt++;
+    }
+
+    public int id; // transient (for internal use)
+
     public int groupIdx;
     public int orderInGroup;
     public String label;
@@ -40,4 +46,5 @@ public abstract class Item {
             return cmp;
         }
     }
+    private static int cnt = 0;
 }
