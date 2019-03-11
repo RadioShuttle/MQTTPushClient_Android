@@ -294,6 +294,9 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
     public void onItemsDelete() {
         Log.d(TAG, "delete item: ");
+        if (mAdapter != null) {
+            mViewModel.removeItems(mAdapter.getSelectedItems());
+        }
     }
 
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {

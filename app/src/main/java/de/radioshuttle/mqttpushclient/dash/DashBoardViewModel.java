@@ -8,6 +8,9 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import androidx.lifecycle.MutableLiveData;
@@ -41,7 +44,7 @@ public class DashBoardViewModel extends ViewModel {
             ArrayList<Item> uiList = new ArrayList<>(); // build a new list for UI
             for(int i = 0; i < mItems.size(); i++) {
                 // if a header does not exists, add group
-                if (mItems.get(i).getType() != Item.TYPE_HEADER && ((i == 0) || mItems.get(i-1).groupIdx != mItems.get(i).groupIdx)) {
+                if (mItems.get(i).getType() != Item.TYPE_HEADER && ((i == 0) || mItems.get(i - 1).groupIdx != mItems.get(i).groupIdx)) {
                     Item header = new GroupItem();
                     header.groupIdx = mItems.get(i).groupIdx;
                     header.orderInGroup = Integer.MIN_VALUE; // always first pos
@@ -53,6 +56,46 @@ public class DashBoardViewModel extends ViewModel {
             }
             mItems.addAll(tmp);
             dashBoardItemsLiveData.setValue(uiList);
+        }
+    }
+
+    public void removeItems(HashSet<Integer> selectedItems) {
+        if (selectedItems != null) {
+            Collections.sort(mItems, new Item.Comparator());
+            Iterator<Item> it = mItems.iterator();
+            HashMap<Integer, Integer> groupItemCnt = new HashMap<>();
+            while(it.hasNext()) {
+                Item item = it.next();
+
+                if(item.getType() == Item.TYPE_HEADER) { // delete group later
+                    groupItemCnt.put(item.groupIdx, 0);
+                } else {
+                    if (selectedItems.contains(item.id)) {
+                        it.remove();
+                    } else {
+                        Integer cnt = groupItemCnt.get(item.groupIdx);
+                        if (cnt != null) {
+                            cnt++;
+                            groupItemCnt.put(item.groupIdx, cnt);
+                        }
+                    }
+                }
+            }
+
+            /* second run: remove groups with no childs */
+            if (!selectedItems.isEmpty()) { // remove groups with no childs
+                it = mItems.iterator();
+                while(it.hasNext()) {
+                    Item item = it.next();
+                    if (selectedItems.contains(item.id) && item.getType() == Item.TYPE_HEADER) {
+                        Integer cnt = groupItemCnt.get(item.groupIdx);
+                        if (cnt != null && cnt == 0) {
+                            it.remove();
+                        }
+                    }
+                }
+            }
+            dashBoardItemsLiveData.setValue(new ArrayList<>(mItems));
         }
     }
 
