@@ -96,7 +96,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         // Log.d(TAG, "onBindViewHolder: " );
         ViewHolder h = (ViewHolder) holder;
         Item item = mData.get(position);
-        if (item.getType() == Item.TYPE_TEXT || item.getType() == Item.TYPE_HEADER) {
+        if (item.getType() == Item.TYPE_TEXT || item.getType() == Item.TYPE_GROUP) {
             h.label.setText(item.label);
         }
 
@@ -111,13 +111,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         h.itemView.setBackgroundColor(background); // default background color
 
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
-        if (item.getType() != Item.TYPE_HEADER && (lp.width != mWidth || lp.height != mWidth)) {
+        if (item.getType() != Item.TYPE_GROUP && (lp.width != mWidth || lp.height != mWidth)) {
             lp.width = mWidth;
             lp.height = mWidth;
             h.itemView.setLayoutParams(lp);
         }
 
-        if (item.getType() == Item.TYPE_HEADER ) {
+        if (item.getType() == Item.TYPE_GROUP) {
             if (lp.width != mSpanCnt * mWidth) {
                 lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
                 h.itemView.setLayoutParams(lp);

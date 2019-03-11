@@ -44,7 +44,7 @@ public class DashBoardViewModel extends ViewModel {
             ArrayList<Item> uiList = new ArrayList<>(); // build a new list for UI
             for(int i = 0; i < mItems.size(); i++) {
                 // if a header does not exists, add group
-                if (mItems.get(i).getType() != Item.TYPE_HEADER && ((i == 0) || mItems.get(i - 1).groupIdx != mItems.get(i).groupIdx)) {
+                if (mItems.get(i).getType() != Item.TYPE_GROUP && ((i == 0) || mItems.get(i - 1).groupIdx != mItems.get(i).groupIdx)) {
                     Item header = new GroupItem();
                     header.groupIdx = mItems.get(i).groupIdx;
                     header.orderInGroup = Integer.MIN_VALUE; // always first pos
@@ -67,7 +67,7 @@ public class DashBoardViewModel extends ViewModel {
             while(it.hasNext()) {
                 Item item = it.next();
 
-                if(item.getType() == Item.TYPE_HEADER) { // delete group later
+                if(item.getType() == Item.TYPE_GROUP) { // delete group later
                     groupItemCnt.put(item.groupIdx, 0);
                 } else {
                     if (selectedItems.contains(item.id)) {
@@ -87,7 +87,7 @@ public class DashBoardViewModel extends ViewModel {
                 it = mItems.iterator();
                 while(it.hasNext()) {
                     Item item = it.next();
-                    if (selectedItems.contains(item.id) && item.getType() == Item.TYPE_HEADER) {
+                    if (selectedItems.contains(item.id) && item.getType() == Item.TYPE_GROUP) {
                         Integer cnt = groupItemCnt.get(item.groupIdx);
                         if (cnt != null && cnt == 0) {
                             it.remove();

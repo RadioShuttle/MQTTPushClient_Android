@@ -20,7 +20,7 @@ public abstract class Item {
 
     public abstract int getType();
 
-    public final static int TYPE_HEADER = 0;
+    public final static int TYPE_GROUP = 0;
     public final static int TYPE_TEXT = 1;
 
     public static class Comparator implements java.util.Comparator<Item> {
