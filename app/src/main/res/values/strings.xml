@@ -32,6 +32,10 @@
     <string name="action_mqtt_actions">MQTT Actions</string>
     <string name="action_zoom">Zoom</string>
 
+    <!-- Dashboard -->
+    <string name="action_add_text">Text</string>
+    <string name="action_add_group">Group</string>
+
     <string name="dlg_remove_account_title">Remove Account</string>
     <string name="dlg_remove_account_msg">Confirm removal of currently selected account.</string>
 
