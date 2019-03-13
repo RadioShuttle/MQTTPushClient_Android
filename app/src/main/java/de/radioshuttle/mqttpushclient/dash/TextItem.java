@@ -9,8 +9,8 @@ package de.radioshuttle.mqttpushclient.dash;
 public class TextItem extends Item {
 
     @Override
-    public int getType() {
-        return Item.TYPE_TEXT;
+    public String getType() {
+        return "text";
     }
 
 }
