@@ -141,41 +141,48 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         switch (item.getItemId()) {
             case android.R.id.home:
                 handleBackPressed();
-                return true;
+                break;
             case R.id.menu_change_view :
                 if (!mActivityStarted) {
                     mActivityStarted = true;
                     switchToMessagesActivity();
                 }
-                return true;
-            case R.id.action_add :
-                addTestItem();
-                return true;
+                break;
+            case R.id.action_add_group :
+                addGroupItem();
+                break;
+            case R.id.action_add_text :
+                addTextItem();
+                break;
             case R.id.action_zoom :
                 zoom();
-                return true;
+                break;
             default:
-                return super.onOptionsItemSelected(item);
+                super.onOptionsItemSelected(item);
         }
+        return true;
+    }
+
+    public void addGroupItem() {
+        GroupItem groupItem = new GroupItem();
+        groupItem.label = "Group " + groupItem.id;
+        mViewModel.addGroup(-1, groupItem);
+    }
+
+    public void addTextItem() {
+        addTestItem();
     }
 
     Random random = new Random();
     protected void addTestItem() {
         List<GroupItem> groups = mViewModel.getGroups();
-        TextItem ti = new TextItem();
-
-        GroupItem group = null;
-        if (groups != null && groups.size() < 3) {
-            group = new GroupItem();
-            group.label = "Group " + group.id;
-            mViewModel.addGroup(-1, group);
-        } else {
-            int idx = random.nextInt(3);
-            group = groups.get(idx); // random group
-            ti.label = "ID: " + group.id + " " + ti.id;
-            mViewModel.addItem(idx, 0, ti);
+        if (groups.size() > 0) {
+            TextItem ti = new TextItem();
+            int idx = random.nextInt(groups.size());
+            GroupItem group = groups.get(idx); // get random group
+            ti.label = "ID: " + group.id + "-" + ti.id;
+            mViewModel.addItem(idx, -1, ti);
         }
-
     }
 
     @Override
