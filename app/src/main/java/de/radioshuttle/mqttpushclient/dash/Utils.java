@@ -49,14 +49,14 @@ public class Utils {
                 int spanCount = ((GridLayoutManager) mRecyclerView.getLayoutManager()).getSpanCount();
                 RecyclerView.Adapter a = mRecyclerView.getAdapter();
                 if (a instanceof DashBoardAdapter) {
-                    if (a.getItemViewType(position) == Item.TYPE_GROUP) {
+                    if (a.getItemViewType(position) == DashBoardAdapter.TYPE_GROUP) {
                         spanSize = spanCount;
                     } else {
                         List<Item> list = ((DashBoardAdapter) a).getData();
                         if (list != null && position + 1 < list.size()) {
-                            if (list.get(position).groupIdx != list.get(position + 1).groupIdx) {
+                            if (list.get(position + 1) instanceof GroupItem) {
                                 int z = 1;
-                                for(int i = position - 1; i >= 0 && list.get(i).groupIdx == list.get(position).groupIdx && list.get(i).getType() != Item.TYPE_GROUP; i--) {
+                                for(int i = position - 1; i >= 0 && !(list.get(i) instanceof GroupItem); i--) {
                                     z++; //TODO: this can be calculated in viewModel when "building" adapter data
                                 }
                                 if (z % spanCount > 0) {
