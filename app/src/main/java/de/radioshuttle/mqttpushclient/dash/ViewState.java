@@ -57,8 +57,6 @@ public class ViewState {
             ViewInfo vi = getViewInfo(account);
             if (vi == null) {
                 vi = new ViewInfo();
-                vi.lastView = 0;
-                vi.lastZoomLevel = 0;
             }
             if (vi.lastView != newState) {
                 vi.lastView = newState;
@@ -68,13 +66,37 @@ public class ViewState {
         }
     }
 
+    public void saveDashboard(String account, long timeStamp, String json) {
+        Log.d(VIEW_STATE, "save dashboard: " + account + " " + json); //TODO: remove after rest
+        if (account != null) {
+            ViewInfo vi = getViewInfo(account);
+            if (vi == null) {
+                vi = new ViewInfo();
+            }
+            if (vi.dashboard_mdate != timeStamp) {
+                vi.dashboard_mdate = timeStamp;
+                vi.dashboard_content = (json == null ? "" : json);
+                mState.put(account, vi);
+                writeState();
+            }
+        }
+    }
+
+    public String getDashBoardContent(String account) {
+        ViewInfo vi = getViewInfo(account);
+        return vi == null ? "" : vi.dashboard_content;
+    }
+
+    public long getDashBoardModificationDate(String account) {
+        ViewInfo vi = getViewInfo(account);
+        return vi == null ? 0 : vi.dashboard_mdate;
+    }
+
     public void setLastZoomLevel(String account, int newZoomLevel) {
         if (account != null) {
             ViewInfo vi = getViewInfo(account);
             if (vi == null) {
                 vi = new ViewInfo();
-                vi.lastView = 0;
-                vi.lastZoomLevel = 0;
             }
             if (vi.lastZoomLevel != newZoomLevel) {
                 vi.lastZoomLevel = newZoomLevel;
@@ -114,6 +136,8 @@ public class ViewState {
                         ViewInfo vi = new ViewInfo();
                         vi.lastView = viewInfo.optInt("last_view", VIEW_MESSAGES);
                         vi.lastZoomLevel = viewInfo.optInt("last_zoom_level", 1);
+                        vi.dashboard_mdate = viewInfo.optLong("dashboar_mdate", -1L);
+                        vi.dashboard_content = viewInfo.optString("dashboard_content", "");
                         mState.put(account, vi);
                     }
                 }
@@ -135,6 +159,8 @@ public class ViewState {
                 val = new JSONObject();
                 val.put("last_view", entry.getValue().lastView);
                 val.put("last_zoom_level", entry.getValue().lastZoomLevel);
+                val.put("dashboar_mdate", entry.getValue().dashboard_mdate);
+                val.put("dashboard_content", entry.getValue().dashboard_content);
                 vs.put(entry.getKey(), val);
             } catch (JSONException e) {
                 Log.e(VIEW_STATE, "Setting view states failed." , e);
@@ -147,7 +173,7 @@ public class ViewState {
 
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(VIEW_STATE, out);
-        editor.commit();
+        editor.apply();
 
     }
 
@@ -156,8 +182,17 @@ public class ViewState {
     static ViewState mViewState;
 
     private static class ViewInfo {
+        public ViewInfo() {
+            lastView = 0;
+            lastZoomLevel = 0;
+            dashboard_mdate = 0;
+            dashboard_content = "";
+        }
+
         int lastView;
         int lastZoomLevel;
+        long dashboard_mdate;
+        String dashboard_content;
     }
 
     public final static int VIEW_MESSAGES = 1;
