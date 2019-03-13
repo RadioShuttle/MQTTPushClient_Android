@@ -49,7 +49,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         // Log.d(TAG, "onCreateViewHolder: " );
         View view;
         TextView label = null;
-        if (viewType == Item.TYPE_TEXT) {
+        if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
         } else {
@@ -60,6 +60,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label;
+        holder.viewType = viewType;
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -96,7 +97,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         // Log.d(TAG, "onBindViewHolder: " );
         ViewHolder h = (ViewHolder) holder;
         Item item = mData.get(position);
-        if (item.getType() == Item.TYPE_TEXT || item.getType() == Item.TYPE_GROUP) {
+        if (h.viewType == TYPE_TEXT || h.viewType == TYPE_GROUP) {
             h.label.setText(item.label);
         }
 
@@ -111,13 +112,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         h.itemView.setBackgroundColor(background); // default background color
 
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
-        if (item.getType() != Item.TYPE_GROUP && (lp.width != mWidth || lp.height != mWidth)) {
+        if (h.viewType != TYPE_GROUP && (lp.width != mWidth || lp.height != mWidth)) {
             lp.width = mWidth;
             lp.height = mWidth;
             h.itemView.setLayoutParams(lp);
         }
 
-        if (item.getType() == Item.TYPE_GROUP) {
+        if (h.viewType == TYPE_GROUP) {
             if (lp.width != mSpanCnt * mWidth) {
                 lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
                 h.itemView.setLayoutParams(lp);
@@ -138,7 +139,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             mData = new ArrayList<>();
         }
 
-        /* if topics have been deleted the selected topics hashmap must be updated */
+        /* if items have been deleted the selected items hashmap must be updated */
         if (mSelectedItems != null && mSelectedItems.size() > 0) {
             int o = mSelectedItems.size();
             HashSet<Integer> dataKeys = new HashSet<>();
@@ -172,13 +173,19 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             super(v);
         }
         TextView label;
+        int viewType;
     }
 
     @Override
     public int getItemViewType(int position) {
         int type = 0;
         if (mData != null && position < mData.size()) {
-            type = mData.get(position).getType();
+            Item item = mData.get(position);
+            if (item instanceof GroupItem) {
+                type = TYPE_GROUP;
+            } else if (item instanceof TextItem) {
+                type = TYPE_TEXT;
+            }
         }
         return type;
     }
@@ -242,6 +249,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     private int spacing;
     private LayoutInflater mInflater;
     private List<Item> mData;
+
+    public final static int TYPE_GROUP = 0;
+    public final static int TYPE_TEXT = 1;
 
     private final static String TAG = DashBoardAdapter.class.getSimpleName();
 }
