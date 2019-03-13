@@ -3,10 +3,23 @@
 
     <item
         android:id="@+id/action_add"
-        android:orderInCategory="80"
+        android:orderInCategory="10"
         android:icon="@drawable/ic_menu_add"
         android:title="@string/action_add_account"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/action_add_text"
+                android:orderInCategory="20"
+                android:title="@string/action_add_text"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_add_group"
+                android:orderInCategory="21"
+                android:title="@string/action_add_group"
+                app:showAsAction="never" />
+        </menu>
+    </item>
 
     <item
         android:id="@+id/action_zoom"
