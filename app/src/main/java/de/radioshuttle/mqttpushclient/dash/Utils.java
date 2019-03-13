@@ -6,15 +6,21 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Rect;
 import android.view.View;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import de.radioshuttle.fcm.Notifications;
+import de.radioshuttle.mqttpushclient.MessagesPagedListAdapter;
 import de.radioshuttle.mqttpushclient.R;
 
 public class Utils {
@@ -70,5 +76,35 @@ public class Utils {
             }
             return spanSize;
         }
+    }
+
+    public static void showDeleteDialog(final DashBoardActivity context) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        String title = context.getString(R.string.dlg_del_dash_title);
+        String all = context.getString(R.string.dlg_dash_items_all);
+        String selectedItems = context.getString(R.string.dlg_dash_selected);
+
+        builder.setTitle(title);
+
+        final int[] selection = new int[] {0};
+        builder.setSingleChoiceItems(new String[]{selectedItems, all}, selection[0], new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                selection[0] = item;
+            }
+        });
+        builder.setPositiveButton(context.getString(R.string.action_delete_msgs), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (selection[0] == 0) { // selected items
+                    context.onItemsDelete(false); // selected items
+                } else {
+                    context.onItemsDelete(true); // all items
+                }
+            }
+        });
+        builder.setNegativeButton(context.getString(R.string.action_cancel), null);
+        AlertDialog dlg = builder.create();
+        dlg.show();
     }
 }

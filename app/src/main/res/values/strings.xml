@@ -21,7 +21,6 @@
     <string name="action_clear">Clear</string>
     <string name="action_delete_topics">Delete</string>
     <string name="action_delete_msgs">Delete</string>
-    <string name="action_delete_dashboard_items">Delete</string>
     <string name="action_actions">MQTT Actions</string>
     <string name="action_add">Add</string>
     <string name="action_update">Update</string>
@@ -30,11 +29,6 @@
     <string name="action_update_topic">Update</string>
     <string name="action_mqtt_topics">MQTT Topics</string>
     <string name="action_mqtt_actions">MQTT Actions</string>
-    <string name="action_zoom">Zoom</string>
-
-    <!-- Dashboard -->
-    <string name="action_add_text">Text</string>
-    <string name="action_add_group">Group</string>
 
     <string name="dlg_remove_account_title">Remove Account</string>
     <string name="dlg_remove_account_msg">Confirm removal of currently selected account.</string>
@@ -207,6 +201,22 @@ to communicate with the MQTT broker and to receive push notifications
     <!-- Dashboard -->
     <string name="action_dashboard">Dashboard</string>
     <string name="action_list">List View</string>
-
     <string name="title_dashboard">Dashboard</string>
+
+    <!-- Dashboard menu items -->
+    <string name="action_delete_dashboard_items">Delete</string>
+    <string name="action_zoom">Zoom</string>
+
+    <string name="action_add_text">Text</string>
+    <string name="action_add_group">Group</string>
+
+
+    <!-- delete dialog -->
+    <string name="dlg_del_dash_title">Delete</string>
+    <string name="dlg_dash_items_all">All items</string>
+    <string name="dlg_dash_selected">Selected items</string>
+
+    <!-- End Dashboard -->
+
+
 </resources>

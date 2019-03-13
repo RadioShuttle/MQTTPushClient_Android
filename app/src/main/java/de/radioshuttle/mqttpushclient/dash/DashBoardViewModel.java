@@ -56,7 +56,7 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public void saveItems() {
 
-        long modificationDate = System.currentTimeMillis(); //TODO: remove
+        long modificationDate = System.currentTimeMillis();
         try {
             JSONArray arr = Item.createJSONStrFromItems(mGroups, mItemsPerGroup, true);
             String localJSON = arr.toString();
@@ -182,6 +182,11 @@ public class DashBoardViewModel extends AndroidViewModel {
                     }
                 }
             }
+            dashBoardItemsLiveData.setValue(buildDisplayList());
+            saveItems();
+        } else if (selectedItems == null) { // delete all
+            mGroups.clear();
+            mItemsPerGroup.clear();
             dashBoardItemsLiveData.setValue(buildDisplayList());
             saveItems();
         }

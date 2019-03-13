@@ -318,10 +318,9 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         Log.d(TAG, "edit item: ");
     }
 
-    public void onItemsDelete() {
-        Log.d(TAG, "delete item: ");
+    public void onItemsDelete(boolean all) {
         if (mAdapter != null) {
-            mViewModel.removeItems(mAdapter.getSelectedItems());
+            mViewModel.removeItems(all ? null : mAdapter.getSelectedItems());
         }
     }
 
@@ -345,7 +344,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             boolean handled = false;
             switch (item.getItemId()) {
                 case R.id.action_delete_items:
-                    onItemsDelete();
+                    Utils.showDeleteDialog(DashBoardActivity.this);
                     handled = true;
                     break;
                 case R.id.action_edit_item:
@@ -372,7 +371,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     private DashBoardAdapter mAdapter;
     private int mZoomLevel;
     private boolean mActivityStarted;
-    private DashBoardViewModel mViewModel;
+    protected DashBoardViewModel mViewModel;
 
     private int ZOOM_LEVEL_1 = 0; // dpi
     private int ZOOM_LEVEL_2 = 0;
