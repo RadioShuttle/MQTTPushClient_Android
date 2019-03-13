@@ -27,7 +27,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,7 +46,6 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dash_board);
 
-        mViewModel = ViewModelProviders.of(this).get(DashBoardViewModel.class);
         Bundle args = getIntent().getExtras();
         String json = args.getString(PARAM_ACCOUNT_JSON);
         boolean hastMultipleServer = args.getBoolean(PARAM_MULTIPLE_PUSHSERVERS);
@@ -61,13 +59,24 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         PushAccount b = null;
         try {
             b = PushAccount.createAccountFormJSON(new JSONObject(json));
-            mViewModel.setPushAccount(b);
+            mViewModel = ViewModelProviders.of(
+                    this, new DashBoardViewModel.Factory(b, getApplication()))
+                    .get(DashBoardViewModel.class);
+
+            ViewState vs = ViewState.getInstance(getApplication());
+            String account = b.getKey();
+
+            if (!mViewModel.isInitialized()) {
+                mViewModel.setItems(vs.getDashBoardContent(b.getKey()), vs.getDashBoardModificationDate(account));
+            }
+
             if (savedInstanceState == null) {
-                mZoomLevel = ViewState.getInstance(getApplication()).getLastZoomLevel(b.getKey());
+                mZoomLevel = ViewState.getInstance(getApplication()).getLastZoomLevel(account);
                 if (mZoomLevel == 0) {
                     mZoomLevel = 1;
                 }
-                ViewState.getInstance(getApplication()).setLastState(b.getKey(), ViewState.VIEW_DASHBOARD);
+
+                vs.setLastState(b.getKey(), ViewState.VIEW_DASHBOARD);
             } else {
                 mZoomLevel = savedInstanceState.getInt(KEY_ZOOM_LEVEL, 1);
             }
@@ -152,11 +161,21 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
     Random random = new Random();
     protected void addTestItem() {
+        List<GroupItem> groups = mViewModel.getGroups();
         TextItem ti = new TextItem();
-        ti.groupIdx = random.nextInt(3);
-        ti.orderInGroup = random.nextInt(7);
-        ti.label = "ID: " + ti.groupIdx + " " + ti.orderInGroup;
-        mViewModel.addItem(ti);
+
+        GroupItem group = null;
+        if (groups != null && groups.size() < 3) {
+            group = new GroupItem();
+            group.label = "Group " + group.id;
+            mViewModel.addGroup(-1, group);
+        } else {
+            int idx = random.nextInt(3);
+            group = groups.get(idx); // random group
+            ti.label = "ID: " + group.id + " " + ti.id;
+            mViewModel.addItem(idx, 0, ti);
+        }
+
     }
 
     @Override
@@ -344,7 +363,6 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
     private ActionMode mActionMode;
     private DashBoardAdapter mAdapter;
-    private PushAccount mPushAccount;
     private int mZoomLevel;
     private boolean mActivityStarted;
     private DashBoardViewModel mViewModel;
