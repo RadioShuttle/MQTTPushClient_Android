@@ -7,8 +7,13 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 public class GroupItem extends Item {
-    @Override
-    public int getType() {
-        return Item.TYPE_GROUP;
+
+    public GroupItem() {
     }
+
+    @Override
+    public String getType() {
+        return "group";
+    }
+
 }
