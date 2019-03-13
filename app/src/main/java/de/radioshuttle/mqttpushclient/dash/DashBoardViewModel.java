@@ -96,6 +96,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         }
 
         dashBoardItemsLiveData.setValue(buildDisplayList());
+        saveItems();
     }
 
     public void addItem(int groupIdx, int itemPos, Item item) {
