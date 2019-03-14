@@ -344,7 +344,8 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
                         };
                         t.execute(new String[] {account.pushserverID, account.getMqttAccountName()});
-                        // Log.d(TAG, "deleteDevice: account data removed!!"); //TODO: remove
+                        ViewState.getInstance(getApplication()).removeAccount(account.getKey());
+                        // Log.d(TAG, "deleteDevice: account data removed!!");
                     }
 
                 } catch (JSONException e) {
