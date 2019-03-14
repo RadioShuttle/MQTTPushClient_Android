@@ -210,6 +210,12 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="action_add_text">Text</string>
     <string name="action_add_group">Group</string>
 
+    <string name="title_add_group">Add Group</string>
+    <string name="title_add_text">Add Text</string>
+
+    <string name="title_edit_group">Edit Group</string>
+    <string name="title_edit_text">Edit Text</string>
+
 
     <!-- delete dialog -->
     <string name="dlg_del_dash_title">Delete</string>
