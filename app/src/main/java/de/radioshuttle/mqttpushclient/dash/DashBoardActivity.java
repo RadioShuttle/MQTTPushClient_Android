@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
@@ -22,6 +23,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -149,21 +151,23 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                 }
                 break;
             case R.id.action_add_group :
-                addGroupItem();
+                openEditor(GroupItem.class);
+                // addGroupItem();
                 break;
             case R.id.action_add_text :
-                addTextItem();
+                openEditor(TextItem.class);
+                // addTextItem();
                 break;
             case R.id.action_zoom :
                 zoom();
                 break;
             default:
-                super.onOptionsItemSelected(item);
+                return super.onOptionsItemSelected(item);
         }
         return true;
     }
 
-    public void addGroupItem() {
+    public void addGroupItem() { //TODO: remove after test
         GroupItem groupItem = new GroupItem();
         groupItem.label = "Group " + groupItem.id;
         mViewModel.addGroup(-1, groupItem);
@@ -171,7 +175,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
     public void addTextItem() {
         addTestItem();
-    }
+    } //TODO: remove after test
 
     Random random = new Random();
     protected void addTestItem() {
@@ -221,6 +225,12 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     public void onBackPressed() {
         handleBackPressed();
         // super.onBackPressed();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy()");
     }
 
     protected void handleBackPressed() {
@@ -324,6 +334,45 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         }
     }
 
+    protected void openEditor(Class<? extends Item> type) {
+        if (!mActivityStarted) {
+            mActivityStarted = true;
+            Intent intent = new Intent(this, DashBoardEditActivity.class);
+            intent.putExtra(DashBoardEditActivity.ARG_MODE, DashBoardEditActivity.MODE_ADD);
+            intent.putExtra(DashBoardEditActivity.ARG_TYPE, type.getName());
+            startActivityForResult(intent, RC_EDIT_ITEM);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mActivityStarted = false;
+        if (requestCode == RC_EDIT_ITEM) {
+            if (resultCode == AppCompatActivity.RESULT_OK && data != null) {
+                int mode = data.getIntExtra(DashBoardEditActivity.ARG_MODE, -1);
+                Item item = null;
+                try {
+                    item = (Item) Class.forName(data.getStringExtra(DashBoardEditActivity.ARG_TYPE)).newInstance();
+                } catch (Exception e) {
+                    Log.e(TAG, "onActivityResult invalid arg: " + e.getMessage());
+                    return;
+                }
+
+                if (mode == DashBoardEditActivity.MODE_ADD) {
+                    if (item instanceof GroupItem) {
+                        item.label = "Group " + item.id;
+                        mViewModel.addGroup(-1, (GroupItem) item); // TODO: remove test data
+                    } else if (item instanceof TextItem) {
+
+                    }
+                } else if (mode == DashBoardEditActivity.MODE_EDIT) {
+
+                }
+            }
+        }
+    }
+
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
         @Override
@@ -376,6 +425,8 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     private int ZOOM_LEVEL_1 = 0; // dpi
     private int ZOOM_LEVEL_2 = 0;
     private int ZOOM_LEVEL_3 = 0;
+
+    private final static int RC_EDIT_ITEM = 1;
 
     private final static String KEY_ZOOM_LEVEL = "ZOOM_LEVEL";
     private final static String KEY_SELECTED_ITEMS = "KEY_SELECTED_ITEMS";
