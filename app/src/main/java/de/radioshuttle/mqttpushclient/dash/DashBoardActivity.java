@@ -23,7 +23,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -167,28 +166,6 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                 return super.onOptionsItemSelected(item);
         }
         return true;
-    }
-
-    public void addGroupItem() { //TODO: remove after test
-        GroupItem groupItem = new GroupItem();
-        groupItem.label = "Group " + groupItem.id;
-        mViewModel.addGroup(-1, groupItem);
-    }
-
-    public void addTextItem() {
-        addTestItem();
-    } //TODO: remove after test
-
-    Random random = new Random();
-    protected void addTestItem() {
-        List<GroupItem> groups = mViewModel.getGroups();
-        if (groups.size() > 0) {
-            TextItem ti = new TextItem();
-            int idx = random.nextInt(groups.size());
-            GroupItem group = groups.get(idx); // get random group
-            ti.label = "ID: " + group.id + "-" + ti.id;
-            mViewModel.addItem(idx, -1, ti);
-        }
     }
 
     @Override
@@ -431,6 +408,14 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                     if (item instanceof GroupItem) {
                         mViewModel.addGroup(itemPos, (GroupItem) item);
                     } else {
+                        /* it there is no group yet, create group and add item to it */
+                        if (mViewModel.getGroups().size() == 0) {
+                            GroupItem groupItem = new GroupItem();
+                            groupItem.label = getString(R.string.new_group_label);
+                            mViewModel.addGroup(0, groupItem);
+                            groupPos = 0;
+                            itemPos = 0;
+                        }
                         mViewModel.addItem(groupPos, itemPos, item);
                     }
                 } else if (mode == DashBoardEditActivity.MODE_EDIT) {
