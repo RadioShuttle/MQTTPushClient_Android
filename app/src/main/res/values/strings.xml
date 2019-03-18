@@ -216,6 +216,14 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="title_edit_group">Edit Group</string>
     <string name="title_edit_text">Edit Text</string>
 
+    <!-- Dashboard edit activity -->
+    <string name="dash_label_name">Name:</string>
+    <string name="dash_label_color">Color:</string>
+    <string name="dash_label_bcolor">Background:</string>
+    <string name="dash_label_group">Group:</string>
+    <string name="dash_label_position">Pos:</string>
+
+    <string name="select_single_dash">Only one dash may be selected for editing</string>
 
     <!-- delete dialog -->
     <string name="dlg_del_dash_title">Delete</string>
