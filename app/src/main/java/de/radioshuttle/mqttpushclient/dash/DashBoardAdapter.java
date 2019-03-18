@@ -49,9 +49,11 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         // Log.d(TAG, "onCreateViewHolder: " );
         View view;
         TextView label = null;
+        TextView textContent = null;
         if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
+            textContent = view.findViewById(R.id.textContent);
         } else {
             view = mInflater.inflate(R.layout.activity_dash_board_item_group, parent, false);
             label = view.findViewById(R.id.name);
@@ -59,8 +61,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
 
         final ViewHolder holder = new ViewHolder(view);
-        holder.label = label;
+        holder.label = label; // item label
         holder.viewType = viewType;
+        holder.textContent = textContent; // content for text items
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -109,20 +112,25 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.itemView.setActivated(false);
         }
 
-        h.itemView.setBackgroundColor(background); // default background color
-
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
-        if (h.viewType != TYPE_GROUP && (lp.width != mWidth || lp.height != mWidth)) {
-            lp.width = mWidth;
-            lp.height = mWidth;
-            h.itemView.setLayoutParams(lp);
+
+        if (h.viewType == TYPE_TEXT) {
+            lp = h.textContent.getLayoutParams();
+            if (lp.width != mWidth || lp.height != mWidth) {
+                lp.width = mWidth;
+                lp.height = mWidth;
+                h.textContent.setLayoutParams(lp);
+            }
+            h.textContent.setBackgroundColor(background);
         }
 
         if (h.viewType == TYPE_GROUP) {
-            if (lp.width != mSpanCnt * mWidth) {
+            if (lp.width != mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2) {
                 lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
                 h.itemView.setLayoutParams(lp);
             }
+            h.itemView.setBackgroundColor(background);
+
         }
         // Log.d(TAG, "width: " + lp.width);
         // Log.d(TAG, "height: " + lp.height);
@@ -173,6 +181,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             super(v);
         }
         TextView label;
+        TextView textContent;
         int viewType;
     }
 
