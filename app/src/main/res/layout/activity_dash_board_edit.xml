@@ -1,9 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".dash.DashBoardEditActivity">
+
+    <androidx.core.widget.NestedScrollView
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+
+        <TableLayout
+            android:id="@+id/dashTable"
+            android:paddingTop="8dp"
+            android:shrinkColumns="1"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            >
+
+            <TableRow>
+                <TextView
+                    android:gravity="right"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:labelFor="@+id/dash_name"
+                    android:text="@string/dash_label_name"/>
+                <EditText
+                    android:id="@+id/dash_name"
+                    android:inputType="text"
+                    android:ems="15"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:minHeight="48dp"
+                    android:layout_marginLeft="4dp"
+                    />
+            </TableRow>
+
+            <TableRow android:id="@+id/rowGroup">
+                <TextView
+                    android:gravity="right"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:labelFor="@+id/dash_groupSpinner"
+                    android:text="@string/dash_label_group"/>
+                <Spinner
+                    android:id="@+id/dash_groupSpinner"
+                    android:minHeight="48dp"
+                    android:layout_marginLeft="4dp"
+                    />
+            </TableRow>
+
+            <TableRow>
+                <TextView
+                    android:gravity="right"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:labelFor="@+id/dash_posSpinner"
+                    android:text="@string/dash_label_position"/>
+                <Spinner
+                    android:id="@+id/dash_posSpinner"
+                    android:layout_marginLeft="4dp"
+                    />
+            </TableRow>
+
+        </TableLayout>
+
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
