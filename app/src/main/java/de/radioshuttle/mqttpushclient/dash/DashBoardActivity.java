@@ -29,12 +29,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -326,6 +328,18 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
     public void onItemEdit() {
         Log.d(TAG, "edit item: ");
+        HashSet<Integer> selItems = mAdapter.getSelectedItems();
+        if (selItems != null && selItems.size() > 0) {
+            if (selItems.size() > 1) {
+                Toast.makeText(getApplicationContext(), R.string.select_single_dash, Toast.LENGTH_LONG).show();
+            } else {
+                DashBoardViewModel.ItemContext ic = mViewModel.getItem(selItems.iterator().next());
+                if (ic != null && ic.item != null) {
+                    openEditor(ic);
+                }
+            }
+        }
+
     }
 
     public void onItemsDelete(boolean all) {
@@ -334,12 +348,52 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         }
     }
 
+    // add
     protected void openEditor(Class<? extends Item> type) {
         if (!mActivityStarted) {
             mActivityStarted = true;
             Intent intent = new Intent(this, DashBoardEditActivity.class);
+            intent.putExtra(DashBoardEditActivity.ARG_ACCOUNT, getIntent().getStringExtra(PARAM_ACCOUNT_JSON));
             intent.putExtra(DashBoardEditActivity.ARG_MODE, DashBoardEditActivity.MODE_ADD);
             intent.putExtra(DashBoardEditActivity.ARG_TYPE, type.getName());
+            if (type.getName().equals(GroupItem.class.getName())) {
+                intent.putExtra(DashBoardEditActivity.ARG_GROUP_POS, -1); // no groups selection
+                intent.putExtra(DashBoardEditActivity.ARG_ITEM_POS, mViewModel.getGroups().size());
+            } else {
+                int pos = -1;
+                LinkedList<GroupItem> groups = mViewModel.getGroups();
+                int grpIdx = mViewModel.getGroups().size() - 1;
+                intent.putExtra(DashBoardEditActivity.ARG_GROUP_POS, grpIdx);
+                if (grpIdx >= 0 && grpIdx < groups.size()) {
+                    int groupID = mViewModel.getGroups().get(grpIdx).id;
+                    LinkedList<Item> items = mViewModel.getItems(groupID);
+                    if (items != null) {
+                        pos = items.size();
+                    }
+                }
+                intent.putExtra(DashBoardEditActivity.ARG_ITEM_POS, pos);
+            }
+
+            startActivityForResult(intent, RC_EDIT_ITEM);
+        }
+    }
+
+    // edit
+    protected void openEditor(DashBoardViewModel.ItemContext selectedItem) {
+        if (!mActivityStarted && selectedItem != null && selectedItem.item != null) {
+            mActivityStarted = true;
+            Intent intent = new Intent(this, DashBoardEditActivity.class);
+            intent.putExtra(DashBoardEditActivity.ARG_ACCOUNT, getIntent().getStringExtra(PARAM_ACCOUNT_JSON));
+            intent.putExtra(DashBoardEditActivity.ARG_MODE, DashBoardEditActivity.MODE_EDIT);
+            intent.putExtra(DashBoardEditActivity.ARG_TYPE, selectedItem.getClass().getName());
+            intent.putExtra(DashBoardEditActivity.ARG_ITEM_ID, selectedItem.item.id);
+            if (selectedItem.item instanceof GroupItem) {
+                intent.putExtra(DashBoardEditActivity.ARG_GROUP_POS, -1);
+            } else {
+                intent.putExtra(DashBoardEditActivity.ARG_GROUP_POS, selectedItem.groupPos);
+            }
+            intent.putExtra(DashBoardEditActivity.ARG_ITEM_POS, selectedItem.itemPos);
+
             startActivityForResult(intent, RC_EDIT_ITEM);
         }
     }
@@ -351,23 +405,40 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         if (requestCode == RC_EDIT_ITEM) {
             if (resultCode == AppCompatActivity.RESULT_OK && data != null) {
                 int mode = data.getIntExtra(DashBoardEditActivity.ARG_MODE, -1);
+                String itemJSONStr = data.getStringExtra(DashBoardEditActivity.ARG_ITEM);
+                int groupPos = data.getIntExtra(DashBoardEditActivity.ARG_GROUP_POS, -1);
+                int itemPos = data.getIntExtra(DashBoardEditActivity.ARG_ITEM_POS, -1);
+                String itemClassName = data.getStringExtra(DashBoardEditActivity.ARG_TYPE);
                 Item item = null;
-                try {
-                    item = (Item) Class.forName(data.getStringExtra(DashBoardEditActivity.ARG_TYPE)).newInstance();
-                } catch (Exception e) {
-                    Log.e(TAG, "onActivityResult invalid arg: " + e.getMessage());
-                    return;
+                if (itemJSONStr != null && itemClassName != null) {
+                    try {
+                        JSONObject itemJSON = new JSONObject(itemJSONStr);
+                        if (itemClassName.equals(GroupItem.class.getName())) {
+                            GroupItem groupItem = new GroupItem();
+                            groupItem.id = itemJSON.optInt("id");
+                            groupItem.setJSONData(itemJSON);
+                            item = groupItem;
+                        } else {
+                            item = Item.createItemFromJSONObject(itemJSON);
+                            item.id = itemJSON.getInt("id");
+                        }
+                    } catch (Exception e) {
+                        Log.d(TAG, "onActivityResult(): parsing result error: " + e.getMessage());
+                    }
                 }
 
                 if (mode == DashBoardEditActivity.MODE_ADD) {
                     if (item instanceof GroupItem) {
-                        item.label = "Group " + item.id;
-                        mViewModel.addGroup(-1, (GroupItem) item); // TODO: remove test data
-                    } else if (item instanceof TextItem) {
-
+                        mViewModel.addGroup(itemPos, (GroupItem) item);
+                    } else {
+                        mViewModel.addItem(groupPos, itemPos, item);
                     }
                 } else if (mode == DashBoardEditActivity.MODE_EDIT) {
-
+                    if (item instanceof GroupItem) {
+                        mViewModel.setGroup(itemPos, (GroupItem) item);
+                    } else {
+                        mViewModel.setItem(groupPos, itemPos, item);
+                    }
                 }
             }
         }
