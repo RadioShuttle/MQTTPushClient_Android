@@ -85,6 +85,57 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     }
 
+    public ItemContext getItem(int itemID) {
+        ItemContext itemContext = null;
+        Item item = null;
+        GroupItem groupItem = null;
+        int groupPos = 0;
+        int itemPos = 0;
+
+        Iterator<GroupItem> itGroups = mGroups.iterator();
+        Item f = null;
+        while(itGroups.hasNext()) {
+            f = itGroups.next();
+            if (f.id == itemID) {
+                item = f;
+                break;
+            }
+            itemPos++;
+        }
+        Iterator<Map.Entry<Integer, LinkedList<Item>>> it = mItemsPerGroup.entrySet().iterator();
+        while (it.hasNext() && item == null) {
+            Map.Entry<Integer, LinkedList<Item>> k = it.next();
+            if (k.getValue() != null) {
+                for(int j = 0; j < mGroups.size(); j++) {
+                    groupPos = j;
+                    if (mGroups.get(j).id == k.getKey()) {
+                        groupItem = mGroups.get(j);
+                        break;
+                    }
+                }
+                itemPos = 0;
+                Iterator<Item> it2 = k.getValue().iterator();
+                while (it2.hasNext()) {
+                    f = it2.next();
+                    if (f.id == itemID) {
+                        item = f;
+                        break;
+                    }
+                    itemPos++;
+                }
+            }
+        }
+        if (item != null) {
+            itemContext = new ItemContext();
+            itemContext.item = item;
+            itemContext.group = groupItem;
+            itemContext.groupPos = groupPos;
+            itemContext.itemPos = itemPos;
+        }
+
+        return itemContext;
+    }
+
     public void addGroup(int pos, GroupItem item) {
 
         if (pos >= 0 && pos < mGroups.size()) {
@@ -97,6 +148,14 @@ public class DashBoardViewModel extends AndroidViewModel {
 
         dashBoardItemsLiveData.setValue(buildDisplayList());
         saveItems();
+    }
+
+    public void setGroup(int pos, GroupItem groupItem) {
+        if (pos >= 0 && pos < mGroups.size()) {
+            mGroups.set(pos, groupItem);
+            dashBoardItemsLiveData.setValue(buildDisplayList());
+            saveItems();
+        }
     }
 
     public void addItem(int groupIdx, int itemPos, Item item) {
@@ -116,14 +175,31 @@ public class DashBoardViewModel extends AndroidViewModel {
                     groupItems.add(item);
                 }
                 dashBoardItemsLiveData.setValue(buildDisplayList());
+                saveItems();
             }
         }
-        saveItems();
-
     }
 
-    public List<GroupItem> getGroups() {
+    public void setItem(int groupIdx, int itemPos, Item item) {
+        if (groupIdx >= 0 && groupIdx < mGroups.size()) {
+            GroupItem group = mGroups.get(groupIdx);
+            if (group != null) {
+                LinkedList<Item> groupItems = mItemsPerGroup.get(group.id);
+                if (groupItems != null && itemPos >= 0 && itemPos < groupItems.size()) {
+                    groupItems.set(itemPos, item);
+                    dashBoardItemsLiveData.setValue(buildDisplayList());
+                    saveItems();
+                }
+            }
+        }
+    }
+
+    public LinkedList<GroupItem> getGroups() {
         return mGroups;
+    }
+
+    public LinkedList<Item> getItems(int groupID) {
+        return mItemsPerGroup.get(groupID);
     }
 
     protected List<Item> buildDisplayList() {
@@ -196,6 +272,13 @@ public class DashBoardViewModel extends AndroidViewModel {
         return mInitialized;
     }
 
+    public static class ItemContext {
+        public Item item;
+        public GroupItem group;
+        public int itemPos;
+        public int groupPos;
+    }
+
 
     public PushAccount getPushAccount() {
         return mPushAccount;
@@ -217,7 +300,6 @@ public class DashBoardViewModel extends AndroidViewModel {
         PushAccount pushAccount;
         Application app;
     }
-
 
     private boolean mInitialized;
     private long mModificationDate;
