@@ -150,14 +150,6 @@ public class DashBoardViewModel extends AndroidViewModel {
         saveItems();
     }
 
-    public void setGroup(int pos, GroupItem groupItem) {
-        if (pos >= 0 && pos < mGroups.size()) {
-            mGroups.set(pos, groupItem);
-            dashBoardItemsLiveData.setValue(buildDisplayList());
-            saveItems();
-        }
-    }
-
     public void addItem(int groupIdx, int itemPos, Item item) {
 
         if (groupIdx >= 0 && groupIdx < mGroups.size()) {
@@ -180,13 +172,67 @@ public class DashBoardViewModel extends AndroidViewModel {
         }
     }
 
+    public void setGroup(int pos, GroupItem groupItem) {
+        if (pos >= 0) {
+            boolean removeOld = false;
+            if (pos >= mGroups.size()) {
+                pos = mGroups.size();
+                mGroups.add(groupItem);
+                removeOld = true;
+            } else {
+                GroupItem currentGr = mGroups.get(pos);
+                if (currentGr.id == groupItem.id) {
+                    mGroups.set(pos, groupItem); // replace
+                } else {
+                    mGroups.add(pos, groupItem); // insert
+                    removeOld = true;
+                }
+            }
+            if (removeOld) {
+                for(int i = 0; i < mGroups.size(); i++) {
+                    if (pos != i && mGroups.get(i).id == groupItem.id) {
+                        mGroups.remove(i); // remove from old pos
+                        break;
+                    }
+                }
+            }
+            dashBoardItemsLiveData.setValue(buildDisplayList());
+            saveItems();
+        }
+    }
+
     public void setItem(int groupIdx, int itemPos, Item item) {
+
         if (groupIdx >= 0 && groupIdx < mGroups.size()) {
             GroupItem group = mGroups.get(groupIdx);
             if (group != null) {
-                LinkedList<Item> groupItems = mItemsPerGroup.get(group.id);
-                if (groupItems != null && itemPos >= 0 && itemPos < groupItems.size()) {
-                    groupItems.set(itemPos, item);
+                LinkedList<Item> items = mItemsPerGroup.get(group.id);
+                if (items != null) {
+                    ItemContext ic = null;
+                    if (itemPos >= items.size()) {
+                        itemPos = items.size();
+                        ic = getItem(item.id);
+                        items.add(item);
+                    } else {
+                        Item currentItem = items.get(itemPos);
+                        if (currentItem.id == item.id) {
+                            items.set(itemPos, item); // replace
+                        } else {
+                            ic = getItem(item.id);
+                            items.add(itemPos, item); // insert
+                        }
+                    }
+                    if (ic != null ) { // remove from old pos
+                        items = getItems(ic.group.id);
+                        if (items != null) {
+                            for(int i = 0; i < items.size(); i++) {
+                                if ((itemPos != i || ic.groupPos != groupIdx) && items.get(i).id == item.id) {
+                                    items.remove(i);
+                                    break;
+                                }
+                            }
+                        }
+                    }
                     dashBoardItemsLiveData.setValue(buildDisplayList());
                     saveItems();
                 }
