@@ -194,20 +194,15 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
         mSwipeRefreshLayout.setRefreshing(false);
     }
 
-    /** returns language code de, en, ja, fr (default will be en), helper to build context URLs */
+    /** returns language code de, en (default will be en), helper to build context URLs */
     public static String getLanguageCode() {
         Locale def = Locale.getDefault();
         String code;
         if (def.getLanguage().equals(new Locale("de").getLanguage())) {
             code = "de";
-        } else if (def.getLanguage().equals(new Locale("fr").getLanguage())) {
-            code = "fr";
-        } else if (def.getLanguage().equals(new Locale("ja").getLanguage())) {
-            code = "ja";
-        } else {
+       } else {
             code = "en";
         }
-        // return "de"; //TODO: raus
         return code;
     }
 
