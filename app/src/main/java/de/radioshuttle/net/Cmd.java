@@ -470,7 +470,11 @@ public class Cmd {
     }
 
     public void response(RawCmd request, int rc) throws IOException {
-        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, rc, new byte[0]);
+        response(request, new byte[0], rc);
+    }
+
+    public void response(RawCmd request, byte[] data, int rc) throws IOException {
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, rc, data);
     }
 
     protected void writeCommandStrPara(int cmd, int seqNo, String arg) throws IOException {
