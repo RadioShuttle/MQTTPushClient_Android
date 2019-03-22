@@ -5,7 +5,8 @@ android {
         config {
             keyAlias 'upload'
             keyPassword 'XXXXXXXXXXX'
-            storeFile file('../android.jksX') // renamed keystore to prevent accidentally building a release (of this branch) for playstore
+            storeFile file('../android.jksX')
+            // renamed keystore to prevent accidentally building a release (of this branch) for playstore
             storePassword 'XXXXXXXXXX'
         }
     }
@@ -14,8 +15,8 @@ android {
         applicationId "de.radioshuttle.mqttpushclient"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 51
-        versionName "1.1.4"
+        versionCode 52
+        versionName "1.1.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         signingConfig signingConfigs.config
@@ -41,8 +42,8 @@ dependencies {
     implementation 'com.squareup.duktape:duktape-android:1.3.0'
 
     implementation 'com.google.android.material:material:1.0.0'
-    implementation 'com.google.firebase:firebase-core:16.0.7'
-    implementation 'com.google.firebase:firebase-messaging:17.4.0'
+    implementation 'com.google.firebase:firebase-core:16.0.8'
+    implementation 'com.google.firebase:firebase-messaging:17.5.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'

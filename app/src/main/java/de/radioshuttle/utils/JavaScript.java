@@ -89,7 +89,7 @@ public class JavaScript {
                     + "  msg.topic = topic; "
                     + "  msg.text = payloadStr; "
                     + "  msg.content = payloadStr;" // deprecated, for backward comp
-                    + "  msg.raw = Duktape.dec('base64', payloadBase64);"
+                    + "  msg.raw = Duktape.dec('base64', payloadBase64).buffer; "
                     + "  msg.notificationType = notificationType; "
                     + "  var content = payloadStr;"
                     + jsBody + "\n"
