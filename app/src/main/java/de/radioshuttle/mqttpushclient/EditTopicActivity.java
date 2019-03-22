@@ -619,8 +619,8 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
 
     public final static String JS_EXAMPLE_BINARY = ""
             + "/* 12 bytes: uint16, uint16, float32, float32 (little endian) */\n"
-            + "if (msg.raw.length >= 12) {\n"
-            + "  var dv = new DataView(msg.raw.buffer);\n"
+            + "if (msg.raw.byteLength >= 12) {\n"
+            + "  var dv = new DataView(msg.raw);\n"
             + "  if (dv.getUint16(0, true) == 33841) {\n"
             + "    var t = dv.getFloat32(4, true);\n"
             + "    var h = dv.getFloat32(8, true);\n"
