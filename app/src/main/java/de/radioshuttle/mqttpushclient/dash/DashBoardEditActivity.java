@@ -9,6 +9,7 @@ package de.radioshuttle.mqttpushclient.dash;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProviders;
 import de.radioshuttle.mqttpushclient.PushAccount;
@@ -18,6 +19,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -74,7 +77,45 @@ public class DashBoardEditActivity extends AppCompatActivity implements AdapterV
                         mViewModel.setItems(vs.getDashBoardContent(b.getKey()), vs.getDashBoardModificationDate(account));
                     }
 
+                    int borderColor = Color.BLACK;
+                    TextView tv = findViewById(R.id.dash_color_label);
+                    if (tv != null) {
+                        ColorStateList tc = tv.getTextColors();
+                        borderColor = tc.getDefaultColor();
+                    }
+                    final int background = ContextCompat.getColor(this, R.color.dashboad_item_background);
+                    final int fBorderColor = borderColor;
+
                     mEditTextLabel = findViewById(R.id.dash_name);
+                    mColorButton = findViewById(R.id.dash_color_button);
+
+                    if (mColorButton != null) {
+                        // Log.d(TAG, "backGround: " + Integer.toHexString(tc.getDefaultColor()));
+                        mColorButton.setColor(borderColor, fBorderColor);
+
+                        mColorButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                //TODO: pass selected color
+                                // showColorDialog(null, tc.getDefaultColor(), "color");
+                                mColorButton.setColor(Color.WHITE, fBorderColor); //TODO test
+
+                            }
+                        });
+                    }
+
+                    mBColorButton = findViewById(R.id.dash_bcolor_button);
+                    if (mBColorButton != null) {
+                        mBColorButton.setColor(background, borderColor);
+                        mBColorButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                //TODO: pass selected color
+                                // showColorDialog(null, background, "bcolor");
+                                mBColorButton.setColor(Color.GREEN, fBorderColor); //TODO test
+                            }
+                        });
+                    }
 
                     if (mMode == MODE_EDIT) {
                         int idx = args.getInt(ARG_ITEM_ID, -1);
@@ -273,6 +314,22 @@ public class DashBoardEditActivity extends AppCompatActivity implements AdapterV
         }
     }
 
+    protected void showColorDialog(Integer selectedColor, int defaultColor,  String type) {
+
+        /*
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        Fragment prev = getSupportFragmentManager().findFragmentByTag(ColorPickerDialog.class.getSimpleName());
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        // Create and show the dialog.
+        DialogFragment newFragment = new ColorPickerDialog();
+        newFragment.show(ft, ColorPickerDialog.class.getSimpleName());
+        */
+    }
+
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
         Log.d(TAG, "onNothingSelected");
@@ -338,15 +395,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements AdapterV
     }
 
     protected EditText mEditTextLabel;
+    protected ColorLabel mColorButton;
+    protected ColorLabel mBColorButton;
 
-    // protected boolean mFirstInitStep;
     protected boolean mGroupSelInit, mItemSelInit;
     protected Item mItem;
     protected Spinner mGroupSpinner;
     protected Spinner mPosSpinner;
     protected DashBoardViewModel mViewModel;
     protected int mMode;
-    // protected DashBoardViewModel.ItemContext mItemContext;
 
     private final static String TAG = DashBoardEditActivity.class.getSimpleName();
 
