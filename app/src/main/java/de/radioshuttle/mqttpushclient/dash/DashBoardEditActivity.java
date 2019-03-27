@@ -339,34 +339,33 @@ public class DashBoardEditActivity extends AppCompatActivity
     }
 
     protected void showColorDialog(int defaultColor, int currentColor, int labelBorderColor, String id) {
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        Fragment prev = getSupportFragmentManager().findFragmentByTag(ColorPickerDialog.class.getSimpleName());
-        if (prev != null) {
-            ft.remove(prev);
-        }
-        ft.addToBackStack(null);
+        Fragment currentColorPickerDlg = getSupportFragmentManager().findFragmentByTag(ColorPickerDialog.class.getSimpleName());
+        if (currentColorPickerDlg == null) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.addToBackStack(null);
 
-        // Create and show the dialog.
-        ArrayList<Integer> palette = ColorPickerDialog.simplePalette();
-        palette.add(0, defaultColor);
-        // chekc if current color in palette. if not add
-        boolean found = false;
-        for(int i = 0; i < palette.size(); i++) {
-            if (palette.get(i) == currentColor) {
-                found = true;
-                break;
+            // Create and show the dialog.
+            ArrayList<Integer> palette = ColorPickerDialog.simplePalette();
+            palette.add(0, defaultColor);
+            // chekc if current color in palette. if not add
+            boolean found = false;
+            for(int i = 0; i < palette.size(); i++) {
+                if (palette.get(i) == currentColor) {
+                    found = true;
+                    break;
+                }
             }
-        }
-        if (!found) {
-            if (palette.size() > 1) {
-                palette.add(1, currentColor);
-            } else {
-                palette.add(currentColor);
+            if (!found) {
+                if (palette.size() > 1) {
+                    palette.add(1, currentColor);
+                } else {
+                    palette.add(currentColor);
+                }
             }
-        }
 
-        DialogFragment newFragment = ColorPickerDialog.newInstance(id, palette, labelBorderColor);
-        newFragment.show(ft, ColorPickerDialog.class.getSimpleName());
+            DialogFragment newFragment = ColorPickerDialog.newInstance(id, palette, labelBorderColor);
+            newFragment.show(ft, ColorPickerDialog.class.getSimpleName());
+        }
     }
 
     @Override
