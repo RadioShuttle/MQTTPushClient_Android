@@ -25,6 +25,9 @@ public abstract class Item {
 
     public int id; // transient (unique id for internal use)
 
+    public Integer color;
+    public Integer background;
+
     public String label;
 
     public JSONObject toJSONObject() throws JSONException {
@@ -33,11 +36,28 @@ public abstract class Item {
             o.put("type", getType());
         }
         o.put("label", label);
+        if (color != null) {
+            o.put("color", color.intValue());
+        }
+        if (background != null) {
+            o.put("background", background);
+        }
+
         return o;
     }
 
     protected void setJSONData(JSONObject o) {
         label = o.optString("label");
+        if (o.has("background")) {
+            background = o.optInt("background");
+        } else {
+            background = null;
+        }
+        if (o.has("color")) {
+            color = o.optInt("color");
+        } else {
+            color = null;
+        }
     }
 
     public static Item createItemFromJSONObject(JSONObject o) {
