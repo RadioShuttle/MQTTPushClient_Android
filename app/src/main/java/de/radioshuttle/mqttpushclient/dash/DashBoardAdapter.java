@@ -50,6 +50,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         View view;
         TextView label = null;
         TextView textContent = null;
+        int defaultColor = 0;
         if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
@@ -57,13 +58,14 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         } else {
             view = mInflater.inflate(R.layout.activity_dash_board_item_group, parent, false);
             label = view.findViewById(R.id.name);
+            defaultColor = label.getTextColors().getDefaultColor();
         }
-
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
         holder.viewType = viewType;
         holder.textContent = textContent; // content for text items
+        holder.defaultColor = defaultColor;
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -104,7 +106,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.label.setText(item.label);
         }
 
-        int background = mDefaultBackground;
+        int background = (item.background == null ? mDefaultBackground : item.background);
+        int color = (item.color == null ? h.defaultColor : item.color);
         if (mSelectedItems.contains(item.id)) {
             h.itemView.setActivated(true);
             background = 0xFFBBDEFB; //TODO
@@ -130,7 +133,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 h.itemView.setLayoutParams(lp);
             }
             h.itemView.setBackgroundColor(background);
-
+            h.label.setTextColor(color);
         }
         // Log.d(TAG, "width: " + lp.width);
         // Log.d(TAG, "height: " + lp.height);
@@ -182,6 +185,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
         TextView label;
         TextView textContent;
+        int defaultColor;
         int viewType;
     }
 
@@ -252,6 +256,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
     private HashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
+    private Integer mDefaultColor;
     private int mDefaultBackground;
     private int mWidth;
     private int mSpanCnt;
