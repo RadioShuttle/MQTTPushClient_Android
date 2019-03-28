@@ -10,6 +10,7 @@ import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -50,21 +51,25 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         View view;
         TextView label = null;
         TextView textContent = null;
+        ImageView selectedImageView = null;
         int defaultColor = 0;
         if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
             textContent = view.findViewById(R.id.textContent);
+            selectedImageView = view.findViewById(R.id.check);
         } else {
             view = mInflater.inflate(R.layout.activity_dash_board_item_group, parent, false);
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
+            selectedImageView = view.findViewById(R.id.check);
         }
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
         holder.viewType = viewType;
         holder.textContent = textContent; // content for text items
+        holder.selectedImageView = selectedImageView;
         holder.defaultColor = defaultColor;
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -110,9 +115,14 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         int color = (item.color == 0 ? h.defaultColor : item.color);
         if (mSelectedItems.contains(item.id)) {
             h.itemView.setActivated(true);
-            background = 0xFFBBDEFB; //TODO
+            if (h.selectedImageView != null && h.selectedImageView.getVisibility() != View.VISIBLE) {
+                h.selectedImageView.setVisibility(View.VISIBLE);
+            }
         } else {
             h.itemView.setActivated(false);
+            if (h.selectedImageView != null && h.selectedImageView.getVisibility() != View.GONE) {
+                h.selectedImageView.setVisibility(View.GONE);
+            }
         }
 
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
@@ -185,6 +195,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
         TextView label;
         TextView textContent;
+        ImageView selectedImageView;
         int defaultColor;
         int viewType;
     }
