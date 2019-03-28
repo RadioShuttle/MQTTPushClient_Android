@@ -91,25 +91,38 @@ public class ColorPickerDialog extends DialogFragment {
         }
     }
 
-    protected static ArrayList<Integer> simplePalette() {
+    public static ArrayList<Integer> simplePalette() {
+        return optimum16Palette();
+    }
+
+    // see /http://alumni.media.mit.edu/~wad/color/palette.html
+    public static ArrayList<Integer> optimum16Palette() {
         ArrayList<Integer> palette = new ArrayList<>();
 
-        //TODO: make a decent palette
-        palette.add(Color.WHITE);
-        palette.add(Color.LTGRAY);
-        palette.add(Color.GRAY);
-        palette.add(Color.DKGRAY);
-        palette.add(Color.BLACK);
-        palette.add(Color.YELLOW);
-        palette.add(Color.RED);
-        palette.add(Color.GREEN);
-        palette.add(Color.CYAN);
-        palette.add(Color.BLUE);
-        palette.add(Color.MAGENTA);
+        palette.add(Color.rgb(255, 255, 255)); // White
+        palette.add(Color.rgb(160, 160, 160)); // Lt. Gray
+        palette.add(Color.rgb(87, 87, 87)); // Dk. Gray
+        palette.add(Color.rgb(0, 0, 0)); // Black
+
+        palette.add(Color.rgb(233, 222, 187)); //  Tan
+        palette.add(Color.rgb(255, 238, 51)); //  Yellow
+        palette.add(Color.rgb(255, 146, 51)); // Orange
+
+        palette.add(Color.rgb(173, 35, 35)); // Red
+        palette.add(Color.rgb(129, 74, 25)); // Brown
+
+        palette.add(Color.rgb(129, 197, 122)); // Lt. Green
+        palette.add(Color.rgb(29, 105, 20)); // Green
+
+        palette.add(Color.rgb(255, 205, 243)); // Pink
+        palette.add(Color.rgb(129, 38, 192)); // Purple
+
+        palette.add(Color.rgb(41, 208, 208)); // Cyan
+        palette.add(Color.rgb(157, 175, 255)); // Lt. Blue
+        palette.add(Color.rgb(42, 75, 215)); // Blue
 
         return palette;
     }
-
 
     interface Callback {
         void onColorSelected(int idx, int color, String name);
