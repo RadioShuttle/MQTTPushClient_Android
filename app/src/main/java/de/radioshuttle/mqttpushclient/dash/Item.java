@@ -25,8 +25,8 @@ public abstract class Item {
 
     public int id; // transient (unique id for internal use)
 
-    public Integer color;
-    public Integer background;
+    public int color;
+    public int background;
 
     public String label;
 
@@ -36,28 +36,16 @@ public abstract class Item {
             o.put("type", getType());
         }
         o.put("label", label);
-        if (color != null) {
-            o.put("color", color.intValue());
-        }
-        if (background != null) {
-            o.put("background", background);
-        }
+        o.put("color", color);
+        o.put("background", background);
 
         return o;
     }
 
     protected void setJSONData(JSONObject o) {
         label = o.optString("label");
-        if (o.has("background")) {
-            background = o.optInt("background");
-        } else {
-            background = null;
-        }
-        if (o.has("color")) {
-            color = o.optInt("color");
-        } else {
-            color = null;
-        }
+        background = o.optInt("background");
+        color = o.optInt("color");
     }
 
     public static Item createItemFromJSONObject(JSONObject o) {

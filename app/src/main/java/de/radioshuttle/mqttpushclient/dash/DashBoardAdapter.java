@@ -106,8 +106,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.label.setText(item.label);
         }
 
-        int background = (item.background == null ? mDefaultBackground : item.background);
-        int color = (item.color == null ? h.defaultColor : item.color);
+        int background = (item.background == 0 ? mDefaultBackground : item.background);
+        int color = (item.color == 0 ? h.defaultColor : item.color);
         if (mSelectedItems.contains(item.id)) {
             h.itemView.setActivated(true);
             background = 0xFFBBDEFB; //TODO

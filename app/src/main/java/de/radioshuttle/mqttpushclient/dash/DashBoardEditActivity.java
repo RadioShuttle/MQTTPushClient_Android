@@ -124,11 +124,11 @@ public class DashBoardEditActivity extends AppCompatActivity
 
                 if (mColorButton != null) {
                     final int defColor = defaultColor;
-                    mColorButton.setColor((mColor == null ? defColor : mColor), mColorLabelBorderColor);
+                    mColorButton.setColor((mColor == 0 ? defColor : mColor), mColorLabelBorderColor);
                     mColorButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defColor, (mColor == null ? defColor : mColor), mColorLabelBorderColor, "color");
+                            showColorDialog(defColor, (mColor == 0 ? defColor : mColor), mColorLabelBorderColor, "color");
 
                         }
                     });
@@ -136,11 +136,11 @@ public class DashBoardEditActivity extends AppCompatActivity
 
                 mBColorButton = findViewById(R.id.dash_bcolor_button);
                 if (mBColorButton != null) {
-                    mBColorButton.setColor((mBackground == null ? defaultBackground : mBackground), mColorLabelBorderColor);
+                    mBColorButton.setColor((mBackground == 0 ? defaultBackground : mBackground), mColorLabelBorderColor);
                     mBColorButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defaultBackground, (mBackground == null ? defaultBackground : mBackground), mColorLabelBorderColor,  "bcolor");
+                            showColorDialog(defaultBackground, (mBackground == 0 ? defaultBackground : mBackground), mColorLabelBorderColor,  "bcolor");
                         }
                     });
                 }
@@ -236,12 +236,8 @@ public class DashBoardEditActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (mColor != null) {
-            outState.putInt(KEY_COLOR, mColor);
-        }
-        if (mBackground != null) {
-            outState.putInt(KEY_BACKGROUND, mBackground);
-        }
+        outState.putInt(KEY_COLOR, mColor);
+        outState.putInt(KEY_BACKGROUND, mBackground);
     }
 
     @Override
@@ -379,7 +375,7 @@ public class DashBoardEditActivity extends AppCompatActivity
             case "color" :
                 mColorButton.setColor(color, mColorLabelBorderColor);
                 if (idx == 0) {
-                    mColor = null; // default system color
+                    mColor = 0; // default system color
                 } else {
                     mColor = color;
                 }
@@ -387,7 +383,7 @@ public class DashBoardEditActivity extends AppCompatActivity
             case "bcolor" :
                 mBColorButton.setColor(color, mColorLabelBorderColor);
                 if (idx == 0) {
-                    mBackground = null; // default system color
+                    mBackground = 0; // default system color
                 } else {
                     mBackground = color;
                 }
@@ -470,21 +466,9 @@ public class DashBoardEditActivity extends AppCompatActivity
                     changed = true;
                 }
             }
-            // color changed?
+            // color or background changed?
             if (!changed) {
-                if (mColor == null) {
-                    changed = mItem.color != null;
-                } else {
-                    changed = mItem.color == null || mColor != mItem.color;
-                }
-            }
-            // background changed?
-            if (!changed) {
-                if (mBackground == null) {
-                    changed = mItem.background != null;
-                } else {
-                    changed = mItem.background == null || mBackground != mItem.background;
-                }
+                changed = mItem.color != mColor || mBackground != mItem.background;
             }
         }
 
@@ -497,14 +481,10 @@ public class DashBoardEditActivity extends AppCompatActivity
     protected int mColorLabelBorderColor;
 
     /* color states */
-    protected Integer mColor;
-    protected Integer mBackground;
+    protected int mColor;
+    protected int mBackground;
     protected String KEY_COLOR = "KEY_COLOR";
     protected String KEY_BACKGROUND = "KEY_BACKGROUND";
-
-    /* selected group, position init states */
-    protected int mInitGroupPos;
-    protected int mInitPositionPos;
 
     protected boolean mGroupSelInit, mItemSelInit;
     protected Item mItem;
