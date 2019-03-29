@@ -222,6 +222,13 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_label_bcolor">Background:</string>
     <string name="dash_label_group">Group:</string>
     <string name="dash_label_position">Pos:</string>
+    <string name="dash_label_textsize">Text size:</string>
+    <string-array name="dash_label_size_array">
+        <item name="dash_label_textsize_s">Small</item>
+        <item name="dash_label_textsize_m">Medium</item>
+        <item name="dash_label_textsize_l">Large</item>
+    </string-array>
+    <string name="dash_label_subscribe_topic">Topic (sub):</string>
 
     <string name="select_single_dash">Only one dash may be selected for editing</string>
     <string name="new_group_label">New Group</string>
