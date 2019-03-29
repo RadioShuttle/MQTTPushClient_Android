@@ -5,7 +5,7 @@
     <item
         android:id="@+id/menu_change_view"
         android:orderInCategory="90"
-        android:icon="@drawable/ic_menu_widgets"
+        android:icon="@drawable/ic_menu_dashboard"
         android:title="@string/action_dashboard"
         app:showAsAction="always" />
 
