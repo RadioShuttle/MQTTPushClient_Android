@@ -101,13 +101,13 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
             final GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
             // layoutManager.setMeasurementCacheEnabled(true);
-            layoutManager.setSpanSizeLookup(new Utils.SpanSizeLookup(mControllerList));
+            layoutManager.setSpanSizeLookup(new DBUtils.SpanSizeLookup(mControllerList));
 
             final int spacing = getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
             Log.d(TAG, "spacing: " + spacing + " dpi " + (int) ((float) spacing * (160f / (float) getResources().getDisplayMetrics().densityDpi)));
 
             mControllerList.setLayoutManager(layoutManager);
-            mControllerList.addItemDecoration(new Utils.ItemDecoration(getApplication()));
+            mControllerList.addItemDecoration(new DBUtils.ItemDecoration(getApplication()));
             HashSet<Integer> selectedItems = new HashSet<>();
             if (savedInstanceState != null) {
                 List<Integer> itemsList= savedInstanceState.getIntegerArrayList(KEY_SELECTED_ITEMS);
@@ -449,7 +449,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             boolean handled = false;
             switch (item.getItemId()) {
                 case R.id.action_delete_items:
-                    Utils.showDeleteDialog(DashBoardActivity.this);
+                    DBUtils.showDeleteDialog(DashBoardActivity.this);
                     handled = true;
                     break;
                 case R.id.action_edit_item:
