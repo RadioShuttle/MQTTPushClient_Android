@@ -25,6 +25,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.utils.Utils;
 
 public class DashBoardViewModel extends AndroidViewModel {
 
@@ -44,7 +45,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mGroups.clear();
         mItemsPerGroup.clear();
         mModificationDate = modificationDate;
-        if (!de.radioshuttle.utils.Utils.isEmpty(json)) {
+        if (!Utils.isEmpty(json)) {
             try {
                 Item.createItemsFromJSONString(json, mGroups, mItemsPerGroup);
             } catch(Exception e) {

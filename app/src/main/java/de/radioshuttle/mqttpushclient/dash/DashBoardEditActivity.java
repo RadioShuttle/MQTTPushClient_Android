@@ -16,6 +16,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.Utils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -483,7 +484,7 @@ public class DashBoardEditActivity extends AppCompatActivity
 
     protected boolean hasDataChanged() {
         boolean changed = false;
-        if (!de.radioshuttle.utils.Utils.equals(mEditTextLabel.getText().toString(), mItem.label)) {
+        if (!Utils.equals(mEditTextLabel.getText().toString(), mItem.label)) {
             changed = true;
         } else {
             // group, position changed ?
@@ -493,7 +494,7 @@ public class DashBoardEditActivity extends AppCompatActivity
                     changed = true;
                 }
                 // subscribe topic changed?
-                if (!changed && !de.radioshuttle.utils.Utils.equals(mEditTextTopicSub.getText().toString(), mItem.topic_s)) {
+                if (!changed && !Utils.equals(mEditTextTopicSub.getText().toString(), mItem.topic_s)) {
                     changed = true;
                 }
             }

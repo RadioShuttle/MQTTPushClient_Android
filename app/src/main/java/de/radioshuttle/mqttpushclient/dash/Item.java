@@ -18,6 +18,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
+import de.radioshuttle.utils.Utils;
+
 public abstract class Item {
     public Item() {
         id = cnt++;
@@ -67,7 +69,7 @@ public abstract class Item {
     }
 
     public static void createItemsFromJSONString(String json, LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems) {
-        if (!de.radioshuttle.utils.Utils.isEmpty(json) && groups != null && groupItems != null) {
+        if (!Utils.isEmpty(json) && groups != null && groupItems != null) {
             try {
                 JSONArray groupArray = new JSONArray(json);
                 GroupItem groupItem;
