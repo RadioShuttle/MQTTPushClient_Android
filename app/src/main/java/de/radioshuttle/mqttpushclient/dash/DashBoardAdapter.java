@@ -19,6 +19,8 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import de.radioshuttle.mqttpushclient.R;
 
@@ -30,14 +32,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         mWidth = width;
         // setHasStableIds(true);
 
-        if (Build.VERSION.SDK_INT >= 23) {
-            mDefaultBackground = activity.getResources().getColor(R.color.dashboad_item_background, null);
-        } else {
-            mDefaultBackground = activity.getResources().getColor(R.color.dashboad_item_background);
-        }
+        mDefaultBackground = ContextCompat.getColor(activity, R.color.dashboad_item_background);
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
+
+        mTextAppearance = new int[] {android.R.style.TextAppearance_Small, android.R.style.TextAppearance_Medium, android.R.style.TextAppearance_Large};
     }
 
     public void addListener(DashBoardActionListener listener) {
@@ -143,6 +143,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 h.itemView.setLayoutParams(lp);
             }
             h.itemView.setBackgroundColor(background);
+            int textSizeIdx = (item.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : item.textsize ) -1;
+            if (textSizeIdx >= 0 && textSizeIdx < mTextAppearance.length) {
+                TextViewCompat.setTextAppearance(h.label, mTextAppearance[textSizeIdx]);
+            }
             h.label.setTextColor(color);
         }
         // Log.d(TAG, "width: " + lp.width);
@@ -265,9 +269,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     }
 
 
+    private int[] mTextAppearance;
     private HashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
-    private Integer mDefaultColor;
     private int mDefaultBackground;
     private int mWidth;
     private int mSpanCnt;
