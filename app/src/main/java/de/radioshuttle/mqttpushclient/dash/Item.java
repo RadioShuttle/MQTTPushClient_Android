@@ -27,6 +27,8 @@ public abstract class Item {
 
     public int color;
     public int background;
+    public int textsize; // 0 - default, 1 - small, 2 - medium, 3 - large
+    public String topic_s;
 
     public String label;
 
@@ -34,10 +36,12 @@ public abstract class Item {
         JSONObject o = new JSONObject();
         if (!(this instanceof GroupItem)) {
             o.put("type", getType());
+            o.put("topic_s", topic_s);
         }
         o.put("label", label);
         o.put("color", color);
         o.put("background", background);
+        o.put("textsize", textsize);
 
         return o;
     }
@@ -46,6 +50,8 @@ public abstract class Item {
         label = o.optString("label");
         background = o.optInt("background");
         color = o.optInt("color");
+        textsize = o.optInt("textsize");
+        topic_s = o.optString("topic_s");
     }
 
     public static Item createItemFromJSONObject(JSONObject o) {
@@ -149,6 +155,12 @@ public abstract class Item {
     public abstract String getType();
 
     private static int cnt = 0;
+
+    public final static int TEXTSIZE_SMALL = 1;
+    public final static int TEXTSIZE_MEDIUM = 2;
+    public final static int TEXTSIZE_LARGE = 3;
+
+    public final static int DEFAULT_TEXTSIZE = 1;
 
     protected static String TAG = Item.class.getSimpleName();
 }
