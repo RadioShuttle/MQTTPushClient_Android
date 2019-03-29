@@ -65,6 +65,7 @@ public class DashBoardEditActivity extends AppCompatActivity
         final int itemPos  = args.getInt(ARG_ITEM_POS, -1);
         mGroupSelInit = (savedInstanceState == null);
         mItemSelInit = (savedInstanceState == null);
+        mTextSizeSelInit = (savedInstanceState == null);
 
         /* check arguemnts */
         if (!(json == null || itemClassName == null || (mMode == MODE_EDIT && itemID == -1))) {
@@ -145,15 +146,14 @@ public class DashBoardEditActivity extends AppCompatActivity
                     });
                 }
 
+                /* name / label */
                 mEditTextLabel = findViewById(R.id.dash_name);
                 if (savedInstanceState == null) {
                     mEditTextLabel.setText(mItem.label);
                 }
 
-                /* set data */
-                TableRow groupRow = findViewById(R.id.rowGroup);
-
                 /* group */
+                TableRow groupRow = findViewById(R.id.rowGroup);
                 if (groupRow != null && mItem != null) {
                     if (mItem instanceof GroupItem) {
                         /* group selection is not required when item is a group */
@@ -195,6 +195,27 @@ public class DashBoardEditActivity extends AppCompatActivity
                     if (mItemSelInit && itemPos >= 0) {
                         Log.d(TAG, "set selection pos: " + itemPos);
                         mPosSpinner.setSelection(itemPos);
+                    }
+                }
+
+                /* text size */
+                mTextSizeSpinner = findViewById(R.id.dash_textSize);
+                if (mTextSizeSpinner != null) {
+                    ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                            R.array.dash_label_size_array, android.R.layout.simple_spinner_item);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    mTextSizeSpinner.setOnItemSelectedListener(this);
+                    mTextSizeSpinner.setAdapter(adapter);
+                }
+
+                /* subscribed topic */
+                TableRow topicSubRow = findViewById(R.id.rowTopicSub);
+                if (topicSubRow != null) {
+                    mEditTextTopicSub = findViewById(R.id.dash_subscribe);
+                    if (mItem instanceof GroupItem) {
+                        topicSubRow.setVisibility(View.GONE);
+                    } else if (savedInstanceState == null) {
+                        mEditTextTopicSub.setText(mItem.topic_s);
                     }
                 }
 
@@ -301,6 +322,14 @@ public class DashBoardEditActivity extends AppCompatActivity
                 }
             }
             Log.d(TAG, "onItemSelected pos " + position);
+        } else if (parent == mTextSizeSpinner) {
+            if (mTextSizeSelInit) {
+                mTextSizeSelInit = false;
+                int textSizeIdx = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize ) -1;
+                if (textSizeIdx != position && mTextSizeSpinner.getAdapter() != null && textSizeIdx >= 0 && textSizeIdx < mTextSizeSpinner.getAdapter().getCount()) {
+                    mTextSizeSpinner.setSelection(textSizeIdx);
+                }
+            }
         }
     }
 
@@ -429,9 +458,13 @@ public class DashBoardEditActivity extends AppCompatActivity
             intent.putExtra(ARG_TYPE, mItem.getClass().getName());
             if (!(mItem instanceof GroupItem)) {
                 intent.putExtra(ARG_GROUP_POS, mGroupSpinner.getSelectedItemPosition());
+                mItem.topic_s = mEditTextTopicSub.getText().toString();
             }
             if (mEditTextLabel != null) {
                 mItem.label = mEditTextLabel.getText().toString();
+            }
+            if ( mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
+                mItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
             }
             try {
                 mItem.color = mColor;
@@ -459,6 +492,10 @@ public class DashBoardEditActivity extends AppCompatActivity
                 if (mGroupSpinner.getSelectedItemPosition() != groupPos) {
                     changed = true;
                 }
+                // subscribe topic changed?
+                if (!changed && !de.radioshuttle.utils.Utils.equals(mEditTextTopicSub.getText().toString(), mItem.topic_s)) {
+                    changed = true;
+                }
             }
             if (!changed) {
                 int itemPos  = getIntent().getIntExtra(ARG_ITEM_POS, AdapterView.INVALID_POSITION);
@@ -470,12 +507,18 @@ public class DashBoardEditActivity extends AppCompatActivity
             if (!changed) {
                 changed = mItem.color != mColor || mBackground != mItem.background;
             }
+            // text size changed?
+            if (!changed && mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
+                int textSizePos = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize) - 1;
+                changed = mTextSizeSpinner.getSelectedItemPosition() != textSizePos;
+            }
         }
 
         return changed;
     }
 
     protected EditText mEditTextLabel;
+    protected EditText mEditTextTopicSub;
     protected ColorLabel mColorButton;
     protected ColorLabel mBColorButton;
     protected int mColorLabelBorderColor;
@@ -486,10 +529,11 @@ public class DashBoardEditActivity extends AppCompatActivity
     protected String KEY_COLOR = "KEY_COLOR";
     protected String KEY_BACKGROUND = "KEY_BACKGROUND";
 
-    protected boolean mGroupSelInit, mItemSelInit;
+    protected boolean mGroupSelInit, mItemSelInit, mTextSizeSelInit;
     protected Item mItem;
     protected Spinner mGroupSpinner;
     protected Spinner mPosSpinner;
+    protected Spinner mTextSizeSpinner;
     protected DashBoardViewModel mViewModel;
     protected int mMode;
 
