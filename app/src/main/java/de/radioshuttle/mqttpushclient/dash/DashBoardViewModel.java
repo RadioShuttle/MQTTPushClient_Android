@@ -7,10 +7,13 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import org.json.JSONArray;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,26 +21,81 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
+import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.utils.MqttTopic;
 import de.radioshuttle.utils.Utils;
 
 public class DashBoardViewModel extends AndroidViewModel {
 
-    public MutableLiveData<List<Item>> dashBoardItemsLiveData;
+    public MutableLiveData<List<Item>> mDashBoardItemsLiveData; // new and edited items
 
     public DashBoardViewModel(PushAccount account, Application app) {
         super(app);
         mPushAccount = account;
-        dashBoardItemsLiveData = new MutableLiveData<>();
+        mDashBoardItemsLiveData = new MutableLiveData<>();
         mGroups = new LinkedList<>();
         mItemsPerGroup = new HashMap<>();
         mModificationDate = 0L;
+
+        // Test data start
+        mTestDataThread = DBUtils.testDataThread(this);
+        mTestDataThread.start();
+        // Test data end
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (mTestDataThread != null) {
+            mTestDataThread.interrupt();
+        }
+    }
+
+    @MainThread
+    public void onMessageReceived(MqttMessage message) {
+        if (message != null) {
+            boolean updated = false;
+            /* iterate over all items and check for subscribed topics */
+            for(GroupItem gr : mGroups) {
+                LinkedList<Item> items = mItemsPerGroup.get(gr.id);
+                if (items != null && items.size() > 0) {
+                    for(Item item : items) {
+                        try {
+                            if (!Utils.isEmpty(item.topic_s) && MqttTopic.isMatched(item.topic_s, message.getTopic())) {
+                                if (Utils.isEmpty(item.script_f)) { // no javascript -> update UI
+                                    String msg = "";
+                                    try {
+                                        msg = message.getPayload() == null ? "" : new String(message.getPayload(), "UTF-8");
+                                    } catch(Exception e) {}
+                                    Log.d(TAG, "content: " + msg);
+                                    item.uiProperties.put("content", msg);
+                                    updated = true;
+                                } else {
+                                    //TODO: javascript
+                                }
+                            }
+                        } catch(Exception e) {
+                            Log.d(TAG, "onMessageReceived(): invalid args.", e);
+                            // invalid arguments
+                        }
+                    }
+                }
+                if (updated) {
+                    // List<Item> livedata = mDashBoardItemsLiveData.getValue();
+                    mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers
+                }
+            }
+
+        }
     }
 
     public void setItems(String json, long modificationDate) {
@@ -47,19 +105,19 @@ public class DashBoardViewModel extends AndroidViewModel {
         mModificationDate = modificationDate;
         if (!Utils.isEmpty(json)) {
             try {
-                Item.createItemsFromJSONString(json, mGroups, mItemsPerGroup);
+                DBUtils.createItemsFromJSONString(json, mGroups, mItemsPerGroup);
             } catch(Exception e) {
                 Log.e(TAG, "Load items: Parsing json failed: " + e.getMessage());
             }
         }
-        dashBoardItemsLiveData.setValue(buildDisplayList());
+        mDashBoardItemsLiveData.setValue(buildDisplayList());
     }
 
     public void saveItems() {
 
         long modificationDate = System.currentTimeMillis();
         try {
-            JSONArray arr = Item.createJSONStrFromItems(mGroups, mItemsPerGroup, true);
+            JSONArray arr = DBUtils.createJSONStrFromItems(mGroups, mItemsPerGroup, true);
             String localJSON = arr.toString();
             String serverJSON = null;
 
@@ -147,7 +205,7 @@ public class DashBoardViewModel extends AndroidViewModel {
             mItemsPerGroup.put(item.id, new LinkedList<Item>());
         }
 
-        dashBoardItemsLiveData.setValue(buildDisplayList());
+        mDashBoardItemsLiveData.setValue(buildDisplayList());
         saveItems();
     }
 
@@ -167,7 +225,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                 } else {
                     groupItems.add(item);
                 }
-                dashBoardItemsLiveData.setValue(buildDisplayList());
+                mDashBoardItemsLiveData.setValue(buildDisplayList());
                 saveItems();
             }
         }
@@ -183,6 +241,7 @@ public class DashBoardViewModel extends AndroidViewModel {
             } else {
                 GroupItem currentGr = mGroups.get(pos);
                 if (currentGr.id == groupItem.id) {
+                    groupItem.uiProperties = currentGr.uiProperties;
                     mGroups.set(pos, groupItem); // replace
                 } else {
                     mGroups.add(pos, groupItem); // insert
@@ -197,7 +256,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                     }
                 }
             }
-            dashBoardItemsLiveData.setValue(buildDisplayList());
+            mDashBoardItemsLiveData.setValue(buildDisplayList());
             saveItems();
         }
     }
@@ -217,6 +276,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                     } else {
                         Item currentItem = items.get(itemPos);
                         if (currentItem.id == item.id) {
+                            item.uiProperties = currentItem.uiProperties;
                             items.set(itemPos, item); // replace
                         } else {
                             ic = getItem(item.id);
@@ -234,7 +294,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                             }
                         }
                     }
-                    dashBoardItemsLiveData.setValue(buildDisplayList());
+                    mDashBoardItemsLiveData.setValue(buildDisplayList());
                     saveItems();
                 }
             }
@@ -305,12 +365,12 @@ public class DashBoardViewModel extends AndroidViewModel {
                     }
                 }
             }
-            dashBoardItemsLiveData.setValue(buildDisplayList());
+            mDashBoardItemsLiveData.setValue(buildDisplayList());
             saveItems();
         } else if (selectedItems == null) { // delete all
             mGroups.clear();
             mItemsPerGroup.clear();
-            dashBoardItemsLiveData.setValue(buildDisplayList());
+            mDashBoardItemsLiveData.setValue(buildDisplayList());
             saveItems();
         }
     }
@@ -348,13 +408,16 @@ public class DashBoardViewModel extends AndroidViewModel {
         Application app;
     }
 
+    private Thread mTestDataThread; //TODO: remove after test
+
     private boolean mInitialized;
     private long mModificationDate;
     private PushAccount mPushAccount;
 
     private LinkedList<GroupItem> mGroups;
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
+    // private HashSet<String> mSubscribedTopics;
 
 
-    private final static String TAG = DashBoardViewModel.class.getSimpleName();
+    public final static String TAG = DashBoardViewModel.class.getSimpleName();
 }
