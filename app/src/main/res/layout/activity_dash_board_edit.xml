@@ -142,6 +142,26 @@
 
             </TableRow>
 
+            <TableRow android:id="@+id/rowFilterScript" android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/filterLabel"
+                    android:gravity="right"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/dlg_filter_label"
+                    android:labelFor="@+id/filterButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/filterButton"
+                    android:minHeight="48dp"
+                    android:layout_gravity="left"
+                    style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                    android:text="@string/dlg_filter_button_add"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </TableRow>
+
 
         </TableLayout>
 
