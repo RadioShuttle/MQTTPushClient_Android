@@ -60,6 +60,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
+            defaultColor = label.getTextColors().getDefaultColor();
             textContent = view.findViewById(R.id.textContent);
             selectedImageView = view.findViewById(R.id.check);
         } else {
