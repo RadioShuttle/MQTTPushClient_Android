@@ -120,7 +120,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             mAdapter.addListener(this);
             mControllerList.setAdapter(mAdapter);
 
-            mViewModel.dashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
+            mViewModel.mDashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
                 @Override
                 public void onChanged(List<Item> dashBoardItems) {
                     RecyclerView.Adapter a = mControllerList.getAdapter();
