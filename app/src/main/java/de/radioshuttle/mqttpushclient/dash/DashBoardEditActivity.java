@@ -14,6 +14,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
+import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
@@ -33,6 +34,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TableRow;
@@ -220,6 +222,28 @@ public class DashBoardEditActivity extends AppCompatActivity
                     }
                 }
 
+                /* filter/UI sctipt */
+                TableRow rowFilterScript = findViewById(R.id.rowFilterScript);
+                if (rowFilterScript != null) {
+                    mFiterScriptButton = findViewById(R.id.filterButton);
+                    if (mItem instanceof GroupItem) {
+                        rowFilterScript.setVisibility(View.GONE);
+                    } else {
+                        mFiterScriptButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                openFilterScriptEditor();
+                            }
+                        });
+                        if (savedInstanceState == null){
+                            mFilterScriptContent = mItem.script_f;
+                        } else {
+                            mFilterScriptContent = savedInstanceState.getString(KEY_FILTER_SCRIPT, "");
+                        }
+                        setFilterButtonText();
+                    }
+                }
+
                 String title = "";
                 if (mMode == MODE_ADD) {
                     if (mItem instanceof GroupItem) {
@@ -260,6 +284,9 @@ public class DashBoardEditActivity extends AppCompatActivity
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_COLOR, mColor);
         outState.putInt(KEY_BACKGROUND, mBackground);
+        if (!Utils.isEmpty(mFilterScriptContent)) {
+            outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
+        }
     }
 
     @Override
@@ -451,6 +478,57 @@ public class DashBoardEditActivity extends AppCompatActivity
         }
     }
 
+    protected boolean isValidInput() {
+        // MqttTopic.validate(topic, true);
+        return true; //TODO:
+    }
+
+    protected void setFilterButtonText() {
+        if (Utils.isEmpty(mFilterScriptContent)) {
+            mFiterScriptButton.setText(getString(R.string.dlg_filter_button_add));
+        } else {
+            mFiterScriptButton.setText(getString(R.string.dlg_filter_button_edit));
+        }
+    }
+
+    protected void openFilterScriptEditor() {
+        if (!mActivityStarted) {
+            mActivityStarted = true;
+
+            Intent intent = new Intent(this, JavaScriptEditorActivity.class);
+            if (Utils.isEmpty(mFilterScriptContent)) {
+                intent.putExtra(JavaScriptEditorActivity.ARG_TITLE, getString(R.string.title_add_javascript));
+            } else {
+                intent.putExtra(JavaScriptEditorActivity.ARG_TITLE, getString(R.string.title_edit_javascript));
+                intent.putExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT, mFilterScriptContent);
+            }
+
+            String header = getString(R.string.dash_filter_script_header);
+            intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc, view) {\n var content = msg.text;");
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
+            intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER);
+
+            Bundle args = getIntent().getExtras();
+            String acc = args.getString(ARG_ACCOUNT);
+            if (!Utils.isEmpty(acc)) {
+                intent.putExtra(JavaScriptEditorActivity.ARG_ACCOUNT, acc);
+            }
+            startActivityForResult(intent, 1);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mActivityStarted = false;
+        // requestCode == 1 for JavaScriptEditor
+        if (requestCode == 1 && resultCode == AppCompatActivity.RESULT_OK) {
+            mFilterScriptContent = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
+            setFilterButtonText();
+        }
+    }
+
     protected void saveAndQuit() {
         Intent intent = new Intent();
         intent.putExtra(ARG_MODE, mMode);
@@ -460,6 +538,7 @@ public class DashBoardEditActivity extends AppCompatActivity
             if (!(mItem instanceof GroupItem)) {
                 intent.putExtra(ARG_GROUP_POS, mGroupSpinner.getSelectedItemPosition());
                 mItem.topic_s = mEditTextTopicSub.getText().toString();
+                mItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
             }
             if (mEditTextLabel != null) {
                 mItem.label = mEditTextLabel.getText().toString();
@@ -481,7 +560,6 @@ public class DashBoardEditActivity extends AppCompatActivity
         finish();
     }
 
-
     protected boolean hasDataChanged() {
         boolean changed = false;
         if (!Utils.equals(mEditTextLabel.getText().toString(), mItem.label)) {
@@ -495,6 +573,10 @@ public class DashBoardEditActivity extends AppCompatActivity
                 }
                 // subscribe topic changed?
                 if (!changed && !Utils.equals(mEditTextTopicSub.getText().toString(), mItem.topic_s)) {
+                    changed = true;
+                }
+                // filter script changed?
+                if (!changed && !Utils.equals(mFilterScriptContent, mItem.script_f)) {
                     changed = true;
                 }
             }
@@ -513,11 +595,15 @@ public class DashBoardEditActivity extends AppCompatActivity
                 int textSizePos = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize) - 1;
                 changed = mTextSizeSpinner.getSelectedItemPosition() != textSizePos;
             }
+
         }
 
         return changed;
     }
 
+    protected boolean mActivityStarted;
+
+    protected Button mFiterScriptButton;
     protected EditText mEditTextLabel;
     protected EditText mEditTextTopicSub;
     protected ColorLabel mColorButton;
@@ -529,6 +615,9 @@ public class DashBoardEditActivity extends AppCompatActivity
     protected int mBackground;
     protected String KEY_COLOR = "KEY_COLOR";
     protected String KEY_BACKGROUND = "KEY_BACKGROUND";
+
+    protected String mFilterScriptContent;
+    protected String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
 
     protected boolean mGroupSelInit, mItemSelInit, mTextSizeSelInit;
     protected Item mItem;
