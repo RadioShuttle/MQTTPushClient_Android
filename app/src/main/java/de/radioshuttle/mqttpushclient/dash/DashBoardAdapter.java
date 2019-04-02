@@ -6,15 +6,11 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
-import android.os.Build;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.TextViewCompat;
-import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import de.radioshuttle.mqttpushclient.R;
 
@@ -156,13 +151,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
 
         // if view for text content exists, set content
-        Log.d(TAG, "ui: " + item.label);
+        // Log.d(TAG, "ui: " + item.label);
         if (h.textContent != null) {
                 int textSizeIdx = (item.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : item.textsize ) -1;
                 if (textSizeIdx >= 0 && textSizeIdx < mTextAppearance.length) {
                     TextViewCompat.setTextAppearance(h.textContent, mTextAppearance[textSizeIdx]);
                 }
-                h.textContent.setText(item.uiProperties.optString("content"));
+                h.textContent.setText((String) item.data.get("content"));
                 h.textContent.setTextColor(color);
         }
 
