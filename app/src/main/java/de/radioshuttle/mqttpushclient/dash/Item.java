@@ -7,24 +7,15 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 
-import android.util.JsonReader;
-import android.util.Log;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-
-import de.radioshuttle.utils.Utils;
 
 public abstract class Item {
     public Item() {
         id = cnt++;
-        uiProperties = new JSONObject();
+        data = new HashMap<>();
     }
 
     public int id; // transient (unique id for internal use)
@@ -73,15 +64,11 @@ public abstract class Item {
         return item;
     }
 
-    public JSONObject uiProperties;
+    public HashMap<String, Object> data;
 
     public abstract String getType();
 
     protected static int cnt = 0;
-
-    public final static int TEXTSIZE_SMALL = 1;
-    public final static int TEXTSIZE_MEDIUM = 2;
-    public final static int TEXTSIZE_LARGE = 3;
 
     public final static int DEFAULT_TEXTSIZE = 1;
 
