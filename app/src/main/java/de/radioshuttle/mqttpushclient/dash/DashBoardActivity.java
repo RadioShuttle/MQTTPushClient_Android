@@ -71,6 +71,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
             if (!mViewModel.isInitialized()) {
                 mViewModel.setItems(vs.getDashBoardContent(b.getKey()), vs.getDashBoardModificationDate(account));
+                mViewModel.startJavaScriptExecutors();
             }
 
             if (savedInstanceState == null) {
