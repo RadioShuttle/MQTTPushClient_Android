@@ -241,6 +241,8 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dlg_dash_items_all">All items</string>
     <string name="dlg_dash_selected">Selected items</string>
 
+    <string name="err_invalid_topic_format">Invalid format.</string>
+
     <!-- End Dashboard -->
 
 
