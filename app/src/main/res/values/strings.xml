@@ -207,14 +207,14 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="action_delete_dashboard_items">Delete</string>
     <string name="action_zoom">Zoom</string>
 
-    <string name="action_add_text">Text</string>
-    <string name="action_add_group">Group</string>
+    <string name="action_add_text">Text View</string>
+    <string name="action_add_group">Group View</string>
 
-    <string name="title_add_group">Add Group</string>
-    <string name="title_add_text">Add Text</string>
+    <string name="title_add_group">Add Group View</string>
+    <string name="title_add_text">Add Text View</string>
 
-    <string name="title_edit_group">Edit Group</string>
-    <string name="title_edit_text">Edit Text</string>
+    <string name="title_edit_group">Edit Group View</string>
+    <string name="title_edit_text">Edit Text View</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
