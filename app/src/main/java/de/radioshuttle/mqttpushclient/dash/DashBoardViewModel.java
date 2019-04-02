@@ -7,13 +7,10 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Application;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import org.json.JSONArray;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,7 +18,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -45,11 +41,17 @@ public class DashBoardViewModel extends AndroidViewModel {
         mGroups = new LinkedList<>();
         mItemsPerGroup = new HashMap<>();
         mModificationDate = 0L;
+    }
 
-        // Test data start
-        mTestDataThread = DBUtils.testDataThread(this);
-        mTestDataThread.start();
-        // Test data end
+    public void startJavaScriptExecutors() {
+        if (mReceivedMsgExecutor == null) {
+            mReceivedMsgExecutor = new JavaScriptExcecutor();
+
+            // Test data start
+            mTestDataThread = DBUtils.testDataThread(this);
+            mTestDataThread.start();
+            // Test data end
+        }
     }
 
     @Override
@@ -57,6 +59,9 @@ public class DashBoardViewModel extends AndroidViewModel {
         super.onCleared();
         if (mTestDataThread != null) {
             mTestDataThread.interrupt();
+        }
+        if (mReceivedMsgExecutor != null) {
+            mReceivedMsgExecutor.shutdown();
         }
     }
 
@@ -73,14 +78,30 @@ public class DashBoardViewModel extends AndroidViewModel {
                             if (!Utils.isEmpty(item.topic_s) && MqttTopic.isMatched(item.topic_s, message.getTopic())) {
                                 if (Utils.isEmpty(item.script_f)) { // no javascript -> update UI
                                     String msg = "";
+                                    byte[] payload = (message.getPayload() == null ? new byte[0] : message.getPayload());
                                     try {
-                                        msg = message.getPayload() == null ? "" : new String(message.getPayload(), "UTF-8");
+                                        msg = new String(payload, "UTF-8");
                                     } catch(Exception e) {}
-                                    Log.d(TAG, "content: " + msg);
-                                    item.uiProperties.put("content", msg);
+                                    // Log.d(TAG, "content: " + msg);
+                                    item.data.put("msg.received", message.getWhen());
+                                    item.data.put("msg.raw", payload);
+                                    item.data.put("msg.content", msg);
+                                    item.data.put("content", msg);
                                     updated = true;
                                 } else {
-                                    //TODO: javascript
+                                    mReceivedMsgExecutor.executeFilterScript(item, message, new JavaScriptExcecutor.Callback() {
+                                        @Override
+                                        public void onFinshed(Item item, Map<String, Object> result) {
+                                            /* if item reference changed, skip result (item has been replaced/edited) */
+                                            ItemContext ic = getItem(item.id);
+                                            if (ic != null && ic.item == item) {
+                                                if (result != null && result.containsKey("content")) { //TODO: add errorMsg and additional message data to content, ...
+                                                    item.data.putAll(result);
+                                                    mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers
+                                                }
+                                            }
+                                        }
+                                    });
                                 }
                             }
                         } catch(Exception e) {
@@ -97,6 +118,7 @@ public class DashBoardViewModel extends AndroidViewModel {
 
         }
     }
+
 
     public void setItems(String json, long modificationDate) {
         mInitialized = true;
@@ -225,6 +247,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                 } else {
                     groupItems.add(item);
                 }
+                //TODO: subscribe to topic. if last message cached, set last message to item, trigger filter script
                 mDashBoardItemsLiveData.setValue(buildDisplayList());
                 saveItems();
             }
@@ -241,7 +264,7 @@ public class DashBoardViewModel extends AndroidViewModel {
             } else {
                 GroupItem currentGr = mGroups.get(pos);
                 if (currentGr.id == groupItem.id) {
-                    groupItem.uiProperties = currentGr.uiProperties;
+                    groupItem.data = currentGr.data;
                     mGroups.set(pos, groupItem); // replace
                 } else {
                     mGroups.add(pos, groupItem); // insert
@@ -265,6 +288,7 @@ public class DashBoardViewModel extends AndroidViewModel {
 
         if (groupIdx >= 0 && groupIdx < mGroups.size()) {
             GroupItem group = mGroups.get(groupIdx);
+            Item replacedItem = null;
             if (group != null) {
                 LinkedList<Item> items = mItemsPerGroup.get(group.id);
                 if (items != null) {
@@ -276,8 +300,8 @@ public class DashBoardViewModel extends AndroidViewModel {
                     } else {
                         Item currentItem = items.get(itemPos);
                         if (currentItem.id == item.id) {
-                            item.uiProperties = currentItem.uiProperties;
-                            items.set(itemPos, item); // replace
+                            item.data = currentItem.data;
+                            replacedItem = items.set(itemPos, item); // replace
                         } else {
                             ic = getItem(item.id);
                             items.add(itemPos, item); // insert
@@ -288,11 +312,14 @@ public class DashBoardViewModel extends AndroidViewModel {
                         if (items != null) {
                             for(int i = 0; i < items.size(); i++) {
                                 if ((itemPos != i || ic.groupPos != groupIdx) && items.get(i).id == item.id) {
-                                    items.remove(i);
+                                    replacedItem = items.remove(i);
                                     break;
                                 }
                             }
                         }
+                    }
+                    //TODO: topic, javascript might have changed: subscribe and/or unsubscribe, set new content / retrigger JavaScript
+                    if (replacedItem != null) {
                     }
                     mDashBoardItemsLiveData.setValue(buildDisplayList());
                     saveItems();
@@ -348,6 +375,10 @@ public class DashBoardViewModel extends AndroidViewModel {
                     while (it2.hasNext()) {
                         item = it2.next();
                         if (selectedItems.contains(item.id)) {
+                            //TODO: remove js
+                            if (mReceivedMsgExecutor != null) {
+                                mReceivedMsgExecutor.remove(item.id);
+                            }
                             it2.remove();
                         }
                     }
@@ -409,6 +440,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     }
 
     private Thread mTestDataThread; //TODO: remove after test
+    private JavaScriptExcecutor mReceivedMsgExecutor;
 
     private boolean mInitialized;
     private long mModificationDate;
