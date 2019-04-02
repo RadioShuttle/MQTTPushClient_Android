@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProviders;
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.MqttTopic;
 import de.radioshuttle.utils.Utils;
 
 import android.app.AlertDialog;
@@ -479,8 +480,19 @@ public class DashBoardEditActivity extends AppCompatActivity
     }
 
     protected boolean isValidInput() {
-        // MqttTopic.validate(topic, true);
-        return true; //TODO:
+        boolean valid = true;
+        if (!(mItem instanceof GroupItem)) {
+            String subTopic = mEditTextTopicSub.getText().toString();
+            if (!Utils.isEmpty(subTopic)) {
+                try {
+                    MqttTopic.validate(subTopic, true);
+                } catch(IllegalArgumentException i) {
+                    mEditTextTopicSub.setError(getString(R.string.err_invalid_topic_format));
+                    valid = false;
+                }
+            }
+        }
+        return valid;
     }
 
     protected void setFilterButtonText() {
@@ -530,34 +542,36 @@ public class DashBoardEditActivity extends AppCompatActivity
     }
 
     protected void saveAndQuit() {
-        Intent intent = new Intent();
-        intent.putExtra(ARG_MODE, mMode);
-        intent.putExtra(ARG_ITEM_POS, mPosSpinner.getSelectedItemPosition());
-        if (mItem != null) {
-            intent.putExtra(ARG_TYPE, mItem.getClass().getName());
-            if (!(mItem instanceof GroupItem)) {
-                intent.putExtra(ARG_GROUP_POS, mGroupSpinner.getSelectedItemPosition());
-                mItem.topic_s = mEditTextTopicSub.getText().toString();
-                mItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
+        if (isValidInput()) {
+            Intent intent = new Intent();
+            intent.putExtra(ARG_MODE, mMode);
+            intent.putExtra(ARG_ITEM_POS, mPosSpinner.getSelectedItemPosition());
+            if (mItem != null) {
+                intent.putExtra(ARG_TYPE, mItem.getClass().getName());
+                if (!(mItem instanceof GroupItem)) {
+                    intent.putExtra(ARG_GROUP_POS, mGroupSpinner.getSelectedItemPosition());
+                    mItem.topic_s = mEditTextTopicSub.getText().toString();
+                    mItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
+                }
+                if (mEditTextLabel != null) {
+                    mItem.label = mEditTextLabel.getText().toString();
+                }
+                if ( mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
+                    mItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
+                }
+                try {
+                    mItem.color = mColor;
+                    mItem.background = mBackground;
+                    JSONObject jsonObject = mItem.toJSONObject();
+                    jsonObject.put("id", mItem.id);
+                    intent.putExtra(ARG_ITEM, jsonObject.toString());
+                } catch(JSONException e) {
+                    Log.d(TAG, "save JSON: " + e.getMessage());
+                }
             }
-            if (mEditTextLabel != null) {
-                mItem.label = mEditTextLabel.getText().toString();
-            }
-            if ( mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
-                mItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
-            }
-            try {
-                mItem.color = mColor;
-                mItem.background = mBackground;
-                JSONObject jsonObject = mItem.toJSONObject();
-                jsonObject.put("id", mItem.id);
-                intent.putExtra(ARG_ITEM, jsonObject.toString());
-            } catch(JSONException e) {
-                Log.d(TAG, "save JSON: " + e.getMessage());
-            }
+            setResult(AppCompatActivity.RESULT_OK, intent);
+            finish();
         }
-        setResult(AppCompatActivity.RESULT_OK, intent);
-        finish();
     }
 
     protected boolean hasDataChanged() {
