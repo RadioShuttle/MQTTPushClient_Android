@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.Utils;
 
 public class DashBoardAdapter extends RecyclerView.Adapter {
 
@@ -150,6 +151,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.label.setTextColor(color);
         }
 
+        String displayError = null;
+        Object javaScriptError = item.data.get("error");
+        if (javaScriptError instanceof String) { //TODO: consider displaying errors in own textfield
+            displayError = mInflater.getContext().getString(R.string.javascript_err) + " " + javaScriptError;
+        }
+
         // if view for text content exists, set content
         // Log.d(TAG, "ui: " + item.label);
         if (h.textContent != null) {
@@ -157,7 +164,11 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 if (textSizeIdx >= 0 && textSizeIdx < mTextAppearance.length) {
                     TextViewCompat.setTextAppearance(h.textContent, mTextAppearance[textSizeIdx]);
                 }
-                h.textContent.setText((String) item.data.get("content"));
+                if (!Utils.isEmpty(displayError)) {
+                    h.textContent.setText(displayError);
+                } else {
+                    h.textContent.setText((String) item.data.get("content"));
+                }
                 h.textContent.setTextColor(color);
         }
 
