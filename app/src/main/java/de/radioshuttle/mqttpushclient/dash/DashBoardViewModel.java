@@ -40,12 +40,13 @@ public class DashBoardViewModel extends AndroidViewModel {
         mDashBoardItemsLiveData = new MutableLiveData<>();
         mGroups = new LinkedList<>();
         mItemsPerGroup = new HashMap<>();
+        mApplication = app;
         mModificationDate = 0L;
     }
 
     public void startJavaScriptExecutors() {
         if (mReceivedMsgExecutor == null) {
-            mReceivedMsgExecutor = new JavaScriptExcecutor();
+            mReceivedMsgExecutor = new JavaScriptExcecutor(mPushAccount, mApplication);
 
             // Test data start
             mTestDataThread = DBUtils.testDataThread(this);
@@ -95,7 +96,8 @@ public class DashBoardViewModel extends AndroidViewModel {
                                             /* if item reference changed, skip result (item has been replaced/edited) */
                                             ItemContext ic = getItem(item.id);
                                             if (ic != null && ic.item == item) {
-                                                if (result != null && result.containsKey("content")) { //TODO: add errorMsg and additional message data to content, ...
+                                                if (result != null) {
+                                                    item.data.clear(); // clear old content, erros
                                                     item.data.putAll(result);
                                                     mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers
                                                 }
@@ -439,6 +441,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         Application app;
     }
 
+    private Application mApplication;
     private Thread mTestDataThread; //TODO: remove after test
     private JavaScriptExcecutor mReceivedMsgExecutor;
 
