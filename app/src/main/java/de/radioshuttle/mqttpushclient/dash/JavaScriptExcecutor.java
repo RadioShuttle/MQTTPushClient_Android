@@ -98,7 +98,7 @@ public class JavaScriptExcecutor {
             String lastSrc = null;
             boolean timeoutError = false; // indicates a timeout error in previous run
             JavaScript.Context jsContext = null;
-            DashBoardJavaScript js = DashBoardJavaScript.getInstance();
+            DashBoardJavaScript js = DashBoardJavaScript.getInstance(mApplication);
             HashMap<String, Object> viewProperties = null;
 
             while(!stopped) {
