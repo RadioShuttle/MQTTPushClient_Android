@@ -6,6 +6,13 @@
 
 package de.radioshuttle.utils;
 
+import android.content.Context;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.UUID;
@@ -57,6 +64,28 @@ public class Utils {
             ret[i] = (byte) ((left << 4) + Character.digit(hex.charAt(c--), 16));
         }
         return ret;
+    }
+
+    public static String getRawStringResource(Context context, String filenameWithoutExt, boolean skipNewLine) throws IOException {
+        InputStream ins = context.getResources().openRawResource(
+                context.getResources().getIdentifier(filenameWithoutExt,
+                        "raw", context.getPackageName()));
+        StringWriter sw = new StringWriter();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
+        try {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                sw.append(line);
+                if (!skipNewLine) {
+                    sw.append("\n");
+                }
+            }
+        } finally {
+            if (reader != null) {
+                try {reader.close();} catch(IOException io) {}
+            }
+        }
+        return sw.toString();
     }
 
     public static final Charset UTF_8 = Charset.forName("UTF-8");
