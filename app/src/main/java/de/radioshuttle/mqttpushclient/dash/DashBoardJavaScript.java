@@ -6,18 +6,30 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.app.Application;
 import android.util.Log;
 
 import com.squareup.duktape.Duktape;
+
+import java.io.IOException;
 import java.util.HashMap;
 
 import de.radioshuttle.utils.JavaScript;
+import de.radioshuttle.utils.Utils;
 
 public class DashBoardJavaScript extends JavaScript {
 
-    public static synchronized DashBoardJavaScript getInstance() {
+    private DashBoardJavaScript(Application app) {
+        try {
+            color_js = Utils.getRawStringResource(app, "javascript_color", true);
+        } catch (IOException e) {
+            Log.d(TAG, "Error loading raw resource: javascript_color.js", e);
+        }
+    }
+
+    public static synchronized DashBoardJavaScript getInstance(Application app) {
         if (js == null) {
-            js = new  DashBoardJavaScript();
+            js = new  DashBoardJavaScript(app);
         }
         return js;
     }
@@ -25,6 +37,9 @@ public class DashBoardJavaScript extends JavaScript {
     public void initViewProperties(Context context, HashMap<String, Object> viewProps) {
         ViewPropertiesImpl viewProperties = new ViewPropertiesImpl(viewProps);
         ((Duktape) context.getInterpreter()).set("view", ViewProperties.class, viewProperties);
+        if (!Utils.isEmpty(color_js)) {
+            ((Duktape) context.getInterpreter()).evaluate(color_js);
+        }
     }
 
     private interface ViewProperties {
@@ -84,6 +99,7 @@ public class DashBoardJavaScript extends JavaScript {
     }
 
 
+    private String color_js;
     private static DashBoardJavaScript js;
 
     private final static String TAG = JavaScript.class.getSimpleName();
