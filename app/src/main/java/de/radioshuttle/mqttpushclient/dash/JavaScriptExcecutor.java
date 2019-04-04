@@ -98,7 +98,8 @@ public class JavaScriptExcecutor {
             String lastSrc = null;
             boolean timeoutError = false; // indicates a timeout error in previous run
             JavaScript.Context jsContext = null;
-            JavaScript js = JavaScript.getInstance();
+            DashBoardJavaScript js = DashBoardJavaScript.getInstance();
+            HashMap<String, Object> viewProperties = null;
 
             while(!stopped) {
                 final HashMap<String, Object> result = new HashMap<>();
@@ -114,6 +115,7 @@ public class JavaScriptExcecutor {
                     try {
                         /* if java script souce has changed, create a new context object and release resouces of the previous one */
                         if ((!Utils.equals(lastSrc, task.item.script_f))) {
+                            viewProperties = null;
                             timeoutError = false;
                             lastSrc = task.item.script_f;
                             if (jsContext != null) { // release resources
@@ -122,16 +124,27 @@ public class JavaScriptExcecutor {
                             jsContext = js.initFormatter(
                                     task.item.script_f, mAccount.user,
                                     new URI(mAccount.uri).getAuthority(), mAccount.pushserver);
+
+
+                            viewProperties = new HashMap<>();
+                            js.initViewProperties(jsContext, viewProperties);
+
                         }
                         /* if there was a timeout error in the previous run, do not try again, just return error*/
                         if (timeoutError) {
                             result.put("error", mApplication.getResources().getString(R.string.javascript_err_timeout));
                         } else {
+                            /* set current view propertes */
+                            viewProperties.put("textcolor", task.item.textcolor);
+                            viewProperties.put("color", 0); //TODO
+                            viewProperties.put("background", task.item.background);
+
                             /* delegate javascript run to other thread to avoid long blocking times */
                             runJS = new RunJS(jsContext, task.message);
                             future = Utils.executor.submit(runJS);
                             HashMap<String, Object> r = future.get(JavaScript.TIMEOUT_MS, TimeUnit.MILLISECONDS);
                             result.putAll(r);
+                            result.putAll(viewProperties);
                         }
                     } catch(Exception e) {
                         if (e instanceof TimeoutException) {
@@ -141,7 +154,7 @@ public class JavaScriptExcecutor {
                         } else {
                             result.put("error", e.getMessage());
                         }
-                        if (future != null && !future.isDone()) { // make sure JS resources are always released in case of error
+                        if (future != null && !future.isDone()) { // make sure JS resources are always released in case of timeout error
                             runJS.releaseResources = true; // tell running thread to release resources after he has finished executing
                             if (future.isDone()) { // reread and close if completed yet
                                 jsContext.close();
