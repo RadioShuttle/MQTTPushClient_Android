@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -112,8 +113,16 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.label.setText(item.label);
         }
 
-        int background = (item.background == 0 ? mDefaultBackground : item.background);
-        int color = (item.color == 0 ? h.defaultColor : item.color);
+        Log.d(TAG, "item background: " +  item.data.get("background"));
+
+        int bg = item.data.containsKey("background") ? (Integer) item.data.get("background") : item.background;
+        int background = (bg== 0 ? mDefaultBackground : bg);
+        Log.d(TAG, "backgound: " + background); //TODO: remove
+
+        int cl = item.data.containsKey("textcolor") ? (Integer) item.data.get("textcolor") : item.textcolor;
+        int textcolor = (item.textcolor == 0 ? h.defaultColor : item.textcolor);
+        Log.d(TAG, "textcolor: " + textcolor); // TODO: remove
+
         if (mSelectedItems.contains(item.id)) {
             h.itemView.setActivated(true);
             if (h.selectedImageView != null && h.selectedImageView.getVisibility() != View.VISIBLE) {
@@ -148,7 +157,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             if (textSizeIdx >= 0 && textSizeIdx < mTextAppearance.length) {
                 TextViewCompat.setTextAppearance(h.label, mTextAppearance[textSizeIdx]);
             }
-            h.label.setTextColor(color);
+            h.label.setTextColor(textcolor);
         }
 
         String displayError = null;
@@ -169,7 +178,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 } else {
                     h.textContent.setText((String) item.data.get("content"));
                 }
-                h.textContent.setTextColor(color);
+                h.textContent.setTextColor(textcolor);
         }
 
         // Log.d(TAG, "width: " + lp.width);

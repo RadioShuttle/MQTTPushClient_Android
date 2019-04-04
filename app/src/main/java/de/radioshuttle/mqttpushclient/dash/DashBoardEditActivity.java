@@ -103,13 +103,13 @@ public class DashBoardEditActivity extends AppCompatActivity
                     mItem = (Item) Class.forName(itemClassName).newInstance();
                 }
 
-                /* color buttons */
+                /* textcolor buttons */
                 if (savedInstanceState == null) {
-                    mColor = mItem.color;
+                    mTextColor = mItem.textcolor;
                     mBackground = mItem.background;
                 } else {
-                    if (savedInstanceState.containsKey(KEY_COLOR)) {
-                        mColor = savedInstanceState.getInt(KEY_COLOR);
+                    if (savedInstanceState.containsKey(KEY_TEXTCOLOR)) {
+                        mTextColor = savedInstanceState.getInt(KEY_TEXTCOLOR);
                     }
                     if (savedInstanceState.containsKey(KEY_BACKGROUND)) {
                         mBackground = savedInstanceState.getInt(KEY_BACKGROUND);
@@ -123,17 +123,17 @@ public class DashBoardEditActivity extends AppCompatActivity
                     defaultColor = tc.getDefaultColor();
                 }
                 final int defaultBackground = ContextCompat.getColor(this, R.color.dashboad_item_background);
-                mColorLabelBorderColor = defaultColor; // use default text color as border color
+                mColorLabelBorderColor = defaultColor; // use default text textcolor as border textcolor
 
                 mColorButton = findViewById(R.id.dash_color_button);
 
                 if (mColorButton != null) {
                     final int defColor = defaultColor;
-                    mColorButton.setColor((mColor == 0 ? defColor : mColor), mColorLabelBorderColor);
+                    mColorButton.setColor((mTextColor == 0 ? defColor : mTextColor), mColorLabelBorderColor);
                     mColorButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defColor, (mColor == 0 ? defColor : mColor), mColorLabelBorderColor, "color");
+                            showColorDialog(defColor, (mTextColor == 0 ? defColor : mTextColor), mColorLabelBorderColor, "textcolor");
 
                         }
                     });
@@ -283,7 +283,7 @@ public class DashBoardEditActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(KEY_COLOR, mColor);
+        outState.putInt(KEY_TEXTCOLOR, mTextColor);
         outState.putInt(KEY_BACKGROUND, mBackground);
         if (!Utils.isEmpty(mFilterScriptContent)) {
             outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
@@ -401,7 +401,7 @@ public class DashBoardEditActivity extends AppCompatActivity
             // Create and show the dialog.
             ArrayList<Integer> palette = ColorPickerDialog.simplePalette();
             palette.add(0, defaultColor);
-            // chekc if current color in palette. if not add
+            // chekc if current textcolor in palette. if not add
             boolean found = false;
             for(int i = 0; i < palette.size(); i++) {
                 if (palette.get(i) == currentColor) {
@@ -430,18 +430,18 @@ public class DashBoardEditActivity extends AppCompatActivity
     @Override
     public void onColorSelected(int idx, int color, String id) {
         switch (id) {
-            case "color" :
+            case "textcolor" :
                 mColorButton.setColor(color, mColorLabelBorderColor);
                 if (idx == 0) {
-                    mColor = 0; // default system color
+                    mTextColor = 0; // default system textcolor
                 } else {
-                    mColor = color;
+                    mTextColor = color;
                 }
                 break;
             case "bcolor" :
                 mBColorButton.setColor(color, mColorLabelBorderColor);
                 if (idx == 0) {
-                    mBackground = 0; // default system color
+                    mBackground = 0; // default system background color
                 } else {
                     mBackground = color;
                 }
@@ -560,7 +560,7 @@ public class DashBoardEditActivity extends AppCompatActivity
                     mItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
                 }
                 try {
-                    mItem.color = mColor;
+                    mItem.textcolor = mTextColor;
                     mItem.background = mBackground;
                     JSONObject jsonObject = mItem.toJSONObject();
                     jsonObject.put("id", mItem.id);
@@ -600,9 +600,9 @@ public class DashBoardEditActivity extends AppCompatActivity
                     changed = true;
                 }
             }
-            // color or background changed?
+            // textcolor or background changed?
             if (!changed) {
-                changed = mItem.color != mColor || mBackground != mItem.background;
+                changed = mItem.textcolor != mTextColor || mBackground != mItem.background;
             }
             // text size changed?
             if (!changed && mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
@@ -624,10 +624,10 @@ public class DashBoardEditActivity extends AppCompatActivity
     protected ColorLabel mBColorButton;
     protected int mColorLabelBorderColor;
 
-    /* color states */
-    protected int mColor;
+    /* textcolor states */
+    protected int mTextColor;
     protected int mBackground;
-    protected String KEY_COLOR = "KEY_COLOR";
+    protected String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
     protected String KEY_BACKGROUND = "KEY_BACKGROUND";
 
     protected String mFilterScriptContent;

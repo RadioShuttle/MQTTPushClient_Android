@@ -20,7 +20,7 @@ public abstract class Item {
 
     public int id; // transient (unique id for internal use)
 
-    public int color;
+    public int textcolor;
     public int background;
     public int textsize; // 0 - default, 1 - small, 2 - medium, 3 - large
     public String topic_s;
@@ -35,7 +35,7 @@ public abstract class Item {
             o.put("topic_s", topic_s);
         }
         o.put("label", label);
-        o.put("color", color);
+        o.put("textcolor", textcolor);
         o.put("background", background);
         o.put("textsize", textsize);
         o.put("script_f", (script_f == null ? "" : script_f));
@@ -46,7 +46,7 @@ public abstract class Item {
     protected void setJSONData(JSONObject o) {
         label = o.optString("label");
         background = o.optInt("background");
-        color = o.optInt("color");
+        textcolor = o.optInt("textcolor");
         textsize = o.optInt("textsize");
         topic_s = o.optString("topic_s");
         script_f = o.optString("script_f");
