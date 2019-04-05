@@ -39,5 +39,6 @@ const Color = {
 	PURPLE : 0xff8126c0,
 	CYAN : 0xff29d0d0,
 	LT_BLUE : 0xff9dafff,
-	BLUE : 0xff2a4bd7
+	BLUE : 0xff2a4bd7,
+	DEFAULT : 0
 };
