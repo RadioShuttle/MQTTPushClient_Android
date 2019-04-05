@@ -218,7 +218,7 @@ to communicate with the MQTT broker and to receive push notifications
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
-    <string name="dash_label_color">Color:</string>
+    <string name="dash_label_text_color">Text color:</string>
     <string name="dash_label_bcolor">Background:</string>
     <string name="dash_label_group">Group:</string>
     <string name="dash_label_position">Pos:</string>

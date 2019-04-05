@@ -117,7 +117,7 @@ public class DashBoardEditActivity extends AppCompatActivity
                 }
 
                 int defaultColor = Color.BLACK;
-                TextView tv = findViewById(R.id.dash_color_label);
+                TextView tv = findViewById(R.id.dash_text_color_label);
                 if (tv != null) {
                     ColorStateList tc = tv.getTextColors();
                     defaultColor = tc.getDefaultColor();
@@ -125,7 +125,7 @@ public class DashBoardEditActivity extends AppCompatActivity
                 final int defaultBackground = ContextCompat.getColor(this, R.color.dashboad_item_background);
                 mColorLabelBorderColor = defaultColor; // use default text textcolor as border textcolor
 
-                mColorButton = findViewById(R.id.dash_color_button);
+                mColorButton = findViewById(R.id.dash_text_color_button);
 
                 if (mColorButton != null) {
                     final int defColor = defaultColor;

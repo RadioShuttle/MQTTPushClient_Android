@@ -71,14 +71,14 @@
                 <TextView
                     android:layout_gravity="right|center_vertical"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/dash_color_button"
-                    android:id="@+id/dash_color_label"
-                    android:text="@string/dash_label_color"
+                    android:labelFor="@+id/dash_text_color_button"
+                    android:id="@+id/dash_text_color_label"
+                    android:text="@string/dash_label_text_color"
                 />
 
                 <LinearLayout>
                     <de.radioshuttle.mqttpushclient.dash.ColorLabel
-                        android:id="@+id/dash_color_button"
+                        android:id="@+id/dash_text_color_button"
                         android:background="@drawable/color_label_selector"
                         android:padding="8dp"
                         android:layout_width="48dp"
