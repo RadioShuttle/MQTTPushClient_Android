@@ -27,6 +27,8 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.net.DashboardRequest;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.MqttTopic;
 import de.radioshuttle.utils.Utils;
 
@@ -42,6 +44,9 @@ public class DashBoardViewModel extends AndroidViewModel {
         mItemsPerGroup = new HashMap<>();
         mApplication = app;
         mModificationDate = 0L;
+        mSaveRequest = new MutableLiveData<>();
+        requestCnt = 0;
+        currentRequest = null;
     }
 
     public void startJavaScriptExecutors() {
@@ -121,11 +126,11 @@ public class DashBoardViewModel extends AndroidViewModel {
         }
     }
 
-
     public void setItems(String json, long modificationDate) {
         mInitialized = true;
         mGroups.clear();
         mItemsPerGroup.clear();
+        mItemsRaw = json;
         mModificationDate = modificationDate;
         if (!Utils.isEmpty(json)) {
             try {
@@ -228,9 +233,6 @@ public class DashBoardViewModel extends AndroidViewModel {
             mGroups.add(item);
             mItemsPerGroup.put(item.id, new LinkedList<Item>());
         }
-
-        mDashBoardItemsLiveData.setValue(buildDisplayList());
-        saveItems();
     }
 
     public void addItem(int groupIdx, int itemPos, Item item) {
@@ -249,11 +251,160 @@ public class DashBoardViewModel extends AndroidViewModel {
                 } else {
                     groupItems.add(item);
                 }
-                //TODO: subscribe to topic. if last message cached, set last message to item, trigger filter script
-                mDashBoardItemsLiveData.setValue(buildDisplayList());
-                saveItems();
             }
         }
+    }
+
+    public static void addGroup(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> itemsPerGroup, int pos, GroupItem item) {
+
+        if (pos >= 0 && pos < groups.size()) {
+            groups.add(pos, item);
+            itemsPerGroup.put(item.id, new LinkedList<Item>());
+        } else {
+            groups.add(item);
+            itemsPerGroup.put(item.id, new LinkedList<Item>());
+        }
+    }
+
+    public static void addItem(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> itemsPerGroup, int groupIdx, int itemPos, Item item) {
+
+        if (groupIdx >= 0 && groupIdx < groups.size()) {
+
+            GroupItem group = groups.get(groupIdx);
+            if (group != null) {
+                LinkedList<Item> groupItems = itemsPerGroup.get(group.id);
+                if (groupItems == null) {
+                    groupItems = new LinkedList<>();
+                    itemsPerGroup.put(group.id, groupItems);
+                }
+                if (itemPos >= 0 && itemPos < itemsPerGroup.size()) {
+                    groupItems.add(itemPos, item);
+                } else {
+                    groupItems.add(item);
+                }
+            }
+        }
+    }
+
+    public static void setGroup(LinkedList<GroupItem> mGroups, int pos, GroupItem groupItem) {
+        if (pos >= 0) {
+            boolean removeOld = false;
+            if (pos >= mGroups.size()) {
+                pos = mGroups.size();
+                mGroups.add(groupItem);
+                removeOld = true;
+            } else {
+                GroupItem currentGr = mGroups.get(pos);
+                if (currentGr.id == groupItem.id) {
+                    groupItem.data = currentGr.data;
+                    mGroups.set(pos, groupItem); // replace
+                } else {
+                    mGroups.add(pos, groupItem); // insert
+                    removeOld = true;
+                }
+            }
+            if (removeOld) {
+                for(int i = 0; i < mGroups.size(); i++) {
+                    if (pos != i && mGroups.get(i).id == groupItem.id) {
+                        mGroups.remove(i); // remove from old pos
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public static void setItem(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> itemsPerGroup, int groupIdx, int itemPos, Item item) {
+
+        if (groupIdx >= 0 && groupIdx < groups.size()) {
+            GroupItem group = groups.get(groupIdx);
+            Item replacedItem = null;
+            if (group != null) {
+                LinkedList<Item> items = itemsPerGroup.get(group.id);
+                if (items != null) {
+                    ItemContext ic = null;
+                    if (itemPos >= items.size()) {
+                        itemPos = items.size();
+                        ic = getItem(groups, itemsPerGroup, item.id);
+                        items.add(item);
+                    } else {
+                        Item currentItem = items.get(itemPos);
+                        if (currentItem.id == item.id) {
+                            item.data = currentItem.data;
+                            replacedItem = items.set(itemPos, item); // replace
+                        } else {
+                            ic = getItem(groups, itemsPerGroup, item.id);
+                            items.add(itemPos, item); // insert
+                        }
+                    }
+                    if (ic != null ) { // remove from old pos
+                        items = itemsPerGroup.get(ic.group.id);
+                        if (items != null) {
+                            for(int i = 0; i < items.size(); i++) {
+                                if ((itemPos != i || ic.groupPos != groupIdx) && items.get(i).id == item.id) {
+                                    replacedItem = items.remove(i);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    //TODO: topic, javascript might have changed: subscribe and/or unsubscribe, set new content / retrigger JavaScript
+                    if (replacedItem != null) {
+                    }
+                }
+            }
+        }
+    }
+
+    public static ItemContext getItem(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> itemsPerGroup, int itemID) {
+        ItemContext itemContext = null;
+        Item item = null;
+        GroupItem groupItem = null;
+        int groupPos = 0;
+        int itemPos = 0;
+
+        Iterator<GroupItem> itGroups = groups.iterator();
+        Item f = null;
+        while(itGroups.hasNext()) {
+            f = itGroups.next();
+            if (f.id == itemID) {
+                item = f;
+                break;
+            }
+            itemPos++;
+        }
+        Iterator<Map.Entry<Integer, LinkedList<Item>>> it = itemsPerGroup.entrySet().iterator();
+        while (it.hasNext() && item == null) {
+            Map.Entry<Integer, LinkedList<Item>> k = it.next();
+            if (k.getValue() != null) {
+                for(int j = 0; j < groups.size(); j++) {
+                    groupPos = j;
+                    if (groups.get(j).id == k.getKey()) {
+                        groupItem = groups.get(j);
+                        break;
+                    }
+                }
+                itemPos = 0;
+                Iterator<Item> it2 = k.getValue().iterator();
+                while (it2.hasNext()) {
+                    f = it2.next();
+                    if (f.id == itemID) {
+                        item = f;
+                        break;
+                    }
+                    itemPos++;
+                }
+            }
+        }
+        if (item != null) {
+            itemContext = new ItemContext();
+            itemContext.item = item;
+            itemContext.group = groupItem;
+            itemContext.groupPos = groupPos;
+            itemContext.itemPos = itemPos;
+        }
+
+        return itemContext;
     }
 
     public void setGroup(int pos, GroupItem groupItem) {
@@ -281,8 +432,6 @@ public class DashBoardViewModel extends AndroidViewModel {
                     }
                 }
             }
-            mDashBoardItemsLiveData.setValue(buildDisplayList());
-            saveItems();
         }
     }
 
@@ -323,8 +472,6 @@ public class DashBoardViewModel extends AndroidViewModel {
                     //TODO: topic, javascript might have changed: subscribe and/or unsubscribe, set new content / retrigger JavaScript
                     if (replacedItem != null) {
                     }
-                    mDashBoardItemsLiveData.setValue(buildDisplayList());
-                    saveItems();
                 }
             }
         }
@@ -336,6 +483,13 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public LinkedList<Item> getItems(int groupID) {
         return mItemsPerGroup.get(groupID);
+    }
+
+    public void copyItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> items) {
+        if (groups != null && mGroups != null && items != null && mItemsPerGroup != null) {
+            groups.addAll(mGroups);
+            items.putAll(mItemsPerGroup);
+        }
     }
 
     protected List<Item> buildDisplayList() {
@@ -398,19 +552,44 @@ public class DashBoardViewModel extends AndroidViewModel {
                     }
                 }
             }
-            mDashBoardItemsLiveData.setValue(buildDisplayList());
-            saveItems();
         } else if (selectedItems == null) { // delete all
             mGroups.clear();
             mItemsPerGroup.clear();
-            mDashBoardItemsLiveData.setValue(buildDisplayList());
-            saveItems();
         }
+    }
+
+    public void saveDashboard(JSONArray data) {
+        requestCnt++;
+        DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSaveRequest, mModificationDate);
+        request.saveDashboard(data);
+        currentRequest = request;
+        request.execute(); //TODO: thread pool
+    }
+
+    public String getItemsRaw() {
+        return mItemsRaw;
+    }
+
+    public long getItemsVersion() {
+        return mModificationDate;
     }
 
     public boolean isInitialized() {
         return mInitialized;
     }
+
+    public boolean isRequestActive() {
+        return requestCnt > 0;
+    }
+
+    public void confirmResultDelivered() {
+        requestCnt = 0;
+    }
+
+    public boolean isCurrentRequest(Request request) {
+        return currentRequest == request;
+    }
+
 
     public static class ItemContext {
         public Item item;
@@ -446,6 +625,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     private JavaScriptExcecutor mReceivedMsgExecutor;
 
     private boolean mInitialized;
+    private String mItemsRaw;
     private long mModificationDate;
     private PushAccount mPushAccount;
 
@@ -453,6 +633,9 @@ public class DashBoardViewModel extends AndroidViewModel {
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
     // private HashSet<String> mSubscribedTopics;
 
+    public MutableLiveData<Request> mSaveRequest;
+    private int requestCnt;
+    private Request currentRequest;
 
     public final static String TAG = DashBoardViewModel.class.getSimpleName();
 }
