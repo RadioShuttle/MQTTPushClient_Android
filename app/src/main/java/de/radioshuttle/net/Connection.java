@@ -274,6 +274,38 @@ public class Connection {
         return messages;
     }
 
+    public long getCachedMessagesDash(List<Object[]> result) throws IOException, ServerError {
+        List<Object[]> messages = new ArrayList<>();
+        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_MESSAGES_DASH, ++mSeqNo);
+        handleError(response);
+        long version = -1;
+        if (lastReturnCode == Cmd.RC_OK) {
+            version = mCmd.readCachedMessageDashboard(response.data, result);
+        }
+        return version;
+    }
+
+    public Object[] getDashboard() throws IOException, ServerError {
+        Object[] result = null;
+        Cmd.RawCmd repoonse = mCmd.request(Cmd.CMD_GET_DASHBOARD, ++mSeqNo);
+        handleError(repoonse);
+        if (lastReturnCode == Cmd.RC_OK) {
+            result = mCmd.readDashboardData(repoonse.data);
+        }
+        return result;
+    }
+
+    public long setDashboardRequest(long version, String dashboard) throws IOException, ServerError {
+        long result = 0L;
+        Cmd.RawCmd repoonse = mCmd.setDashboardRequest(++mSeqNo, version, dashboard);
+        handleError(repoonse);
+        if (lastReturnCode == Cmd.RC_OK) {
+            DataInputStream is = mCmd.getDataInputStream(repoonse.data);
+            result = is.readLong();
+        }
+        return result;
+    }
+
 
     public void bye() throws IOException {
         mCmd.writeCommand(Cmd.CMD_DISCONNECT, ++mSeqNo, Cmd.FLAG_REQUEST, 0, new byte[0]);

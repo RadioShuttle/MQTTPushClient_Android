@@ -47,6 +47,9 @@ public class Cmd {
     public final static int CMD_GET_MESSAGES = 19;
     public final static int CMD_ADMIN = 20;
     public final static int CMD_BACKUP = 21;
+    public final static int CMD_SET_DASHBOARD = 22;
+    public final static int CMD_GET_DASHBOARD = 23;
+    public final static int CMD_GET_MESSAGES_DASH = 24;
 
     public RawCmd helloRequest(int seqNo, boolean ssl) throws IOException {
         int flags = FLAG_REQUEST;
@@ -249,6 +252,39 @@ public class Cmd {
         return readCommand();
     }
 
+    public RawCmd setDashboardRequest(int seqNo, long version, String dashboardJson) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        os.writeLong(version);
+        writeString(dashboardJson, os);
+        writeCommand(CMD_SET_DASHBOARD, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public void setDashboardResonse(Cmd.RawCmd cmd, long version) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        os.writeLong(version);
+        writeCommand(cmd.command, cmd.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+
+    }
+
+    public void getDashBoardResponse(Cmd.RawCmd cmd, long version, String dashboard) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        os.writeLong(version);
+        writeString(dashboard, os);
+        writeCommand(cmd.command, cmd.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public Object[] readDashboardData(byte[] data) throws IOException {
+        Object[] result  = new Object[2];
+        DataInputStream is = getDataInputStream(data);
+        result[0] = is.readLong();
+        result[1] = readString(is);
+        return result;
+    }
+
     public RawCmd mqttPublishRequest(int seqNo, String topic, String content, boolean retain) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
@@ -374,6 +410,39 @@ public class Cmd {
             }
         }
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public void getCachedDashMessagesResponse(RawCmd request, long version, List<Object[]> messages) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        os.writeLong(version);
+        if (messages == null || messages.size() == 0) {
+            os.writeShort(0);
+        } else {
+            os.writeShort(messages.size());
+            for(Object[] msg : messages) {
+                if (msg.length >= 4) {
+                    os.writeLong((Long) msg[0]);
+                    writeString((String) msg[1], os);
+                    byte[] b = (byte[]) msg[2];
+                    if (b == null || b.length == 0) {
+                        os.writeShort(0);
+                    } else {
+                        os.writeShort(b.length);
+                        os.write(b);
+                    }
+                    os.writeInt((Integer) msg[3]);
+                }
+            }
+        }
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public long readCachedMessageDashboard(byte[] data, List<Object[]> messages) throws IOException {
+        DataInputStream is = getDataInputStream(data);
+        long version = is.readLong();
+        messages.addAll(readCachedMessages(Arrays.copyOfRange(data, 8, data.length)));
+        return version;
     }
 
     public List<Object[]> readCachedMessages(byte[] data)  throws IOException {
