@@ -8,6 +8,7 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -24,7 +25,7 @@ import static de.radioshuttle.mqttpushclient.AccountListActivity.PREFS_NAME;
 
 public class ViewState {
 
-    public static ViewState getInstance(Application app) {
+    public static ViewState getInstance(Context app) {
         if (mViewState == null) {
             mViewState = new ViewState(app);
         }
@@ -113,7 +114,7 @@ public class ViewState {
         }
     }
 
-    private ViewState(Application app) {
+    private ViewState(Context app) {
         mApp = app;
         readStates();
     }
@@ -178,7 +179,7 @@ public class ViewState {
     }
 
     private HashMap<String, ViewInfo> mState;
-    private Application mApp;
+    private Context mApp;
     static ViewState mViewState;
 
     private static class ViewInfo {
