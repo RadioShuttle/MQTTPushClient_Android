@@ -13,10 +13,16 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.net.Cmd;
+import de.radioshuttle.net.DashboardRequest;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.MqttTopic;
 import de.radioshuttle.utils.Utils;
 
@@ -40,16 +46,23 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import org.json.JSONException;
+import com.google.android.material.snackbar.Snackbar;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class DashBoardEditActivity extends AppCompatActivity
-        implements AdapterView.OnItemSelectedListener, ColorPickerDialog.Callback {
+public class DashBoardEditActivity extends AppCompatActivity implements
+        AdapterView.OnItemSelectedListener, ColorPickerDialog.Callback,
+        CertificateErrorDialog.Callback,
+        Observer<Request>
+{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,15 +74,27 @@ public class DashBoardEditActivity extends AppCompatActivity
             return;
         }
 
-        mMode = args.getInt(ARG_MODE, MODE_ADD);
+        if (savedInstanceState == null) {
+            mMode = args.getInt(ARG_MODE, MODE_ADD);
+            mSelectedGroupIdx = args.getInt(ARG_GROUP_POS, -1);
+            mSelectedPosIdx = args.getInt(ARG_ITEM_POS, -1);
+            mSelectedTextIdx = Item.DEFAULT_TEXTSIZE - 1;
+        } else {
+            mMode = args.getInt(ARG_MODE);
+            mSelectedGroupIdx = savedInstanceState.getInt(KEY_SELECTED_GROUP, -1);
+            mSelectedPosIdx = savedInstanceState.getInt(KEY_SELECTED_POS, -1);
+            mSelectedTextIdx = savedInstanceState.getInt(KEY_SELECTED_TEXT, -1);
+        }
+
         String json = args.getString(ARG_ACCOUNT);
         String itemClassName = args.getString(ARG_TYPE);
-        int itemID = args.getInt(ARG_ITEM_ID, -1);
-        final int groupPos = args.getInt(ARG_GROUP_POS, -1);
-        final int itemPos  = args.getInt(ARG_ITEM_POS, -1);
-        mGroupSelInit = (savedInstanceState == null);
-        mItemSelInit = (savedInstanceState == null);
-        mTextSizeSelInit = (savedInstanceState == null);
+        String dashboardContentRaw;
+        long dashboardContentVersion;
+
+        int itemID;
+        itemID = args.getInt(ARG_ITEM_ID, -1);
+        dashboardContentRaw = args.getString(ARG_DASHBOARD, "");
+        dashboardContentVersion =  args.getLong(ARG_DASHBOARD_VERSION, 0L);
 
         /* check arguemnts */
         if (!(json == null || itemClassName == null || (mMode == MODE_EDIT && itemID == -1))) {
@@ -81,11 +106,8 @@ public class DashBoardEditActivity extends AppCompatActivity
                         this, new DashBoardViewModel.Factory(b, getApplication()))
                         .get(DashBoardViewModel.class);
 
-                ViewState vs = ViewState.getInstance(getApplication());
-                String account = b.getKey();
-
                 if (!mViewModel.isInitialized()) {
-                    mViewModel.setItems(vs.getDashBoardContent(b.getKey()), vs.getDashBoardModificationDate(account));
+                    mViewModel.setItems(dashboardContentRaw, dashboardContentVersion);
                 }
 
                 if (mMode == MODE_EDIT) {
@@ -95,6 +117,9 @@ public class DashBoardEditActivity extends AppCompatActivity
                             throw new RuntimeException("Edit item not found");
                         }
                         mItem = ic.item;
+                        if (savedInstanceState == null) {
+                            mSelectedTextIdx = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize ) -1;
+                        }
                     } else {
                         throw new RuntimeException("Edit item not found");
                     }
@@ -156,6 +181,7 @@ public class DashBoardEditActivity extends AppCompatActivity
                     mEditTextLabel.setText(mItem.label);
                 }
 
+
                 /* group */
                 TableRow groupRow = findViewById(R.id.rowGroup);
                 if (groupRow != null && mItem != null) {
@@ -165,6 +191,7 @@ public class DashBoardEditActivity extends AppCompatActivity
                     } else {
                         mGroupSpinner = findViewById(R.id.dash_groupSpinner);
                         if (mGroupSpinner != null) {
+                            // DBUtils.spinnerSelectWorkaround(mGroupSpinner, mSelectedGroupIdx, "group");
                             ArrayList<String> groups = new ArrayList<>();
                             List<GroupItem> groupItems = mViewModel.getGroups();
                             for(int i = 0; i < groupItems.size(); i++) {
@@ -174,10 +201,11 @@ public class DashBoardEditActivity extends AppCompatActivity
                             a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                             mGroupSpinner.setOnItemSelectedListener(this);
                             mGroupSpinner.setAdapter(a);
-                            if (mGroupSelInit && groupPos >= 0) {
-                                Log.d(TAG, "set selection group: " + groupPos);
+                            // selection below is sometimes not working, see workaround above DBUtils.spinnerSelectWorkaround()
+                            if (mSelectedGroupIdx >= 0) {
+                                Log.d(TAG, "set selection group: " + mSelectedGroupIdx);
                                 // mFirstInitStep = (itemPos < 0);
-                                mGroupSpinner.setSelection(groupPos);
+                                mGroupSpinner.setSelection(mSelectedGroupIdx, false);
                             }
                         }
                     }
@@ -186,19 +214,20 @@ public class DashBoardEditActivity extends AppCompatActivity
                 /* position */
                 mPosSpinner = findViewById(R.id.dash_posSpinner);
                 if (mPosSpinner != null) {
+                    mPosSpinner.setOnItemSelectedListener(this);
                     if (mItem instanceof GroupItem) {
                         List<GroupItem> groupItems = mViewModel.getGroups();
                         initPosSpinner(groupItems);
                     } else {
                         /* items can only be added, if a group is selected */
                         List<GroupItem> groupItems = mViewModel.getGroups();
-                        if (groupPos >= 0 && groupPos < groupItems.size()) {
-                            initPosSpinner(mViewModel.getItems(groupItems.get(groupPos).id));
+                        if (mSelectedGroupIdx >= 0 && mSelectedGroupIdx < groupItems.size()) {
+                            initPosSpinner(mViewModel.getItems(groupItems.get(mSelectedGroupIdx).id));
                         }
                     }
-                    if (mItemSelInit && itemPos >= 0) {
-                        Log.d(TAG, "set selection pos: " + itemPos);
-                        mPosSpinner.setSelection(itemPos);
+                    if (mSelectedPosIdx >= 0) {
+                        mPosSpinner.setSelection(mSelectedPosIdx, false);
+                        Log.d(TAG, "idx: " + mSelectedPosIdx + " sel: " + mPosSpinner.getSelectedItemPosition());
                     }
                 }
 
@@ -208,8 +237,11 @@ public class DashBoardEditActivity extends AppCompatActivity
                     ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                             R.array.dash_label_size_array, android.R.layout.simple_spinner_item);
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    mTextSizeSpinner.setOnItemSelectedListener(this);
                     mTextSizeSpinner.setAdapter(adapter);
+                    if (mSelectedTextIdx >= 0) {
+                        Log.d(TAG, "set selection textsize: " + mSelectedTextIdx);
+                        mPosSpinner.setSelection(mSelectedTextIdx, false);
+                    }
                 }
 
                 /* subscribed topic */
@@ -268,6 +300,35 @@ public class DashBoardEditActivity extends AppCompatActivity
         }
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mViewModel.mSaveRequest.observe(this, this );
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setEnabled(false);
+        mSwipeRefreshLayout.setRefreshing(mViewModel.isRequestActive());
+        updateUI(!mViewModel.isRequestActive());
+
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_TEXTCOLOR, mTextColor);
+        outState.putInt(KEY_BACKGROUND, mBackground);
+        if (!Utils.isEmpty(mFilterScriptContent)) {
+            outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
+        }
+        outState.putInt(ARG_MODE, mMode);
+        if (mGroupSpinner != null) {
+            outState.putInt(KEY_SELECTED_GROUP, mGroupSpinner.getSelectedItemPosition());
+        }
+        if (mPosSpinner != null) {
+            outState.putInt(KEY_SELECTED_POS, mPosSpinner.getSelectedItemPosition());
+        }
+        if (mTextSizeSpinner != null) {
+            outState.putInt(KEY_SELECTED_TEXT, mTextSizeSpinner.getSelectedItemPosition());
+        }
+
     }
 
     protected void handleBackPressed() {
@@ -277,16 +338,7 @@ public class DashBoardEditActivity extends AppCompatActivity
         } else {
             setResult(AppCompatActivity.RESULT_CANCELED);
             finish();
-        }
-    }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(KEY_TEXTCOLOR, mTextColor);
-        outState.putInt(KEY_BACKGROUND, mBackground);
-        if (!Utils.isEmpty(mFilterScriptContent)) {
-            outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
         }
     }
 
@@ -305,7 +357,7 @@ public class DashBoardEditActivity extends AppCompatActivity
                 handleBackPressed();
                 break;
             case R.id.action_save:
-                saveAndQuit();
+                save();
                 break;
             default:
                 consumed = super.onOptionsItemSelected(item);
@@ -321,44 +373,37 @@ public class DashBoardEditActivity extends AppCompatActivity
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         if (parent == mGroupSpinner) {
-            Log.d(TAG, "onItemSelected group " + position);
-            if (mGroupSelInit) {
-                final int groupPos = getIntent().getIntExtra(ARG_GROUP_POS, -1);
-                if (groupPos != position && groupPos >= 0) {
-                    mGroupSpinner.setSelection(groupPos);
-                } else {
-                    mGroupSelInit = false;
-                }
-            } else {
-                if (mPosSpinner != null) {
-                    LinkedList<GroupItem> groupItemList = mViewModel.getGroups();
-                    if (position >= 0 && position < groupItemList.size()) {
-                        int groupID = groupItemList.get(position).id;
-                        LinkedList<Item> items = mViewModel.getItems(groupID);
-                        if (items != null) {
-                            initPosSpinner(items);
-                            mPosSpinner.setSelection(items.size());
-                        }
+            if (mPosSpinner != null && (mGinit && mPinit)) {
+                LinkedList<GroupItem> groupItemList = mViewModel.getGroups();
+                if (position >= 0 && position < groupItemList.size()) {
+                    int groupID = groupItemList.get(position).id;
+                    LinkedList<Item> items = mViewModel.getItems(groupID);
+                    if (items != null) {
+                        initPosSpinner(items);
+                        mPosSpinner.setSelection(items.size());
                     }
                 }
             }
+            if (!mGinit) {
+                if (mSelectedGroupIdx >= 0 && position != mSelectedGroupIdx) {
+                    mGroupSpinner.setSelection(mSelectedGroupIdx);
+                }
+            }
+            mGinit = true;
         } else if (parent == mPosSpinner) {
-            if (mItemSelInit) {
-                mItemSelInit = false;
-                final int itemPos  = getIntent().getIntExtra(ARG_ITEM_POS, -1);
-                if (itemPos != position && itemPos >= 0) {
-                    mPosSpinner.setSelection(itemPos);
+            if (!mPinit) {
+                if (mSelectedPosIdx >= 0 && position != mSelectedPosIdx) {
+                    mPosSpinner.setSelection(mSelectedPosIdx);
                 }
             }
-            Log.d(TAG, "onItemSelected pos " + position);
+            mPinit = true;
         } else if (parent == mTextSizeSpinner) {
-            if (mTextSizeSelInit) {
-                mTextSizeSelInit = false;
-                int textSizeIdx = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize ) -1;
-                if (textSizeIdx != position && mTextSizeSpinner.getAdapter() != null && textSizeIdx >= 0 && textSizeIdx < mTextSizeSpinner.getAdapter().getCount()) {
-                    mTextSizeSpinner.setSelection(textSizeIdx);
+            if (!mTinit) {
+                if (mSelectedTextIdx >= 0 && position != mSelectedTextIdx) {
+                    mTextSizeSpinner.setSelection(mSelectedTextIdx);
                 }
             }
+            mTinit = true;
         }
     }
 
@@ -387,7 +432,7 @@ public class DashBoardEditActivity extends AppCompatActivity
             adapterItems.add(String.valueOf(i + 1));
             ArrayAdapter<String> a = createPosAdapter(mPosSpinner, adapterItems);
             a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            mPosSpinner.setOnItemSelectedListener(this);
+            // mPosSpinner.setOnItemSelectedListener(this);
             mPosSpinner.setAdapter(a);
         }
     }
@@ -447,6 +492,71 @@ public class DashBoardEditActivity extends AppCompatActivity
                 }
                 break;
         }
+    }
+
+    @Override
+    public void onChanged(Request request) {
+        if (request != null && request instanceof DashboardRequest) {
+            DashboardRequest dashboardRequest = (DashboardRequest) request;
+            PushAccount b = dashboardRequest.getAccount();
+            if (b.status == 1) {
+                mSwipeRefreshLayout.setRefreshing(true);
+            } else {
+                boolean isNew = false;
+                if (mViewModel.isCurrentRequest(request)) {
+                    isNew = mViewModel.isRequestActive(); // result already processed/displayed?
+                    mViewModel.confirmResultDelivered();
+                    mSwipeRefreshLayout.setRefreshing(false);
+                    updateUI(true);
+
+                    /* handle cerificate exception */
+                    if (b.hasCertifiateException()) {
+                        //TODO
+                    }
+                    b.setCertificateExeption(null); // mark es "processed"
+                    /* end handle cerificate exception */
+                    /* handle insecure connection */
+                    if (b.inSecureConnectionAsk) {
+                        //TODO
+                    }
+                    b.inSecureConnectionAsk = false; // mark as "processed"
+                    if (b.requestStatus != Cmd.RC_OK) {
+                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                        if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
+                            t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                        }
+                        showErrorMsg(t);
+                    } else {
+                        if (dashboardRequest.saveSuccesful()) {
+                            if (isNew) {
+                                Intent data = new Intent();
+                                data.putExtra(ARG_DASHBOARD, dashboardRequest.getReceivedDashboard());
+                                data.putExtra(ARG_DASHBOARD_VERSION, dashboardRequest.getServerVersion());
+                                setResult(AppCompatActivity.RESULT_OK, data);
+                                Toast.makeText(getApplicationContext(), R.string.info_data_saved, Toast.LENGTH_LONG).show();
+                                finish();
+                            }
+                        } else if (!dashboardRequest.saveSuccesful() && dashboardRequest.requestStatus != Cmd.RC_OK) {
+                            String t = (dashboardRequest.requestErrorTxt == null ? "" : dashboardRequest.requestErrorTxt);
+                            if (dashboardRequest.requestStatus == Cmd.RC_MQTT_ERROR) {
+                                t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                            }
+                            showErrorMsg(t);
+                        } else if (dashboardRequest.isVersionError()) {
+                            String t = getString(R.string.dash_err_version_err);
+                            showErrorMsg(t);
+                        }
+                    }
+
+                }
+            }
+        }
+
+    }
+
+    @Override
+    public void retry(Bundle args) {
+        //TODO
     }
 
     public static class QuitWithoutSaveDlg extends DialogFragment {
@@ -541,36 +651,84 @@ public class DashBoardEditActivity extends AppCompatActivity
         }
     }
 
-    protected void saveAndQuit() {
-        if (isValidInput()) {
-            Intent intent = new Intent();
-            intent.putExtra(ARG_MODE, mMode);
-            intent.putExtra(ARG_ITEM_POS, mPosSpinner.getSelectedItemPosition());
+    protected void save() {
+        if (!hasDataChanged()) {
+            Toast.makeText(getApplicationContext(), R.string.error_data_unmodified, Toast.LENGTH_LONG).show();
+        } else if (isValidInput()){
             if (mItem != null) {
-                intent.putExtra(ARG_TYPE, mItem.getClass().getName());
-                if (!(mItem instanceof GroupItem)) {
-                    intent.putExtra(ARG_GROUP_POS, mGroupSpinner.getSelectedItemPosition());
+                int itemPos = mPosSpinner != null ? mPosSpinner.getSelectedItemPosition() : 0;
+                int groupPos = -1;
+                if (!(mItem instanceof GroupItem) && mGroupSpinner != null) {
+                    groupPos = mGroupSpinner.getSelectedItemPosition();
                     mItem.topic_s = mEditTextTopicSub.getText().toString();
                     mItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
                 }
                 if (mEditTextLabel != null) {
                     mItem.label = mEditTextLabel.getText().toString();
                 }
-                if ( mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
+                if (mTextSizeSpinner != null && mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
                     mItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
                 }
-                try {
-                    mItem.textcolor = mTextColor;
-                    mItem.background = mBackground;
-                    JSONObject jsonObject = mItem.toJSONObject();
-                    jsonObject.put("id", mItem.id);
-                    intent.putExtra(ARG_ITEM, jsonObject.toString());
-                } catch(JSONException e) {
-                    Log.d(TAG, "save JSON: " + e.getMessage());
+                mItem.textcolor = mTextColor;
+                mItem.background = mBackground;
+
+                /* convert complete dashboard to json */
+                LinkedList<GroupItem> groupItems = new LinkedList<>();
+                HashMap<Integer, LinkedList<Item>> items = new HashMap<>();
+                mViewModel.copyItems(groupItems, items);
+
+                if (mMode == MODE_ADD) {
+                    if (mItem instanceof GroupItem) {
+                        DashBoardViewModel.addGroup(groupItems, items, itemPos, (GroupItem) mItem);
+                    } else {
+                        /* it there is no group yet, create group and add item to it */
+                        if (groupItems.size() == 0) {
+                            GroupItem groupItem = new GroupItem();
+                            groupItem.label = getString(R.string.new_group_label);
+                            DashBoardViewModel.addGroup(groupItems, items, 0, groupItem);
+                            groupPos = 0;
+                            itemPos = 0;
+                        }
+                        DashBoardViewModel.addItem(groupItems, items, groupPos, itemPos, mItem);
+                    }
+                } else { // MODE_EDIT
+                    if (mItem instanceof GroupItem) {
+                        DashBoardViewModel.setGroup(groupItems, itemPos, (GroupItem) mItem);
+                    } else {
+                        DashBoardViewModel.setItem(groupItems, items, groupPos, itemPos, mItem);
+                    }
                 }
+                JSONArray arr = DBUtils.createJSONStrFromItems(groupItems, items, true);
+                updateUI(false);
+                mViewModel.saveDashboard(arr);
+                Log.d(TAG, "json: "+  arr.toString());
             }
-            setResult(AppCompatActivity.RESULT_OK, intent);
-            finish();
+
+        }
+    }
+
+    protected void updateUI(boolean enableFields) {
+        setEnabled(mFiterScriptButton, enableFields);
+        setEnabled(mEditTextLabel, enableFields);
+        setEnabled(mEditTextTopicSub, enableFields);
+        setEnabled(mColorButton, enableFields);
+        setEnabled(mBColorButton, enableFields);
+        setEnabled(mGroupSpinner, enableFields);
+        setEnabled(mPosSpinner, enableFields);
+        setEnabled(mTextSizeSpinner, enableFields);
+    }
+
+    protected void setEnabled(View v, boolean enabled) {
+        if (v != null) {
+            v.setEnabled(enabled);
+        }
+    }
+
+    protected void showErrorMsg(String msg) {
+        View v = findViewById(R.id.rView);
+        if (v != null) {
+            mSnackbar = Snackbar.make(v, msg, Snackbar.LENGTH_INDEFINITE);
+            mSnackbar.show();
         }
     }
 
@@ -595,7 +753,7 @@ public class DashBoardEditActivity extends AppCompatActivity
                 }
             }
             if (!changed) {
-                int itemPos  = getIntent().getIntExtra(ARG_ITEM_POS, AdapterView.INVALID_POSITION);
+                int itemPos = getIntent().getIntExtra(ARG_ITEM_POS, AdapterView.INVALID_POSITION);
                 if (mPosSpinner.getSelectedItemPosition() != itemPos) {
                     changed = true;
                 }
@@ -609,7 +767,6 @@ public class DashBoardEditActivity extends AppCompatActivity
                 int textSizePos = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize) - 1;
                 changed = mTextSizeSpinner.getSelectedItemPosition() != textSizePos;
             }
-
         }
 
         return changed;
@@ -617,29 +774,44 @@ public class DashBoardEditActivity extends AppCompatActivity
 
     protected boolean mActivityStarted;
 
+    //UI elements
     protected Button mFiterScriptButton;
     protected EditText mEditTextLabel;
     protected EditText mEditTextTopicSub;
     protected ColorLabel mColorButton;
     protected ColorLabel mBColorButton;
+    protected Spinner mGroupSpinner;
+    protected Spinner mPosSpinner;
+    protected Spinner mTextSizeSpinner;
+
+    boolean mGinit, mPinit, mTinit;
+
     protected int mColorLabelBorderColor;
 
     /* textcolor states */
     protected int mTextColor;
     protected int mBackground;
-    protected String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
-    protected String KEY_BACKGROUND = "KEY_BACKGROUND";
+    protected final static String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
+    protected final static String KEY_BACKGROUND = "KEY_BACKGROUND";
 
     protected String mFilterScriptContent;
-    protected String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
+    protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
 
-    protected boolean mGroupSelInit, mItemSelInit, mTextSizeSelInit;
+    protected int mSelectedGroupIdx;
+    protected final static String KEY_SELECTED_GROUP = "KEY_SELECTED_GROUP";
+    protected int mSelectedPosIdx;
+    protected final static String KEY_SELECTED_POS = "KEY_SELECTED_POS";
+    protected int mSelectedTextIdx;
+    protected final static String KEY_SELECTED_TEXT = "KEY_SELECTED_TEXT";
+
+
     protected Item mItem;
-    protected Spinner mGroupSpinner;
-    protected Spinner mPosSpinner;
-    protected Spinner mTextSizeSpinner;
+
     protected DashBoardViewModel mViewModel;
     protected int mMode;
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private Snackbar mSnackbar;
 
     private final static String TAG = DashBoardEditActivity.class.getSimpleName();
 
@@ -652,5 +824,6 @@ public class DashBoardEditActivity extends AppCompatActivity
     public final static String ARG_ITEM_ID = "ARG_ITEM_ID";
     public final static String ARG_GROUP_POS = "ARG_GROUP_POS";
     public final static String ARG_ITEM_POS = "ARG_ITEM_POS";
-    public final static String ARG_ITEM = "ARG_ITEM";
+    public final static String ARG_DASHBOARD = "ARG_DASHBOARD";
+    public final static String ARG_DASHBOARD_VERSION = "ARG_DASHBOARD_VERSION";
 }
