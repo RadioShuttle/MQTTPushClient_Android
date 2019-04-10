@@ -233,8 +233,8 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="select_single_dash">Only one dash may be selected for editing</string>
     <string name="new_group_label">New Group</string>
 
-
     <string name="dash_filter_script_header">Filter the content of all messages</string>
+    <string name="dash_err_version_err">Version error. Reopen editor and try again.</string>
 
     <!-- delete dialog -->
     <string name="dlg_del_dash_title">Delete</string>
