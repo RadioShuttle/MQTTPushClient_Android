@@ -12,17 +12,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
+import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Cmd;
+import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.DashboardRequest;
 import de.radioshuttle.net.Request;
+import de.radioshuttle.net.TopicsRequest;
 import de.radioshuttle.utils.MqttTopic;
 import de.radioshuttle.utils.Utils;
 
@@ -55,8 +60,10 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class DashBoardEditActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener, ColorPickerDialog.Callback,
@@ -357,7 +364,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 handleBackPressed();
                 break;
             case R.id.action_save:
-                save();
+                checkAndSave();
                 break;
             default:
                 consumed = super.onOptionsItemSelected(item);
@@ -511,15 +518,51 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                     /* handle cerificate exception */
                     if (b.hasCertifiateException()) {
-                        //TODO
+                        /* only show dialog if the certificate has not already been denied */
+                        if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
+                            FragmentManager fm = getSupportFragmentManager();
+
+                            String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
+                                    AppTrustManager.getUniqueKey(b.getCertificateException().chain[0]);
+
+                            /* check if a dialog is not already showing (for this certificate) */
+                            if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                CertificateErrorDialog dialog = new CertificateErrorDialog();
+                                Bundle args = CertificateErrorDialog.createArgsFromEx(
+                                        b.getCertificateException(), request.getAccount().pushserver);
+                                if (args != null) {
+                                    int cmd = dashboardRequest.mCmd;
+                                    args.putInt("cmd", cmd);
+                                    dialog.setArguments(args);
+                                    dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                }
+                            }
+                        }
                     }
                     b.setCertificateExeption(null); // mark es "processed"
-                    /* end handle cerificate exception */
+
                     /* handle insecure connection */
                     if (b.inSecureConnectionAsk) {
-                        //TODO
+                        if (Connection.mInsecureConnection.get(b.pushserver) == null) {
+                            FragmentManager fm = getSupportFragmentManager();
+
+                            String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
+
+                            /* check if a dialog is not already showing (for this host) */
+                            if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                                Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
+                                if (args != null) {
+                                    int cmd = dashboardRequest.mCmd;
+                                    args.putInt("cmd", cmd);
+                                    dialog.setArguments(args);
+                                    dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                }
+                            }
+                        }
                     }
                     b.inSecureConnectionAsk = false; // mark as "processed"
+
                     if (b.requestStatus != Cmd.RC_OK) {
                         String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
                         if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
@@ -556,7 +599,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     @Override
     public void retry(Bundle args) {
-        //TODO
+        save();
     }
 
     public static class QuitWithoutSaveDlg extends DialogFragment {
@@ -651,59 +694,62 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
     }
 
-    protected void save() {
+    protected void checkAndSave() {
         if (!hasDataChanged()) {
             Toast.makeText(getApplicationContext(), R.string.error_data_unmodified, Toast.LENGTH_LONG).show();
         } else if (isValidInput()){
-            if (mItem != null) {
-                int itemPos = mPosSpinner != null ? mPosSpinner.getSelectedItemPosition() : 0;
-                int groupPos = -1;
-                if (!(mItem instanceof GroupItem) && mGroupSpinner != null) {
-                    groupPos = mGroupSpinner.getSelectedItemPosition();
-                    mItem.topic_s = mEditTextTopicSub.getText().toString();
-                    mItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
-                }
-                if (mEditTextLabel != null) {
-                    mItem.label = mEditTextLabel.getText().toString();
-                }
-                if (mTextSizeSpinner != null && mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
-                    mItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
-                }
-                mItem.textcolor = mTextColor;
-                mItem.background = mBackground;
+            save();
+        }
+    }
 
-                /* convert complete dashboard to json */
-                LinkedList<GroupItem> groupItems = new LinkedList<>();
-                HashMap<Integer, LinkedList<Item>> items = new HashMap<>();
-                mViewModel.copyItems(groupItems, items);
-
-                if (mMode == MODE_ADD) {
-                    if (mItem instanceof GroupItem) {
-                        DashBoardViewModel.addGroup(groupItems, items, itemPos, (GroupItem) mItem);
-                    } else {
-                        /* it there is no group yet, create group and add item to it */
-                        if (groupItems.size() == 0) {
-                            GroupItem groupItem = new GroupItem();
-                            groupItem.label = getString(R.string.new_group_label);
-                            DashBoardViewModel.addGroup(groupItems, items, 0, groupItem);
-                            groupPos = 0;
-                            itemPos = 0;
-                        }
-                        DashBoardViewModel.addItem(groupItems, items, groupPos, itemPos, mItem);
-                    }
-                } else { // MODE_EDIT
-                    if (mItem instanceof GroupItem) {
-                        DashBoardViewModel.setGroup(groupItems, itemPos, (GroupItem) mItem);
-                    } else {
-                        DashBoardViewModel.setItem(groupItems, items, groupPos, itemPos, mItem);
-                    }
-                }
-                JSONArray arr = DBUtils.createJSONStrFromItems(groupItems, items, true);
-                updateUI(false);
-                mViewModel.saveDashboard(arr);
-                Log.d(TAG, "json: "+  arr.toString());
+    protected void save() {
+        if (mItem != null) {
+            int itemPos = mPosSpinner != null ? mPosSpinner.getSelectedItemPosition() : 0;
+            int groupPos = -1;
+            if (!(mItem instanceof GroupItem) && mGroupSpinner != null) {
+                groupPos = mGroupSpinner.getSelectedItemPosition();
+                mItem.topic_s = mEditTextTopicSub.getText().toString();
+                mItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
             }
+            if (mEditTextLabel != null) {
+                mItem.label = mEditTextLabel.getText().toString();
+            }
+            if (mTextSizeSpinner != null && mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
+                mItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
+            }
+            mItem.textcolor = mTextColor;
+            mItem.background = mBackground;
 
+            /* convert complete dashboard to json */
+            LinkedList<GroupItem> groupItems = new LinkedList<>();
+            HashMap<Integer, LinkedList<Item>> items = new HashMap<>();
+            mViewModel.copyItems(groupItems, items);
+
+            if (mMode == MODE_ADD) {
+                if (mItem instanceof GroupItem) {
+                    DashBoardViewModel.addGroup(groupItems, items, itemPos, (GroupItem) mItem);
+                } else {
+                    /* it there is no group yet, create group and add item to it */
+                    if (groupItems.size() == 0) {
+                        GroupItem groupItem = new GroupItem();
+                        groupItem.label = getString(R.string.new_group_label);
+                        DashBoardViewModel.addGroup(groupItems, items, 0, groupItem);
+                        groupPos = 0;
+                        itemPos = 0;
+                    }
+                    DashBoardViewModel.addItem(groupItems, items, groupPos, itemPos, mItem);
+                }
+            } else { // MODE_EDIT
+                if (mItem instanceof GroupItem) {
+                    DashBoardViewModel.setGroup(groupItems, itemPos, (GroupItem) mItem);
+                } else {
+                    DashBoardViewModel.setItem(groupItems, items, groupPos, itemPos, mItem);
+                }
+            }
+            JSONArray arr = DBUtils.createJSONStrFromItems(groupItems, items, true);
+            updateUI(false);
+            mViewModel.saveDashboard(arr);
+            Log.d(TAG, "json: "+  arr.toString());
         }
     }
 
