@@ -652,7 +652,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (Utils.isEmpty(mFilterScriptContent)) {
             mFiterScriptButton.setText(getString(R.string.dlg_filter_button_add));
         } else {
-            mFiterScriptButton.setText(getString(R.string.dlg_filter_button_edit));
+            if (mItem != null && !Utils.equals(mFilterScriptContent, mItem.script_f)) {
+                mFiterScriptButton.setText(getString(R.string.dlg_filter_button_edit_modified));
+            } else {
+                mFiterScriptButton.setText(getString(R.string.dlg_filter_button_edit));
+            }
         }
     }
 
