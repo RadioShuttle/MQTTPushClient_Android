@@ -7,164 +7,172 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".dash.DashBoardEditActivity">
 
-    <androidx.core.widget.NestedScrollView
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/swiperefresh"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_width="match_parent"
         android:layout_height="0dp">
 
-        <TableLayout
-            android:id="@+id/dashTable"
-            android:paddingTop="8dp"
-            android:shrinkColumns="1"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
-            android:paddingBottom="16dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            >
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-            <TableRow>
-                <TextView
-                    android:gravity="right"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/dash_name"
-                    android:text="@string/dash_label_name"/>
-                <EditText
-                    android:id="@+id/dash_name"
-                    android:inputType="text"
-                    android:ems="15"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:minHeight="48dp"
-                    android:layout_marginLeft="4dp"
-                    />
-            </TableRow>
+            <TableLayout
+                android:id="@+id/dashTable"
+                android:paddingTop="8dp"
+                android:shrinkColumns="1"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingBottom="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                >
 
-            <TableRow android:id="@+id/rowGroup">
-                <TextView
-                    android:gravity="right"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/dash_groupSpinner"
-                    android:text="@string/dash_label_group"/>
-                <Spinner
-                    android:id="@+id/dash_groupSpinner"
-                    android:minHeight="48dp"
-                    android:layout_marginLeft="4dp"
-                    />
-            </TableRow>
-
-            <TableRow>
-                <TextView
-                    android:gravity="right"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/dash_posSpinner"
-                    android:text="@string/dash_label_position"/>
-                <Spinner
-                    android:id="@+id/dash_posSpinner"
-                    android:minHeight="48dp"
-                    android:layout_marginLeft="4dp"
-                    />
-            </TableRow>
-
-            <TableRow android:id="@+id/rowColor" android:layout_marginTop="4dp">
-                <TextView
-                    android:layout_gravity="right|center_vertical"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/dash_text_color_button"
-                    android:id="@+id/dash_text_color_label"
-                    android:text="@string/dash_label_text_color"
-                />
-
-                <LinearLayout>
-                    <de.radioshuttle.mqttpushclient.dash.ColorLabel
-                        android:id="@+id/dash_text_color_button"
-                        android:background="@drawable/color_label_selector"
-                        android:padding="8dp"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp" />
-                </LinearLayout>
-
-            </TableRow>
-
-            <TableRow android:id="@+id/rowBackground">
-                <TextView
-                    android:layout_gravity="right|center_vertical"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/dash_bcolor_button"
-                    android:text="@string/dash_label_bcolor"
-                    />
-
-                <LinearLayout>
-                    <de.radioshuttle.mqttpushclient.dash.ColorLabel
-                        android:id="@+id/dash_bcolor_button"
-                        android:background="@drawable/color_label_selector"
-                        android:padding="8dp"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp" />
-                </LinearLayout>
-
-            </TableRow>
-
-            <TableRow android:id="@+id/rowTextSize" android:layout_marginTop="4dp">
-                <TextView
-                    android:layout_gravity="right|center_vertical"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/dash_textSize"
-                    android:text="@string/dash_label_textsize"
-                    />
-                <LinearLayout>
-                    <Spinner
-                        android:id="@+id/dash_textSize"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                <TableRow>
+                    <TextView
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_name"
+                        android:text="@string/dash_label_name"/>
+                    <EditText
+                        android:id="@+id/dash_name"
+                        android:inputType="text"
+                        android:ems="15"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
                         android:minHeight="48dp"
                         android:layout_marginLeft="4dp"
                         />
-                </LinearLayout>
-            </TableRow>
+                </TableRow>
 
-            <TableRow android:id="@+id/rowTopicSub">
-                <TextView
-                    android:layout_gravity="right|center_vertical"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/dash_subscribe"
-                    android:text="@string/dash_label_subscribe_topic"
-                    />
-                <EditText
-                    android:id="@+id/dash_subscribe"
-                    android:inputType="text"
-                    android:ems="15"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:minHeight="48dp"
-                    android:layout_marginLeft="4dp"
-                    />
+                <TableRow android:id="@+id/rowGroup" android:gravity="center">
+                    <TextView
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_groupSpinner"
+                        android:text="@string/dash_label_group"/>
+                    <Spinner
+                        android:id="@+id/dash_groupSpinner"
+                        android:minHeight="48dp"
+                        android:layout_marginLeft="4dp"
+                        />
+                </TableRow>
 
-            </TableRow>
+                <TableRow android:id="@+id/rowPosition" android:gravity="center_vertical">
+                    <TextView
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_posSpinner"
+                        android:text="@string/dash_label_position"/>
+                    <Spinner
+                        android:id="@+id/dash_posSpinner"
+                        android:minHeight="48dp"
+                        android:layout_marginLeft="4dp"
+                        />
+                </TableRow>
 
-            <TableRow android:id="@+id/rowFilterScript" android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/filterLabel"
-                    android:gravity="right"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="@string/dlg_filter_label"
-                    android:labelFor="@+id/filterButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                <TableRow android:id="@+id/rowColor" android:layout_marginTop="4dp">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_text_color_button"
+                        android:id="@+id/dash_text_color_label"
+                        android:text="@string/dash_label_text_color"
+                        />
 
-                <Button
-                    android:id="@+id/filterButton"
-                    android:minHeight="48dp"
-                    android:layout_gravity="left"
-                    style="@style/Widget.AppCompat.Button.Borderless.Colored"
-                    android:text="@string/dlg_filter_button_add"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </TableRow>
+                    <LinearLayout>
+                        <de.radioshuttle.mqttpushclient.dash.ColorLabel
+                            android:id="@+id/dash_text_color_button"
+                            android:background="@drawable/color_label_selector"
+                            android:padding="8dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp" />
+                    </LinearLayout>
+
+                </TableRow>
+
+                <TableRow android:id="@+id/rowBackground">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_bcolor_button"
+                        android:text="@string/dash_label_bcolor"
+                        />
+
+                    <LinearLayout>
+                        <de.radioshuttle.mqttpushclient.dash.ColorLabel
+                            android:id="@+id/dash_bcolor_button"
+                            android:background="@drawable/color_label_selector"
+                            android:padding="8dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp" />
+                    </LinearLayout>
+
+                </TableRow>
+
+                <TableRow android:id="@+id/rowTextSize" android:layout_marginTop="4dp">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_textSize"
+                        android:text="@string/dash_label_textsize"
+                        />
+                    <LinearLayout>
+                        <Spinner
+                            android:id="@+id/dash_textSize"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minHeight="48dp"
+                            android:layout_marginLeft="4dp"
+                            />
+                    </LinearLayout>
+                </TableRow>
+
+                <TableRow android:id="@+id/rowTopicSub">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_subscribe"
+                        android:text="@string/dash_label_subscribe_topic"
+                        />
+                    <EditText
+                        android:id="@+id/dash_subscribe"
+                        android:inputType="text"
+                        android:ems="15"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:minHeight="48dp"
+                        android:layout_marginLeft="4dp"
+                        />
+
+                </TableRow>
+
+                <TableRow android:id="@+id/rowFilterScript" android:gravity="center_vertical">
+                    <TextView
+                        android:id="@+id/filterLabel"
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/dlg_filter_label"
+                        android:labelFor="@+id/filterButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <Button
+                        android:id="@+id/filterButton"
+                        android:minHeight="48dp"
+                        android:layout_gravity="left"
+                        style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                        android:text="@string/dlg_filter_button_add"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </TableRow>
 
 
-        </TableLayout>
+            </TableLayout>
 
-    </androidx.core.widget.NestedScrollView>
+        </androidx.core.widget.NestedScrollView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
