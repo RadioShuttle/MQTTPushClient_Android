@@ -117,7 +117,8 @@ public class DBUtils {
         dlg.show();
     }
 
-    public static void createItemsFromJSONString(String json, LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems) {
+    public static int createItemsFromJSONString(String json, LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems) {
+        int maxID = 0;
         if (!Utils.isEmpty(json) && groups != null && groupItems != null) {
             try {
                 JSONArray groupArray = new JSONArray(json);
@@ -127,37 +128,32 @@ public class DBUtils {
                 for (int i = 0; i < groupArray.length(); i++) {
                     groupItem = new GroupItem();
                     groupJSON = groupArray.getJSONObject(i);
-                    if (groupJSON.optInt("id", -1) != -1) {
-                        groupItem.id = groupJSON.optInt("id");
-                        if (groupItem.id >= Item.cnt) {
-                            Item.cnt = groupItem.id + 1;
-                        }
-                    }
                     groupItem.setJSONData(groupJSON);
                     JSONArray itemArray = groupJSON.getJSONArray("items");
                     groups.add(groupItem);
                     LinkedList<Item> items = new LinkedList<>();
                     groupItems.put(groupItem.id, items);
+                    if (groupItem.id > maxID) {
+                        maxID = groupItem.id;
+                    }
 
                     for (int j = 0; j < itemArray.length(); j++) {
                         itemJSON = itemArray.getJSONObject(j);
                         item = Item.createItemFromJSONObject(itemJSON);
-                        if (itemJSON.optInt("id", -1) != -1) {
-                            item.id = itemJSON.optInt("id");
-                            if (item.id >= Item.cnt) {
-                                Item.cnt = item.id  + 1;
-                            }
-                        }
                         items.add(item);
+                        if (item.id > maxID) {
+                            maxID = item.id;
+                        }
                     }
                 }
             } catch (JSONException e) {
                 Log.d(Item.TAG, "Error parsing JSON: " + e.getMessage());
             }
         }
+        return maxID;
     }
 
-    public static JSONArray createJSONStrFromItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems, boolean storeGroupID) {
+    public static JSONArray createJSONStrFromItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems) {
         JSONArray groupItemArray = new JSONArray();
         if (groups != null && groupItems != null) {
             JSONObject groupJSON = null;
@@ -170,9 +166,6 @@ public class DBUtils {
                 GroupItem g = it.next();
                 try {
                     groupJSON = g.toJSONObject();
-                    if (storeGroupID) {
-                        groupJSON.put("id", g.id);
-                    }
                     itemArray = new JSONArray();
                     groupJSON.put("items", itemArray);
                     groupItemArray.put(groupJSON);
@@ -187,9 +180,6 @@ public class DBUtils {
                         Item e = it2.next();
                         try {
                             itemJSON = e.toJSONObject();
-                            if (storeGroupID) {
-                                itemJSON.put("id", e.id);
-                            }
                         } catch(JSONException e2) {
                             Log.d(Item.TAG, "Error createJSONStrFromItems: " + e2.getMessage());
                             continue;

@@ -133,6 +133,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else { // MODE_ADD
                     DashBoardViewModel.ItemContext ic = new DashBoardViewModel.ItemContext();
                     mItem = (Item) Class.forName(itemClassName).newInstance();
+                    mItem.id = mViewModel.incrementAndGetID();
+                    Log.d(TAG, "id: " + mItem.id);
                 }
 
                 /* textcolor buttons */
@@ -247,7 +249,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mTextSizeSpinner.setAdapter(adapter);
                     if (mSelectedTextIdx >= 0) {
                         Log.d(TAG, "set selection textsize: " + mSelectedTextIdx);
-                        mPosSpinner.setSelection(mSelectedTextIdx, false);
+                        mTextSizeSpinner.setSelection(mSelectedTextIdx, false);
                     }
                 }
 
@@ -750,7 +752,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     DashBoardViewModel.setItem(groupItems, items, groupPos, itemPos, mItem);
                 }
             }
-            JSONArray arr = DBUtils.createJSONStrFromItems(groupItems, items, true);
+            JSONArray arr = DBUtils.createJSONStrFromItems(groupItems, items);
             updateUI(false);
             mViewModel.saveDashboard(arr);
             Log.d(TAG, "json: "+  arr.toString());

@@ -47,6 +47,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mSaveRequest = new MutableLiveData<>();
         requestCnt = 0;
         currentRequest = null;
+        mMaxID = 0;
     }
 
     public void startJavaScriptExecutors() {
@@ -132,9 +133,10 @@ public class DashBoardViewModel extends AndroidViewModel {
         mItemsPerGroup.clear();
         mItemsRaw = json;
         mModificationDate = modificationDate;
+        mMaxID = 0;
         if (!Utils.isEmpty(json)) {
             try {
-                DBUtils.createItemsFromJSONString(json, mGroups, mItemsPerGroup);
+                mMaxID = DBUtils.createItemsFromJSONString(json, mGroups, mItemsPerGroup);
             } catch(Exception e) {
                 Log.e(TAG, "Load items: Parsing json failed: " + e.getMessage());
             }
@@ -142,35 +144,8 @@ public class DashBoardViewModel extends AndroidViewModel {
         mDashBoardItemsLiveData.setValue(buildDisplayList());
     }
 
-    public void saveItems() {
-
-        long modificationDate = System.currentTimeMillis();
-        try {
-            JSONArray arr = DBUtils.createJSONStrFromItems(mGroups, mItemsPerGroup, true);
-            String localJSON = arr.toString();
-            String serverJSON = null;
-
-            if (arr != null) {
-                for(int i = 0; i < arr.length(); i++) {
-                    arr.getJSONObject(i).remove("id");
-                    JSONArray jsonArray = arr.getJSONObject(i).optJSONArray("items");
-                    if (jsonArray != null) {
-                        for(int j = 0; j < jsonArray.length(); j++) {
-                            jsonArray.getJSONObject(j).remove("id");
-                        }
-                    }
-                }
-                serverJSON = arr.toString();
-            }
-            mModificationDate = modificationDate;
-            ViewState.getInstance(getApplication()).saveDashboard(mPushAccount.getKey(), mModificationDate, localJSON);
-
-            //TODO: send to push server
-
-        } catch(Exception e) {
-            Log.e(TAG, "Save items: Parsing json failed: " + e.getMessage());
-        }
-
+    public int incrementAndGetID() {
+        return ++mMaxID;
     }
 
     public ItemContext getItem(int itemID) {
@@ -620,6 +595,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         Application app;
     }
 
+    private int mMaxID;
     private Application mApplication;
     private Thread mTestDataThread; //TODO: remove after test
     private JavaScriptExcecutor mReceivedMsgExecutor;

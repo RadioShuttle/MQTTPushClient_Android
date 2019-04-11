@@ -14,12 +14,10 @@ import java.util.HashMap;
 
 public abstract class Item {
     public Item() {
-        id = cnt++;
         data = new HashMap<>();
     }
 
-    public int id; // transient (unique id for internal use)
-
+    public int id;
     public int textcolor;
     public int background;
     public int textsize; // 0 - default, 1 - small, 2 - medium, 3 - large
@@ -39,6 +37,7 @@ public abstract class Item {
         o.put("background", background);
         o.put("textsize", textsize);
         o.put("script_f", (script_f == null ? "" : script_f));
+        o.put("id", id);
 
         return o;
     }
@@ -50,6 +49,7 @@ public abstract class Item {
         textsize = o.optInt("textsize");
         topic_s = o.optString("topic_s");
         script_f = o.optString("script_f");
+        id = o.optInt("id");
     }
 
     public static Item createItemFromJSONObject(JSONObject o) {
@@ -67,8 +67,6 @@ public abstract class Item {
     public HashMap<String, Object> data;
 
     public abstract String getType();
-
-    protected static int cnt = 0;
 
     public final static int DEFAULT_TEXTSIZE = 1;
 
