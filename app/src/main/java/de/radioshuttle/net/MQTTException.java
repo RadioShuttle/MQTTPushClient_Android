@@ -11,4 +11,6 @@ public class MQTTException extends ServerError {
     public MQTTException(int code, String msg) {
         super(code, msg);
     }
+
+    public static final short REASON_CODE_SUBSCRIBE_FAILED				= 0x80;
 }
