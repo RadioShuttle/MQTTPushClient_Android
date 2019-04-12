@@ -295,9 +295,9 @@ public class Connection {
         return result;
     }
 
-    public long setDashboardRequest(long version, String dashboard) throws IOException, ServerError {
+    public long setDashboardRequest(long version, int itemID, String dashboard) throws IOException, ServerError {
         long result = 0L;
-        Cmd.RawCmd repoonse = mCmd.setDashboardRequest(++mSeqNo, version, dashboard);
+        Cmd.RawCmd repoonse = mCmd.setDashboardRequest(++mSeqNo, version, itemID, dashboard);
         handleError(repoonse);
         if (lastReturnCode == Cmd.RC_OK) {
             DataInputStream is = mCmd.getDataInputStream(repoonse.data);

@@ -8,12 +8,13 @@ package de.radioshuttle.net;
 
 import android.content.Context;
 
-import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.lifecycle.MutableLiveData;
+import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
 
@@ -27,9 +28,10 @@ public class DashboardRequest extends Request {
         mReceivedDashboard = null;
     }
 
-    public void saveDashboard(JSONArray dashboard) { // TODO: pass json str
+    public void saveDashboard(JSONObject dashboard, int itemID) { // TODO: pass json str
         mCmd = Cmd.CMD_SET_DASHBOARD;
         mDashboardPara = dashboard;
+        mItemIDPara = itemID;
     }
 
     public void loadDashboard() {
@@ -43,7 +45,7 @@ public class DashboardRequest extends Request {
             try {
                 String jsonStr = mDashboardPara.toString();
 
-                long result = mConnection.setDashboardRequest(mLocalVersion, jsonStr);
+                long result = mConnection.setDashboardRequest(mLocalVersion, mItemIDPara, jsonStr);
                 if (result != 0) { //Cmd.RC_OK
                     mServerVersion = result;
                     mReceivedDashboard = jsonStr;
@@ -68,6 +70,19 @@ public class DashboardRequest extends Request {
             List<Object[]> result = new ArrayList<>();
             try {
                 mServerVersion = mConnection.getCachedMessagesDash(result);
+                mReceivedMessages = new ArrayList<>();
+
+                MqttMessage mqttMessage;
+                for(int i = 0; i < result.size(); i++) {
+                    mqttMessage = new MqttMessage();
+                    mqttMessage.setWhen((Long) result.get(i)[0] * 1000L);
+                    mqttMessage.setTopic((String) result.get(i)[1]);
+                    mqttMessage.setPayload((byte[]) result.get(i)[2]);
+                    mqttMessage.setSeqno((Integer) result.get(i)[3]);
+                    mReceivedMessages.add(mqttMessage);
+                }
+                //TODO: sort descending by date
+
                 //TODO save cached messages locally
             } catch (ServerError e) {
                 requestErrorCode = e.errorCode;
@@ -116,14 +131,21 @@ public class DashboardRequest extends Request {
     public String getReceivedDashboard() {
         return mReceivedDashboard;
     }
+    public List<MqttMessage> getReceivedMessages() {
+        return mReceivedMessages == null ? new ArrayList<MqttMessage>() : mReceivedMessages;
+    }
 
     public int requestStatus;
     public int requestErrorCode;
     public String requestErrorTxt;
 
+
+    List<MqttMessage> mReceivedMessages;
+
     boolean mSaved;
     boolean invalidVersion;
-    JSONArray mDashboardPara;
+    int mItemIDPara;
+    JSONObject mDashboardPara;
     String mReceivedDashboard;
     long mLocalVersion;
     long mServerVersion;

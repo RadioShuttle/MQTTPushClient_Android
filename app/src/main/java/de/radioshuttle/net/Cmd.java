@@ -252,10 +252,11 @@ public class Cmd {
         return readCommand();
     }
 
-    public RawCmd setDashboardRequest(int seqNo, long version, String dashboardJson) throws IOException {
+    public RawCmd setDashboardRequest(int seqNo, long version, int itemID, String dashboardJson) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         os.writeLong(version);
+        os.writeInt(itemID);
         writeString(dashboardJson, os);
         writeCommand(CMD_SET_DASHBOARD, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
@@ -412,7 +413,7 @@ public class Cmd {
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
-    public void getCachedDashMessagesResponse(RawCmd request, long version, List<Object[]> messages) throws IOException {
+    public void getCachedDashMessagesResponse(RawCmd request, long version, List<Object[]> messages, Map<String, Integer> dashboardTopics) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         os.writeLong(version);
@@ -420,10 +421,15 @@ public class Cmd {
             os.writeShort(0);
         } else {
             os.writeShort(messages.size());
+            String topic;
+            if (dashboardTopics == null) {
+                dashboardTopics = new HashMap<>();
+            }
             for(Object[] msg : messages) {
                 if (msg.length >= 4) {
                     os.writeLong((Long) msg[0]);
-                    writeString((String) msg[1], os);
+                    topic = (String) msg[1];
+                    writeString(topic, os);
                     byte[] b = (byte[]) msg[2];
                     if (b == null || b.length == 0) {
                         os.writeShort(0);
@@ -432,6 +438,7 @@ public class Cmd {
                         os.write(b);
                     }
                     os.writeInt((Integer) msg[3]);
+                    os.writeShort(dashboardTopics.containsKey(topic) ? dashboardTopics.get(topic) : 0);
                 }
             }
         }
