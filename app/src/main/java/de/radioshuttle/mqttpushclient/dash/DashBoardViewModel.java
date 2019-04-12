@@ -7,9 +7,12 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +21,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -45,6 +52,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mApplication = app;
         mModificationDate = 0L;
         mSaveRequest = new MutableLiveData<>();
+        mMessagesRequest = new MutableLiveData<>();
         requestCnt = 0;
         currentRequest = null;
         mMaxID = 0;
@@ -69,6 +77,13 @@ public class DashBoardViewModel extends AndroidViewModel {
         }
         if (mReceivedMsgExecutor != null) {
             mReceivedMsgExecutor.shutdown();
+        }
+
+        if (mGetMessagesTask != null) {
+            mGetMessagesTask.cancel(true);
+        }
+        if (mTimer != null) {
+            mTimer.shutdown();
         }
     }
 
@@ -197,37 +212,6 @@ public class DashBoardViewModel extends AndroidViewModel {
         }
 
         return itemContext;
-    }
-
-    public void addGroup(int pos, GroupItem item) {
-
-        if (pos >= 0 && pos < mGroups.size()) {
-            mGroups.add(pos, item);
-            mItemsPerGroup.put(item.id, new LinkedList<Item>());
-        } else {
-            mGroups.add(item);
-            mItemsPerGroup.put(item.id, new LinkedList<Item>());
-        }
-    }
-
-    public void addItem(int groupIdx, int itemPos, Item item) {
-
-        if (groupIdx >= 0 && groupIdx < mGroups.size()) {
-
-            GroupItem group = mGroups.get(groupIdx);
-            if (group != null) {
-                LinkedList<Item> groupItems = mItemsPerGroup.get(group.id);
-                if (groupItems == null) {
-                    groupItems = new LinkedList<>();
-                    mItemsPerGroup.put(group.id, groupItems);
-                }
-                if (itemPos >= 0 && itemPos < mItemsPerGroup.size()) {
-                    groupItems.add(itemPos, item);
-                } else {
-                    groupItems.add(item);
-                }
-            }
-        }
     }
 
     public static void addGroup(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> itemsPerGroup, int pos, GroupItem item) {
@@ -382,76 +366,6 @@ public class DashBoardViewModel extends AndroidViewModel {
         return itemContext;
     }
 
-    public void setGroup(int pos, GroupItem groupItem) {
-        if (pos >= 0) {
-            boolean removeOld = false;
-            if (pos >= mGroups.size()) {
-                pos = mGroups.size();
-                mGroups.add(groupItem);
-                removeOld = true;
-            } else {
-                GroupItem currentGr = mGroups.get(pos);
-                if (currentGr.id == groupItem.id) {
-                    groupItem.data = currentGr.data;
-                    mGroups.set(pos, groupItem); // replace
-                } else {
-                    mGroups.add(pos, groupItem); // insert
-                    removeOld = true;
-                }
-            }
-            if (removeOld) {
-                for(int i = 0; i < mGroups.size(); i++) {
-                    if (pos != i && mGroups.get(i).id == groupItem.id) {
-                        mGroups.remove(i); // remove from old pos
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    public void setItem(int groupIdx, int itemPos, Item item) {
-
-        if (groupIdx >= 0 && groupIdx < mGroups.size()) {
-            GroupItem group = mGroups.get(groupIdx);
-            Item replacedItem = null;
-            if (group != null) {
-                LinkedList<Item> items = mItemsPerGroup.get(group.id);
-                if (items != null) {
-                    ItemContext ic = null;
-                    if (itemPos >= items.size()) {
-                        itemPos = items.size();
-                        ic = getItem(item.id);
-                        items.add(item);
-                    } else {
-                        Item currentItem = items.get(itemPos);
-                        if (currentItem.id == item.id) {
-                            item.data = currentItem.data;
-                            replacedItem = items.set(itemPos, item); // replace
-                        } else {
-                            ic = getItem(item.id);
-                            items.add(itemPos, item); // insert
-                        }
-                    }
-                    if (ic != null ) { // remove from old pos
-                        items = getItems(ic.group.id);
-                        if (items != null) {
-                            for(int i = 0; i < items.size(); i++) {
-                                if ((itemPos != i || ic.groupPos != groupIdx) && items.get(i).id == item.id) {
-                                    replacedItem = items.remove(i);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    //TODO: topic, javascript might have changed: subscribe and/or unsubscribe, set new content / retrigger JavaScript
-                    if (replacedItem != null) {
-                    }
-                }
-            }
-        }
-    }
-
     public LinkedList<GroupItem> getGroups() {
         return mGroups;
     }
@@ -533,12 +447,40 @@ public class DashBoardViewModel extends AndroidViewModel {
         }
     }
 
-    public void saveDashboard(JSONArray data) {
+    public void saveDashboard(JSONObject data, int itemID) {
         requestCnt++;
         DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSaveRequest, mModificationDate);
-        request.saveDashboard(data);
+        request.saveDashboard(data, itemID);
         currentRequest = request;
-        request.execute(); //TODO: thread pool
+        request.execute(); //TODO: executor
+    }
+
+    public void loadMessages() {
+        requestCnt++;
+        DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mMessagesRequest, mModificationDate);
+        request.loadDashboard();
+        currentRequest = request;
+        request.execute(); //TODO: executor
+    }
+
+    public void startGetMessagesTimer() {
+        mTimer = Executors.newScheduledThreadPool(1);
+        final Handler uiHandler = new Handler(Looper.getMainLooper());
+
+        //TODO: pause get messages task when in background
+        mGetMessagesTask = mTimer.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                uiHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mInitialized && !DashBoardViewModel.this.isRequestActive()) {
+                            loadMessages();
+                        }
+                    }
+                });
+            }
+        }, 0, 5000L, TimeUnit.MILLISECONDS);
     }
 
     public String getItemsRaw() {
@@ -599,6 +541,8 @@ public class DashBoardViewModel extends AndroidViewModel {
     private Application mApplication;
     private Thread mTestDataThread; //TODO: remove after test
     private JavaScriptExcecutor mReceivedMsgExecutor;
+    private ScheduledExecutorService mTimer;
+    private ScheduledFuture<?> mGetMessagesTask;
 
     private boolean mInitialized;
     private String mItemsRaw;
@@ -610,6 +554,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     // private HashSet<String> mSubscribedTopics;
 
     public MutableLiveData<Request> mSaveRequest;
+    public MutableLiveData<Request> mMessagesRequest;
     private int requestCnt;
     private Request currentRequest;
 
