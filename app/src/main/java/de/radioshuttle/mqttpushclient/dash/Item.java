@@ -57,6 +57,7 @@ public abstract class Item {
         String type = o.optString("type");
         switch (type) {
             case "text": item = new TextItem(); break;
+            case "group": item = new GroupItem(); break;
         }
         if (item != null) {
             item.setJSONData(o);
