@@ -14,10 +14,14 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.MessagesActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.net.Cmd;
+import de.radioshuttle.net.DashboardRequest;
+import de.radioshuttle.net.Request;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -60,6 +64,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         }
 
         PushAccount b = null;
+        boolean init = false;
         try {
             b = PushAccount.createAccountFormJSON(new JSONObject(json));
             mViewModel = ViewModelProviders.of(
@@ -72,6 +77,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             if (!mViewModel.isInitialized()) {
                 mViewModel.setItems(vs.getDashBoardContent(b.getKey()), vs.getDashBoardModificationDate(account));
                 mViewModel.startJavaScriptExecutors();
+                init = true;
             }
 
             if (savedInstanceState == null) {
@@ -134,7 +140,22 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             if (selectedItems != null && selectedItems.size() > 0) {
                 mActionMode = startSupportActionMode(mActionModeCallback);
             }
+
+            mViewModel.mMessagesRequest.observe(this, new Observer<Request>() {
+                @Override
+                public void onChanged(Request request) {
+                    if (request instanceof DashboardRequest) {
+                        onLoadFinishedDashboard((DashboardRequest) request);
+                    }
+                }
+            });
+
+            if (init) {
+                mViewModel.startGetMessagesTimer();
+            }
+
         }
+
 
         setTitle(getString(R.string.title_dashboard));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -377,6 +398,21 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             intent.putExtra(DashBoardEditActivity.ARG_ITEM_POS, selectedItem.itemPos);
 
             startActivityForResult(intent, RC_EDIT_ITEM);
+        }
+    }
+
+    public void onLoadFinishedDashboard(DashboardRequest request) {
+
+
+        if (mViewModel.isCurrentRequest(request)) {
+            mViewModel.confirmResultDelivered();
+        }
+
+        for(MqttMessage m : request.getReceivedMessages()) {
+            mViewModel.onMessageReceived(m);
+        }
+        //TODO: handle errors:
+        if (request.requestErrorCode == Cmd.RC_OK) {
         }
     }
 
