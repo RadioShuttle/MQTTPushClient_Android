@@ -235,6 +235,7 @@ to communicate with the MQTT broker and to receive push notifications
 
     <string name="dash_filter_script_header">Filter the content of all messages</string>
     <string name="dash_err_version_err">Version error. Reopen editor and try again.</string>
+    <string name="dash_err_subscribe_failed">Subscribe to topic failed.</string>
 
     <!-- delete dialog -->
     <string name="dlg_del_dash_title">Delete</string>
