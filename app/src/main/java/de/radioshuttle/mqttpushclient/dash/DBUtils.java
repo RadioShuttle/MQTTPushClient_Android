@@ -121,7 +121,8 @@ public class DBUtils {
         int maxID = 0;
         if (!Utils.isEmpty(json) && groups != null && groupItems != null) {
             try {
-                JSONArray groupArray = new JSONArray(json);
+                JSONObject dashboardObj = new JSONObject(json);
+                JSONArray groupArray = dashboardObj.getJSONArray("groups");
                 GroupItem groupItem;
                 Item item;
                 JSONObject groupJSON, itemJSON;
@@ -153,8 +154,15 @@ public class DBUtils {
         return maxID;
     }
 
-    public static JSONArray createJSONStrFromItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems) {
+    public static JSONObject createJSONStrFromItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems) {
+        JSONObject dashboardObj = new JSONObject();
         JSONArray groupItemArray = new JSONArray();
+        try {
+            dashboardObj.put("groups", groupItemArray);
+        } catch (JSONException e) {
+            Log.d(Item.TAG, "Error createJSONStrFromItems: " + e.getMessage());
+            return dashboardObj;
+        }
         if (groups != null && groupItems != null) {
             JSONObject groupJSON = null;
             JSONObject itemJSON = null;
@@ -190,7 +198,7 @@ public class DBUtils {
 
             }
         }
-        return groupItemArray;
+        return dashboardObj;
     }
 
     public static Thread testDataThread(final DashBoardViewModel vm) {
@@ -221,4 +229,5 @@ public class DBUtils {
             }
         });
     };
+
 }
