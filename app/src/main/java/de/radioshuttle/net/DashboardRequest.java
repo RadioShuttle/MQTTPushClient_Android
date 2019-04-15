@@ -7,15 +7,19 @@
 package de.radioshuttle.net;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import androidx.lifecycle.MutableLiveData;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
 
 public class DashboardRequest extends Request {
@@ -32,10 +36,6 @@ public class DashboardRequest extends Request {
         mCmd = Cmd.CMD_SET_DASHBOARD;
         mDashboardPara = dashboard;
         mItemIDPara = itemID;
-    }
-
-    public void loadDashboard() {
-        mCmd = Cmd.CMD_GET_DASHBOARD;
     }
 
     @Override
@@ -62,11 +62,12 @@ public class DashboardRequest extends Request {
                 requestErrorTxt = e.getMessage();
             }
             requestStatus = mConnection.lastReturnCode;
+            if (requestStatus == Cmd.RC_INVALID_ARGS) {
+                requestErrorTxt = mAppContext.getString(R.string.err_invalid_topic_format);
+            }
 
-        }
-
-        /* always get last messages of subcribed topics and dashboard version timestamp */
-        if (requestStatus == Cmd.RC_OK) {
+        } else {
+            /* get last messages of subcribed topics and dashboard version timestamp */
             List<Object[]> result = new ArrayList<>();
             try {
                 mServerVersion = mConnection.getCachedMessagesDash(result);
@@ -81,7 +82,18 @@ public class DashboardRequest extends Request {
                     mqttMessage.setSeqno((Integer) result.get(i)[3]);
                     mReceivedMessages.add(mqttMessage);
                 }
-                //TODO: sort descending by date
+                Collections.sort(mReceivedMessages, new Comparator<MqttMessage>() {
+                    @Override
+                    public int compare(MqttMessage o1, MqttMessage o2) {
+                        int cmp = 0;
+                        if (o1.getWhen() < o2.getWhen()) {
+                            cmp = -1;
+                        } else if (o1.getWhen() > o2.getWhen()) {
+                            cmp = 1;
+                        }
+                        return cmp;
+                    }
+                });
 
                 //TODO save cached messages locally
             } catch (ServerError e) {
@@ -91,16 +103,18 @@ public class DashboardRequest extends Request {
             requestStatus = mConnection.lastReturnCode;
         }
 
+
         if (requestStatus == Cmd.RC_OK) {
-            /* server version != local version: we need an update */
+            /* server version != local version: update required */
             invalidVersion = invalidVersion || (mCmd != Cmd.CMD_SET_DASHBOARD && mServerVersion > 0 && mLocalVersion != mServerVersion);
 
-            if (invalidVersion || mCmd == Cmd.CMD_GET_DASHBOARD) {
+            if (invalidVersion) {
                 try {
                     Object[] dash = mConnection.getDashboard();
                     if (dash != null) {
                         mServerVersion = (long) dash[0];
                         mReceivedDashboard = (String) dash[1];
+                        Log.d("DashboradRequest",  "local version: " + mLocalVersion + ", server version: " + mServerVersion);
                         ViewState.getInstance(mAppContext).saveDashboard(mPushAccount.getKey(), mServerVersion, mReceivedDashboard);
                     }
                 } catch(ServerError e) {
