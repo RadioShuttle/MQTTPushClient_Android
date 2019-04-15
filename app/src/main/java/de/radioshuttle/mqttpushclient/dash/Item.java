@@ -29,9 +29,9 @@ public abstract class Item {
     public JSONObject toJSONObject() throws JSONException {
         JSONObject o = new JSONObject();
         if (!(this instanceof GroupItem)) {
-            o.put("type", getType());
             o.put("topic_s", topic_s);
         }
+        o.put("type", getType());
         o.put("label", label);
         o.put("textcolor", textcolor);
         o.put("background", background);
