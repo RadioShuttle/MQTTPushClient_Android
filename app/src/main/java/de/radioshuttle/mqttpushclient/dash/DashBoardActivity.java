@@ -10,16 +10,22 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
+import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
+import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
 import de.radioshuttle.mqttpushclient.MessagesActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Cmd;
+import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.DashboardRequest;
 import de.radioshuttle.net.Request;
 
@@ -34,10 +40,13 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -73,6 +82,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
             ViewState vs = ViewState.getInstance(getApplication());
             String account = b.getKey();
+            Log.d(TAG, "onCreate()");
 
             if (!mViewModel.isInitialized()) {
                 mViewModel.setItems(vs.getDashBoardContent(b.getKey()), vs.getDashBoardModificationDate(account));
@@ -141,11 +151,20 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                 mActionMode = startSupportActionMode(mActionModeCallback);
             }
 
-            mViewModel.mMessagesRequest.observe(this, new Observer<Request>() {
+            mViewModel.mSyncRequest.observe(this, new Observer<Request>() {
                 @Override
                 public void onChanged(Request request) {
                     if (request instanceof DashboardRequest) {
-                        onLoadFinishedDashboard((DashboardRequest) request);
+                        onLoadMessagesFinished((DashboardRequest) request);
+                    }
+                }
+            });
+
+            mViewModel.mSaveRequest.observe(this, new Observer<Request>() {
+                @Override
+                public void onChanged(Request request) {
+                    if (request instanceof DashboardRequest) {
+                        onDeleteFinished((DashboardRequest) request);
                     }
                 }
             });
@@ -153,12 +172,14 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             if (init) {
                 mViewModel.startGetMessagesTimer();
             }
-
         }
-
 
         setTitle(getString(R.string.title_dashboard));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setEnabled(false);
+        mSwipeRefreshLayout.setRefreshing(mViewModel.isRequestActive());
     }
 
     @Override
@@ -343,7 +364,14 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
     public void onItemsDelete(boolean all) {
         if (mAdapter != null) {
-            mViewModel.removeItems(all ? null : mAdapter.getSelectedItems());
+
+            /* convert complete dashboard to json */
+            LinkedList<GroupItem> groupItems = new LinkedList<>();
+            HashMap<Integer, LinkedList<Item>> items = new HashMap<>();
+            mViewModel.copyItems(groupItems, items);
+            mViewModel.removeItems(groupItems, items, all ? null : mAdapter.getSelectedItems(), mViewModel.mReceivedMsgExecutor);
+            JSONObject obj = DBUtils.createJSONStrFromItems(groupItems, items);
+            mViewModel.saveDashboard(obj, 0);
         }
     }
 
@@ -401,18 +429,154 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         }
     }
 
-    public void onLoadFinishedDashboard(DashboardRequest request) {
+    public void onLoadMessagesFinished(DashboardRequest request) {
 
+        PushAccount b = request.getAccount();
+        if (b.status == 0) {
+            boolean isNew = false;
+            if (mViewModel.isCurrentSyncRequest(request)) {
+                isNew = mViewModel.isSyncRequestActive(); // result already processed/displayed?
+                mViewModel.confirmResultDeliveredSyncRequest();
 
-        if (mViewModel.isCurrentRequest(request)) {
-            mViewModel.confirmResultDelivered();
+                /* handle cerificate exception */
+                //TODO
+
+                /* handle insecure connection */
+                //TODO
+
+                if (isNew) {
+                    if (b.requestStatus != Cmd.RC_OK) {
+                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                        if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
+                            t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                        }
+                        showErrorMsg(t);
+                    } else if (request.requestStatus != Cmd.RC_OK) {
+                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                        showErrorMsg(t);
+                    } else if (request.isVersionError()) { // ok, but maybe the current dashboard is outdated
+                        mViewModel.setItems(
+                                request.getReceivedDashboard(),
+                                request.getServerVersion());
+                        String t = getString(R.string.dash_err_version_err_replaced);
+                        showErrorMsg(t);
+                    } else { // no errors. hide previous shown error message
+                        if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
+                            mSnackbar.dismiss(); //TODO: make sure, error message is shown at least a few seconds (there may be a publish, deletion error currntyl showing)
+                        }
+                    }
+                }
+            }
         }
 
         for(MqttMessage m : request.getReceivedMessages()) {
             mViewModel.onMessageReceived(m);
         }
-        //TODO: handle errors:
-        if (request.requestErrorCode == Cmd.RC_OK) {
+    }
+
+    public void onDeleteFinished(DashboardRequest dashboardRequest) {
+        PushAccount b = dashboardRequest.getAccount();
+        if (b.status == 1) {
+            mSwipeRefreshLayout.setRefreshing(true);
+        } else {
+            boolean isNew = false;
+            if (mViewModel.isCurrentRequest(dashboardRequest)) {
+                isNew = mViewModel.isRequestActive(); // result already processed/displayed?
+                mViewModel.confirmResultDelivered();
+                mSwipeRefreshLayout.setRefreshing(false);
+                // updateUI(true);
+
+                if (isNew) {
+                    /* handle cerificate exception */
+                    if (b.hasCertifiateException()) {
+                        /* only show dialog if the certificate has not already been denied */
+                        if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
+                            FragmentManager fm = getSupportFragmentManager();
+
+                            String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
+                                    AppTrustManager.getUniqueKey(b.getCertificateException().chain[0]);
+
+                            /* check if a dialog is not already showing (for this certificate) */
+                            if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                CertificateErrorDialog dialog = new CertificateErrorDialog();
+                                Bundle args = CertificateErrorDialog.createArgsFromEx(
+                                        b.getCertificateException(), dashboardRequest.getAccount().pushserver);
+                                if (args != null) {
+                                    //TODO:
+                                /*
+                                int cmd = dashboardRequest.mCmd;
+                                args.putInt("cmd", cmd);
+                                dialog.setArguments(args);
+                                dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                */
+                                }
+                            }
+                        }
+                    }
+                    b.setCertificateExeption(null); // mark es "processed"
+
+                    /* handle insecure connection */
+                    if (b.inSecureConnectionAsk) {
+                        if (Connection.mInsecureConnection.get(b.pushserver) == null) {
+                            FragmentManager fm = getSupportFragmentManager();
+
+                            String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
+
+                            /* check if a dialog is not already showing (for this host) */
+                            if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                                Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
+                                if (args != null) {
+                                    //TODO
+                                /*
+                                int cmd = dashboardRequest.mCmd;
+                                args.putInt("cmd", cmd);
+                                dialog.setArguments(args);
+                                dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                */
+                                }
+                            }
+                        }
+                    }
+                    b.inSecureConnectionAsk = false; // mark as "processed"
+
+                    if (b.requestStatus != Cmd.RC_OK) {
+                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                        if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
+                            t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                        }
+                        showErrorMsg(t);
+                    } else if (dashboardRequest.saveSuccesful()) {
+                        Log.d(TAG, "onDeleteFinished(): ");
+                        mViewModel.setItems(
+                                dashboardRequest.getReceivedDashboard(),
+                                dashboardRequest.getServerVersion());
+                        if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
+                            mSnackbar.dismiss();
+                        }
+                    } else if (dashboardRequest.requestStatus != Cmd.RC_OK) {
+                        String t = (dashboardRequest.requestErrorTxt == null ? "" : dashboardRequest.requestErrorTxt);
+                        if (dashboardRequest.requestStatus == Cmd.RC_MQTT_ERROR) {
+                            t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                        }
+                        showErrorMsg(t);
+                    } else if (dashboardRequest.isVersionError()) { // deleted content replaced by new version
+                        mViewModel.setItems(
+                                dashboardRequest.getReceivedDashboard(),
+                                dashboardRequest.getServerVersion());
+                        String t = getString(R.string.dash_err_version_err_replaced);
+                        showErrorMsg(t);
+                    }
+                }
+            }
+        }
+    }
+
+    protected void showErrorMsg(String msg) {
+        View v = findViewById(R.id.rView);
+        if (v != null) {
+            mSnackbar = Snackbar.make(v, msg, Snackbar.LENGTH_INDEFINITE);
+            mSnackbar.show();
         }
     }
 
@@ -423,6 +587,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
         if (requestCode == RC_EDIT_ITEM) {
 
             if (resultCode == AppCompatActivity.RESULT_OK && data != null) {
+                Log.d(TAG, "onActivityResult(): ");
                 mViewModel.setItems(
                         data.getStringExtra(DashBoardEditActivity.ARG_DASHBOARD),
                         data.getLongExtra(DashBoardEditActivity.ARG_DASHBOARD_VERSION, - 1));
@@ -450,7 +615,11 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             boolean handled = false;
             switch (item.getItemId()) {
                 case R.id.action_delete_items:
-                    DBUtils.showDeleteDialog(DashBoardActivity.this);
+                    if (mViewModel.isRequestActive()) {
+                        Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
+                    } else {
+                        DBUtils.showDeleteDialog(DashBoardActivity.this);
+                    }
                     handled = true;
                     break;
                 case R.id.action_edit_item:
@@ -478,6 +647,10 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     private int mZoomLevel;
     private boolean mActivityStarted;
     protected DashBoardViewModel mViewModel;
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private Snackbar mSnackbar;
+
 
     private int ZOOM_LEVEL_1 = 0; // dpi
     private int ZOOM_LEVEL_2 = 0;
