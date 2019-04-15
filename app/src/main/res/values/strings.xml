@@ -234,7 +234,8 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="new_group_label">New Group</string>
 
     <string name="dash_filter_script_header">Filter the content of all messages</string>
-    <string name="dash_err_version_err">Version error. Reopen editor and try again.</string>
+    <string name="dash_err_version_err">Version error. Quit the editor to update to the latest version.</string>
+    <string name="dash_err_version_err_replaced">Version error. Dashboard has been replaced by a newer version.</string>
     <string name="dash_err_subscribe_failed">Subscribe to topic failed.</string>
 
     <!-- delete dialog -->
