@@ -708,7 +708,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     }
 
     protected void checkAndSave() {
-        if (!hasDataChanged()) {
+        if (mMode == MODE_EDIT && !hasDataChanged()) {
             Toast.makeText(getApplicationContext(), R.string.error_data_unmodified, Toast.LENGTH_LONG).show();
         } else if (isValidInput()){
             save();
@@ -785,6 +785,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         setEnabled(mGroupSpinner, enableFields);
         setEnabled(mPosSpinner, enableFields);
         setEnabled(mTextSizeSpinner, enableFields);
+        invalidateOptionsMenu();
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem m = menu.findItem(R.id.action_save);
+        if (m != null) {
+            m.setEnabled(!mViewModel.isRequestActive());
+        }
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     protected void setEnabled(View v, boolean enabled) {
