@@ -11,7 +11,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -52,8 +51,10 @@ public class DashBoardViewModel extends AndroidViewModel {
         mApplication = app;
         mModificationDate = 0L;
         mSaveRequest = new MutableLiveData<>();
-        mMessagesRequest = new MutableLiveData<>();
+        mSyncRequest = new MutableLiveData<>();
         requestCnt = 0;
+        syncRequestCnt = 0;
+        currentSyncRequest = null;
         currentRequest = null;
         mMaxID = 0;
     }
@@ -403,15 +404,14 @@ public class DashBoardViewModel extends AndroidViewModel {
         return list;
     }
 
-    public void removeItems(HashSet<Integer> selectedItems) {
-
+    public static void removeItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> itemsPerGroup, HashSet<Integer> selectedItems, JavaScriptExcecutor javaScriptExcecutor) {
         if (selectedItems != null && selectedItems.size() > 0) {
             Item item;
             boolean deleteGroup;
-            Iterator<Map.Entry<Integer, LinkedList<Item>>> it = mItemsPerGroup.entrySet().iterator();
+            Iterator<Map.Entry<Integer, LinkedList<Item>>> it = itemsPerGroup.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<Integer, LinkedList<Item>> k = it.next();
-                 deleteGroup = false;
+                deleteGroup = false;
                 if (selectedItems.contains(k.getKey())) {
                     deleteGroup = true;
                 }
@@ -421,16 +421,16 @@ public class DashBoardViewModel extends AndroidViewModel {
                         item = it2.next();
                         if (selectedItems.contains(item.id)) {
                             //TODO: remove js
-                            if (mReceivedMsgExecutor != null) {
-                                mReceivedMsgExecutor.remove(item.id);
+                            if (javaScriptExcecutor != null) {
+                                javaScriptExcecutor.remove(item.id);
                             }
                             it2.remove();
                         }
                     }
                     if (deleteGroup) { // delete group, if it has no entries
-                        LinkedList<Item> e = mItemsPerGroup.get(k.getKey());
+                        LinkedList<Item> e = itemsPerGroup.get(k.getKey());
                         if (e == null || e.size() == 0) {
-                            Iterator<GroupItem> it3 = mGroups.iterator();
+                            Iterator<GroupItem> it3 = groups.iterator();
                             while(it3.hasNext()) {
                                 item = it3.next();
                                 if (item.id == k.getKey()) {
@@ -442,8 +442,8 @@ public class DashBoardViewModel extends AndroidViewModel {
                 }
             }
         } else if (selectedItems == null) { // delete all
-            mGroups.clear();
-            mItemsPerGroup.clear();
+            groups.clear();
+            itemsPerGroup.clear();
         }
     }
 
@@ -452,19 +452,19 @@ public class DashBoardViewModel extends AndroidViewModel {
         DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSaveRequest, mModificationDate);
         request.saveDashboard(data, itemID);
         currentRequest = request;
-        request.execute(); //TODO: executor
+        request.executeOnExecutor(Utils.executor);
     }
 
     public void loadMessages() {
-        requestCnt++;
-        DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mMessagesRequest, mModificationDate);
-        request.loadDashboard();
-        currentRequest = request;
-        request.execute(); //TODO: executor
+        syncRequestCnt++;
+        Log.d(TAG, "loadMessages: " + mModificationDate);
+        DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSyncRequest, mModificationDate);
+        currentSyncRequest = request;
+        request.executeOnExecutor(Utils.executor);
     }
 
     public void startGetMessagesTimer() {
-        mTimer = Executors.newScheduledThreadPool(1);
+        mTimer = Executors.newScheduledThreadPool(1); //TODO: move
         final Handler uiHandler = new Handler(Looper.getMainLooper());
 
         //TODO: pause get messages task when in background
@@ -474,7 +474,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                 uiHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (mInitialized && !DashBoardViewModel.this.isRequestActive()) {
+                        if (mInitialized && !DashBoardViewModel.this.isSyncRequestActive()) {
                             loadMessages();
                         }
                     }
@@ -506,6 +506,19 @@ public class DashBoardViewModel extends AndroidViewModel {
     public boolean isCurrentRequest(Request request) {
         return currentRequest == request;
     }
+
+    public boolean isCurrentSyncRequest(Request request) {
+        return currentSyncRequest == request;
+    }
+
+    public boolean isSyncRequestActive() {
+        return syncRequestCnt > 0;
+    }
+
+    public void confirmResultDeliveredSyncRequest() {
+        syncRequestCnt = 0;
+    }
+
 
 
     public static class ItemContext {
@@ -540,7 +553,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     private int mMaxID;
     private Application mApplication;
     private Thread mTestDataThread; //TODO: remove after test
-    private JavaScriptExcecutor mReceivedMsgExecutor;
+    protected JavaScriptExcecutor mReceivedMsgExecutor;
     private ScheduledExecutorService mTimer;
     private ScheduledFuture<?> mGetMessagesTask;
 
@@ -554,9 +567,11 @@ public class DashBoardViewModel extends AndroidViewModel {
     // private HashSet<String> mSubscribedTopics;
 
     public MutableLiveData<Request> mSaveRequest;
-    public MutableLiveData<Request> mMessagesRequest;
+    public MutableLiveData<Request> mSyncRequest;
     private int requestCnt;
+    private int syncRequestCnt;
     private Request currentRequest;
+    private Request currentSyncRequest;
 
     public final static String TAG = DashBoardViewModel.class.getSimpleName();
 }
