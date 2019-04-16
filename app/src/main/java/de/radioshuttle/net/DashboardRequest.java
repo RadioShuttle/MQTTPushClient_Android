@@ -80,6 +80,7 @@ public class DashboardRequest extends Request {
                     mqttMessage.setTopic((String) result.get(i)[1]);
                     mqttMessage.setPayload((byte[]) result.get(i)[2]);
                     mqttMessage.setSeqno((Integer) result.get(i)[3]);
+                    //TODO: restult.get(i)[4] contains subscription status (set and handle in UI)
                     mReceivedMessages.add(mqttMessage);
                 }
                 Collections.sort(mReceivedMessages, new Comparator<MqttMessage>() {
