@@ -448,7 +448,28 @@ public class Cmd {
     public long readCachedMessageDashboard(byte[] data, List<Object[]> messages) throws IOException {
         DataInputStream is = getDataInputStream(data);
         long version = is.readLong();
-        messages.addAll(readCachedMessages(Arrays.copyOfRange(data, 8, data.length)));
+
+        int len = is.readShort();
+        int b = 0;
+        if (len > 0) {
+            for(int i = 0; i < len; i++) {
+                Object[] o = new Object[5];
+                o[0] = is.readLong();
+                o[1] = readString(is);
+                b = is.readUnsignedShort();
+                if (b > 0) {
+                    byte[] buf = new byte[b];
+                    is.readFully(buf);
+                    o[2] = buf;
+                } else {
+                    o[2] = new byte[0];
+                }
+                o[3] = is.readInt();
+                o[4] = is.readShort();
+                messages.add(o);
+            }
+        }
+
         return version;
     }
 
