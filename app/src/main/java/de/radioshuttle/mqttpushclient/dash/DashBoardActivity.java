@@ -28,6 +28,7 @@ import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.DashboardRequest;
 import de.radioshuttle.net.Request;
+import de.radioshuttle.utils.Utils;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -461,6 +462,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                         String t = getString(R.string.dash_err_version_err_replaced);
                         showErrorMsg(t);
                     } else { // no errors. hide previous shown error message
+                        mLastErrorStr = null;
                         if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
                             mSnackbar.dismiss(); //TODO: make sure, error message is shown at least a few seconds (there may be a publish, deletion error currntyl showing)
                         }
@@ -548,6 +550,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                         showErrorMsg(t);
                     } else if (dashboardRequest.saveSuccesful()) {
                         Log.d(TAG, "onDeleteFinished(): ");
+                        mLastErrorStr = null;
                         mViewModel.setItems(
                                 dashboardRequest.getReceivedDashboard(),
                                 dashboardRequest.getServerVersion());
@@ -575,8 +578,11 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     protected void showErrorMsg(String msg) {
         View v = findViewById(R.id.rView);
         if (v != null) {
-            mSnackbar = Snackbar.make(v, msg, Snackbar.LENGTH_INDEFINITE);
-            mSnackbar.show();
+            if (!Utils.equals(msg, mLastErrorStr) || mSnackbar == null || !mSnackbar.isShownOrQueued()) {
+                mSnackbar = Snackbar.make(v, msg, Snackbar.LENGTH_INDEFINITE);
+                mSnackbar.show();
+                mLastErrorStr = msg;
+            }
         }
     }
 
@@ -642,6 +648,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
 
     private RecyclerView mControllerList;
 
+    private String mLastErrorStr;
     private ActionMode mActionMode;
     private DashBoardAdapter mAdapter;
     private int mZoomLevel;
