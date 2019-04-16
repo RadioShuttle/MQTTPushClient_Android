@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -378,7 +379,10 @@ public class DashBoardViewModel extends AndroidViewModel {
     public void copyItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> items) {
         if (groups != null && mGroups != null && items != null && mItemsPerGroup != null) {
             groups.addAll(mGroups);
-            items.putAll(mItemsPerGroup);
+
+            for(Map.Entry<Integer, LinkedList<Item>> e : mItemsPerGroup.entrySet()) {
+                items.put(e.getKey(), new LinkedList<>(e.getValue()));
+            }
         }
     }
 
