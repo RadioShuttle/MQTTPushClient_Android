@@ -113,15 +113,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.label.setText(item.label);
         }
 
-        Log.d(TAG, "item background: " +  item.data.get("background"));
-
         int bg = item.data.containsKey("background") ? (Integer) item.data.get("background") : item.background;
         int background = (bg== 0 ? mDefaultBackground : bg);
-        Log.d(TAG, "backgound: " + background); //TODO: remove
+        // Log.d(TAG, "backgound: " + background);
 
         int cl = item.data.containsKey("textcolor") ? (Integer) item.data.get("textcolor") : item.textcolor;
         int textcolor = (item.textcolor == 0 ? h.defaultColor : item.textcolor);
-        Log.d(TAG, "textcolor: " + textcolor); // TODO: remove
+        // Log.d(TAG, "textcolor: " + textcolor);
 
         if (mSelectedItems.contains(item.id)) {
             h.itemView.setActivated(true);
