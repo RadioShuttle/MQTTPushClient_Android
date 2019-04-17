@@ -465,7 +465,7 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public void loadMessages() {
         syncRequestCnt++;
-        Log.d(TAG, "loadMessages: " + mModificationDate);
+        // Log.d(TAG, "loadMessages: " + mModificationDate);
         DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSyncRequest, mModificationDate);
         currentSyncRequest = request;
         request.executeOnExecutor(Utils.executor);
