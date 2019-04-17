@@ -14,6 +14,7 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -90,7 +91,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     }
 
     @MainThread
-    public void onMessageReceived(MqttMessage message) {
+    public void onMessageReceived(Message message) {
         if (message != null) {
             boolean updated = false;
             /* iterate over all items and check for subscribed topics */
@@ -99,7 +100,8 @@ public class DashBoardViewModel extends AndroidViewModel {
                 if (items != null && items.size() > 0) {
                     for(Item item : items) {
                         try {
-                            if (!Utils.isEmpty(item.topic_s) && MqttTopic.isMatched(item.topic_s, message.getTopic())) {
+                            if (!Utils.isEmpty(item.topic_s) && message.filter.equals(item.topic_s)) {
+                                item.data.put("sub_topic_stat", message.status);
                                 if (Utils.isEmpty(item.script_f)) { // no javascript -> update UI
                                     String msg = "";
                                     byte[] payload = (message.getPayload() == null ? new byte[0] : message.getPayload());
@@ -113,6 +115,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     item.data.put("content", msg);
                                     updated = true;
                                 } else {
+                                    // Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
                                     mReceivedMsgExecutor.executeFilterScript(item, message, new JavaScriptExcecutor.Callback() {
                                         @Override
                                         public void onFinshed(Item item, Map<String, Object> result) {
