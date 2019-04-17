@@ -50,6 +50,7 @@ public class Cmd {
     public final static int CMD_SET_DASHBOARD = 22;
     public final static int CMD_GET_DASHBOARD = 23;
     public final static int CMD_GET_MESSAGES_DASH = 24;
+    public final static int CMD_BACKUP_DASH = 25;
 
     public RawCmd helloRequest(int seqNo, boolean ssl) throws IOException {
         int flags = FLAG_REQUEST;
@@ -426,7 +427,7 @@ public class Cmd {
                 dashboardTopics = new HashMap<>();
             }
             for(Object[] msg : messages) {
-                if (msg.length >= 4) {
+                if (msg.length >= 5) {
                     os.writeLong((Long) msg[0]);
                     topic = (String) msg[1];
                     writeString(topic, os);
@@ -439,6 +440,7 @@ public class Cmd {
                     }
                     os.writeInt((Integer) msg[3]);
                     os.writeShort(dashboardTopics.containsKey(topic) ? dashboardTopics.get(topic) : 0);
+                    writeString((String) msg[4], os);
                 }
             }
         }
@@ -453,7 +455,7 @@ public class Cmd {
         int b = 0;
         if (len > 0) {
             for(int i = 0; i < len; i++) {
-                Object[] o = new Object[5];
+                Object[] o = new Object[6];
                 o[0] = is.readLong();
                 o[1] = readString(is);
                 b = is.readUnsignedShort();
@@ -466,6 +468,7 @@ public class Cmd {
                 }
                 o[3] = is.readInt();
                 o[4] = is.readShort();
+                o[5] = readString(is);
                 messages.add(o);
             }
         }
