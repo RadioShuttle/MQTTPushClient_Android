@@ -14,12 +14,16 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import androidx.lifecycle.MutableLiveData;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.mqttpushclient.dash.Message;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
 
 public class DashboardRequest extends Request {
@@ -73,30 +77,19 @@ public class DashboardRequest extends Request {
                 mServerVersion = mConnection.getCachedMessagesDash(result);
                 mReceivedMessages = new ArrayList<>();
 
-                MqttMessage mqttMessage;
+                Message mqttMessage;
                 for(int i = 0; i < result.size(); i++) {
-                    mqttMessage = new MqttMessage();
+                    mqttMessage = new Message();
                     mqttMessage.setWhen((Long) result.get(i)[0] * 1000L);
                     mqttMessage.setTopic((String) result.get(i)[1]);
                     mqttMessage.setPayload((byte[]) result.get(i)[2]);
                     mqttMessage.setSeqno((Integer) result.get(i)[3]);
-                    //TODO: restult.get(i)[4] contains subscription status (set and handle in UI)
+                    mqttMessage.status = (Short) result.get(i)[4];
+                    mqttMessage.filter = (String) result.get(i)[5];
                     mReceivedMessages.add(mqttMessage);
                 }
-                Collections.sort(mReceivedMessages, new Comparator<MqttMessage>() {
-                    @Override
-                    public int compare(MqttMessage o1, MqttMessage o2) {
-                        int cmp = 0;
-                        if (o1.getWhen() < o2.getWhen()) {
-                            cmp = -1;
-                        } else if (o1.getWhen() > o2.getWhen()) {
-                            cmp = 1;
-                        }
-                        return cmp;
-                    }
-                });
-
                 //TODO save cached messages locally
+
             } catch (ServerError e) {
                 requestErrorCode = e.errorCode;
                 requestErrorTxt = e.getMessage();
@@ -146,16 +139,15 @@ public class DashboardRequest extends Request {
     public String getReceivedDashboard() {
         return mReceivedDashboard;
     }
-    public List<MqttMessage> getReceivedMessages() {
-        return mReceivedMessages == null ? new ArrayList<MqttMessage>() : mReceivedMessages;
+    public List<Message> getReceivedMessages() {
+        return mReceivedMessages == null ? new ArrayList<Message>() : mReceivedMessages;
     }
 
     public int requestStatus;
     public int requestErrorCode;
     public String requestErrorTxt;
 
-
-    List<MqttMessage> mReceivedMessages;
+    List<Message> mReceivedMessages;
 
     boolean mSaved;
     boolean invalidVersion;
