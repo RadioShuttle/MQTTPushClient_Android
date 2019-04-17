@@ -136,10 +136,6 @@ public class Cmd {
         return m;
     }
 
-    public RawCmd fcmDataRequest(int seqNo) throws IOException {
-        return request(CMD_GET_FCM_DATA, seqNo);
-    }
-
     public void fcmDataResponse(RawCmd request, String app_id, String senderID, String pushServerID) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
@@ -380,12 +376,12 @@ public class Cmd {
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
-    public RawCmd getCachedMessagesRequest(int seqNo, long since, int seqCnt) throws IOException {
+    public RawCmd getCachedMessagesRequest(int cmd, int seqNo, long since, int seqCnt) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         os.writeLong(since);
         os.writeInt(seqCnt);
-        writeCommand(CMD_GET_MESSAGES, seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+        writeCommand(cmd, seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
         return readCommand();
     }
 
