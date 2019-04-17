@@ -38,6 +38,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -174,6 +175,8 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             if (init) {
                 mViewModel.startGetMessagesTimer();
             }
+
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
 
         setTitle(getString(R.string.title_dashboard));
@@ -255,6 +258,18 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mViewModel.startGetMessagesTimer();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mViewModel.stopGetMessagesTimer();
     }
 
     protected void handleBackPressed() {
