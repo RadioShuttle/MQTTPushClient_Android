@@ -214,9 +214,11 @@ public class DBUtils {
                         uiHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                MqttMessage m = new MqttMessage();
+                                Message m = new Message();
                                 m.setWhen(System.currentTimeMillis());
                                 m.setTopic("test");
+                                m.filter = "test";
+                                m.status = 0;
                                 m.setPayload(String.valueOf(15 + random.nextInt(15)).getBytes());
                                 vm.onMessageReceived(m);
                             }

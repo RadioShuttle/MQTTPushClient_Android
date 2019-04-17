@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
@@ -471,7 +472,7 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
             }
         }
 
-        for(MqttMessage m : request.getReceivedMessages()) {
+        for(Message m : request.getReceivedMessages()) {
             mViewModel.onMessageReceived(m);
         }
     }
