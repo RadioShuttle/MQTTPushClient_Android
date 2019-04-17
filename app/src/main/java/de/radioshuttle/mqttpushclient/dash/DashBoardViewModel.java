@@ -33,11 +33,9 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
-import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.net.DashboardRequest;
 import de.radioshuttle.net.Request;
-import de.radioshuttle.utils.MqttTopic;
 import de.radioshuttle.utils.Utils;
 
 public class DashBoardViewModel extends AndroidViewModel {
@@ -59,6 +57,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         currentSyncRequest = null;
         currentRequest = null;
         mMaxID = 0;
+        mTimer = Executors.newScheduledThreadPool(1);
     }
 
     public void startJavaScriptExecutors() {
@@ -66,8 +65,10 @@ public class DashBoardViewModel extends AndroidViewModel {
             mReceivedMsgExecutor = new JavaScriptExcecutor(mPushAccount, mApplication);
 
             // Test data start
+            /*
             mTestDataThread = DBUtils.testDataThread(this);
             mTestDataThread.start();
+            */
             // Test data end
         }
     }
@@ -471,23 +472,31 @@ public class DashBoardViewModel extends AndroidViewModel {
     }
 
     public void startGetMessagesTimer() {
-        mTimer = Executors.newScheduledThreadPool(1); //TODO: move
-        final Handler uiHandler = new Handler(Looper.getMainLooper());
 
-        //TODO: pause get messages task when in background
-        mGetMessagesTask = mTimer.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                uiHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mInitialized && !DashBoardViewModel.this.isSyncRequestActive()) {
-                            loadMessages();
+        if (mGetMessagesTask == null || mGetMessagesTask.isCancelled()) {
+            final Handler uiHandler = new Handler(Looper.getMainLooper());
+            Log.d(TAG, "startGetMessagesTimer() started." );
+
+            mGetMessagesTask = mTimer.scheduleWithFixedDelay(new Runnable() {
+                @Override
+                public void run() {
+                    uiHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mInitialized && !DashBoardViewModel.this.isSyncRequestActive()) {
+                                loadMessages();
+                            }
                         }
-                    }
-                });
-            }
-        }, 0, 5000L, TimeUnit.MILLISECONDS);
+                    });
+                }
+            }, 0, 5000L, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    public void stopGetMessagesTimer() {
+        if (mGetMessagesTask != null) {
+            mGetMessagesTask.cancel(false);
+        }
     }
 
     public String getItemsRaw() {
