@@ -74,7 +74,8 @@ public class DashboardRequest extends Request {
             /* get last messages of subcribed topics and dashboard version timestamp */
             List<Object[]> result = new ArrayList<>();
             try {
-                mServerVersion = mConnection.getCachedMessagesDash(result);
+                //TODO: set since
+                mServerVersion = mConnection.getCachedMessagesDash(0, 0, result);
                 mReceivedMessages = new ArrayList<>();
 
                 Message mqttMessage;

@@ -159,7 +159,7 @@ public class Connection {
     }
 
     public Map<String, String> getFCMData() throws IOException, ServerError {
-        Cmd.RawCmd response = mCmd.fcmDataRequest(++mSeqNo);
+        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_FCM_DATA, ++mSeqNo);
         handleError(response);
         return mCmd.readFCMData(response.data);
     }
@@ -266,7 +266,7 @@ public class Connection {
 
     public List<Object[]> getCachedMessages(long since, int seqNo)  throws IOException, ServerError {
         List<Object[]> messages = new ArrayList<>();
-        Cmd.RawCmd response = mCmd.getCachedMessagesRequest(++mSeqNo, since, seqNo);
+        Cmd.RawCmd response = mCmd.getCachedMessagesRequest(Cmd.CMD_GET_MESSAGES, ++mSeqNo, since, seqNo);
         handleError(response);
         if (lastReturnCode == Cmd.RC_OK) {
             messages = mCmd.readCachedMessages(response.data);
@@ -274,9 +274,8 @@ public class Connection {
         return messages;
     }
 
-    public long getCachedMessagesDash(List<Object[]> result) throws IOException, ServerError {
-        List<Object[]> messages = new ArrayList<>();
-        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_MESSAGES_DASH, ++mSeqNo);
+    public long getCachedMessagesDash(long since, int seqNo, List<Object[]> result) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.getCachedMessagesRequest(Cmd.CMD_GET_MESSAGES_DASH, ++mSeqNo, since, seqNo);
         handleError(response);
         long version = -1;
         if (lastReturnCode == Cmd.RC_OK) {
