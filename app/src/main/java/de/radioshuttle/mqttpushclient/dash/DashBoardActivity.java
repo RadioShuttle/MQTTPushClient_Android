@@ -57,7 +57,8 @@ import java.util.Map;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
-public class DashBoardActivity extends AppCompatActivity implements DashBoardActionListener {
+public class DashBoardActivity extends AppCompatActivity implements
+        DashBoardActionListener, CertificateErrorDialog.Callback {
 
 
     @Override
@@ -456,10 +457,51 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                 mViewModel.confirmResultDeliveredSyncRequest();
 
                 /* handle cerificate exception */
-                //TODO
+                if (b.hasCertifiateException()) {
+                    /* only show dialog if the certificate has not already been denied */
+                    if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
+                        FragmentManager fm = getSupportFragmentManager();
+
+                        String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
+                                AppTrustManager.getUniqueKey(b.getCertificateException().chain[0]);
+
+                        /* check if a dialog is not already showing (for this certificate) */
+                        if (fm.findFragmentByTag(DLG_TAG) == null) {
+                            CertificateErrorDialog dialog = new CertificateErrorDialog();
+                            Bundle args = CertificateErrorDialog.createArgsFromEx(
+                                    b.getCertificateException(), request.getAccount().pushserver);
+                            if (args != null) {
+                                mViewModel.stopGetMessagesTimer();
+                                args.putInt("cmd", Cmd.CMD_GET_MESSAGES_DASH);
+                                dialog.setArguments(args);
+                                dialog.show(getSupportFragmentManager(), DLG_TAG);
+                            }
+                        }
+                    }
+                }
+                b.setCertificateExeption(null); // mark es "processed"
 
                 /* handle insecure connection */
-                //TODO
+                if (b.inSecureConnectionAsk) {
+                    if (Connection.mInsecureConnection.get(b.pushserver) == null) {
+                        FragmentManager fm = getSupportFragmentManager();
+
+                        String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
+
+                        /* check if a dialog is not already showing (for this host) */
+                        if (fm.findFragmentByTag(DLG_TAG) == null) {
+                            InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                            Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
+                            if (args != null) {
+                                mViewModel.stopGetMessagesTimer();
+                                args.putInt("cmd", Cmd.CMD_GET_MESSAGES_DASH);
+                                dialog.setArguments(args);
+                                dialog.show(getSupportFragmentManager(), DLG_TAG);
+                            }
+                        }
+                    }
+                }
+                b.inSecureConnectionAsk = false; // mark as "processed"
 
                 if (isNew) {
                     if (b.requestStatus != Cmd.RC_OK) {
@@ -504,60 +546,11 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                 mSwipeRefreshLayout.setRefreshing(false);
                 // updateUI(true);
 
+                /* handle cerificate exception */
+
+                /* handle insecure connection */
+
                 if (isNew) {
-                    /* handle cerificate exception */
-                    if (b.hasCertifiateException()) {
-                        /* only show dialog if the certificate has not already been denied */
-                        if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
-                            FragmentManager fm = getSupportFragmentManager();
-
-                            String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
-                                    AppTrustManager.getUniqueKey(b.getCertificateException().chain[0]);
-
-                            /* check if a dialog is not already showing (for this certificate) */
-                            if (fm.findFragmentByTag(DLG_TAG) == null) {
-                                CertificateErrorDialog dialog = new CertificateErrorDialog();
-                                Bundle args = CertificateErrorDialog.createArgsFromEx(
-                                        b.getCertificateException(), dashboardRequest.getAccount().pushserver);
-                                if (args != null) {
-                                    //TODO:
-                                /*
-                                int cmd = dashboardRequest.mCmd;
-                                args.putInt("cmd", cmd);
-                                dialog.setArguments(args);
-                                dialog.show(getSupportFragmentManager(), DLG_TAG);
-                                */
-                                }
-                            }
-                        }
-                    }
-                    b.setCertificateExeption(null); // mark es "processed"
-
-                    /* handle insecure connection */
-                    if (b.inSecureConnectionAsk) {
-                        if (Connection.mInsecureConnection.get(b.pushserver) == null) {
-                            FragmentManager fm = getSupportFragmentManager();
-
-                            String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
-
-                            /* check if a dialog is not already showing (for this host) */
-                            if (fm.findFragmentByTag(DLG_TAG) == null) {
-                                InsecureConnectionDialog dialog = new InsecureConnectionDialog();
-                                Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
-                                if (args != null) {
-                                    //TODO
-                                /*
-                                int cmd = dashboardRequest.mCmd;
-                                args.putInt("cmd", cmd);
-                                dialog.setArguments(args);
-                                dialog.show(getSupportFragmentManager(), DLG_TAG);
-                                */
-                                }
-                            }
-                        }
-                    }
-                    b.inSecureConnectionAsk = false; // mark as "processed"
-
                     if (b.requestStatus != Cmd.RC_OK) {
                         String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
                         if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
@@ -613,6 +606,16 @@ public class DashBoardActivity extends AppCompatActivity implements DashBoardAct
                 mViewModel.setItems(
                         data.getStringExtra(DashBoardEditActivity.ARG_DASHBOARD),
                         data.getLongExtra(DashBoardEditActivity.ARG_DASHBOARD_VERSION, - 1));
+            }
+        }
+    }
+
+    @Override
+    public void retry(Bundle args) {
+        if (args != null) {
+            int cmd = args.getInt("cmd");
+            if (cmd == Cmd.CMD_GET_MESSAGES_DASH) {
+                mViewModel.startGetMessagesTimer();
             }
         }
     }
