@@ -91,6 +91,9 @@ public class Cmd {
         m.put("uri", readString(is));
         m.put("user", readString(is));
         short n = is.readShort();
+        if (n < 0 || n > Cmd.MAX_STRING_SIZE) {
+            throw new IOException("Invalid string len");
+        }
         char[] pwd = new char[n];
         if (PROTOCOL_MAJOR == 1 && clientProtocolMinor < 2) { // pre 1.2 password is utf-16
             for (int i = 0; i < n; i++) {
@@ -106,6 +109,9 @@ public class Cmd {
         byte[] uuid = null;
         if (is.available() >= 2) { // extended in 1.5
             n = is.readShort();
+            if (n < 0 || n > Cmd.MAX_STRING_SIZE) {
+                throw new IOException("Invalid string len");
+            }
             uuid = new byte[n];
             is.readFully(uuid);
         } else {
@@ -673,21 +679,50 @@ public class Cmd {
     }
 
     public static void writeString(String s, DataOutputStream dos) throws IOException {
+        writeString(s, dos, true);
+    }
+
+    public static void writeLongString(String s, DataOutputStream dos) throws IOException {
+        writeString(s, dos, false);
+    }
+
+    protected static void writeString(String s, DataOutputStream dos, boolean lenShort) throws IOException {
         if (s == null || s.length() == 0) {
-            dos.writeShort(0);
+            if (lenShort) {
+                dos.writeShort(0);
+            } else {
+                dos.writeInt(0);
+            }
         } else {
             byte[] b = s.getBytes("UTF-8");
-            dos.writeShort(b.length);
+            if (lenShort) {
+                dos.writeShort(b.length);
+            } else {
+                dos.writeInt(b.length);
+            }
             dos.write(b);
         }
     }
 
     public static String readString(DataInputStream dis) throws IOException {
+        return readString(dis, true);
+    }
+
+    public static String readLongString(DataInputStream dis) throws IOException {
+        return readString(dis, false);
+    }
+
+    protected static String readString(DataInputStream dis, boolean lenShort) throws IOException {
         String s;
-        short len = dis.readShort();
+        int len;
+        if (lenShort) {
+            len = dis.readUnsignedShort();
+        } else {
+            len = dis.readInt();
+        }
         if (len == 0 || len == -1) { // len == -1 was pre 1.2
             s = "";
-        } else if (len > 0) {
+        } else if (len > 0 && len <= MAX_STRING_SIZE ) {
             byte[] b = new byte[len];
             dis.readFully(b);
             s = new String(b, "UTF-8");
@@ -771,6 +806,8 @@ public class Cmd {
 
     public byte clientProtocolMinor;
 
+    public final static int MAX_TOPICS_SIZE = 65536;
+    public final static int MAX_STRING_SIZE = MAX_TOPICS_SIZE;
     public final static int MAX_PAYLOAD = 1024 * 256;
     static {
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
