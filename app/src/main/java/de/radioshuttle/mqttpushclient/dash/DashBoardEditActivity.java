@@ -30,7 +30,7 @@ import de.radioshuttle.net.DashboardRequest;
 import de.radioshuttle.net.MQTTException;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.TopicsRequest;
-import de.radioshuttle.utils.MqttTopic;
+import de.radioshuttle.utils.MqttUtils;
 import de.radioshuttle.utils.Utils;
 
 import android.app.AlertDialog;
@@ -647,7 +647,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             String subTopic = mEditTextTopicSub.getText().toString();
             if (!Utils.isEmpty(subTopic)) {
                 try {
-                    MqttTopic.validate(subTopic, true);
+                    MqttUtils.topicValidate(subTopic, true);
                 } catch(IllegalArgumentException i) {
                     mEditTextTopicSub.setError(getString(R.string.err_invalid_topic_format));
                     valid = false;
