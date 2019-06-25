@@ -8,6 +8,7 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,7 +20,10 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
 
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
@@ -99,6 +103,17 @@ public class DetailViewDialog extends DialogFragment {
             displayError = getString(R.string.javascript_err) + " " + javaScriptError;
         }
 
+        Long when = (Long) mItem.data.get("msg.received");
+        String receivedDateStr = null;
+        if (when != null) {
+            if (DateUtils.isToday(when)) {
+                receivedDateStr = mTimeFormatter.format(new Date(when));
+            } else {
+                receivedDateStr = mFormatter.format(new Date(when));
+            }
+        }
+
+
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 
         if (mTextContent != null) { //mItem instanceof TextItem
@@ -120,6 +135,8 @@ public class DetailViewDialog extends DialogFragment {
             } else {
                 mTextContent.setText((String) mItem.data.get("content"));
             }
+
+            mLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
         }
 
     }
@@ -129,6 +146,10 @@ public class DetailViewDialog extends DialogFragment {
     protected TextView mTextContent;
     protected int mDefaultTextColor;
     protected Item mItem;
+
+    protected DateFormat mFormatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());;
+    protected DateFormat mTimeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT);
+
 
     private final static String TAG = DetailViewDialog.class.getSimpleName();
 }
