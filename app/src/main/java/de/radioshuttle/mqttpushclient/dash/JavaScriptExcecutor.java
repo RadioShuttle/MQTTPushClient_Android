@@ -169,6 +169,12 @@ public class JavaScriptExcecutor {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
+                                result.put("msg.received", pTask.message.getWhen());
+                                result.put("msg.raw", pTask.message.getPayload());
+                                result.put("msg.content", new String(pTask.message.getPayload()));
+                                if (result.containsKey("error")) {
+                                    result.put("content", new String(pTask.message.getPayload()));
+                                }
                                 pTask.callback.onFinshed(pTask.item, result);
                             }
                         });
@@ -201,22 +207,13 @@ public class JavaScriptExcecutor {
         }
 
         @Override
-        public HashMap<String, Object> call() throws Exception {
+        public HashMap<String, Object> call() {
             HashMap<String, Object> result = new HashMap<>();
             try {
-                try {
-                    String content = JavaScript.getInstance().formatMsg(jsContext, message, 0);
-                    result.put("content", content);
-                } catch(Exception e) {
-                    /* error, set message payload as content */
-                    result.put("content", new String(message.getPayload()));
-                    throw e;
-                }
+                String content = JavaScript.getInstance().formatMsg(jsContext, message, 0);
+                result.put("content", content);
             } finally {
                 /* put additional message data to result too */
-                result.put("msg.received", message.getWhen());
-                result.put("msg.raw", message.getPayload());
-                result.put("msg.content", new String(message.getPayload()));
                 if (releaseResources) {
                     jsContext.close();
                 }
