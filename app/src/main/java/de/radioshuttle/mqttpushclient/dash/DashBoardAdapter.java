@@ -37,8 +37,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
-
-        mTextAppearance = new int[] {android.R.style.TextAppearance_Small, android.R.style.TextAppearance_Medium, android.R.style.TextAppearance_Large};
     }
 
     public void addListener(DashBoardActionListener listener) {
@@ -47,7 +45,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, final int viewType) {
         // Log.d(TAG, "onCreateViewHolder: " );
         View view;
         TextView label = null;
@@ -96,7 +94,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                             toggleSelection(pos);
                         }
                     } else {
-                        mListener.onItemClicked(getItem(holder.getAdapterPosition()));
+                        if (viewType != TYPE_GROUP) {
+                            mListener.onItemClicked(getItem(holder.getAdapterPosition()));
+                        }
                     }
                 }
             }
@@ -112,14 +112,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         if (h.viewType == TYPE_TEXT || h.viewType == TYPE_GROUP) {
             h.label.setText(item.label);
         }
-
-        int bg = item.data.containsKey("background") ? (Integer) item.data.get("background") : item.background;
-        int background = (bg== 0 ? mDefaultBackground : bg);
-        // Log.d(TAG, "backgound: " + background);
-
-        int cl = item.data.containsKey("textcolor") ? (Integer) item.data.get("textcolor") : item.textcolor;
-        int textcolor = (item.textcolor == 0 ? h.defaultColor : item.textcolor);
-        // Log.d(TAG, "textcolor: " + textcolor);
 
         if (mSelectedItems.contains(item.id)) {
             h.itemView.setActivated(true);
@@ -141,8 +133,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 lp.width = mWidth;
                 lp.height = mWidth;
                 h.textContent.setLayoutParams(lp);
+
             }
-            h.textContent.setBackgroundColor(background);
+            item.setViewBackground(h.textContent, mDefaultBackground);
         }
 
         if (h.viewType == TYPE_GROUP) {
@@ -150,33 +143,25 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
                 h.itemView.setLayoutParams(lp);
             }
-            h.itemView.setBackgroundColor(background);
-            int textSizeIdx = (item.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : item.textsize ) -1;
-            if (textSizeIdx >= 0 && textSizeIdx < mTextAppearance.length) {
-                TextViewCompat.setTextAppearance(h.label, mTextAppearance[textSizeIdx]);
-            }
-            h.label.setTextColor(textcolor);
+            item.setViewBackground(h.itemView, mDefaultBackground);
+            item.setViewTextAppearance(h.label, h.defaultColor);
         }
 
         String displayError = null;
         Object javaScriptError = item.data.get("error");
-        if (javaScriptError instanceof String) { //TODO: consider displaying errors in own textfield
+        if (javaScriptError instanceof String) {
             displayError = mInflater.getContext().getString(R.string.javascript_err) + " " + javaScriptError;
         }
 
         // if view for text content exists, set content
         // Log.d(TAG, "ui: " + item.label);
         if (h.textContent != null) {
-                int textSizeIdx = (item.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : item.textsize ) -1;
-                if (textSizeIdx >= 0 && textSizeIdx < mTextAppearance.length) {
-                    TextViewCompat.setTextAppearance(h.textContent, mTextAppearance[textSizeIdx]);
-                }
+            item.setViewTextAppearance(h.textContent, h.defaultColor);
                 if (!Utils.isEmpty(displayError)) {
-                    h.textContent.setText(displayError);
+                    h.textContent.setText(displayError); //TODO: consider displaying errors in own textfield
                 } else {
                     h.textContent.setText((String) item.data.get("content"));
                 }
-                h.textContent.setTextColor(textcolor);
         }
 
         // Log.d(TAG, "width: " + lp.width);
@@ -299,7 +284,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     }
 
 
-    private int[] mTextAppearance;
     private HashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
     private int mDefaultBackground;
