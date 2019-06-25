@@ -7,7 +7,6 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.FragmentManager;
@@ -16,7 +15,7 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import de.radioshuttle.db.MqttMessage;
+
 import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
@@ -52,7 +51,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
@@ -306,12 +304,12 @@ public class DashBoardActivity extends AppCompatActivity implements
         int spanCount = 0;
         DisplayMetrics dm = getResources().getDisplayMetrics();
 
-        float spacingDPI = getResources().getDimension(R.dimen.dashboard_spacing) * (160f / (float) dm.densityDpi) ;
+        float spacingDPI = getResources().getDimension(R.dimen.dashboard_spacing) / dm.density;
 
         // Log.d(TAG, "width px: " + getWidthPixel() + " width dpi: " + getWidthDPI());
 
         // calc number of columns depending on width
-        float widthDPI = (float) dm.widthPixels * (160f / (float) dm.densityDpi);
+        float widthDPI = (float) dm.widthPixels  / dm.density;
         widthDPI -= 24; // subtract left and right margin (not including spacing for most left and most right cell)
 
         if ((float) itemWidth > widthDPI) {
@@ -332,7 +330,7 @@ public class DashBoardActivity extends AppCompatActivity implements
     protected int getWidthDPI() {
         DisplayMetrics dm = getResources().getDisplayMetrics();
         int widthPixel = getWidthPixel();
-        return (int) ((float) widthPixel * (160f / (float) dm.densityDpi));
+        return (int) ((float) widthPixel / dm.density);
     }
 
     protected int getWidthPixel() {
@@ -349,9 +347,20 @@ public class DashBoardActivity extends AppCompatActivity implements
 
     @Override
     public void onItemClicked(Item item) {
+        /*
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(item.label + " clicked.");
         builder.create().show();
+        */
+        FragmentManager fm = getSupportFragmentManager();
+
+        String DLG_TAG = DetailViewDialog.class.getSimpleName();
+        if (fm.findFragmentByTag(DLG_TAG) == null) {
+
+        }
+        DetailViewDialog dlg = DetailViewDialog.newInstance(item);
+        dlg.show(fm, DLG_TAG);
+
     }
 
     @Override
