@@ -7,10 +7,19 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 
+import android.view.View;
+import android.widget.TextView;
+
+import androidx.core.content.ContextCompat;
+import androidx.core.widget.TextViewCompat;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+
+import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.Utils;
 
 public abstract class Item {
     public Item() {
@@ -64,6 +73,42 @@ public abstract class Item {
         }
         return item;
     }
+
+    /* helper for view component (used in adapter and detail dialog */
+
+    void setViewBackground(View v, Integer defalutBackgroundColor) {
+        if (v != null) {
+            int color;
+            if (defalutBackgroundColor == null) {
+                color = ContextCompat.getColor(v.getContext(), R.color.dashboad_item_background);
+            } else {
+                color = defalutBackgroundColor;
+            }
+            int bg = data.containsKey("background") ? (Integer) data.get("background") : background;
+            int background = (bg == 0 ? color : bg);
+
+            v.setBackgroundColor(background);
+        }
+    }
+
+    /** set text color and text appearance */
+    void setViewTextAppearance(TextView v, int defaultColor) {
+        if (v != null) {
+            int textSizeIdx = (textsize <= 0 ? Item.DEFAULT_TEXTSIZE : textsize ) -1;
+            if (textSizeIdx >= 0 && textSizeIdx < TEXTAPP.length) {
+                TextViewCompat.setTextAppearance(v, TEXTAPP[textSizeIdx]);
+            }
+
+            int color = data.containsKey("textcolor") ? (Integer) data.get("textcolor") : textcolor;
+            if (color != 0) {
+                v.setTextColor(color);
+            } else if (defaultColor != 0) { // && color == 0
+                v.setTextColor(defaultColor);
+            }
+        }
+    }
+
+    final static int[] TEXTAPP = new int[] {android.R.style.TextAppearance_Small, android.R.style.TextAppearance_Medium, android.R.style.TextAppearance_Large};
 
     public HashMap<String, Object> data;
 
