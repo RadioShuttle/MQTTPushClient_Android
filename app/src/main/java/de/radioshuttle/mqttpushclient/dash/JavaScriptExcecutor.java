@@ -204,12 +204,21 @@ public class JavaScriptExcecutor {
         public HashMap<String, Object> call() throws Exception {
             HashMap<String, Object> result = new HashMap<>();
             try {
-                String content = JavaScript.getInstance().formatMsg(jsContext, message, 0);
-                result.put("content", content);
+                try {
+                    String content = JavaScript.getInstance().formatMsg(jsContext, message, 0);
+                    result.put("content", content);
+                } catch(Exception e) {
+                    /* error, set message payload as content */
+                    result.put("content", new String(message.getPayload()));
+                    throw e;
+                }
             } finally {
+                /* put additional message data to result too */
+                result.put("msg.received", message.getWhen());
+                result.put("msg.raw", message.getPayload());
+                result.put("msg.content", new String(message.getPayload()));
                 if (releaseResources) {
                     jsContext.close();
-                    Log.d(TAG, "releaseResources !" ); //TODO: remove
                 }
             }
             return result;
