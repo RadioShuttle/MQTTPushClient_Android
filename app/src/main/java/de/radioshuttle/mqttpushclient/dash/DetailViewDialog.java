@@ -16,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
@@ -86,7 +88,15 @@ public class DetailViewDialog extends DialogFragment {
                     updateItemData();
 
                     if (view != null) {
-                        root.addView(view);
+                        View bottom = root.findViewById(R.id.closeButton);
+
+                        root.addView(view, 0);
+
+                        ConstraintSet cs = new ConstraintSet();
+                        cs.clone((ConstraintLayout) root);
+                        cs.connect(bottom.getId(), ConstraintSet.TOP, view.getId(), ConstraintSet.BOTTOM);
+                        cs.applyTo((ConstraintLayout) root);
+
                     }
                 }
             }
