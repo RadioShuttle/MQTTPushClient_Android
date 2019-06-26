@@ -11,7 +11,6 @@ import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.DialogFragment;
@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Locale;
 
 import de.radioshuttle.mqttpushclient.R;
-import de.radioshuttle.utils.Utils;
 
 public class DetailViewDialog extends DialogFragment {
 
@@ -92,39 +91,62 @@ public class DetailViewDialog extends DialogFragment {
 
                         /* tint send button and value editor */
                         ImageButton sendButton = view.findViewById(R.id.sendButton);
-                        sendButton.setVisibility(View.VISIBLE);
+                        // sendButton.setVisibility(View.VISIBLE); //TODO
                         ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
                         ImageViewCompat.setImageTintList(sendButton, csl);
 
                         EditText editText = view.findViewById(R.id.editValue);
-                        editText.setVisibility(View.VISIBLE);
+                        // editText.setVisibility(View.VISIBLE); //TODO
                         editText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
 
                     }
 
-                    viewModel.mDashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
-                        @Override
-                        public void onChanged(List<Item> items) {
-                            // Log.d(TAG, "item data updated.");
-                            updateView();
-                        }
-                    });
-
-                    /* tint buttons */
-                    ImageButton closeButton = root.findViewById(R.id.closeButton);
-                    int color = mItem.getTextcolor();
-                    ImageViewCompat.setImageTintList(closeButton, ColorStateList.valueOf(color == 0 ? mDefaultTextColor : color));
-
-                    closeButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            dismiss();
-                        }
-                    });
-
-                    updateView();
-
                     if (view != null) {
+
+                        viewModel.mDashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
+                            @Override
+                            public void onChanged(List<Item> items) {
+                                // Log.d(TAG, "item data updated.");
+                                updateView();
+                            }
+                        });
+
+                        /* tint buttons */
+                        ImageButton closeButton = root.findViewById(R.id.closeButton);
+                        ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                        ImageViewCompat.setImageTintList(closeButton, csl);
+                        closeButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dismiss();
+                            }
+                        });
+
+                        mErrorButton = root.findViewById(R.id.errorButton);
+                        ImageViewCompat.setImageTintList(mErrorButton, csl);
+                        mErrorButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                toogleViewMode(VIEW_ERROR_1);
+                            }
+                        });
+
+                        if (savedInstanceState != null) {
+                            if (mItem.data.get("error") instanceof String) {
+                                mViewMode = savedInstanceState.getInt(KEY_VIEW_MODE, 0);
+                            }
+                        }
+
+                        /* error view set size */
+                        mErrorLabel = root.findViewById(R.id.errorLabel);
+                        mErrorContent = root.findViewById(R.id.errorContent);
+                        ViewGroup.LayoutParams lp = mErrorContent.getLayoutParams();
+                        lp.width = Math.min(w, w2);
+                        lp.height = lp.width;
+                        mErrorContent.setLayoutParams(lp);
+
+                        mCurrentView = view;
+                        updateView();
                         root.addView(view, 0);
                         /*
                         ConstraintSet cs = new ConstraintSet();
@@ -142,11 +164,22 @@ public class DetailViewDialog extends DialogFragment {
 
     protected void updateView() {
 
-        String displayError = null;
-        Object javaScriptError = mItem.data.get("error");
-        if (javaScriptError instanceof String) {
-            displayError = getString(R.string.javascript_err) + " " + javaScriptError;
+        /* if there is an error, show corresonding error button (if not already shown) */
+        if (mItem.data.get("error") instanceof String) {
+            if (mErrorButton.getVisibility() != View.VISIBLE) {
+                mErrorButton.setVisibility(View.VISIBLE);
+            }
+        } else {
+            /* no error, hide error button  */
+            if (mViewMode == VIEW_ERROR_1) {
+                if (mErrorButton.getVisibility() != View.GONE) {
+                    /* hide error view (this may happen if a new result comes in with no error) */
+                    mErrorButton.setVisibility(View.GONE);
+                    mViewMode = VIEW_DASHITEM;
+                }
+            }
         }
+        //TODO: error2 (see code above)
 
         Long when = (Long) mItem.data.get("msg.received");
         String receivedDateStr = null;
@@ -158,31 +191,89 @@ public class DetailViewDialog extends DialogFragment {
             }
         }
 
-
-        if (mTextContent != null) { //mItem instanceof TextItem
-            mItem.setViewTextAppearance(mTextContent, mLabel.getTextColors().getDefaultColor());
-            mItem.setViewBackground(mTextContent, mDefaultBackground);
-
-            if (!Utils.isEmpty(displayError)) {
-                mTextContent.setText(displayError); //TODO: consider displaying errors in own textfield
-            } else {
-                mTextContent.setText((String) mItem.data.get("content"));
+        if (mViewMode == VIEW_DASHITEM) {
+            /* make sure current attached dash item is visible and error view is gone */
+            if (mErrorContent.getVisibility() != View.GONE) {
+                mErrorContent.setVisibility(View.GONE);
+                mErrorLabel.setVisibility(View.GONE);
+            }
+            if (mCurrentView.getVisibility() != View.VISIBLE) {
+                mCurrentView.setVisibility(View.VISIBLE);
             }
 
-            mLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
-        }
+            if (mTextContent != null) { //mItem instanceof TextItem
+                mItem.setViewTextAppearance(mTextContent, mLabel.getTextColors().getDefaultColor());
+                mItem.setViewBackground(mTextContent, mDefaultBackground);
+                mTextContent.setText((String) mItem.data.get("content"));
 
+                mLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
+            } else {
+                //TODO: continue here to set other dash item related data
+            }
+        } else {
+            /* make sure current attached dash item is gone and error view is visible */
+            if (mErrorContent.getVisibility() != View.VISIBLE) {
+                mErrorContent.setVisibility(View.VISIBLE);
+                mErrorLabel.setVisibility(View.VISIBLE);
+            }
+            if (mCurrentView.getVisibility() != View.GONE) {
+                mCurrentView.setVisibility(View.GONE);
+            }
+
+            String displayError = null;
+            if (mViewMode == VIEW_ERROR_1) {
+                Object javaScriptError = mItem.data.get("error");
+                if (javaScriptError instanceof String) {
+                    displayError = getString(R.string.javascript_err) + " " + javaScriptError;
+                }
+
+            } else if (mViewMode == VIEW_ERROR_2) {
+                //TODO:
+            }
+
+            mItem.setViewBackground(mErrorContent, mDefaultBackground);
+            if (mItem.textcolor != 0) {
+                mErrorContent.setTextColor(mItem.textcolor);
+            }
+            mErrorContent.setText(displayError);
+            mErrorLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
+        }
     }
 
+    protected void toogleViewMode(int state) {
+        if (mViewMode == state) {
+            mViewMode = 0;
+        } else {
+            mViewMode = state;
+        }
+        updateView();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_VIEW_MODE, mViewMode);
+    }
+
+    protected View mCurrentView;
     protected TextView mLabel;
     protected int mDefaultBackground;
     protected TextView mTextContent;
     protected int mDefaultTextColor;
     protected Item mItem;
 
+    protected int mViewMode;
+    protected TextView mErrorContent;
+    protected TextView mErrorLabel;
+    protected ImageButton mErrorButton;
+
     protected DateFormat mFormatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());;
     protected DateFormat mTimeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT);
 
+    protected final static int VIEW_DASHITEM = 0;
+    protected final static int VIEW_ERROR_1 = 1;
+    protected final static int VIEW_ERROR_2 = 2;
+    protected final static String KEY_VIEW_MODE = "KEY_VIEW_MODE";
 
     private final static String TAG = DetailViewDialog.class.getSimpleName();
 }
