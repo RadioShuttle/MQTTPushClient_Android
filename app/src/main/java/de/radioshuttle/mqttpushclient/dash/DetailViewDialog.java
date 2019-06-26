@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
@@ -14,11 +15,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
 
@@ -68,35 +70,68 @@ public class DetailViewDialog extends DialogFragment {
 
                     mDefaultBackground = ContextCompat.getColor(getActivity(), R.color.dashboad_item_background);
 
+                    /* calc size of dash item*/
+                    float defSizeDPI = 250f; //TODO: default size?
+                    DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+                    int a = Math.min(displayMetrics.heightPixels, displayMetrics.widthPixels);
+                    int w = (int) (defSizeDPI * getResources().getDisplayMetrics().density);
+                    int w2 = (int) ((float) a * .9f - 64f * getResources().getDisplayMetrics().density);
+
                     if (mItem instanceof TextItem){
                         view =  inflater.inflate(R.layout.activity_dash_board_item_text, null);
 
                         mTextContent = view.findViewById(R.id.textContent);
                         mLabel = view.findViewById(R.id.name);
+
+                        ViewGroup.LayoutParams lp = mTextContent.getLayoutParams();
+                        lp.width = Math.min(w, w2);
+                        lp.height = lp.width;
+                        mTextContent.setLayoutParams(lp);
+
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
+
+                        /* tint send button and value editor */
+                        ImageButton sendButton = view.findViewById(R.id.sendButton);
+                        sendButton.setVisibility(View.VISIBLE);
+                        ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                        ImageViewCompat.setImageTintList(sendButton, csl);
+
+                        EditText editText = view.findViewById(R.id.editValue);
+                        editText.setVisibility(View.VISIBLE);
+                        editText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
 
                     }
 
                     viewModel.mDashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
                         @Override
                         public void onChanged(List<Item> items) {
-                            Log.d(TAG, "item data updated.");
-                            updateItemData();
+                            // Log.d(TAG, "item data updated.");
+                            updateView();
                         }
                     });
 
-                    updateItemData();
+                    /* tint buttons */
+                    ImageButton closeButton = root.findViewById(R.id.closeButton);
+                    int color = mItem.getTextcolor();
+                    ImageViewCompat.setImageTintList(closeButton, ColorStateList.valueOf(color == 0 ? mDefaultTextColor : color));
+
+                    closeButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            dismiss();
+                        }
+                    });
+
+                    updateView();
 
                     if (view != null) {
-                        View bottom = root.findViewById(R.id.closeButton);
-
                         root.addView(view, 0);
-
+                        /*
                         ConstraintSet cs = new ConstraintSet();
                         cs.clone((ConstraintLayout) root);
                         cs.connect(bottom.getId(), ConstraintSet.TOP, view.getId(), ConstraintSet.BOTTOM);
                         cs.applyTo((ConstraintLayout) root);
-
+                        */
                     }
                 }
             }
@@ -105,7 +140,7 @@ public class DetailViewDialog extends DialogFragment {
         return root;
     }
 
-    protected void updateItemData() {
+    protected void updateView() {
 
         String displayError = null;
         Object javaScriptError = mItem.data.get("error");
@@ -124,19 +159,7 @@ public class DetailViewDialog extends DialogFragment {
         }
 
 
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-
         if (mTextContent != null) { //mItem instanceof TextItem
-            float defSizeDPI = 250f; //TODO: default size?
-
-            int a = Math.min(displayMetrics.heightPixels, displayMetrics.widthPixels);
-
-            ViewGroup.LayoutParams lp = mTextContent.getLayoutParams();
-            int w = (int) (defSizeDPI * getResources().getDisplayMetrics().density);
-            int w2 = (int) ((float) a * .9f - 64f * getResources().getDisplayMetrics().density);
-            lp.width = Math.min(w, w2);
-            lp.height = lp.width;
-            mTextContent.setLayoutParams(lp);
             mItem.setViewTextAppearance(mTextContent, mLabel.getTextColors().getDefaultColor());
             mItem.setViewBackground(mTextContent, mDefaultBackground);
 
