@@ -76,7 +76,7 @@ public abstract class Item {
 
     /* helper for view component (used in adapter and detail dialog */
 
-    void setViewBackground(View v, Integer defalutBackgroundColor) {
+    public void setViewBackground(View v, Integer defalutBackgroundColor) {
         if (v != null) {
             int color;
             if (defalutBackgroundColor == null) {
@@ -92,20 +92,25 @@ public abstract class Item {
     }
 
     /** set text color and text appearance */
-    void setViewTextAppearance(TextView v, int defaultColor) {
+    public void setViewTextAppearance(TextView v, int defaultColor) {
         if (v != null) {
             int textSizeIdx = (textsize <= 0 ? Item.DEFAULT_TEXTSIZE : textsize ) -1;
             if (textSizeIdx >= 0 && textSizeIdx < TEXTAPP.length) {
                 TextViewCompat.setTextAppearance(v, TEXTAPP[textSizeIdx]);
             }
 
-            int color = data.containsKey("textcolor") ? (Integer) data.get("textcolor") : textcolor;
+            int color = getTextcolor();
             if (color != 0) {
                 v.setTextColor(color);
             } else if (defaultColor != 0) { // && color == 0
                 v.setTextColor(defaultColor);
             }
         }
+    }
+
+    protected int getTextcolor() {
+        int color = data.containsKey("textcolor") ? (Integer) data.get("textcolor") : textcolor;
+        return color;
     }
 
     final static int[] TEXTAPP = new int[] {android.R.style.TextAppearance_Small, android.R.style.TextAppearance_Medium, android.R.style.TextAppearance_Large};
