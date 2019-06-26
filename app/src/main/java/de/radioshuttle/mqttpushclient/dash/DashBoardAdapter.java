@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.content.res.ColorStateList;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +21,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import de.radioshuttle.mqttpushclient.R;
@@ -51,6 +53,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         TextView label = null;
         TextView textContent = null;
         ImageView selectedImageView = null;
+        ImageView errorImageView = null;
         int defaultColor = 0;
         if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
@@ -58,6 +61,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             defaultColor = label.getTextColors().getDefaultColor();
             textContent = view.findViewById(R.id.textContent);
             selectedImageView = view.findViewById(R.id.check);
+            errorImageView = view.findViewById(R.id.errorImage);
         } else {
             view = mInflater.inflate(R.layout.activity_dash_board_item_group, parent, false);
             label = view.findViewById(R.id.name);
@@ -71,6 +75,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         holder.textContent = textContent; // content for text items
         holder.selectedImageView = selectedImageView;
         holder.defaultColor = defaultColor;
+        holder.errorImage = errorImageView;
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -147,21 +152,22 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             item.setViewTextAppearance(h.label, h.defaultColor);
         }
 
-        String displayError = null;
         Object javaScriptError = item.data.get("error");
-        if (javaScriptError instanceof String) {
-            displayError = mInflater.getContext().getString(R.string.javascript_err) + " " + javaScriptError;
+        if (javaScriptError instanceof String) { // value set?
+            if (h.errorImage != null) {
+                if (h.errorImage.getVisibility() != View.VISIBLE) {
+                    h.errorImage.setVisibility(View.VISIBLE);
+                }
+                ColorStateList csl = ColorStateList.valueOf(item.textcolor == 0 ? h.defaultColor : item.textcolor);
+                ImageViewCompat.setImageTintList(h.errorImage, csl);
+            }
         }
 
         // if view for text content exists, set content
         // Log.d(TAG, "ui: " + item.label);
         if (h.textContent != null) {
             item.setViewTextAppearance(h.textContent, h.defaultColor);
-                if (!Utils.isEmpty(displayError)) {
-                    h.textContent.setText(displayError); //TODO: consider displaying errors in own textfield
-                } else {
-                    h.textContent.setText((String) item.data.get("content"));
-                }
+            h.textContent.setText((String) item.data.get("content"));
         }
 
         // Log.d(TAG, "width: " + lp.width);
@@ -215,6 +221,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         TextView label;
         TextView textContent;
         ImageView selectedImageView;
+        ImageView errorImage;
         int defaultColor;
         int viewType;
     }
