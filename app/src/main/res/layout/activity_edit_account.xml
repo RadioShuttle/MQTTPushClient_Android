@@ -26,9 +26,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 >
-                <TableRow>
+                <TableRow android:layout_marginTop="8dp">
                     <TextView
-                        android:layout_marginTop="8dp"
                         android:layout_span="2"
                         android:text="@string/label_push_notification_server"
                         android:textAppearance="?android:attr/textAppearanceMedium" />
@@ -51,8 +50,8 @@
                         />
                 </TableRow>
 
-                <TableRow>
-                    <TextView android:layout_marginTop="16dp"
+                <TableRow android:layout_marginTop="16dp">
+                    <TextView
                         android:layout_span="2"
                         android:text="@string/label_mqtt_server"
                         android:textAppearance="?android:attr/textAppearanceMedium" />
@@ -165,6 +164,11 @@
                         android:enabled="false"
                         android:minHeight="48dp"
                         android:text="@string/action_mqtt_actions"/>
+                </TableRow>
+
+                <TableRow>
+                    
+
                 </TableRow>
 
 
