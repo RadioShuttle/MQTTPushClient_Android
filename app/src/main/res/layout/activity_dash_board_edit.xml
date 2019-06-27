@@ -168,6 +168,89 @@
                         android:layout_height="wrap_content" />
                 </TableRow>
 
+                <TableRow android:id="@+id/rowPublish" android:layout_marginTop="24dp">
+                    <TextView
+                        android:text="Publish"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        />
+                </TableRow>
+
+                <TableRow android:id="@+id/rowTopicPub">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_publish"
+                        android:text="@string/dash_label_publish_topic"
+                        />
+                    <EditText
+                        android:id="@+id/dash_publish"
+                        android:inputType="text"
+                        android:ems="15"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:minHeight="48dp"
+                        android:layout_marginLeft="4dp"
+                        />
+
+                </TableRow>
+
+                <TableRow android:id="@+id/rowRetain">
+                    <TextView
+                        android:visibility="invisible"
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/retain"
+                        android:text="@string/dash_label_message"
+                        />
+                    <CheckBox
+                        android:id="@+id/retain"
+                        android:layout_gravity="left|center_vertical"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/dlg_actions_retain_label"
+                        android:minHeight="48dp"
+                        android:minWidth="48dp"
+                        android:checked="false"
+                        />
+                </TableRow>
+
+                <TableRow android:id="@+id/rowInputTyp">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_publish_imput_type"
+                        android:text="@string/dash_label_input_type"
+                        />
+                    <LinearLayout>
+                        <Spinner
+                            android:id="@+id/dash_publish_imput_type"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minHeight="48dp"
+                            android:layout_marginLeft="4dp"
+                            />
+                    </LinearLayout>
+                </TableRow>
+
+                <TableRow android:id="@+id/rowOutputScript" android:gravity="center_vertical">
+                    <TextView
+                        android:id="@+id/outputScriptLabel"
+                        android:gravity="right"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/dash_outputscript_label"
+                        android:labelFor="@+id/outputScriptButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <Button
+                        android:id="@+id/outputScriptButton"
+                        android:minHeight="48dp"
+                        android:layout_gravity="left"
+                        style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                        android:text="@string/dlg_filter_button_add"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </TableRow>
+
 
             </TableLayout>
 
