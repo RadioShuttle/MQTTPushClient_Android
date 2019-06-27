@@ -9,6 +9,7 @@ package de.radioshuttle.mqttpushclient.dash;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
@@ -100,6 +101,11 @@ public class DetailViewDialog extends DialogFragment {
                             ImageViewCompat.setImageTintList(sendButton, csl);
 
                             EditText editText = view.findViewById(R.id.editValue);
+                            if (((TextItem) mItem).inputtype == TextItem.TYPE_NUMBER) {
+                                /* set numeric keyboard */
+                                editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+                            }
+
                             editText.setVisibility(View.VISIBLE);
                             editText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
                         }
