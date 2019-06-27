@@ -49,6 +49,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TableRow;
@@ -89,11 +90,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             mSelectedGroupIdx = args.getInt(ARG_GROUP_POS, -1);
             mSelectedPosIdx = args.getInt(ARG_ITEM_POS, -1);
             mSelectedTextIdx = Item.DEFAULT_TEXTSIZE - 1;
+            mSelectedInputTypeIdx = 0;
         } else {
             mMode = args.getInt(ARG_MODE);
             mSelectedGroupIdx = savedInstanceState.getInt(KEY_SELECTED_GROUP, -1);
             mSelectedPosIdx = savedInstanceState.getInt(KEY_SELECTED_POS, -1);
             mSelectedTextIdx = savedInstanceState.getInt(KEY_SELECTED_TEXT, -1);
+            mSelectedInputTypeIdx = savedInstanceState.getInt(KEY_SELECTED_INPUTTYPE, -1);
         }
 
         String json = args.getString(ARG_ACCOUNT);
@@ -129,6 +132,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         mItem = ic.item;
                         if (savedInstanceState == null) {
                             mSelectedTextIdx = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize ) -1;
+                            if (mItem instanceof TextItem) {
+                                mSelectedInputTypeIdx = ((TextItem) mItem).inputtype;
+                            }
                         }
                     } else {
                         throw new RuntimeException("Edit item not found");
@@ -285,7 +291,75 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         } else {
                             mFilterScriptContent = savedInstanceState.getString(KEY_FILTER_SCRIPT, "");
                         }
-                        setFilterButtonText();
+                        setFilterButtonText(mFiterScriptButton, mFilterScriptContent, mItem.script_f);
+                    }
+                }
+
+                /* publish header */
+                TableRow rowPublish = findViewById(R.id.rowPublish);
+                if (rowPublish != null && mItem instanceof GroupItem) {
+                    rowPublish.setVisibility(View.GONE);
+                }
+
+                /* publish topic */
+                TableRow topicPubRow = findViewById(R.id.rowTopicPub);
+                if (topicPubRow != null) {
+                    mEditTextTopicPub = findViewById(R.id.dash_publish);
+                    if (mItem instanceof GroupItem) {
+                        topicPubRow.setVisibility(View.GONE);
+                    } else if (savedInstanceState == null) {
+                        mEditTextTopicPub.setText(mItem.topic_p);
+                    }
+                }
+
+                /* publish retain flag */
+                TableRow retainRow = findViewById(R.id.rowRetain);
+                if (retainRow != null) {
+                    mRetainCheckbox = findViewById(R.id.retain);
+                    if (mItem instanceof GroupItem) {
+                        retainRow.setVisibility(View.GONE);
+                    } else if (savedInstanceState == null) {
+                        mRetainCheckbox.setChecked(mItem.retain);
+                    }
+                }
+
+                /* input type */
+                TableRow inputTypeRow = findViewById(R.id.rowInputTyp);
+                if (inputTypeRow != null) {
+                    mInputTypeSpinner = findViewById(R.id.dash_publish_imput_type);
+                    if (!(mItem instanceof TextItem)) {
+                        inputTypeRow.setVisibility(View.GONE);
+                    } else {
+                        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                                R.array.dash_label_input_type_array, android.R.layout.simple_spinner_item);
+                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                        mInputTypeSpinner.setAdapter(adapter);
+                        if (mSelectedInputTypeIdx >= 0) {
+                            Log.d(TAG, "set selection inputType: " + mSelectedInputTypeIdx);
+                            mInputTypeSpinner.setSelection(mSelectedInputTypeIdx, false);
+                        }
+                    }
+                }
+
+                /* script (output format) */
+                TableRow rowOutputScript = findViewById(R.id.rowOutputScript);
+                if (rowOutputScript != null) {
+                    mOutputScriptButton = findViewById(R.id.outputScriptButton);
+                    if (mItem instanceof GroupItem) {
+                        rowOutputScript.setVisibility(View.GONE);
+                    } else {
+                        mOutputScriptButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                openOutputScriptEditor();
+                            }
+                        });
+                        if (savedInstanceState == null){
+                            mOutputScriptContent = mItem.script_p;
+                        } else {
+                            mOutputScriptContent = savedInstanceState.getString(KEY_OUTPUT_SCRIPT, "");
+                        }
+                        setFilterButtonText(mOutputScriptButton, mOutputScriptContent, mItem.script_p);
                     }
                 }
 
@@ -339,6 +413,12 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
         if (mTextSizeSpinner != null) {
             outState.putInt(KEY_SELECTED_TEXT, mTextSizeSpinner.getSelectedItemPosition());
+        }
+        if (mInputTypeSpinner != null) {
+            outState.putInt(KEY_SELECTED_INPUTTYPE, mInputTypeSpinner.getSelectedItemPosition());
+        }
+        if (!Utils.isEmpty(mOutputScriptContent)) {
+            outState.putString(KEY_OUTPUT_SCRIPT, mOutputScriptContent);
         }
 
     }
@@ -416,6 +496,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
             }
             mTinit = true;
+        } else if (parent == mInputTypeSpinner) {
+            if (!mInputTypeInit) {
+                if(mSelectedInputTypeIdx >= 0 && position != mSelectedInputTypeIdx) {
+                    mInputTypeSpinner.setSelection(mSelectedInputTypeIdx);
+                }
+            }
+            mInputTypeInit = true;
         }
     }
 
@@ -653,18 +740,27 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     valid = false;
                 }
             }
+            String pubTopic = mEditTextTopicPub.getText().toString();
+            if (!Utils.isEmpty(pubTopic)) {
+                try {
+                    MqttUtils.topicValidate(subTopic, true);
+                } catch(IllegalArgumentException i) {
+                    mEditTextTopicPub.setError(getString(R.string.err_invalid_topic_format));
+                    valid = false;
+                }
+            }
         }
         return valid;
     }
 
-    protected void setFilterButtonText() {
-        if (Utils.isEmpty(mFilterScriptContent)) {
-            mFiterScriptButton.setText(getString(R.string.dlg_filter_button_add));
+    protected void setFilterButtonText(Button scriptButton, String scriptContent, String orgContent) {
+        if (Utils.isEmpty(scriptContent)) {
+            scriptButton.setText(getString(R.string.dlg_filter_button_add));
         } else {
-            if (mItem != null && !Utils.equals(mFilterScriptContent, mItem.script_f)) {
-                mFiterScriptButton.setText(getString(R.string.dlg_filter_button_edit_modified));
+            if (mItem != null && !Utils.equals(scriptContent, orgContent)) {
+                scriptButton.setText(getString(R.string.dlg_filter_button_edit_modified));
             } else {
-                mFiterScriptButton.setText(getString(R.string.dlg_filter_button_edit));
+                scriptButton.setText(getString(R.string.dlg_filter_button_edit));
             }
         }
     }
@@ -696,14 +792,45 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
     }
 
+    protected void openOutputScriptEditor() {
+        if (!mActivityStarted) {
+            mActivityStarted = true;
+
+            Intent intent = new Intent(this, JavaScriptEditorActivity.class);
+            if (Utils.isEmpty(mOutputScriptContent)) {
+                intent.putExtra(JavaScriptEditorActivity.ARG_TITLE, getString(R.string.title_add_javascript));
+            } else {
+                intent.putExtra(JavaScriptEditorActivity.ARG_TITLE, getString(R.string.title_edit_javascript));
+                intent.putExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT, mOutputScriptContent);
+            }
+
+            String header = getString(R.string.dash_filter_script_header); //TODO: set outputscript specific data
+            intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc, view) {\n var content = msg.text;");
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
+            intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER);
+
+            Bundle args = getIntent().getExtras();
+            String acc = args.getString(ARG_ACCOUNT);
+            if (!Utils.isEmpty(acc)) {
+                intent.putExtra(JavaScriptEditorActivity.ARG_ACCOUNT, acc);
+            }
+            startActivityForResult(intent, 2);
+        }
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         mActivityStarted = false;
-        // requestCode == 1 for JavaScriptEditor
+        // requestCode == 1 for JavaScriptEditor Filter Script
         if (requestCode == 1 && resultCode == AppCompatActivity.RESULT_OK) {
             mFilterScriptContent = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
-            setFilterButtonText();
+            setFilterButtonText(mFiterScriptButton, mFilterScriptContent, (mItem != null ? mItem.script_f : null));
+        } else if (requestCode == 2 && resultCode == AppCompatActivity.RESULT_OK) {
+            mOutputScriptContent = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
+            setFilterButtonText(mOutputScriptButton, mOutputScriptContent, (mItem != null ? mItem.script_p : null));
         }
     }
 
@@ -732,6 +859,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     groupPos = mGroupSpinner.getSelectedItemPosition();
                     cItem.topic_s = mEditTextTopicSub.getText().toString();
                     cItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
+
+                    cItem.topic_p = mEditTextTopicPub.getText().toString();
+                    cItem.retain = mRetainCheckbox.isChecked();
+                    if (cItem instanceof TextItem) {
+                        ((TextItem) cItem).inputtype = mInputTypeSpinner.getSelectedItemPosition();
+                    }
+                    cItem.script_p = mOutputScriptContent == null ? "" : mOutputScriptContent;
                 }
                 if (mEditTextLabel != null) {
                     cItem.label = mEditTextLabel.getText().toString();
@@ -785,6 +919,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         setEnabled(mGroupSpinner, enableFields);
         setEnabled(mPosSpinner, enableFields);
         setEnabled(mTextSizeSpinner, enableFields);
+        setEnabled(mEditTextTopicPub, enableFields);
+        setEnabled(mRetainCheckbox, enableFields);
+        setEnabled(mInputTypeSpinner, enableFields);
+        setEnabled(mOutputScriptButton, enableFields);
         invalidateOptionsMenu();
     }
 
@@ -824,13 +962,33 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     changed = true;
                 }
                 // subscribe topic changed?
-                if (!changed && !Utils.equals(mEditTextTopicSub.getText().toString(), mItem.topic_s)) {
+                else if (!Utils.equals(mEditTextTopicSub.getText().toString(), mItem.topic_s)) {
                     changed = true;
                 }
                 // filter script changed?
-                if (!changed && !Utils.equals(mFilterScriptContent, mItem.script_f)) {
+                else if (!Utils.equals(mFilterScriptContent, mItem.script_f)) {
                     changed = true;
                 }
+                // publish topic chaned?
+                else if (!Utils.equals(mEditTextTopicPub.getText().toString(), mItem.topic_p)) {
+                    changed = true;
+                }
+                // retain flag changed?
+                else if (mRetainCheckbox.isChecked() != mItem.retain) {
+                    changed = true;
+                }
+                else if (mItem instanceof TextItem && mInputTypeSpinner.getAdapter() != null && mInputTypeSpinner.getAdapter().getCount() > 0) {
+                    if (mInputTypeSpinner.getSelectedItemPosition() != ((TextItem) mItem).inputtype) {
+                        changed = true;
+                    }
+                }
+                if (!changed) {
+                    if (!Utils.equals(mOutputScriptContent, mItem.script_p)) {
+                        changed = true;
+                    }
+                    //TODO: continue here
+                }
+
             }
             if (!changed) {
                 int itemPos = getIntent().getIntExtra(ARG_ITEM_POS, AdapterView.INVALID_POSITION);
@@ -858,13 +1016,18 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected Button mFiterScriptButton;
     protected EditText mEditTextLabel;
     protected EditText mEditTextTopicSub;
+    protected EditText mEditTextTopicPub;
+    protected CheckBox mRetainCheckbox;
+    protected Spinner mInputTypeSpinner;
     protected ColorLabel mColorButton;
     protected ColorLabel mBColorButton;
     protected Spinner mGroupSpinner;
     protected Spinner mPosSpinner;
     protected Spinner mTextSizeSpinner;
+    protected Button mOutputScriptButton;
 
     boolean mGinit, mPinit, mTinit;
+    boolean mInputTypeInit;
 
     protected int mColorLabelBorderColor;
 
@@ -877,13 +1040,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
 
+    protected String mOutputScriptContent;
+    protected final static String KEY_OUTPUT_SCRIPT = "kEY_OUTPUT_SCRIPT";
+
     protected int mSelectedGroupIdx;
     protected final static String KEY_SELECTED_GROUP = "KEY_SELECTED_GROUP";
     protected int mSelectedPosIdx;
     protected final static String KEY_SELECTED_POS = "KEY_SELECTED_POS";
     protected int mSelectedTextIdx;
     protected final static String KEY_SELECTED_TEXT = "KEY_SELECTED_TEXT";
-
+    protected int mSelectedInputTypeIdx;
+    protected final static String KEY_SELECTED_INPUTTYPE = "KEY_SELECTED_INPUTTYPE";
 
     protected Item mItem;
 
