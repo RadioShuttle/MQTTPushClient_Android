@@ -229,6 +229,15 @@ to communicate with the MQTT broker and to receive push notifications
         <item name="dash_label_textsize_l">Large</item>
     </string-array>
     <string name="dash_label_subscribe_topic">Topic (sub):</string>
+    <string name="dash_label_publish_topic">Topic (pub):</string>
+    <string name="dash_section_publish">Publish</string>
+    <string name="dash_label_input_type">Input Type:</string>
+    <string name="dash_outputscript_label">Script:</string>
+    <string name="dash_label_message">Message:</string>
+    <string-array name="dash_label_input_type_array">
+        <item name="dash_label_input_text">Text</item>
+        <item name="dash_label_input_number">Number</item>
+    </string-array>
 
     <string name="select_single_dash">Only one dash may be selected for editing</string>
     <string name="new_group_label">New Group</string>
