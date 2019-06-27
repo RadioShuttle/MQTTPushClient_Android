@@ -33,19 +33,28 @@ public abstract class Item {
     public String topic_s;
     public String script_f;
 
+    public String topic_p;
+    public String script_p;
+    public boolean retain;
+
     public String label;
 
     public JSONObject toJSONObject() throws JSONException {
         JSONObject o = new JSONObject();
         if (!(this instanceof GroupItem)) {
             o.put("topic_s", topic_s);
+            o.put("script_f", (script_f == null ? "" : script_f));
+
+            o.put("topic_p", topic_p);
+            o.put("script_p", (script_p == null ? "" : script_p));
+
+            o.put("retain", retain);
         }
         o.put("type", getType());
         o.put("label", label);
         o.put("textcolor", textcolor);
         o.put("background", background);
         o.put("textsize", textsize);
-        o.put("script_f", (script_f == null ? "" : script_f));
         o.put("id", id);
 
         return o;
@@ -58,6 +67,9 @@ public abstract class Item {
         textsize = o.optInt("textsize");
         topic_s = o.optString("topic_s");
         script_f = o.optString("script_f");
+        topic_p = o.optString("topic_p");
+        script_p = o.optString("script_p");
+        retain = o.optBoolean("retain");
         id = o.optInt("id");
     }
 
