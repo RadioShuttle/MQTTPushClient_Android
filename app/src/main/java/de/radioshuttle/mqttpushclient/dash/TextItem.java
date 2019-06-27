@@ -28,6 +28,8 @@ public class TextItem extends Item {
         inputtype = o.optInt("input_type");
     }
 
+    public final static int TYPE_STRING = 0;
+    public final static int TYPE_NUMBER = 1;
 
     public int inputtype;
 
