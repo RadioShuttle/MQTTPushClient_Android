@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.Utils;
 
 public class DetailViewDialog extends DialogFragment {
 
@@ -76,6 +77,8 @@ public class DetailViewDialog extends DialogFragment {
                     int w = (int) (defSizeDPI * getResources().getDisplayMetrics().density);
                     int w2 = (int) ((float) a * .9f - 64f * getResources().getDisplayMetrics().density);
 
+                    boolean publishEnabled = !Utils.isEmpty(mItem.topic_p) || !Utils.isEmpty(mItem.script_p);
+
                     if (mItem instanceof TextItem){
                         view =  inflater.inflate(R.layout.activity_dash_board_item_text, null);
 
@@ -89,16 +92,17 @@ public class DetailViewDialog extends DialogFragment {
 
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
 
-                        /* tint send button and value editor */
-                        ImageButton sendButton = view.findViewById(R.id.sendButton);
-                        // sendButton.setVisibility(View.VISIBLE); //TODO
-                        ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
-                        ImageViewCompat.setImageTintList(sendButton, csl);
+                        if (publishEnabled) {
+                            /* tint send button and value editor */
+                            ImageButton sendButton = view.findViewById(R.id.sendButton);
+                            sendButton.setVisibility(View.VISIBLE);
+                            ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                            ImageViewCompat.setImageTintList(sendButton, csl);
 
-                        EditText editText = view.findViewById(R.id.editValue);
-                        // editText.setVisibility(View.VISIBLE); //TODO
-                        editText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
-
+                            EditText editText = view.findViewById(R.id.editValue);
+                            editText.setVisibility(View.VISIBLE);
+                            editText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                        }
                     }
 
                     if (view != null) {
