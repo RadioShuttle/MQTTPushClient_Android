@@ -246,7 +246,7 @@ public class Connection {
         return mCmd.readIntArray(response.data);
     }
 
-    public int[] publish(String topic, String content, boolean retain) throws IOException, ServerError {
+    public int[] publish(String topic, byte[] content, boolean retain) throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.mqttPublishRequest(++mSeqNo, topic, content, retain);
         handleError(response);
         return mCmd.readIntArray(response.data);

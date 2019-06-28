@@ -289,11 +289,11 @@ public class Cmd {
         return result;
     }
 
-    public RawCmd mqttPublishRequest(int seqNo, String topic, String content, boolean retain) throws IOException {
+    public RawCmd mqttPublishRequest(int seqNo, String topic, byte[] content, boolean retain) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(topic, os);
-        writeString(content, os);
+        writeByteArray(content, os);
         os.writeBoolean(retain);
         writeCommand(CMD_MQTT_PUBLISH, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();

@@ -77,7 +77,7 @@ public class ActionsRequest extends Request {
                 } else if (mCmd == Cmd.CMD_UPD_ACTION) {
                     rc = mConnection.updateAction(mActionArg.prevName, mActionArg.name, arg);
                 } else {
-                    rc = mConnection.publish(arg.topic, arg.content, arg.retain);
+                    rc = mConnection.publish(arg.topic, arg.content.getBytes("UTF-8"), arg.retain);
                 }
                 //TODO: handle rc
             } catch(MQTTException e) {
