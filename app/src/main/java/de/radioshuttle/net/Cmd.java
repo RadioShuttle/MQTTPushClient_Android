@@ -454,20 +454,12 @@ public class Cmd {
         long version = is.readLong();
 
         int len = is.readShort();
-        int b = 0;
         if (len > 0) {
             for(int i = 0; i < len; i++) {
                 Object[] o = new Object[6];
                 o[0] = is.readLong();
                 o[1] = readString(is);
-                b = is.readUnsignedShort();
-                if (b > 0) {
-                    byte[] buf = new byte[b];
-                    is.readFully(buf);
-                    o[2] = buf;
-                } else {
-                    o[2] = new byte[0];
-                }
+                o[2] = readByteArray(is);
                 o[3] = is.readInt();
                 o[4] = is.readShort();
                 o[5] = readString(is);
@@ -482,20 +474,12 @@ public class Cmd {
         List<Object[]> messages = new ArrayList<Object[]>();
         DataInputStream is = getDataInputStream(data);
         int len = is.readShort();
-        int b = 0;
         if (len > 0) {
             for(int i = 0; i < len; i++) {
                 Object[] o = new Object[4];
                 o[0] = is.readLong();
                 o[1] = readString(is);
-                b = is.readUnsignedShort();
-                if (b > 0) {
-                    byte[] buf = new byte[b];
-                    is.readFully(buf);
-                    o[2] = buf;
-                } else {
-                    o[2] = new byte[0];
-                }
+                o[2] = readByteArray(is);
                 o[3] = is.readInt();
                 messages.add(o);
             }
@@ -687,21 +671,7 @@ public class Cmd {
     }
 
     protected static void writeString(String s, DataOutputStream dos, boolean lenShort) throws IOException {
-        if (s == null || s.length() == 0) {
-            if (lenShort) {
-                dos.writeShort(0);
-            } else {
-                dos.writeInt(0);
-            }
-        } else {
-            byte[] b = s.getBytes("UTF-8");
-            if (lenShort) {
-                dos.writeShort(b.length);
-            } else {
-                dos.writeInt(b.length);
-            }
-            dos.write(b);
-        }
+        writeByteArray(s == null ? null : s.getBytes("UTF-8"), dos, lenShort);
     }
 
     public static String readString(DataInputStream dis) throws IOException {
@@ -713,7 +683,15 @@ public class Cmd {
     }
 
     protected static String readString(DataInputStream dis, boolean lenShort) throws IOException {
-        String s;
+        return new String(readByteArray(dis, lenShort), "UTF-8");
+    }
+
+    public static byte[] readByteArray(DataInputStream dis)  throws IOException {
+        return readByteArray(dis, true);
+    }
+
+    public static byte[] readByteArray(DataInputStream dis, boolean lenShort) throws IOException {
+        byte[] b;
         int len;
         if (lenShort) {
             len = dis.readUnsignedShort();
@@ -721,15 +699,36 @@ public class Cmd {
             len = dis.readInt();
         }
         if (len == 0 || len == -1) { // len == -1 was pre 1.2
-            s = "";
+            b = new byte[0];
         } else if (len > 0 && len <= MAX_STRING_SIZE ) {
-            byte[] b = new byte[len];
+            b = new byte[len];
             dis.readFully(b);
-            s = new String(b, "UTF-8");
         } else {
             throw new IOException("Invalid string len");
         }
-        return s;
+        return b;
+
+    }
+
+    public static void writeByteArray(byte[] b, DataOutputStream dos) throws IOException {
+        writeByteArray(b, dos, true);
+    }
+
+    public static void writeByteArray(byte[] b, DataOutputStream dos, boolean lenShort) throws IOException {
+        if (b == null || b.length == 0) {
+            if (lenShort) {
+                dos.writeShort(0);
+            } else {
+                dos.writeInt(0);
+            }
+        } else {
+            if (lenShort) {
+                dos.writeShort(b.length);
+            } else {
+                dos.writeInt(b.length);
+            }
+            dos.write(b);
+        }
     }
 
     /** converts char array to UTF-8 byte array */
