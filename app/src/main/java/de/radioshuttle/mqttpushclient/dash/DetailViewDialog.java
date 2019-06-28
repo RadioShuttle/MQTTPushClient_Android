@@ -103,7 +103,8 @@ public class DetailViewDialog extends DialogFragment {
                             EditText editText = view.findViewById(R.id.editValue);
                             if (((TextItem) mItem).inputtype == TextItem.TYPE_NUMBER) {
                                 /* set numeric keyboard */
-                                editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+                                editText.setInputType(InputType.TYPE_CLASS_NUMBER|
+                                        InputType.TYPE_NUMBER_FLAG_SIGNED|InputType.TYPE_NUMBER_FLAG_DECIMAL);
                             }
 
                             editText.setVisibility(View.VISIBLE);
