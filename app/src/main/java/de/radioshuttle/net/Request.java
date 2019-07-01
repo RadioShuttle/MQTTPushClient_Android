@@ -213,11 +213,21 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 }
 
                 if (app == null) {
-                    FirebaseOptions options = new FirebaseOptions.Builder()
-                            .setApplicationId(m.get("app_id"))
-                            .build();
                     try {
-                        app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
+                        synchronized (FIREBASE_SYNC) {
+                            for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) { // reread
+                                if (a.getName().equals(mSenderID)) {
+                                    app = FirebaseApp.getInstance(mSenderID);
+                                    break;
+                                }
+                            }
+                            if (app == null) {
+                                FirebaseOptions options = new FirebaseOptions.Builder()
+                                        .setApplicationId(m.get("app_id"))
+                                        .build();
+                                app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
+                            }
+                        }
                     } catch(Exception e) {
                         Log.d(TAG, "Error initializing firebase for "+ mSenderID, e);
                     }
@@ -585,6 +595,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected MutableLiveData<Request> mAccountLiveData;
     protected CertException mCertException;
     protected boolean mInsecureConnectionAsk;
+
+    public static Object FIREBASE_SYNC = new Object();
 
     private final static String TAG = Request.class.getSimpleName();
 }

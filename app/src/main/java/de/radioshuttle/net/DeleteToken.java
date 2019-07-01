@@ -75,10 +75,20 @@ public class DeleteToken extends Request {
                 }
                 if (app == null) {
                     Log.d(TAG, "deleteToken(): init firebase app with mPushAccount.fcm_app_id");
-                    FirebaseOptions options = new FirebaseOptions.Builder()
-                            .setApplicationId(mPushAccount.fcm_app_id)
-                            .build();
-                    app = FirebaseApp.initializeApp(mAppContext, options, senderID);
+                    synchronized (FIREBASE_SYNC) {
+                        for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) { // reread
+                            if (a.getName().equals(mSenderID)) {
+                                app = FirebaseApp.getInstance(mSenderID);
+                                break;
+                            }
+                        }
+                        if (app == null) {
+                            FirebaseOptions options = new FirebaseOptions.Builder()
+                                    .setApplicationId(mPushAccount.fcm_app_id)
+                                    .build();
+                            app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
+                        }
+                    }
                 }
                 if (app != null) {
                     FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
