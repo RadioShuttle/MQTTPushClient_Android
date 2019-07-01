@@ -116,7 +116,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 List<PushAccount> accounts = mViewModel.accountList.getValue();
                 if (accounts != null) {
                     for(PushAccount a : accounts) {
-                        a.executor = Executors.newSingleThreadExecutor();
+                        a.executor = Utils.newSingleThreadPool();
                     }
                 }
             }
@@ -159,8 +159,8 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                         /* success */
                                         DeleteToken dt = (DeleteToken) request;
                                         if (dt.deviceRemoved) {
-                                            if (pushAccount.executor != null && pushAccount.executor instanceof ThreadPoolExecutor) {
-                                                ((ThreadPoolExecutor) pushAccount.executor).shutdown();
+                                            if (pushAccount.executor != null) {
+                                                pushAccount.executor.shutdown();
                                             }
                                             removeAccountData(pushAccount);
                                             return;
@@ -438,7 +438,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                     }
                                 }
                                 if (!found) {
-                                    b.executor = Executors.newSingleThreadExecutor();
+                                    b.executor = Utils.newSingleThreadPool();
                                     list.add(b);
                                 }
                                 mViewModel.accountList.setValue(list);

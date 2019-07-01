@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.net.CertException;
 import de.radioshuttle.net.Connection;
@@ -44,7 +45,7 @@ public class PushAccount {
     public int newMessages;
     public CertException certException;
     public boolean inSecureConnectionAsk;
-    public Executor executor;
+    public ThreadPoolExecutor executor;
 
     public volatile ArrayList<Topic> topics; // result of getTopics
 

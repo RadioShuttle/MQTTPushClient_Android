@@ -69,8 +69,8 @@ public class AccountViewModel extends ViewModel {
         List<PushAccount> accounts = accountList.getValue();
         if (accounts != null) {
             for(PushAccount a : accounts) {
-                if (a.executor != null && a.executor instanceof ThreadPoolExecutor) {
-                    ((ThreadPoolExecutor) a.executor).shutdown();
+                if (a.executor != null) {
+                    a.executor.shutdown();
                 }
             }
         }
