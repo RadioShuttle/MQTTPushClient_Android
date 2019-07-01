@@ -43,6 +43,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessageDao;
@@ -109,6 +112,14 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
         boolean accountsChecked = mViewModel.initialized;
         try {
             mViewModel.init(accountsJSON);
+            if (!accountsChecked) {
+                List<PushAccount> accounts = mViewModel.accountList.getValue();
+                if (accounts != null) {
+                    for(PushAccount a : accounts) {
+                        a.executor = Executors.newSingleThreadExecutor();
+                    }
+                }
+            }
         } catch (JSONException e) {
             Log.e(TAG, "Loading accounts failed." , e);
             Toast.makeText(getApplicationContext(), R.string.error_loading_accounts, Toast.LENGTH_LONG).show();
@@ -131,20 +142,26 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                             PushAccount pushAccount = request.getAccount();
                             if (request.getAccount().getKey().equals(pushAccounts.get(i).getKey())) {
                                 pushAccounts.set(i, pushAccount);
-                                boolean requestFinished = (pushAccount.status == 0);
+                                boolean requestFinished = mViewModel.isCurrentRequest(request); // last request of this account
                                 mAdapter.setData(pushAccounts);
                                 Log.d(TAG, "status: " + pushAccount.status + " requestStatus: " + pushAccount.requestStatus
                                         + " request: " + (request instanceof DeleteToken ? "deleteDevice"  : "check"));
 
                                 if (requestFinished) {
-                                    if (mViewModel.isCurrentRequest(request)) {
+                                    // last request of all accounts ?
+                                    if (mViewModel.isLastRequest(request)) {
                                         mSwipeRefreshLayout.setRefreshing(false);
-                                        mViewModel.confirmResultDelivered();
                                     }
+
+                                    mViewModel.confirmResultDelivered(request);
+
                                     if (request instanceof DeleteToken) {
                                         /* success */
                                         DeleteToken dt = (DeleteToken) request;
                                         if (dt.deviceRemoved) {
+                                            if (pushAccount.executor != null && pushAccount.executor instanceof ThreadPoolExecutor) {
+                                                ((ThreadPoolExecutor) pushAccount.executor).shutdown();
+                                            }
                                             removeAccountData(pushAccount);
                                             return;
                                         }
@@ -414,12 +431,14 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                 boolean found = false;
                                 for (int i = 0; i < list.size(); i++) {
                                     if (list.get(i).getKey().equals(b.getKey())) {
+                                        b.executor = list.get(i).executor;
                                         list.set(i, b);
                                         found = true;
                                         break;
                                     }
                                 }
                                 if (!found) {
+                                    b.executor = Executors.newSingleThreadExecutor();
                                     list.add(b);
                                 }
                                 mViewModel.accountList.setValue(list);

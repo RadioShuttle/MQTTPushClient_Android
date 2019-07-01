@@ -21,8 +21,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.net.Request;
@@ -35,15 +40,13 @@ public class AccountViewModel extends ViewModel {
     public MutableLiveData<Request> request;
 
     public boolean initialized;
-    private int requestCnt;
-    private ArrayList<Request> currentRequests;
+    private HashMap<String, Request> currentRequests;
     private Application app;
 
     public AccountViewModel() {
         accountList = new MutableLiveData<>();
         request = new MutableLiveData<>();
         initialized = false;
-        requestCnt = 0;
         app = null;
 
     }
@@ -62,6 +65,14 @@ public class AccountViewModel extends ViewModel {
         super.onCleared();
         if (app != null && broadcastReceiver != null) {
             LocalBroadcastManager.getInstance(app).unregisterReceiver(broadcastReceiver);
+        }
+        List<PushAccount> accounts = accountList.getValue();
+        if (accounts != null) {
+            for(PushAccount a : accounts) {
+                if (a.executor != null && a.executor instanceof ThreadPoolExecutor) {
+                    ((ThreadPoolExecutor) a.executor).shutdown();
+                }
+            }
         }
     }
 
@@ -130,22 +141,25 @@ public class AccountViewModel extends ViewModel {
         ArrayList<PushAccount> pushAccounts = accountList.getValue();
 
         if (currentRequests == null) {
-            currentRequests = new ArrayList<>();
+            currentRequests = new HashMap<>();
         } else {
-            /* cancel current tasks */
-            for(Request b : currentRequests) {
-                b.cancel();
+            /* refresh -> cancel current tasks  */
+            for(Map.Entry<String, Request> b : currentRequests.entrySet()) {
+                b.getValue().cancel();
             }
             currentRequests.clear();
         }
 
         if (pushAccounts != null) {
-            requestCnt++;
             for(int i = 0; i < pushAccounts.size(); i++) {
                 Request request = new Request(context, pushAccounts.get(i), this.request);
                 request.setSync(true);
-                currentRequests.add(request);
-                request.execute();
+                currentRequests.put(pushAccounts.get(i).getKey(), request);
+                if (pushAccounts.get(i).executor != null) {
+                    request.executeOnExecutor(pushAccounts.get(i).executor, (Void[]) null);
+                } else {
+                    request.execute();
+                }
             }
         }
     }
@@ -154,40 +168,50 @@ public class AccountViewModel extends ViewModel {
     public void saveAccount(Context context, PushAccount pushAccount, boolean sync) {
 
         if (currentRequests == null) {
-            currentRequests = new ArrayList<>();
+            currentRequests = new HashMap<>();
         } else {
-            /* cancel current tasks */
-            for(Request b : currentRequests) {
-                b.cancel();
-            }
-            currentRequests.clear();
         }
-        requestCnt++;
         Request request = new Request(context, pushAccount, this.request);
         request.setSync(sync);
-        currentRequests.add(request);
-        request.execute();
+        currentRequests.put(pushAccount.getKey(), request);
+
+        if (pushAccount.executor != null) {
+            request.executeOnExecutor(pushAccount.executor, (Void[]) null);
+        } else {
+            request.execute();
+        }
     }
 
     public void deleteAccount(Context context, boolean deleteToken, PushAccount pushAccount) {
         if (currentRequests == null) {
-            currentRequests = new ArrayList<>();
+            currentRequests = new HashMap<>();
+        }
+
+        /* cancel current task for account */
+        Request task = currentRequests.remove(pushAccount.getKey());
+        if (task != null) {
+            task.cancel();
         }
         DeleteToken deleteRequest = new DeleteToken(context, deleteToken, pushAccount, this.request);
-        requestCnt++;
-        currentRequests.add(deleteRequest);
-        deleteRequest.execute();
+
+        currentRequests.put(pushAccount.getKey(), deleteRequest);
+
+        if (pushAccount.executor != null) {
+            deleteRequest.executeOnExecutor(pushAccount.executor, (Void[]) null);
+        } else {
+            deleteRequest.execute();
+        }
     }
 
     public boolean isRequestActive() {
-        return requestCnt > 0;
+        return currentRequests != null && currentRequests.size() > 0;
     }
 
     public boolean isDeleteRequestActive() {
         boolean active = false;
-        if (requestCnt > 0) {
-            for(Request r : currentRequests) {
-                if (r instanceof DeleteToken) {
+        if (isRequestActive()) {
+            for(Map.Entry<String, Request> b : currentRequests.entrySet()) {
+                if (b.getValue() instanceof DeleteToken) {
                     active = true;
                     break;
                 }
@@ -196,16 +220,19 @@ public class AccountViewModel extends ViewModel {
         return active;
     }
 
-    public void confirmResultDelivered() {
-        requestCnt = 0;
+    public void confirmResultDelivered(Request request) {
+        currentRequests.remove(request.getAccount().getKey());
     }
 
     public boolean isCurrentRequest(Request request) {
         return
             request.getAccount().status == 0 &&
                     currentRequests != null &&
-                    currentRequests.size() > 0 &&
-                    currentRequests.get(currentRequests.size() - 1) == request;
+                    currentRequests.get(request.getAccount().getKey()) == request;
+    }
+
+    public boolean isLastRequest(Request request) {
+        return currentRequests.size() == 1 && isCurrentRequest(request);
     }
 
     public boolean hasMultiplePushServers() {
