@@ -18,10 +18,19 @@ import java.security.SecureRandom;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Utils {
     
     public static ExecutorService executor = Executors.newCachedThreadPool();
+
+    public static ThreadPoolExecutor newSingleThreadPool() {
+        return new ThreadPoolExecutor(1, 1,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>());
+    }
 
     public static boolean isEmpty(String s) {
         return s == null || s.trim().length() == 0;
