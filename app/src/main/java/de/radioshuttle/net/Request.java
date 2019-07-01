@@ -435,6 +435,25 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         if (mAccountLiveData != null) {
             mAccountLiveData.setValue(this);
         }
+        if (mSync) {
+            if (mLastSyncKeyOut != null) {
+                Notifications.setLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(), mLastSyncKeyOut[0], (int) mLastSyncKeyOut[1]);
+                Log.d(TAG, "last sync date set: " + new Date(mLastSyncKeyOut[0]) + " " + (mLastSyncKeyOut[0] / 1000L) + " / " + mLastSyncKeyOut[1]);
+            }
+            if (mNewMessagesCnt != null && mNewMessagesCnt > 0) {
+                Notifications.addToNewMessageCounter(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(),
+                        mNewMessagesCnt);
+                Log.d(TAG, "New messages: " + mNewMessagesCnt);
+            }
+        }
+    }
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        if (mSync) {
+            mLastSyncKeyIn = Notifications.getLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName());
+        }
     }
 
     public void setSync(boolean sync) {
@@ -442,9 +461,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     }
 
     protected void syncMessages() throws IOException, ServerError {
-        long[] lastSyncKey = Notifications.getLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName());
-        long lastReceived = lastSyncKey[0];
-        int lastReceivedSeqNo = (int) lastSyncKey[1];
+        long lastReceived = mLastSyncKeyIn[0];
+        int lastReceivedSeqNo = (int) mLastSyncKeyIn[1];
 
         //if last received older than 30 days, set it to 30daysAgo
         GregorianCalendar monthAgo = new GregorianCalendar();
@@ -531,20 +549,18 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             }
         }
 
-        if (lastReceived > lastSyncKey[0] || (lastReceived == lastSyncKey[0] && lastReceivedSeqNo >  (int) lastSyncKey[1])) {
-            Notifications.setLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(), lastReceived, lastReceivedSeqNo);
+        if (lastReceived > mLastSyncKeyIn[0] || (lastReceived == mLastSyncKeyIn[0] && lastReceivedSeqNo >  (int) mLastSyncKeyIn[1])) {
+            mLastSyncKeyOut = new long[] {lastReceived, lastReceivedSeqNo};
             // Log.d(TAG, "last sync date set: " + new Date(lastReceived) + " " + (lastReceived / 1000L) + " / " + lastReceivedSeqNo);
         }
 
         if (ids.size() > 0) {
-            Notifications.addToNewMessageCounter(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(),
-                    ids.size());
+            mNewMessagesCnt = ids.size();
             Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
             intent.putExtra(MqttMessage.ARG_PUSHSERVER_ADDR, mPushAccount.pushserver);
             intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mPushAccount.getMqttAccountName());
             intent.putExtra(MqttMessage.ARG_IDS, ids);
             LocalBroadcastManager.getInstance(mAppContext).sendBroadcast(intent);
-
         }
 
         /* delete all messages older than 30 days */
@@ -598,6 +614,12 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected MutableLiveData<Request> mAccountLiveData;
     protected CertException mCertException;
     protected boolean mInsecureConnectionAsk;
+
+    // values set, used in pre-, postExectue
+    long[] mLastSyncKeyIn; // value read in preExecute
+    long[] mLastSyncKeyOut; // value to be processed in postExecute
+    Integer mNewMessagesCnt; // value to be processed in postExecute;
+
 
     public static Object FIREBASE_SYNC = new Object();
     public static Object ACCOUNTS = new Object();
