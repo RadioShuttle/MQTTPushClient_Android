@@ -16,9 +16,11 @@ import org.json.JSONObject;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.net.ActionsRequest;
 import de.radioshuttle.net.Request;
+import de.radioshuttle.utils.Utils;
 
 public class ActionsViewModel extends ViewModel {
 
@@ -34,6 +36,7 @@ public class ActionsViewModel extends ViewModel {
             initialized = true;
             pushAccount = PushAccount.createAccountFormJSON(new JSONObject(accountJson));
             pushAccount.topics.clear(); // load topics from server
+            executor = Utils.newSingleThreadPool();
         }
     }
 
@@ -41,7 +44,11 @@ public class ActionsViewModel extends ViewModel {
         requestCnt++;
         currentRequest = new ActionsRequest(context, pushAccount, actionsRequest);
         currentRequest.setSync(true);
-        currentRequest.execute();
+        if (executor != null) {
+            currentRequest.executeOnExecutor(executor, (Void[]) null);
+        } else {
+            currentRequest.execute();
+        }
     }
 
     public void deleteActions(Context context, List<String> actionNames) {
@@ -49,7 +56,11 @@ public class ActionsViewModel extends ViewModel {
         ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
         request.deleteActions(actionNames);
         currentRequest = request;
-        currentRequest.execute();
+        if (executor != null) {
+            currentRequest.executeOnExecutor(executor, (Void[]) null);
+        } else {
+            currentRequest.execute();
+        }
     }
 
     public void addAction(Context context, ActionsViewModel.Action a) {
@@ -57,7 +68,11 @@ public class ActionsViewModel extends ViewModel {
         ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
         request.addAction(a);
         currentRequest = request;
-        currentRequest.execute();
+        if (executor != null) {
+            currentRequest.executeOnExecutor(executor, (Void[]) null);
+        } else {
+            currentRequest.execute();
+        }
     }
 
     public void publish(Context context, ActionsViewModel.Action a) {
@@ -65,7 +80,11 @@ public class ActionsViewModel extends ViewModel {
         ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
         request.publish(a);
         currentRequest = request;
-        currentRequest.execute();
+        if (executor != null) {
+            currentRequest.executeOnExecutor(executor, (Void[]) null);
+        } else {
+            currentRequest.execute();
+        }
     }
 
     public void updateAction(Context context, ActionsViewModel.Action a) {
@@ -73,7 +92,11 @@ public class ActionsViewModel extends ViewModel {
         ActionsRequest request = new ActionsRequest(context, pushAccount, actionsRequest);
         request.updateAction(a);
         currentRequest = request;
-        currentRequest.execute();
+        if (executor != null) {
+            currentRequest.executeOnExecutor(executor, (Void[]) null);
+        } else {
+            currentRequest.execute();
+        }
     }
 
     public boolean isRequestActive() {
@@ -86,6 +109,14 @@ public class ActionsViewModel extends ViewModel {
 
     public boolean isCurrentRequest(Request request) {
         return currentRequest == request;
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (executor != null) {
+            executor.shutdown();
+        }
     }
 
     public static class Action {
@@ -117,5 +148,7 @@ public class ActionsViewModel extends ViewModel {
     public String lastEnteredAction;
     private int requestCnt;
     private Request currentRequest;
+
+    private ThreadPoolExecutor executor;
 
 }
