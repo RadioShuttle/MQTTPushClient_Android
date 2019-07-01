@@ -107,7 +107,6 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             e.commit();
         }
 
-
         mViewModel = ViewModelProviders.of(this).get(AccountViewModel.class);
         boolean accountsChecked = mViewModel.initialized;
         try {
@@ -331,10 +330,12 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 try {
                     /* save account data locally without */
                     FirebaseTokens.getInstance(getApplication()).removeAccount(account.getKey());
-                    SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = settings.edit();
-                    editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
-                    editor.commit();
+                    synchronized (Request.ACCOUNTS) {
+                        SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = settings.edit();
+                        editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
+                        editor.commit();
+                    }
                     ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
                     boolean found = false;
                     if (pushAccounts != null) {
@@ -360,7 +361,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                             }
 
                         };
-                        t.execute(new String[] {account.pushserverID, account.getMqttAccountName()});
+                        t.executeOnExecutor(Utils.executor, new String[] {account.pushserverID, account.getMqttAccountName()});
                         ViewState.getInstance(getApplication()).removeAccount(account.getKey());
                         // Log.d(TAG, "deleteDevice: account data removed!!");
                     }

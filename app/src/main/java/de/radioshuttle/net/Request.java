@@ -19,7 +19,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -46,7 +45,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -202,7 +200,10 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 if (!Utils.equals(mSenderID, mPushAccount.fcm_sender_id) || !Utils.equals(m.get("app_id"), mPushAccount.fcm_app_id)) {
                     mPushAccount.fcm_app_id = m.get("app_id");
                     mPushAccount.fcm_sender_id = mSenderID;
-                    updateAccountFCMData();
+
+                    synchronized (ACCOUNTS) {
+                        updateAccountFCMData();
+                    }
                 }
 
                 for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
@@ -249,7 +250,9 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 /* get stored filter scripts. local stored scripts may not be up to date */
                 if (mGetTopicFilterScripts) {
                     LinkedHashMap<String, Cmd.Topic> topics = mConnection.getTopics();
-                    updateLocalStoredScripts(topics);
+                    synchronized (ACCOUNTS) {
+                        updateLocalStoredScripts(topics);
+                    }
                 }
 
             }
@@ -597,6 +600,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected boolean mInsecureConnectionAsk;
 
     public static Object FIREBASE_SYNC = new Object();
+    public static Object ACCOUNTS = new Object();
 
     private final static String TAG = Request.class.getSimpleName();
 }
