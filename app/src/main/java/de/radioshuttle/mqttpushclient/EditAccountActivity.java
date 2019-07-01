@@ -106,7 +106,7 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
                     } else {
                         if (mViewModel.isCurrentRequest(request)) {
                             mSwipeRefreshLayout.setRefreshing(false);
-                            mViewModel.confirmResultDelivered();
+                            mViewModel.confirmResultDelivered(request);
                             setUIEnabled(true, true);
 
                             /* handle cerificate exception */
