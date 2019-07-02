@@ -174,7 +174,7 @@ public class ViewState {
 
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(VIEW_STATE, out);
-        editor.apply();
+        editor.commit();
 
     }
 
