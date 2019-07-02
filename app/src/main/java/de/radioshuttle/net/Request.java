@@ -64,6 +64,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         mAccountUpdated = false;
         mHasTopics = null;
         mCancelled = new AtomicBoolean(false);
+        mCompleted = false;
     }
 
     public void cancel() {
@@ -432,6 +433,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     @Override
     protected void onPostExecute(PushAccount pushAccount) {
         super.onPostExecute(pushAccount);
+        setCompleted(true);
         if (mAccountLiveData != null) {
             mAccountLiveData.setValue(this);
         }
@@ -595,6 +597,14 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         mGetTopicFilterScripts = false;
     }
 
+    public void setCompleted(boolean completed) {
+        mCompleted = true;
+    }
+
+    public boolean hasCompleted() {
+        return mCompleted;
+    }
+
     /* true, if this account has topics, if null: getTopics() was not called in this request */
     public Boolean hasTopics() {
         return mHasTopics;
@@ -614,6 +624,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected MutableLiveData<Request> mAccountLiveData;
     protected CertException mCertException;
     protected boolean mInsecureConnectionAsk;
+
+    protected boolean mCompleted;
 
     // values set, used in pre-, postExectue
     long[] mLastSyncKeyIn; // value read in preExecute
