@@ -39,6 +39,8 @@ public abstract class Item {
 
     public String label;
 
+    public String outputScriptError;
+
     public JSONObject toJSONObject() throws JSONException {
         JSONObject o = new JSONObject();
         if (!(this instanceof GroupItem)) {
