@@ -25,6 +25,7 @@ import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
 
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
@@ -59,9 +60,9 @@ public class DetailViewDialog extends DialogFragment {
         if (getArguments() != null) {
             Bundle args = getArguments();
             if (getActivity() instanceof DashBoardActivity) {
-                DashBoardViewModel viewModel = ((DashBoardActivity) getActivity()).mViewModel;
+                mViewModel = ((DashBoardActivity) getActivity()).mViewModel;
 
-                DashBoardViewModel.ItemContext itemContext = viewModel.getItem(args.getInt("id"));
+                DashBoardViewModel.ItemContext itemContext = mViewModel.getItem(args.getInt("id"));
                 if (itemContext != null) {
                     mItem = itemContext.item;
 
@@ -100,7 +101,7 @@ public class DetailViewDialog extends DialogFragment {
                             ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
                             ImageViewCompat.setImageTintList(sendButton, csl);
 
-                            EditText editText = view.findViewById(R.id.editValue);
+                            final EditText editText = view.findViewById(R.id.editValue);
                             if (((TextItem) mItem).inputtype == TextItem.TYPE_NUMBER) {
                                 /* set numeric keyboard */
                                 editText.setInputType(InputType.TYPE_CLASS_NUMBER|
@@ -109,12 +110,21 @@ public class DetailViewDialog extends DialogFragment {
 
                             editText.setVisibility(View.VISIBLE);
                             editText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+
+                            sendButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    try {
+                                        performSend(editText != null ? editText.getText().toString().getBytes("UTF-8") : null);
+                                    } catch (UnsupportedEncodingException e) {}
+                                }
+                            });
                         }
                     }
 
                     if (view != null) {
 
-                        viewModel.mDashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
+                        mViewModel.mDashBoardItemsLiveData.observe(this, new Observer<List<Item>>() {
                             @Override
                             public void onChanged(List<Item> items) {
                                 // Log.d(TAG, "item data updated.");
@@ -171,6 +181,11 @@ public class DetailViewDialog extends DialogFragment {
         }
 
         return root;
+    }
+
+    protected void performSend(byte[] value) {
+        //TODO: consider ignoring empty values
+        mViewModel.publish(mItem.topic_p, value, mItem.retain, mItem);
     }
 
     protected void updateView() {
@@ -265,6 +280,7 @@ public class DetailViewDialog extends DialogFragment {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_VIEW_MODE, mViewMode);
     }
+    protected DashBoardViewModel mViewModel;
 
     protected View mCurrentView;
     protected TextView mLabel;
