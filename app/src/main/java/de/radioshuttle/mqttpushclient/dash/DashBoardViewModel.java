@@ -14,17 +14,16 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.MainThread;
@@ -35,7 +34,9 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.net.DashboardRequest;
+import de.radioshuttle.net.PublishRequest;
 import de.radioshuttle.net.Request;
+import de.radioshuttle.utils.MqttUtils;
 import de.radioshuttle.utils.Utils;
 
 public class DashBoardViewModel extends AndroidViewModel {
@@ -52,17 +53,19 @@ public class DashBoardViewModel extends AndroidViewModel {
         mModificationDate = 0L;
         mSaveRequest = new MutableLiveData<>();
         mSyncRequest = new MutableLiveData<>();
-        requestCnt = 0;
+        mPublishRequest = new MutableLiveData<>();
+        saveRequestCnt = 0;
         syncRequestCnt = 0;
         currentSyncRequest = null;
-        currentRequest = null;
+        currentSaveRequest = null;
         mMaxID = 0;
         mTimer = Executors.newScheduledThreadPool(1);
+        mRequestExecutor = Utils.newSingleThreadPool();
     }
 
     public void startJavaScriptExecutors() {
-        if (mReceivedMsgExecutor == null) {
-            mReceivedMsgExecutor = new JavaScriptExcecutor(mPushAccount, mApplication);
+        if (mJavaScriptExecutor == null) {
+            mJavaScriptExecutor = new JavaScriptExcecutor(mPushAccount, mApplication);
 
             // Test data start
             /*
@@ -79,8 +82,8 @@ public class DashBoardViewModel extends AndroidViewModel {
         if (mTestDataThread != null) {
             mTestDataThread.interrupt();
         }
-        if (mReceivedMsgExecutor != null) {
-            mReceivedMsgExecutor.shutdown();
+        if (mJavaScriptExecutor != null) {
+            mJavaScriptExecutor.shutdown();
         }
 
         if (mGetMessagesTask != null) {
@@ -89,6 +92,10 @@ public class DashBoardViewModel extends AndroidViewModel {
         if (mTimer != null) {
             mTimer.shutdown();
         }
+        if (mRequestExecutor != null) {
+            mRequestExecutor.shutdown();
+        }
+
     }
 
     @MainThread
@@ -117,7 +124,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     updated = true;
                                 } else {
                                     // Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
-                                    mReceivedMsgExecutor.executeFilterScript(item, message, new JavaScriptExcecutor.Callback() {
+                                    mJavaScriptExecutor.executeFilterScript(item, message, new JavaScriptExcecutor.Callback() {
                                         @Override
                                         public void onFinshed(Item item, Map<String, Object> result) {
                                             /* if item reference changed, skip result (item has been replaced/edited) */
@@ -146,6 +153,35 @@ public class DashBoardViewModel extends AndroidViewModel {
             }
 
         }
+    }
+
+    // set published message
+    public void onMessagePublished(Message pm) {
+        if (Utils.isEmpty(pm.getTopic())) {
+            return;
+        }
+        /* iterate over all items and check for subscribed topics */
+        for(GroupItem gr : mGroups) {
+            LinkedList<Item> items = mItemsPerGroup.get(gr.id);
+            if (items != null && items.size() > 0) {
+                for (Item item : items) {
+                    try {
+                        if (!Utils.isEmpty(item.topic_s) && MqttUtils.topicIsMatched(item.topic_s, pm.getTopic())) {
+                            Message m = new Message();
+                            m.filter = item.topic_s;
+                            m.status = 0; //TODO: ?
+                            m.setTopic(pm.getTopic());
+                            m.setWhen(pm.getWhen());
+                            m.setPayload(pm.getPayload());
+                            onMessageReceived(m);
+                        }
+                    } catch(Exception e) {
+                        Log.e(TAG, "onMessagePublished(): error validating topic");
+                    }
+                }
+            }
+        }
+
     }
 
     public void setItems(String json, long modificationDate) {
@@ -456,11 +492,11 @@ public class DashBoardViewModel extends AndroidViewModel {
     }
 
     public void saveDashboard(JSONObject data, int itemID) {
-        requestCnt++;
+        saveRequestCnt++;
         DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSaveRequest, mModificationDate);
         request.saveDashboard(data, itemID);
-        currentRequest = request;
-        request.executeOnExecutor(Utils.executor);
+        currentSaveRequest = request;
+        request.executeOnExecutor(mRequestExecutor);
     }
 
     public void loadMessages() {
@@ -468,7 +504,36 @@ public class DashBoardViewModel extends AndroidViewModel {
         // Log.d(TAG, "loadMessages: " + mModificationDate);
         DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSyncRequest, mModificationDate);
         currentSyncRequest = request;
-        request.executeOnExecutor(Utils.executor);
+        request.executeOnExecutor(mRequestExecutor);
+    }
+
+    public void publish(final String topic, final byte[] payload, final boolean retain, final Item originator) {
+        final PublishRequest publish = new PublishRequest(mApplication, mPushAccount, mPublishRequest);
+
+        mJavaScriptExecutor.executeOutputScript(originator, topic, payload, retain,
+                new JavaScriptExcecutor.Callback() {
+                    @Override
+                    public void onFinshed(Item item, Map<String, Object> result) {
+                        if(result == null || result.get("error") instanceof String) {
+                            String errMsg = (String) result.get("error");
+                            originator.outputScriptError = errMsg;
+                            mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers (to show dashboard item error image)
+                            publish.outputScriptError = errMsg;
+                            publish.setCompleted(true);
+                            mPublishRequest.setValue(publish); // notify observers (to hide dialog progress bar)
+                        } else {
+                            if (!Utils.isEmpty(topic)) {
+                                publish.setMessage(topic, (byte[]) result.get("msg.raw"), retain, originator);
+                                publish.executeOnExecutor(mRequestExecutor, null);
+                            } else {
+                                /* if topic was empty, only Javascript has been executed */
+                                publish.setCompleted(true);
+                                mPublishRequest.setValue(publish); // notify observers (e. g. dialog progress bar)
+                            }
+                        }
+                    }
+                });
+
     }
 
     public void startGetMessagesTimer() {
@@ -511,16 +576,16 @@ public class DashBoardViewModel extends AndroidViewModel {
         return mInitialized;
     }
 
-    public boolean isRequestActive() {
-        return requestCnt > 0;
+    public boolean isSaveRequestActive() {
+        return saveRequestCnt > 0;
     }
 
-    public void confirmResultDelivered() {
-        requestCnt = 0;
+    public void confirmSaveResultDelivered() {
+        saveRequestCnt = 0;
     }
 
-    public boolean isCurrentRequest(Request request) {
-        return currentRequest == request;
+    public boolean isCurrentSaveRequest(Request request) {
+        return currentSaveRequest == request;
     }
 
     public boolean isCurrentSyncRequest(Request request) {
@@ -534,8 +599,6 @@ public class DashBoardViewModel extends AndroidViewModel {
     public void confirmResultDeliveredSyncRequest() {
         syncRequestCnt = 0;
     }
-
-
 
     public static class ItemContext {
         public Item item;
@@ -569,9 +632,11 @@ public class DashBoardViewModel extends AndroidViewModel {
     private int mMaxID;
     private Application mApplication;
     private Thread mTestDataThread; //TODO: remove after test
-    protected JavaScriptExcecutor mReceivedMsgExecutor;
+    protected JavaScriptExcecutor mJavaScriptExecutor;
     private ScheduledExecutorService mTimer;
     private ScheduledFuture<?> mGetMessagesTask;
+
+    private ThreadPoolExecutor mRequestExecutor;
 
     private boolean mInitialized;
     private String mItemsRaw;
@@ -582,11 +647,15 @@ public class DashBoardViewModel extends AndroidViewModel {
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
     // private HashSet<String> mSubscribedTopics;
 
+    /* observers */
     public MutableLiveData<Request> mSaveRequest;
     public MutableLiveData<Request> mSyncRequest;
-    private int requestCnt;
+    public MutableLiveData<Request> mPublishRequest;
+
+    private int saveRequestCnt;
     private int syncRequestCnt;
-    private Request currentRequest;
+
+    private Request currentSaveRequest;
     private Request currentSyncRequest;
 
     public final static String TAG = DashBoardViewModel.class.getSimpleName();
