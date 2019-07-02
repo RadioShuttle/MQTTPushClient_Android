@@ -18,7 +18,6 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
-import de.radioshuttle.mqttpushclient.EditTopicActivity;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
@@ -29,7 +28,6 @@ import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.DashboardRequest;
 import de.radioshuttle.net.MQTTException;
 import de.radioshuttle.net.Request;
-import de.radioshuttle.net.TopicsRequest;
 import de.radioshuttle.utils.MqttUtils;
 import de.radioshuttle.utils.Utils;
 
@@ -58,16 +56,13 @@ import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 public class DashBoardEditActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener, ColorPickerDialog.Callback,
@@ -390,8 +385,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setEnabled(false);
-        mSwipeRefreshLayout.setRefreshing(mViewModel.isRequestActive());
-        updateUI(!mViewModel.isRequestActive());
+        mSwipeRefreshLayout.setRefreshing(mViewModel.isSaveRequestActive());
+        updateUI(!mViewModel.isSaveRequestActive());
 
     }
 
@@ -602,9 +597,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 mSwipeRefreshLayout.setRefreshing(true);
             } else {
                 boolean isNew = false;
-                if (mViewModel.isCurrentRequest(request)) {
-                    isNew = mViewModel.isRequestActive(); // result already processed/displayed?
-                    mViewModel.confirmResultDelivered();
+                if (mViewModel.isCurrentSaveRequest(request)) {
+                    isNew = mViewModel.isSaveRequestActive(); // result already processed/displayed?
+                    mViewModel.confirmSaveResultDelivered();
                     mSwipeRefreshLayout.setRefreshing(false);
                     updateUI(true);
 
@@ -930,7 +925,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem m = menu.findItem(R.id.action_save);
         if (m != null) {
-            m.setEnabled(!mViewModel.isRequestActive());
+            m.setEnabled(!mViewModel.isSaveRequestActive());
         }
 
         return super.onPrepareOptionsMenu(menu);
