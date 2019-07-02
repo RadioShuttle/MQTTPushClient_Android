@@ -39,6 +39,20 @@ public class JavaScriptExcecutor {
         void onFinshed(Item item, Map<String, Object> result);
     }
 
+    public void executeOutputScript(Item item, String topic, byte[] payload, boolean retain, Callback callback) {
+        //TODO: implement js
+        if (callback != null) {
+            //TODO: remove "fake" result
+            HashMap<String, Object> result = new HashMap<>();
+            result.put("msg.topic", topic);
+            result.put("msg.received", System.currentTimeMillis());
+            result.put("msg.raw", payload); // this is the output result
+            result.put("msg.retain", retain);
+            // result.put("error", "JS error");
+            callback.onFinshed(item, result);
+        }
+    }
+
     public void executeFilterScript(Item item, MqttMessage message, Callback callback) {
         if (item != null) {
             Worker worker = null;
