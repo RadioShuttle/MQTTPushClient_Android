@@ -26,6 +26,7 @@ import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.DashboardRequest;
+import de.radioshuttle.net.PublishRequest;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.Utils;
 
@@ -166,7 +167,16 @@ public class DashBoardActivity extends AppCompatActivity implements
                 @Override
                 public void onChanged(Request request) {
                     if (request instanceof DashboardRequest) {
-                        onDeleteFinished((DashboardRequest) request);
+                        onSaveFinished((DashboardRequest) request);
+                    }
+                }
+            });
+
+            mViewModel.mPublishRequest.observe(this, new Observer<Request>() {
+                @Override
+                public void onChanged(Request request) {
+                    if (request instanceof PublishRequest) {
+                        onPublishFinished((PublishRequest) request);
                     }
                 }
             });
@@ -183,7 +193,7 @@ public class DashBoardActivity extends AppCompatActivity implements
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setEnabled(false);
-        mSwipeRefreshLayout.setRefreshing(mViewModel.isRequestActive());
+        mSwipeRefreshLayout.setRefreshing(mViewModel.isSaveRequestActive());
     }
 
     @Override
@@ -396,7 +406,7 @@ public class DashBoardActivity extends AppCompatActivity implements
             LinkedList<GroupItem> groupItems = new LinkedList<>();
             HashMap<Integer, LinkedList<Item>> items = new HashMap<>();
             mViewModel.copyItems(groupItems, items);
-            mViewModel.removeItems(groupItems, items, all ? null : mAdapter.getSelectedItems(), mViewModel.mReceivedMsgExecutor);
+            mViewModel.removeItems(groupItems, items, all ? null : mAdapter.getSelectedItems(), mViewModel.mJavaScriptExecutor);
             JSONObject obj = DBUtils.createJSONStrFromItems(groupItems, items);
             mViewModel.saveDashboard(obj, 0);
         }
@@ -459,58 +469,13 @@ public class DashBoardActivity extends AppCompatActivity implements
     public void onLoadMessagesFinished(DashboardRequest request) {
 
         PushAccount b = request.getAccount();
-        if (b.status == 0) {
+        if (request.hasCompleted()) {
             boolean isNew = false;
             if (mViewModel.isCurrentSyncRequest(request)) {
                 isNew = mViewModel.isSyncRequestActive(); // result already processed/displayed?
                 mViewModel.confirmResultDeliveredSyncRequest();
 
-                /* handle cerificate exception */
-                if (b.hasCertifiateException()) {
-                    /* only show dialog if the certificate has not already been denied */
-                    if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
-                        FragmentManager fm = getSupportFragmentManager();
-
-                        String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
-                                AppTrustManager.getUniqueKey(b.getCertificateException().chain[0]);
-
-                        /* check if a dialog is not already showing (for this certificate) */
-                        if (fm.findFragmentByTag(DLG_TAG) == null) {
-                            CertificateErrorDialog dialog = new CertificateErrorDialog();
-                            Bundle args = CertificateErrorDialog.createArgsFromEx(
-                                    b.getCertificateException(), request.getAccount().pushserver);
-                            if (args != null) {
-                                mViewModel.stopGetMessagesTimer();
-                                args.putInt("cmd", Cmd.CMD_GET_MESSAGES_DASH);
-                                dialog.setArguments(args);
-                                dialog.show(getSupportFragmentManager(), DLG_TAG);
-                            }
-                        }
-                    }
-                }
-                b.setCertificateExeption(null); // mark es "processed"
-
-                /* handle insecure connection */
-                if (b.inSecureConnectionAsk) {
-                    if (Connection.mInsecureConnection.get(b.pushserver) == null) {
-                        FragmentManager fm = getSupportFragmentManager();
-
-                        String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
-
-                        /* check if a dialog is not already showing (for this host) */
-                        if (fm.findFragmentByTag(DLG_TAG) == null) {
-                            InsecureConnectionDialog dialog = new InsecureConnectionDialog();
-                            Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
-                            if (args != null) {
-                                mViewModel.stopGetMessagesTimer();
-                                args.putInt("cmd", Cmd.CMD_GET_MESSAGES_DASH);
-                                dialog.setArguments(args);
-                                dialog.show(getSupportFragmentManager(), DLG_TAG);
-                            }
-                        }
-                    }
-                }
-                b.inSecureConnectionAsk = false; // mark as "processed"
+                handleCertError(Cmd.CMD_GET_MESSAGES_DASH, request);
 
                 if (isNew) {
                     if (b.requestStatus != Cmd.RC_OK) {
@@ -543,21 +508,100 @@ public class DashBoardActivity extends AppCompatActivity implements
         }
     }
 
-    public void onDeleteFinished(DashboardRequest dashboardRequest) {
+    public void onPublishFinished(PublishRequest publishRequest) {
+        if (publishRequest != null) {
+            PushAccount b = publishRequest.getAccount();
+            if (!publishRequest.hasCompleted()) {
+                //TODO: set progress bar, if not already done when publish was triggered
+            } else {
+                if (!publishRequest.isDeliverd()) {
+                    publishRequest.setResultDelivered(true);
+                    //TODO: hide progress bar
+
+                    handleCertError(Cmd.CMD_MQTT_PUBLISH, publishRequest);
+
+                    if (b.requestStatus != Cmd.RC_OK) {
+                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                        if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
+                            t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                        }
+                        //TODO: add t to item.error
+                    } else if (publishRequest.requestStatus != Cmd.RC_OK) {
+                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                        //TODO: add t to item.error
+                    } else { // reesult OK
+                        //TODO: hide previous shown error message
+                        mViewModel.onMessagePublished(publishRequest.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    protected void handleCertError(int cmd, Request r) {
+        PushAccount b = r.getAccount();
+
+        /* handle cerificate exception */
+        if (b.hasCertifiateException()) {
+            /* only show dialog if the certificate has not already been denied */
+            if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
+                FragmentManager fm = getSupportFragmentManager();
+
+                String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
+                        AppTrustManager.getUniqueKey(b.getCertificateException().chain[0]);
+
+                /* check if a dialog is not already showing (for this certificate) */
+                if (fm.findFragmentByTag(DLG_TAG) == null) {
+                    CertificateErrorDialog dialog = new CertificateErrorDialog();
+                    Bundle args = CertificateErrorDialog.createArgsFromEx(
+                            b.getCertificateException(), r.getAccount().pushserver);
+                    if (args != null) {
+                        mViewModel.stopGetMessagesTimer();
+                        args.putInt("cmd", cmd);
+                        dialog.setArguments(args);
+                        dialog.show(getSupportFragmentManager(), DLG_TAG);
+                    }
+                }
+            }
+        }
+        b.setCertificateExeption(null); // mark es "processed"
+
+        /* handle insecure connection */
+        if (b.inSecureConnectionAsk) {
+            if (Connection.mInsecureConnection.get(b.pushserver) == null) {
+                FragmentManager fm = getSupportFragmentManager();
+
+                String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
+
+                /* check if a dialog is not already showing (for this host) */
+                if (fm.findFragmentByTag(DLG_TAG) == null) {
+                    InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                    Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
+                    if (args != null) {
+                        mViewModel.stopGetMessagesTimer();
+                        args.putInt("cmd", Cmd.CMD_GET_MESSAGES_DASH);
+                        dialog.setArguments(args);
+                        dialog.show(getSupportFragmentManager(), DLG_TAG);
+                    }
+                }
+            }
+        }
+        b.inSecureConnectionAsk = false; // mark as "processed"
+    }
+
+    public void onSaveFinished(DashboardRequest dashboardRequest) {
         PushAccount b = dashboardRequest.getAccount();
-        if (b.status == 1) {
+        if (!dashboardRequest.hasCompleted()) {
             mSwipeRefreshLayout.setRefreshing(true);
         } else {
             boolean isNew = false;
-            if (mViewModel.isCurrentRequest(dashboardRequest)) {
-                isNew = mViewModel.isRequestActive(); // result already processed/displayed?
-                mViewModel.confirmResultDelivered();
+            if (mViewModel.isCurrentSaveRequest(dashboardRequest)) {
+                isNew = mViewModel.isSaveRequestActive(); // result already processed/displayed?
+                mViewModel.confirmSaveResultDelivered();
                 mSwipeRefreshLayout.setRefreshing(false);
                 // updateUI(true);
 
-                /* handle cerificate exception */
-
-                /* handle insecure connection */
+                // handleCertError(Cmd.CMD_SET_DASHBOARD, dashboardRequest); //TODO
 
                 if (isNew) {
                     if (b.requestStatus != Cmd.RC_OK) {
@@ -567,7 +611,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                         }
                         showErrorMsg(t);
                     } else if (dashboardRequest.saveSuccesful()) {
-                        Log.d(TAG, "onDeleteFinished(): ");
+                        Log.d(TAG, "onSaveFinished(): ");
                         mLastErrorStr = null;
                         mViewModel.setItems(
                                 dashboardRequest.getReceivedDashboard(),
@@ -625,7 +669,7 @@ public class DashBoardActivity extends AppCompatActivity implements
             int cmd = args.getInt("cmd");
             if (cmd == Cmd.CMD_GET_MESSAGES_DASH) {
                 mViewModel.startGetMessagesTimer();
-            }
+            } //TODO: handle other
         }
     }
 
@@ -649,7 +693,7 @@ public class DashBoardActivity extends AppCompatActivity implements
             boolean handled = false;
             switch (item.getItemId()) {
                 case R.id.action_delete_items:
-                    if (mViewModel.isRequestActive()) {
+                    if (mViewModel.isSaveRequestActive()) {
                         Toast.makeText(getApplicationContext(), R.string.op_in_progress, Toast.LENGTH_LONG).show();
                     } else {
                         DBUtils.showDeleteDialog(DashBoardActivity.this);
