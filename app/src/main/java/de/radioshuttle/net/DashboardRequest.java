@@ -33,6 +33,7 @@ public class DashboardRequest extends Request {
         mGetTopicFilterScripts = false; // disable getTopics in super class
         mLocalVersion = localVersion;
         invalidVersion = false;
+        mStoreDashboardLocally = false;
         mReceivedDashboard = null;
     }
 
@@ -53,7 +54,7 @@ public class DashboardRequest extends Request {
                 if (result != 0) { //Cmd.RC_OK
                     mServerVersion = result;
                     mReceivedDashboard = jsonStr;
-                    ViewState.getInstance(mAppContext).saveDashboard(mPushAccount.getKey(), mServerVersion, mReceivedDashboard);
+                    mStoreDashboardLocally = true;
                     mSaved = true;
                 } else {
                     invalidVersion = true;
@@ -109,8 +110,7 @@ public class DashboardRequest extends Request {
                     if (dash != null) {
                         mServerVersion = (long) dash[0];
                         mReceivedDashboard = (String) dash[1];
-                        Log.d("DashboradRequest",  "local version: " + mLocalVersion + ", server version: " + mServerVersion);
-                        ViewState.getInstance(mAppContext).saveDashboard(mPushAccount.getKey(), mServerVersion, mReceivedDashboard);
+                        mStoreDashboardLocally = true;
                     }
                 } catch(ServerError e) {
                     requestErrorCode = e.errorCode;
@@ -121,6 +121,16 @@ public class DashboardRequest extends Request {
         }
 
         return true;
+    }
+
+    @Override
+    protected void onPostExecute(PushAccount pushAccount) {
+        mCompleted = true;
+        super.onPostExecute(pushAccount);
+        if (mStoreDashboardLocally) {
+            ViewState.getInstance(mAppContext).saveDashboard(mPushAccount.getKey(), mServerVersion, mReceivedDashboard);
+            Log.d("DashboradRequest",  "local version: " + mLocalVersion + ", server version: " + mServerVersion);
+        }
     }
 
     // save might have success, but afterwards getCachedDashMessages() could be fail
@@ -159,5 +169,7 @@ public class DashboardRequest extends Request {
     long mServerVersion;
 
     public int mCmd;
+
+    protected boolean mStoreDashboardLocally; // indicates if mReceivedDashboard must be stored in onPostExecute()
 
 }
