@@ -8,6 +8,9 @@ package de.radioshuttle.net;
 
 import android.content.Context;
 import androidx.lifecycle.MutableLiveData;
+
+import java.util.concurrent.atomic.AtomicLong;
+
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.mqttpushclient.dash.Message;
@@ -17,6 +20,7 @@ public class PublishRequest extends Request {
     public PublishRequest(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
         super(context, pushAccount, accountLiveData);
         mGetTopicFilterScripts = false;
+        mPublishID = PUBLISH_ID.incrementAndGet();
     }
 
     public void setMessage(String topic, byte[] payload, boolean retain, int itemID) {
@@ -55,6 +59,10 @@ public class PublishRequest extends Request {
         return mItemID;
     }
 
+    public long getmPublishID() {
+        return mPublishID;
+    }
+
     public Message getMessage() {
         Message m = new Message();
         m.setTopic(mTopic);
@@ -67,6 +75,10 @@ public class PublishRequest extends Request {
     public int requestErrorCode;
     public String requestErrorTxt;
     public String outputScriptError;
+
+    protected long mPublishID; // a unique internal ID used in UI
+    protected static AtomicLong PUBLISH_ID = new AtomicLong();
+
 
     String mTopic;
     byte[] mPayload;
