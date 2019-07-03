@@ -19,11 +19,11 @@ public class PublishRequest extends Request {
         mGetTopicFilterScripts = false;
     }
 
-    public void setMessage(String topic, byte[] payload, boolean retain, Item item) {
+    public void setMessage(String topic, byte[] payload, boolean retain, int itemID) {
         mTopic = topic;
         mPayload = payload;
         mRetain = retain;
-        mItem = item;
+        mItemID = itemID;
         mWhen = System.currentTimeMillis();
     }
 
@@ -47,8 +47,12 @@ public class PublishRequest extends Request {
         mDelivered = delivered;
     }
 
-    public boolean isDeliverd() {
+    public boolean isDelivered() {
         return mDelivered;
+    }
+
+    public int getItemID() {
+        return mItemID;
     }
 
     public Message getMessage() {
@@ -67,7 +71,7 @@ public class PublishRequest extends Request {
     String mTopic;
     byte[] mPayload;
     boolean mRetain;
-    Item mItem;
+    int mItemID;
     boolean mDelivered;
     long mWhen;
 
