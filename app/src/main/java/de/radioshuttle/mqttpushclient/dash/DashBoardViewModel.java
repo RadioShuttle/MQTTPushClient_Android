@@ -131,7 +131,11 @@ public class DashBoardViewModel extends AndroidViewModel {
                                             ItemContext ic = getItem(item.id);
                                             if (ic != null && ic.item == item) {
                                                 if (result != null) {
-                                                    item.data.clear(); // clear old content, erros
+                                                    String publishError = (String) item.data.get("error2");
+                                                    item.data.clear(); // clear old content, erros except publish error
+                                                    if (!Utils.isEmpty(publishError)) {
+                                                        item.data.put("error2", publishError);
+                                                    }
                                                     item.data.putAll(result);
                                                     mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers
                                                 }
@@ -157,6 +161,7 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     // set published message
     public void onMessagePublished(Message pm) {
+
         if (Utils.isEmpty(pm.getTopic())) {
             return;
         }
@@ -198,6 +203,10 @@ public class DashBoardViewModel extends AndroidViewModel {
                 Log.e(TAG, "Load items: Parsing json failed: " + e.getMessage());
             }
         }
+        mDashBoardItemsLiveData.setValue(buildDisplayList());
+    }
+
+    public void notifyDataChanged() {
         mDashBoardItemsLiveData.setValue(buildDisplayList());
     }
 
@@ -509,6 +518,7 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public void publish(final String topic, final byte[] payload, final boolean retain, final Item originator) {
         final PublishRequest publish = new PublishRequest(mApplication, mPushAccount, mPublishRequest);
+        publish.setMessage(topic, payload, retain, originator.id);
 
         mJavaScriptExecutor.executeOutputScript(originator, topic, payload, retain,
                 new JavaScriptExcecutor.Callback() {
@@ -517,14 +527,15 @@ public class DashBoardViewModel extends AndroidViewModel {
                         if(result == null || result.get("error") instanceof String) {
                             String errMsg = (String) result.get("error");
                             originator.outputScriptError = errMsg;
-                            mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers (to show dashboard item error image)
                             publish.outputScriptError = errMsg;
                             publish.setCompleted(true);
+                            mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers (to show dashboard item error image)
                             mPublishRequest.setValue(publish); // notify observers (to hide dialog progress bar)
                         } else {
                             if (!Utils.isEmpty(topic)) {
-                                publish.setMessage(topic, (byte[]) result.get("msg.raw"), retain, originator);
-                                publish.executeOnExecutor(mRequestExecutor, null);
+                                /* overrited payload with msg.raw (modified payload by javascript) */
+                                publish.setMessage(topic, (byte[]) result.get("msg.raw"), retain, originator.id);
+                                publish.executeOnExecutor(mRequestExecutor, (Void[]) null);
                             } else {
                                 /* if topic was empty, only Javascript has been executed */
                                 publish.setCompleted(true);
