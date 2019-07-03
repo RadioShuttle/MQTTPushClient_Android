@@ -516,7 +516,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         request.executeOnExecutor(mRequestExecutor);
     }
 
-    public void publish(final String topic, final byte[] payload, final boolean retain, final Item originator) {
+    public long publish(final String topic, final byte[] payload, final boolean retain, final Item originator) {
         final PublishRequest publish = new PublishRequest(mApplication, mPushAccount, mPublishRequest);
         publish.setMessage(topic, payload, retain, originator.id);
 
@@ -544,7 +544,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                         }
                     }
                 });
-
+        return publish.getmPublishID();
     }
 
     public void startGetMessagesTimer() {
