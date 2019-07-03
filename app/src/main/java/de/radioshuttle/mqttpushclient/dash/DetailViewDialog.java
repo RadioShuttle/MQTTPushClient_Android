@@ -218,7 +218,6 @@ public class DetailViewDialog extends DialogFragment {
     protected void performSend(byte[] value) {
         if (mCurrentPublishID > 0) {
             Toast t = Toast.makeText(getContext(), getString(R.string.op_in_progress), Toast.LENGTH_LONG);
-            // t.setView(getDialog().findViewById(R.id.rootView));
             t.show();
         } else {
             //TODO: consider ignoring empty values
@@ -238,9 +237,9 @@ public class DetailViewDialog extends DialogFragment {
                     DashBoardViewModel.ItemContext ic = mViewModel.getItem(request.getItemID());
                     Toast t;
                     if (ic != null && ic.item != null && !Utils.isEmpty((String) ic.item.data.get("error2"))) {
-                        t = Toast.makeText(getContext(), "An error occured.", Toast.LENGTH_LONG);
+                        t = Toast.makeText(getContext(), getString(R.string.errormsg_general_error), Toast.LENGTH_LONG);
                     } else {
-                        t = Toast.makeText(getContext(), "Message has been published", Toast.LENGTH_LONG);
+                        t = Toast.makeText(getContext(), getString(R.string.dlg_info_message_published), Toast.LENGTH_LONG);
                     }
                     t.show();
                     mCurrentPublishID = -1;

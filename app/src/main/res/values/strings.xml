@@ -107,6 +107,7 @@
     <string name="select_single_topic">Only one topic may be selected for editing</string>
 
     <string name="errormsg_unexpected_error">An unexprected error has occured.</string>
+    <string name="errormsg_general_error">An error has occured.</string>
 
     <string name="title_privacy">Privacy Policy</string>
     <string name="privacy_summary">
@@ -253,6 +254,9 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dlg_dash_selected">Selected items</string>
 
     <string name="err_invalid_topic_format">Invalid format.</string>
+
+    <!-- Detail view dialog -->
+    <string name="dlg_info_message_published">Message has been published.</string>
 
     <!-- End Dashboard -->
 
