@@ -8,6 +8,9 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.format.DateUtils;
@@ -180,6 +183,17 @@ public class DetailViewDialog extends DialogFragment {
                         mErrorContent.setLayoutParams(lp);
 
                         mProgressBar = root.findViewById(R.id.progressBar);
+                        if (mProgressBar != null) {
+                            if (Build.VERSION.SDK_INT >= 21) {
+                                mProgressBar.setIndeterminateTintMode(PorterDuff.Mode.SRC_ATOP);
+                                mProgressBar.setIndeterminateTintList(csl);
+                            } else {
+                                Drawable drawable = mProgressBar.getIndeterminateDrawable();
+                                if (drawable != null) {
+                                    drawable.setColorFilter(csl.getDefaultColor(), PorterDuff.Mode.SRC_ATOP);
+                                }
+                            }
+                        }
 
                         mCurrentView = view;
                         updateView();
