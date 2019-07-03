@@ -152,6 +152,15 @@ public class DetailViewDialog extends DialogFragment {
                             }
                         });
 
+                        mErrorButton2 = root.findViewById(R.id.errorButton2);
+                        ImageViewCompat.setImageTintList(mErrorButton2, csl);
+                        mErrorButton2.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                toogleViewMode(VIEW_ERROR_2);
+                            }
+                        });
+
                         if (savedInstanceState != null) {
                             if (mItem.data.get("error") instanceof String) {
                                 mViewMode = savedInstanceState.getInt(KEY_VIEW_MODE, 0);
@@ -205,7 +214,21 @@ public class DetailViewDialog extends DialogFragment {
                 }
             }
         }
-        //TODO: error2 (see code above)
+
+        if (mItem.data.get("error2") instanceof String) {
+            if (mErrorButton2.getVisibility() != View.VISIBLE) {
+                mErrorButton2.setVisibility(View.VISIBLE);
+            }
+        } else {
+            /* no error, hide error button  */
+            if (mViewMode == VIEW_ERROR_2) {
+                if (mErrorButton2.getVisibility() != View.GONE) {
+                    /* hide error view (this may happen if a new result comes in with no error) */
+                    mErrorButton2.setVisibility(View.GONE);
+                    mViewMode = VIEW_DASHITEM;
+                }
+            }
+        }
 
         Long when = (Long) mItem.data.get("msg.received");
         String receivedDateStr = null;
@@ -252,15 +275,18 @@ public class DetailViewDialog extends DialogFragment {
                 if (javaScriptError instanceof String) {
                     displayError = getString(R.string.javascript_err) + " " + javaScriptError;
                 }
-
             } else if (mViewMode == VIEW_ERROR_2) {
-                //TODO:
+                Object outputError = mItem.data.get("error2");
+                if (outputError instanceof String) {
+                    displayError = "" + outputError;
+                }
             }
 
             mItem.setViewBackground(mErrorContent, mDefaultBackground);
             if (mItem.textcolor != 0) {
                 mErrorContent.setTextColor(mItem.textcolor);
             }
+
             mErrorContent.setText(displayError);
             mErrorLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
         }
@@ -293,6 +319,7 @@ public class DetailViewDialog extends DialogFragment {
     protected TextView mErrorContent;
     protected TextView mErrorLabel;
     protected ImageButton mErrorButton;
+    protected ImageButton mErrorButton2;
 
     protected DateFormat mFormatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());;
     protected DateFormat mTimeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT);
