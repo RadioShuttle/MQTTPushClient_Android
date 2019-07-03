@@ -54,6 +54,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         TextView textContent = null;
         ImageView selectedImageView = null;
         ImageView errorImageView = null;
+        ImageView errorImage2View = null;
         int defaultColor = 0;
         if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
@@ -62,6 +63,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             textContent = view.findViewById(R.id.textContent);
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
+            errorImage2View = view.findViewById(R.id.errorImage2);
         } else {
             view = mInflater.inflate(R.layout.activity_dash_board_item_group, parent, false);
             label = view.findViewById(R.id.name);
@@ -76,6 +78,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         holder.selectedImageView = selectedImageView;
         holder.defaultColor = defaultColor;
         holder.errorImage = errorImageView;
+        holder.errorImage2 = errorImage2View;
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -152,14 +155,35 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             item.setViewTextAppearance(h.label, h.defaultColor);
         }
 
+        Object publishError = item.data.get("error2");
+        if (h.errorImage2 != null) {
+            if (publishError instanceof String) { // value set?
+                ColorStateList csl = ColorStateList.valueOf(item.textcolor == 0 ? h.defaultColor : item.textcolor);
+                ImageViewCompat.setImageTintList(h.errorImage2, csl);
+
+                if (h.errorImage2.getVisibility() != View.VISIBLE) {
+                    h.errorImage2.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (h.errorImage2.getVisibility() != View.GONE) {
+                    h.errorImage2.setVisibility(View.GONE);
+                }
+            }
+        }
+
         Object javaScriptError = item.data.get("error");
-        if (javaScriptError instanceof String) { // value set?
-            if (h.errorImage != null) {
+        if (h.errorImage != null) {
+            if (javaScriptError instanceof String) { // value set?
+                ColorStateList csl = ColorStateList.valueOf(item.textcolor == 0 ? h.defaultColor : item.textcolor);
+                ImageViewCompat.setImageTintList(h.errorImage, csl);
+
                 if (h.errorImage.getVisibility() != View.VISIBLE) {
                     h.errorImage.setVisibility(View.VISIBLE);
                 }
-                ColorStateList csl = ColorStateList.valueOf(item.textcolor == 0 ? h.defaultColor : item.textcolor);
-                ImageViewCompat.setImageTintList(h.errorImage, csl);
+            } else {
+                if (h.errorImage.getVisibility() != View.GONE) {
+                    h.errorImage.setVisibility(View.GONE);
+                }
             }
         }
 
@@ -222,6 +246,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         TextView textContent;
         ImageView selectedImageView;
         ImageView errorImage;
+        ImageView errorImage2;
         int defaultColor;
         int viewType;
     }
