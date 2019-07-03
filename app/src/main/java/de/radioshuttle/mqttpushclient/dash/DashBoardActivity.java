@@ -514,9 +514,10 @@ public class DashBoardActivity extends AppCompatActivity implements
             if (!publishRequest.hasCompleted()) {
                 //TODO: set progress bar, if not already done when publish was triggered
             } else {
-                if (!publishRequest.isDeliverd()) {
+                if (!publishRequest.isDelivered()) {
                     publishRequest.setResultDelivered(true);
                     //TODO: hide progress bar
+                    DashBoardViewModel.ItemContext ic = mViewModel.getItem(publishRequest.getItemID());
 
                     handleCertError(Cmd.CMD_MQTT_PUBLISH, publishRequest);
 
@@ -525,12 +526,36 @@ public class DashBoardActivity extends AppCompatActivity implements
                         if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
                             t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
                         }
-                        //TODO: add t to item.error
+                        if (ic != null && ic.item != null) {
+                            ic.item.data.put("error2", t); //TODO: consider showing error in global window too
+                            mViewModel.notifyDataChanged();
+                        }
                     } else if (publishRequest.requestStatus != Cmd.RC_OK) {
                         String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
-                        //TODO: add t to item.error
+                        if (ic != null && ic.item != null) {
+                            ic.item.data.put("error2", t); //TODO: consider showing error in global window too
+                            mViewModel.notifyDataChanged();
+                        }
                     } else { // reesult OK
-                        //TODO: hide previous shown error message
+                        boolean updateItem = false;
+                        if (!Utils.isEmpty(publishRequest.outputScriptError)) {
+                            if (ic != null && ic.item != null) {
+                                if (!ic.item.data.containsKey("error2") || !Utils.equals(ic.item.data.get("error2"), (String) publishRequest.outputScriptError)) {
+                                    updateItem = true;
+                                }
+                                ic.item.data.put("error2", publishRequest.outputScriptError); // clear error message
+                            }
+                        } else {
+                            if (ic != null && ic.item != null) {
+                                if (ic.item.data.containsKey("error2")) {
+                                    updateItem = true;
+                                }
+                                ic.item.data.remove("error2"); // clear error message
+                            }
+                        }
+                        if (updateItem) {
+                            mViewModel.notifyDataChanged();
+                        }
                         mViewModel.onMessagePublished(publishRequest.getMessage());
                     }
                 }
