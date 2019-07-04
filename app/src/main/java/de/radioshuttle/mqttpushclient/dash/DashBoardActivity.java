@@ -90,6 +90,22 @@ public class DashBoardActivity extends AppCompatActivity implements
             if (!mViewModel.isInitialized()) {
                 mViewModel.setItems(vs.getDashBoardContent(b.getKey()), vs.getDashBoardModificationDate(account));
                 mViewModel.startJavaScriptExecutors();
+                mViewModel.loadLastReceivedMessages();
+                mViewModel.mCachedMessages.observe(this, new Observer<List<Message>>() {
+                    @Override
+                    public void onChanged(List<Message> messages) {
+                        if (messages != null) {
+                            /* only set cahced messages if we do not have received any messages so far */
+                            if (mViewModel.getLastReceivedMessages() == null) {
+                                for(Message m : messages) {
+                                    mViewModel.onMessageReceived(m);
+                                }
+                                mViewModel.mCachedMessages.removeObserver(this);
+                            }
+                        }
+                    }
+                });
+
                 init = true;
             }
 
@@ -279,6 +295,8 @@ public class DashBoardActivity extends AppCompatActivity implements
     protected void onStop() {
         super.onStop();
         mViewModel.stopGetMessagesTimer();
+        // cache last received messages
+        mViewModel.saveLastReceivedMessages();
     }
 
     protected void handleBackPressed() {
@@ -468,43 +486,46 @@ public class DashBoardActivity extends AppCompatActivity implements
 
     public void onLoadMessagesFinished(DashboardRequest request) {
 
-        PushAccount b = request.getAccount();
-        if (request.hasCompleted()) {
-            boolean isNew = false;
-            if (mViewModel.isCurrentSyncRequest(request)) {
-                isNew = mViewModel.isSyncRequestActive(); // result already processed/displayed?
-                mViewModel.confirmResultDeliveredSyncRequest();
+        if (request != null) {
+            PushAccount b = request.getAccount();
+            if (request.hasCompleted()) {
+                boolean isNew = false;
+                if (mViewModel.isCurrentSyncRequest(request)) {
+                    isNew = mViewModel.isSyncRequestActive(); // result already processed/displayed?
+                    mViewModel.confirmResultDeliveredSyncRequest();
 
-                handleCertError(Cmd.CMD_GET_MESSAGES_DASH, request);
+                    handleCertError(Cmd.CMD_GET_MESSAGES_DASH, request);
 
-                if (isNew) {
-                    if (b.requestStatus != Cmd.RC_OK) {
-                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
-                        if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
-                            t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
-                        }
-                        showErrorMsg(t);
-                    } else if (request.requestStatus != Cmd.RC_OK) {
-                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
-                        showErrorMsg(t);
-                    } else if (request.isVersionError()) { // ok, but maybe the current dashboard is outdated
-                        mViewModel.setItems(
-                                request.getReceivedDashboard(),
-                                request.getServerVersion());
-                        String t = getString(R.string.dash_err_version_err_replaced);
-                        showErrorMsg(t);
-                    } else { // no errors. hide previous shown error message
-                        mLastErrorStr = null;
-                        if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
-                            mSnackbar.dismiss(); //TODO: make sure, error message is shown at least a few seconds (there may be a publish, deletion error currntyl showing)
+                    if (isNew) {
+                        if (b.requestStatus != Cmd.RC_OK) {
+                            String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                            if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
+                                t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                            }
+                            showErrorMsg(t);
+                        } else if (request.requestStatus != Cmd.RC_OK) {
+                            String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                            showErrorMsg(t);
+                        } else if (request.isVersionError()) { // ok, but maybe the current dashboard is outdated
+                            mViewModel.setItems(
+                                    request.getReceivedDashboard(),
+                                    request.getServerVersion());
+                            String t = getString(R.string.dash_err_version_err_replaced);
+                            showErrorMsg(t);
+                        } else { // no errors. hide previous shown error message
+                            mViewModel.setLastReceivedMessages(request.getReceivedMessages()); // to be cached later
+                            mLastErrorStr = null;
+                            if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
+                                mSnackbar.dismiss(); //TODO: make sure, error message is shown at least a few seconds (there may be a publish, deletion error currntyl showing)
+                            }
                         }
                     }
                 }
             }
-        }
 
-        for(Message m : request.getReceivedMessages()) {
-            mViewModel.onMessageReceived(m);
+            for(Message m : request.getReceivedMessages()) {
+                mViewModel.onMessageReceived(m);
+            }
         }
     }
 
@@ -519,7 +540,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                     //TODO: hide progress bar
                     DashBoardViewModel.ItemContext ic = mViewModel.getItem(publishRequest.getItemID());
 
-                    handleCertError(Cmd.CMD_MQTT_PUBLISH, publishRequest);
+                     //handleCertError(Cmd.CMD_MQTT_PUBLISH, publishRequest);
 
                     if (b.requestStatus != Cmd.RC_OK) {
                         String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
@@ -626,7 +647,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                 mSwipeRefreshLayout.setRefreshing(false);
                 // updateUI(true);
 
-                // handleCertError(Cmd.CMD_SET_DASHBOARD, dashboardRequest); //TODO
+                // handleCertError(Cmd.CMD_SET_DASHBOARD, dashboardRequest);
 
                 if (isNew) {
                     if (b.requestStatus != Cmd.RC_OK) {
