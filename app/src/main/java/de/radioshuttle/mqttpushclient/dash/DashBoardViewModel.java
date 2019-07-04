@@ -7,12 +7,23 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Application;
+import android.database.sqlite.SQLiteConstraintException;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
+import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +43,10 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
+
+import de.radioshuttle.db.AppDatabase;
+import de.radioshuttle.db.Code;
+import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.net.DashboardRequest;
 import de.radioshuttle.net.PublishRequest;
@@ -54,6 +69,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mSaveRequest = new MutableLiveData<>();
         mSyncRequest = new MutableLiveData<>();
         mPublishRequest = new MutableLiveData<>();
+        mCachedMessages = new MutableLiveData<>();
         saveRequestCnt = 0;
         syncRequestCnt = 0;
         currentSyncRequest = null;
@@ -186,8 +202,10 @@ public class DashBoardViewModel extends AndroidViewModel {
                 }
             }
         }
-
     }
+
+    // public void save
+
 
     public void setItems(String json, long modificationDate) {
         mInitialized = true;
@@ -575,6 +593,165 @@ public class DashBoardViewModel extends AndroidViewModel {
         }
     }
 
+    public void loadLastReceivedMessages() {
+        final String pushServerID = mPushAccount.pushserverID;
+        final String mqttAccount = mPushAccount.getMqttAccountName();
+        final Application app = getApplication();
+        Log.d(TAG, "Load messages: " + pushServerID + ", " + mqttAccount);
+        if (!Utils.isEmpty(pushServerID) && !Utils.isEmpty(mqttAccount)) {
+            Utils.executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ArrayList<Message> result = new ArrayList<>();
+                        AppDatabase db = AppDatabase.getInstance(app);
+                        MqttMessageDao dao = db.mqttMessageDao();
+                        Long psid = dao.getCode(pushServerID);
+                        Long accountID = dao.getCode(mqttAccount);
+                        if (psid != null && accountID != null) {
+                            File msgsD = new File(app.getFilesDir(), "mc_" + psid + "_" + accountID + ".json");
+                            synchronized (mFileLock) {
+                                BufferedReader bufferedReader = null;
+                                JsonReader jsonReader = null;
+                                Message m;
+                                try {
+                                    if (msgsD.exists()) {
+                                        bufferedReader  = new BufferedReader(new InputStreamReader(new FileInputStream(msgsD), "UTF-8"));
+                                        jsonReader = new JsonReader(bufferedReader);
+                                        String name;
+                                        jsonReader.beginArray();
+                                        while(jsonReader.hasNext()) {
+                                            m = new Message();
+                                            jsonReader.beginObject();
+                                            while(jsonReader.hasNext()) {
+                                                name = jsonReader.nextName();
+                                                if (name.equals("filter")) {
+                                                    m.filter = jsonReader.nextString();
+                                                } else if (name.equals("status")) {
+                                                    m.status = jsonReader.nextInt();
+                                                } else if (name.equals("received")) {
+                                                    m.setWhen(jsonReader.nextLong());
+                                                } else if (name.equals("seqno")) {
+                                                    m.setSeqno(jsonReader.nextInt());
+                                                } else if (name.equals("topic")) {
+                                                    m.setTopic(jsonReader.nextString());
+                                                } else if (name.equals("payload")) {
+                                                    m.setPayload(Base64.decode(jsonReader.nextString(), Base64.DEFAULT));
+                                                }
+                                            }
+                                            jsonReader.endObject();
+                                            // Log.d(TAG, "message read: " + m.filter + ", " + m.status + ", " + m.getTopic() + ", " + new String(m.getPayload()) + ", " +m.getWhen() + ", " + m.getSeqno());
+                                            result.add(m);
+                                        }
+                                        jsonReader.endArray();
+                                    }
+                                } finally {
+                                    if (jsonReader != null) {
+                                        jsonReader.close();
+                                    }
+                                }
+                                if (result.size() > 0) {
+                                    mCachedMessages.postValue(result);
+                                }
+                            }
+                        }
+                    } catch(Exception e) {
+                        Log.e(TAG, "Error loading messages for account: " + pushServerID + ", " + mqttAccount, e);
+                    }
+                }
+            });
+        }
+    }
+
+    public void saveLastReceivedMessages() {
+        if (mLastReceivedMessages != null && mLastReceivedMessages.size() > 0) {
+            final ArrayList<Message> msgArr = new ArrayList<>(mLastReceivedMessages);
+            final String pushServerID = mPushAccount.pushserverID;
+            final String mqttAccount = mPushAccount.getMqttAccountName();
+            final Application app = getApplication();
+            Log.d(TAG, "Save messages: " + pushServerID + ", " + mqttAccount);
+            if (!Utils.isEmpty(pushServerID) && !Utils.isEmpty(mqttAccount)) {
+                Utils.executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            AppDatabase db = AppDatabase.getInstance(app);
+                            MqttMessageDao dao = db.mqttMessageDao();
+                            Long psid = dao.getCode(pushServerID);
+                            if (psid == null) {
+                                Code c = new Code();
+                                c.setName(pushServerID);
+                                try {
+                                    psid = db.mqttMessageDao().insertCode(c);
+                                } catch (SQLiteConstraintException e) {
+                                    // rare case: sync messages has just inserted this pushServerID
+                                    Log.d(TAG, "insert pushserver id into code table: ", e);
+                                    psid = db.mqttMessageDao().getCode(pushServerID); // reread
+                                }
+                                // Log.d(TAG, " (before null) code: " + psCode);
+                            }
+                            Long accountID = dao.getCode(mqttAccount);
+                            if (accountID == null) {
+                                Code c = new Code();
+                                c.setName(mqttAccount);
+                                try {
+                                    accountID = db.mqttMessageDao().insertCode(c);
+                                } catch (SQLiteConstraintException e) {
+                                    // rare case: sync messages has just inserted this accountname
+                                    Log.d(TAG, "insert accountname into code table: ", e);
+                                    accountID = db.mqttMessageDao().getCode(mqttAccount);
+                                }
+                                // Log.d(TAG, " (before null) mqttAccountCode: " + mqttAccountCode);
+                            }
+                            File msgs = new File(app.getFilesDir(), "mc_" + psid + "_" + accountID + ".tmp");
+                            File msgsD = new File(app.getFilesDir(), "mc_" + psid + "_" + accountID + ".json");
+                            BufferedWriter bufferedWriter = null;
+                            JsonWriter jsonWriter = null;
+                            boolean writeCompleted = false;
+                            synchronized (mFileLock) {
+                                try {
+                                    bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(msgs), "UTF-8"));
+                                    jsonWriter = new JsonWriter(bufferedWriter);
+                                    jsonWriter.beginArray();
+                                    for(Message m : msgArr) {
+                                        jsonWriter.beginObject();
+                                        jsonWriter.name("filter");
+                                        jsonWriter.value(m.filter);
+                                        jsonWriter.name("status");
+                                        jsonWriter.value(m.status);
+                                        jsonWriter.name("received");
+                                        jsonWriter.value(m.getWhen());
+                                        jsonWriter.name("seqno");
+                                        jsonWriter.value(m.getSeqno());
+                                        jsonWriter.name("topic");
+                                        jsonWriter.value(m.getTopic() == null ? "" : m.getTopic());
+                                        jsonWriter.name("payload");
+                                        jsonWriter.value(Base64.encodeToString(m.getPayload(), Base64.DEFAULT));
+                                        jsonWriter.endObject();
+                                    }
+                                    jsonWriter.endArray();
+                                    writeCompleted = true;
+                                } finally {
+                                    if (jsonWriter != null) {
+                                        jsonWriter.close();
+                                    }
+                                    if (writeCompleted) {
+                                        msgs.renameTo(msgsD);
+                                    }
+                                    msgs.delete();
+                                }
+                            }
+                        } catch(Exception e) {
+                            Log.e(TAG, "Error saving messages for account: " + pushServerID + ", " + mqttAccount, e);
+                        }
+                    }
+                });
+            }
+        }
+    }
+    private final Object mFileLock = new Object();
+
+
     public String getItemsRaw() {
         return mItemsRaw;
     }
@@ -609,6 +786,14 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public void confirmResultDeliveredSyncRequest() {
         syncRequestCnt = 0;
+    }
+
+    public void setLastReceivedMessages(List<Message> messages) {
+        mLastReceivedMessages = messages;
+    }
+
+    public List<Message> getLastReceivedMessages() {
+        return mLastReceivedMessages;
     }
 
     public static class ItemContext {
@@ -656,12 +841,13 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     private LinkedList<GroupItem> mGroups;
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
-    // private HashSet<String> mSubscribedTopics;
+    private List<Message> mLastReceivedMessages;
 
     /* observers */
     public MutableLiveData<Request> mSaveRequest;
     public MutableLiveData<Request> mSyncRequest;
     public MutableLiveData<Request> mPublishRequest;
+    public MutableLiveData<List<Message>> mCachedMessages;
 
     private int saveRequestCnt;
     private int syncRequestCnt;
