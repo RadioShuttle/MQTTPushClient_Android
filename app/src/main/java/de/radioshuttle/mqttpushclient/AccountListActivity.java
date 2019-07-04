@@ -41,6 +41,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -357,6 +358,16 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                 long psid = dao.getCode(objects[0]);
                                 long accountID = dao.getCode(objects[1]);
                                 dao.deleteMessagesForAccount(psid, accountID);
+
+                                /* delete cached dashboard messages */
+                                try {
+                                    File cachedMessages = new File(getApplication().getFilesDir(), "mc_" + psid + "_" + accountID + ".json");
+                                    boolean deleted = cachedMessages.delete();
+                                    Log.d(TAG, "Cached dashboard messages deleted for account " + objects[0] + ", " + objects[1] + ": " + deleted);
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Deletion of cached messages failed: " + e.getMessage());
+                                }
+
                                 return null;
                             }
 
