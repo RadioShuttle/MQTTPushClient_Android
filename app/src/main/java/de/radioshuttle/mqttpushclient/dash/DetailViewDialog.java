@@ -15,12 +15,14 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -69,6 +71,8 @@ public class DetailViewDialog extends DialogFragment {
             if (getActivity() instanceof DashBoardActivity) {
                 mViewModel = ((DashBoardActivity) getActivity()).mViewModel;
 
+                mAutofillDisabled = (savedInstanceState == null ? false : savedInstanceState.getBoolean(KEY_AUTOFILL_DISABLED, false));
+
                 DashBoardViewModel.ItemContext itemContext = mViewModel.getItem(args.getInt("id"));
                 if (itemContext != null) {
                     mItem = itemContext.item;
@@ -92,6 +96,7 @@ public class DetailViewDialog extends DialogFragment {
                         view =  inflater.inflate(R.layout.activity_dash_board_item_text, null);
 
                         mTextContent = view.findViewById(R.id.textContent);
+
                         mLabel = view.findViewById(R.id.name);
 
                         ViewGroup.LayoutParams lp = mTextContent.getLayoutParams();
@@ -108,21 +113,32 @@ public class DetailViewDialog extends DialogFragment {
                             ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
                             ImageViewCompat.setImageTintList(sendButton, csl);
 
-                            final EditText editText = view.findViewById(R.id.editValue);
+                            mTextViewEditText = view.findViewById(R.id.editValue);
                             if (((TextItem) mItem).inputtype == TextItem.TYPE_NUMBER) {
                                 /* set numeric keyboard */
-                                editText.setInputType(InputType.TYPE_CLASS_NUMBER|
+                                mTextViewEditText.setInputType(InputType.TYPE_CLASS_NUMBER|
                                         InputType.TYPE_NUMBER_FLAG_SIGNED|InputType.TYPE_NUMBER_FLAG_DECIMAL);
                             }
 
-                            editText.setVisibility(View.VISIBLE);
-                            editText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                            mTextViewEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                                @Override
+                                public void onFocusChange(View v, boolean hasFocus) {
+                                    Log.d(TAG, "focus changed: " + hasFocus);
+                                    /* user touces control*/
+                                    if (hasFocus) {
+                                        mAutofillDisabled = true;
+                                    }
+                                }
+                            });
+
+                            mTextViewEditText.setVisibility(View.VISIBLE);
+                            mTextViewEditText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
 
                             sendButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     try {
-                                        performSend(editText != null ? editText.getText().toString().getBytes("UTF-8") : null);
+                                        performSend(mTextViewEditText != null ? mTextViewEditText.getText().toString().getBytes("UTF-8") : null);
                                     } catch (UnsupportedEncodingException e) {}
                                 }
                             });
@@ -319,6 +335,11 @@ public class DetailViewDialog extends DialogFragment {
                 mItem.setViewTextAppearance(mTextContent, mLabel.getTextColors().getDefaultColor());
                 mItem.setViewBackground(mTextContent, mDefaultBackground);
                 mTextContent.setText((String) mItem.data.get("content"));
+                if (!mAutofillDisabled && mTextViewEditText != null) {
+                    mTextViewEditText.setText((String) mItem.data.get("text.value"));
+                    // mTextViewEditText.requestFocus();
+                    // mTextViewEditText.selectAll();
+                }
 
                 mLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
             } else {
@@ -371,6 +392,7 @@ public class DetailViewDialog extends DialogFragment {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_VIEW_MODE, mViewMode);
         outState.putLong(KEY_PUBLISH_ID, mCurrentPublishID);
+        outState.putBoolean(KEY_AUTOFILL_DISABLED, mAutofillDisabled);
 
     }
     protected DashBoardViewModel mViewModel;
@@ -390,6 +412,10 @@ public class DetailViewDialog extends DialogFragment {
     protected ProgressBar mProgressBar;
     protected long mCurrentPublishID;
 
+    /* input controls */
+    protected boolean mAutofillDisabled; // when user touches control, autofill (setting default value) is disabled until published
+    protected EditText mTextViewEditText;
+
     protected DateFormat mFormatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());;
     protected DateFormat mTimeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT);
 
@@ -398,6 +424,7 @@ public class DetailViewDialog extends DialogFragment {
     protected final static int VIEW_ERROR_2 = 2;
     protected final static String KEY_VIEW_MODE = "KEY_VIEW_MODE";
     protected final static String KEY_PUBLISH_ID = "KEY_PUBLISH_ID";
+    protected final static String KEY_AUTOFILL_DISABLED = "KEY_AUTOFILL_DISABLED";
 
     private final static String TAG = DetailViewDialog.class.getSimpleName();
 }
