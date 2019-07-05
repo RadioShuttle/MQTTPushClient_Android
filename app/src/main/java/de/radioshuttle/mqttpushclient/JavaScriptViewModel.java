@@ -65,17 +65,14 @@ public class JavaScriptViewModel extends AndroidViewModel {
                 @Override
                 public void run() {
                     JSResult result = new JSResult();
-                    final JavaScript js =
-                            mMode == JavaScriptEditorActivity.CONTENT_FILTER ? JavaScript.getInstance() :
-                            DashBoardJavaScript.getInstance(getApplication());
+                    final DashBoardJavaScript js = DashBoardJavaScript.getInstance(getApplication());
                     final JavaScript.Context context;
                     try {
                         context = js.initFormatter(souceCode, accUser, accMqttServer , accPushServer);
-                        if (js instanceof DashBoardJavaScript) {
+                        if (mMode == JavaScriptEditorActivity.CONTENT_FILTER_DASHBOARD) {
                             HashMap<String, Object> viewProperties = new HashMap<>();
-                            ((DashBoardJavaScript) js).initViewProperties(context, viewProperties);
+                            js.initViewProperties(context, viewProperties);
                         }
-
                         try {
                             Future<JSResult> future = Utils.executor.submit(new Callable<JSResult>() {
                                 @Override
