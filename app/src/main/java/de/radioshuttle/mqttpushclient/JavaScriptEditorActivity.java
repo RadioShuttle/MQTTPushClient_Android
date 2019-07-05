@@ -44,12 +44,15 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
 
         setTitle("JavaScript Editor"); //Default will be overriden
 
-        mViewModel = ViewModelProviders.of(this).get(JavaScriptViewModel.class);
+        mViewModel = ViewModelProviders.of(
+                this, new JavaScriptViewModel.Factory(getApplication()))
+                .get(JavaScriptViewModel.class);
 
         Bundle args = getIntent().getExtras();
         if (args != null) {
 
             mComponentType = args.getInt(ARG_COMPONENT);
+            mViewModel.setComponentType(mComponentType);
 
             if (!Utils.isEmpty(args.getString(ARG_TITLE))) {
                 setTitle(args.getString(ARG_TITLE));
@@ -140,7 +143,9 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                         }
                     }
                 });
-                mViewModel.loadLastReceivedMsg(getApplication(), mViewModel.mContentFilterCache.get("msg.topic"));
+                if (mComponentType == CONTENT_FILTER || mComponentType == CONTENT_FILTER_DASHBOARD) {
+                    mViewModel.loadLastReceivedMsg(mViewModel.mContentFilterCache.get("msg.topic"));
+                }
             }
         }
 
@@ -277,7 +282,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
             if (mTestDataMsgContent != null) {
                 mViewModel.mContentFilterCache.put("msg.content", mTestDataMsgContent.getText().toString());
             }
-            mViewModel.runJavaScript( mEditor.getText().toString());
+            mViewModel.runJavaScript(mEditor.getText().toString());
         }
     }
 
@@ -354,6 +359,8 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     public final static String ARG_COMPONENT = "ARG_COMPONENT";
 
     public final static int CONTENT_FILTER = 1;
+    public final static int CONTENT_FILTER_DASHBOARD = 2;
+    public final static int CONTENT_OUTPUT_DASHBOARD = 3;
 
     private final static String TAG = JavaScriptEditorActivity.class.getSimpleName();
 }
