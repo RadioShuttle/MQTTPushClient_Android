@@ -131,6 +131,13 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                     }
                 }
             });
+            // testDataLabel
+            if (mComponentType == CONTENT_OUTPUT_DASHBOARD) {
+                TextView v = findViewById(R.id.testDataLabel);
+                if (v != null) {
+                    v.setText(R.string.test_data_label_outputscript);
+                }
+            }
             if (!mTestDataLoaded) {
                 mViewModel.latestMessage.observe(this, new Observer<JavaScriptViewModel.Request>() {
                     @Override
