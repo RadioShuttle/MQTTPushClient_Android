@@ -738,7 +738,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             String pubTopic = mEditTextTopicPub.getText().toString();
             if (!Utils.isEmpty(pubTopic)) {
                 try {
-                    MqttUtils.topicValidate(subTopic, true);
+                    MqttUtils.topicValidate(pubTopic, false);
                 } catch(IllegalArgumentException i) {
                     mEditTextTopicPub.setError(getString(R.string.err_invalid_topic_format));
                     valid = false;
@@ -776,7 +776,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
             intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc, view) {\n var content = msg.text;");
             intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
-            intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER);
+
+            if (mEditTextTopicSub != null) {
+                String subTopic = mEditTextTopicSub.getText().toString();
+                intent.putExtra(JavaScriptEditorActivity.ARG_TOPIC, subTopic);
+            }
+
+            intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER_DASHBOARD);
 
             Bundle args = getIntent().getExtras();
             String acc = args.getString(ARG_ACCOUNT);
@@ -799,11 +805,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 intent.putExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT, mOutputScriptContent);
             }
 
-            String header = getString(R.string.dash_filter_script_header); //TODO: set outputscript specific data
+            String header = getString(R.string.dash_output_script_header);
             intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
-            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc, view) {\n var content = msg.text;");
-            intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
-            intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER);
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function setContent(input, msg, acc) {\n var msg.text = input;");
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return msg;\n}");
+            intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD);
+            if (mEditTextTopicPub != null) {
+                String pubTopic = mEditTextTopicPub.getText().toString();
+                intent.putExtra(JavaScriptEditorActivity.ARG_TOPIC, pubTopic);
+            }
 
             Bundle args = getIntent().getExtras();
             String acc = args.getString(ARG_ACCOUNT);
