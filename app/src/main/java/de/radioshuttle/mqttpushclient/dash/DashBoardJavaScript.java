@@ -46,11 +46,13 @@ public class DashBoardJavaScript extends JavaScript {
         void setColor(double color);
         void setBackgroundColor(double color);
         void setTextColor(double color);
+        void setTextSize(double size);
         void setTextFieldValue(String defaultInputValue);
         double getTextColor();
         double getBackgroundColor();
         double getColor();
         String getTextFieldValue();
+        double getTextSize();
     }
 
     private static class ViewPropertiesImpl implements ViewProperties {
@@ -99,6 +101,16 @@ public class DashBoardJavaScript extends JavaScript {
         @Override
         public String getTextFieldValue() {
             return p.get("text.value") instanceof String ? (String) p.get("text.value") : "";
+        }
+
+        @Override
+        public void setTextSize(double size) {
+            p.put("textsize", doubleToInt(size));
+        }
+
+        @Override
+        public double getTextSize() {
+            return intToDouble((int) (p.get("textsize") == null ? 0 : p.get("textsize")));
         }
 
         protected double intToDouble(int i) {

@@ -152,6 +152,7 @@ public class JavaScriptExcecutor {
                             viewProperties.put("textcolor", task.item.textcolor);
                             viewProperties.put("color", 0); //TODO
                             viewProperties.put("background", task.item.background);
+                            viewProperties.put("textsize", task.item.textsize);
 
                             /* delegate javascript run to other thread to avoid long blocking times */
                             runJS = new RunJS(jsContext, task.message);

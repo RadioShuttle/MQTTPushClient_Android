@@ -108,6 +108,7 @@ public abstract class Item {
     /** set text color and text appearance */
     public void setViewTextAppearance(TextView v, int defaultColor) {
         if (v != null) {
+            int textsize = data.containsKey("textsize") ?  (Integer) data.get("textsize") : this.textsize;
             int textSizeIdx = (textsize <= 0 ? Item.DEFAULT_TEXTSIZE : textsize ) -1;
             if (textSizeIdx >= 0 && textSizeIdx < TEXTAPP.length) {
                 TextViewCompat.setTextAppearance(v, TEXTAPP[textSizeIdx]);
