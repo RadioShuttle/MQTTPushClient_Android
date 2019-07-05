@@ -637,6 +637,8 @@ public class DashBoardViewModel extends AndroidViewModel {
                                                     m.setTopic(jsonReader.nextString());
                                                 } else if (name.equals("payload")) {
                                                     m.setPayload(Base64.decode(jsonReader.nextString(), Base64.DEFAULT));
+                                                } else {
+                                                    jsonReader.skipValue();
                                                 }
                                             }
                                             jsonReader.endObject();
