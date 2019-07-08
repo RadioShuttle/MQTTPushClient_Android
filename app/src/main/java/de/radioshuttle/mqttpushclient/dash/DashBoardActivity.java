@@ -577,7 +577,9 @@ public class DashBoardActivity extends AppCompatActivity implements
                         if (updateItem) {
                             mViewModel.notifyDataChanged();
                         }
-                        mViewModel.onMessagePublished(publishRequest.getMessage());
+                        if (Utils.isEmpty(publishRequest.outputScriptError)) {
+                            mViewModel.onMessagePublished(publishRequest.getMessage());
+                        }
                     }
                 }
             }
