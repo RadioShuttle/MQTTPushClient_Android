@@ -121,7 +121,7 @@ public class JavaScript {
 
     /* implementation specific */
 
-    private static class DuktapeContext implements Context<Duktape> {
+    protected static class DuktapeContext implements Context<Duktape> {
 
         public DuktapeContext() {
             duktape  = Duktape.create();
@@ -142,7 +142,7 @@ public class JavaScript {
     }
 
 
-    private interface DuktapeMsgFormatter {
+    protected interface DuktapeMsgFormatter {
         String formatMsg(String receivedDateMillis, String topic, String payloadBase64, String payloadStr, int notificationType);
     }
 
