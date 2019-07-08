@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Application;
+import android.util.Base64;
 import android.util.Log;
 
 import com.squareup.duktape.Duktape;
@@ -40,6 +41,32 @@ public class DashBoardJavaScript extends JavaScript {
         if (!Utils.isEmpty(color_js)) {
             ((Duktape) context.getInterpreter()).evaluate(color_js);
         }
+    }
+
+    public Context initSetContent(String jsBody, String accUser, String accMqttServer, String accPushServer) throws Exception {
+        if (jsBody == null) {
+            jsBody = "";
+        }
+        jsBody += "  if (msg.raw.byteLength > 0) { content = msg.raw; }"; // binary data takes precedence over msg.text
+        jsBody += "  else if (typeof msg.text === 'string') { content = new TextEncoder().encode(msg.text); } ";
+        jsBody += "  else { content = null; } ";
+        jsBody += "  if (content != null) content = Duktape.enc('base64', content);";
+
+        return initFormatter(jsBody, accUser, accPushServer, accMqttServer);
+    }
+
+    public String setContent(Context context, String input, String topic) {
+        String result = null;
+        if (context instanceof DuktapeContext) {
+            result = ((DuktapeContext) context).formatter.formatMsg(
+                    String.valueOf(System.currentTimeMillis()),
+                    topic,
+                    null,
+                    input,
+                    0
+            );
+        }
+        return result;
     }
 
     private interface ViewProperties {
