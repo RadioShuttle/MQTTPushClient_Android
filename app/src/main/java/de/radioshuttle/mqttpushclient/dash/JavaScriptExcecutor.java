@@ -9,6 +9,7 @@ package de.radioshuttle.mqttpushclient.dash;
 import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.util.Log;
 
 import java.net.URI;
@@ -33,24 +34,71 @@ public class JavaScriptExcecutor {
         mExecutors = new HashMap<>();
         mAccount = account;
         mApplication = app;
+        mHandler = new Handler(Looper.getMainLooper());
     }
 
     interface Callback {
         void onFinshed(Item item, Map<String, Object> result);
     }
 
-    public void executeOutputScript(Item item, String topic, byte[] payload, boolean retain, Callback callback) {
-        //TODO: implement js
-        if (callback != null) {
-            //TODO: remove "fake" result
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("msg.topic", topic);
-            result.put("msg.received", System.currentTimeMillis());
-            result.put("msg.raw", payload); // this is the output result
-            result.put("msg.retain", retain);
-            // result.put("error", "JS error");
-            callback.onFinshed(item, result);
+    public void executeOutputScript(final Item item, final String topic, final byte[] payload, boolean retain, final Callback callback) {
+
+       final HashMap<String, Object> result = new HashMap<>();
+        result.put("msg.topic", topic);
+        result.put("msg.received", System.currentTimeMillis());
+        result.put("msg.retain", retain);
+
+        if (item != null) {
+            if (!Utils.isEmpty(item.script_p)) {
+                Utils.executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        final DashBoardJavaScript js = DashBoardJavaScript.getInstance(mApplication);
+                        try {
+                            final JavaScript.Context context = js.initSetContent(
+                                    item.script_p,
+                                    mAccount.user,
+                                    new URI(mAccount.uri).getAuthority(),
+                                    mAccount.pushserver);
+                            Future future = Utils.executor.submit(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        String res = js.setContent(context, new String(payload), topic);
+                                        if (!Utils.isEmpty(res)) {
+                                            result.put("msg.raw", Base64.decode(res, Base64.DEFAULT));
+                                        }
+                                    } finally {
+                                        context.close();
+                                    }
+                                }
+                            });
+                            future.get(JavaScript.TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                        } catch(Exception e) {
+                            if (e instanceof TimeoutException) {
+                                result.put("error", mApplication.getResources().getString(R.string.javascript_err_timeout));
+                            } else if (e instanceof ExecutionException && e.getCause() != null) {
+                                result.put("error", e.getCause().getMessage());
+                            } else {
+                                result.put("error", e.getMessage());
+                            }
+                        } finally {
+                            if (callback != null) {
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        callback.onFinshed(item, result);
+                                    }
+                                });                                              }
+                            }
+                    }
+                });
+            } else if (callback != null) { // there is no script to execute
+                result.put("msg.raw", payload); // if there is no script, result equals argument payload
+                callback.onFinshed(item, result);
+            }
         }
+
     }
 
     public void executeFilterScript(Item item, MqttMessage message, Callback callback) {
@@ -248,6 +296,7 @@ public class JavaScriptExcecutor {
         Callback callback;
     }
 
+    private Handler mHandler;
     private Application mApplication;
     private HashMap<Integer, Worker> mExecutors;
     private PushAccount mAccount;
