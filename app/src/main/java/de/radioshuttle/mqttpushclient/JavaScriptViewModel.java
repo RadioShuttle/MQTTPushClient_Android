@@ -48,7 +48,7 @@ public class JavaScriptViewModel extends AndroidViewModel {
     public HashMap<String, String> mContentFilterCache = new HashMap<>();
     public PushAccount mAccount;
 
-    public boolean runJavaScript(final String souceCode, final Object ...args) {
+    public boolean runJavaScript(final String souceCode) {
         boolean executed = false;
         if (javaScriptRunning.compareAndSet(false, true)) {
             executed = true;
@@ -68,7 +68,12 @@ public class JavaScriptViewModel extends AndroidViewModel {
                     final DashBoardJavaScript js = DashBoardJavaScript.getInstance(getApplication());
                     final JavaScript.Context context;
                     try {
-                        context = js.initFormatter(souceCode, accUser, accMqttServer , accPushServer);
+                        if (mMode == JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD) {
+                            context = js.initSetContent(souceCode, accUser, accMqttServer , accPushServer);
+                        } else {
+                            context = js.initFormatter(souceCode, accUser, accMqttServer , accPushServer);
+                        }
+
                         if (mMode == JavaScriptEditorActivity.CONTENT_FILTER_DASHBOARD) {
                             HashMap<String, Object> viewProperties = new HashMap<>();
                             js.initViewProperties(context, viewProperties);
@@ -79,7 +84,11 @@ public class JavaScriptViewModel extends AndroidViewModel {
                                 public JSResult call() {
                                     JSResult result = new JSResult();
                                     try {
-                                        result.result = js.formatMsg(context, para, 0);
+                                        if (mMode == JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD) {
+                                            result.result = js.setContent(context, new String(para.getPayload()), para.getTopic());
+                                        } else {
+                                            result.result = js.formatMsg(context, para, 0);
+                                        }
                                     } finally {
                                         context.close();
                                     }
