@@ -19,6 +19,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -107,7 +108,14 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 public void onChanged(JavaScriptViewModel.JSResult jsResult) {
                     if (jsResult != null) {
                         if (jsResult.code == 0) {
-                            mResultTextView.setText(getString(R.string.javascript_result) + "\n" + jsResult.result);
+                            String val = "";
+                            if (mComponentType == CONTENT_OUTPUT_DASHBOARD && !Utils.isEmpty(jsResult.result)) {
+                                val = new String(Base64.decode(jsResult.result, Base64.DEFAULT));
+                            } else {
+                                val = jsResult.result;
+                            }
+                            mResultTextView.setText(getString(R.string.javascript_result) + "\n" + val);
+
                         } else if (jsResult.code == 1) {
                             mResultTextView.setText(getString(R.string.javascript_err) + "\n" + getString(R.string.javascript_err_timeout));
                         } else {
