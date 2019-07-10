@@ -148,12 +148,12 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                         + " request: " + (request instanceof DeleteToken ? "deleteDevice"  : "check"));
 
                                 if (requestFinished) {
-                                    // last request of all accounts ?
-                                    if (mViewModel.isLastRequest(request)) {
+                                    mViewModel.confirmResultDelivered(request);
+
+                                    // hide progress, if no requests active anymore
+                                    if (!mViewModel.isRequestActive()) {
                                         mSwipeRefreshLayout.setRefreshing(false);
                                     }
-
-                                    mViewModel.confirmResultDelivered(request);
 
                                     if (request instanceof DeleteToken) {
                                         /* success */
