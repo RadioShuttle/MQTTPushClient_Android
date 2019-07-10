@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Application;
+import android.content.Context;
 import android.database.sqlite.SQLiteConstraintException;
 import android.os.Handler;
 import android.os.Looper;
@@ -137,6 +138,8 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     item.data.put("msg.raw", payload);
                                     item.data.put("msg.content", msg);
                                     item.data.put("content", msg);
+                                    item.data.remove("error"); // remove previous set error
+                                    item.updateUIContent(getApplication());
                                     updated = true;
                                 } else {
                                     // Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
@@ -153,6 +156,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                                         item.data.put("error2", publishError);
                                                     }
                                                     item.data.putAll(result);
+                                                    item.updateUIContent(getApplication());
                                                     mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers
                                                 }
                                             }
