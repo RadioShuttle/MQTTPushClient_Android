@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -204,7 +205,18 @@ public class AccountViewModel extends ViewModel {
     }
 
     public boolean isRequestActive() {
-        return currentRequests != null && currentRequests.size() > 0;
+        boolean active = false;
+        if (currentRequests != null && currentRequests.size() > 0) {
+            for(Iterator<Map.Entry<String, Request>> it = currentRequests.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, Request> e = it.next();
+                if (e.getValue() != null && !e.getValue().hasCompleted()) {
+                    active = true;
+                } else {
+                    it.remove();
+                }
+            }
+        }
+        return active;
     }
 
     public boolean isDeleteRequestActive() {
@@ -229,10 +241,6 @@ public class AccountViewModel extends ViewModel {
             request.getAccount().status == 0 &&
                     currentRequests != null &&
                     currentRequests.get(request.getAccount().getKey()) == request;
-    }
-
-    public boolean isLastRequest(Request request) {
-        return currentRequests.size() == 1 && isCurrentRequest(request);
     }
 
     public boolean hasMultiplePushServers() {
