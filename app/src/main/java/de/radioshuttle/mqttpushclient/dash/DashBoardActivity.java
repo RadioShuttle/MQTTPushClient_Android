@@ -232,6 +232,9 @@ public class DashBoardActivity extends AppCompatActivity implements
                 openEditor(TextItem.class);
                 // addTextItem();
                 break;
+            case R.id.action_add_progress :
+                openEditor(ProgressItem.class);
+                break;
             case R.id.action_zoom :
                 zoom();
                 break;
