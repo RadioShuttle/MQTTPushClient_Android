@@ -130,6 +130,77 @@
                     </LinearLayout>
                 </TableRow>
 
+
+                <TableRow android:id="@+id/rowProgressRange">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_progress_range"
+                        android:text="@string/dash_label_progress_range"
+                        />
+                    <LinearLayout android:id="@+id/dash_progress_range" android:orientation="horizontal">
+                        <EditText
+                            android:id="@+id/dash_progress_min"
+                            android:inputType="numberDecimal|number|numberSigned"
+                            android:ems="3"
+                            android:text="0"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:minHeight="48dp"
+                            android:layout_marginLeft="4dp"
+                            />
+
+                        <EditText
+                            android:id="@+id/dash_progress_max"
+                            android:inputType="numberDecimal|number|numberSigned"
+                            android:ems="3"
+                            android:text="100"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:minHeight="48dp"
+                            android:layout_marginLeft="4dp"
+                            />
+                    </LinearLayout>
+                </TableRow>
+
+                <TableRow android:id="@+id/rowProgressDecimal">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_progress_decimal"
+                        android:text="@string/dash_label_progress_decimal"
+                        />
+                    <LinearLayout>
+                        <EditText
+                            android:id="@+id/dash_progress_decimal"
+                            android:inputType="number"
+                            android:ems="3"
+                            android:text="0"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:minHeight="48dp"
+                            android:layout_marginLeft="4dp"
+                            />
+                    </LinearLayout>
+
+                </TableRow>
+
+                <TableRow android:id="@+id/rowPogressPercent">
+                    <CheckBox
+                        android:id="@+id/dash_progress_display_percent"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginLeft="4dp"
+                        android:layout_column="1"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:text="@string/dash_label_progress_percent"
+                        />
+                </TableRow>
+
+
                 <TableRow android:id="@+id/rowTopicSub">
                     <TextView
                         android:layout_gravity="right|center_vertical"
