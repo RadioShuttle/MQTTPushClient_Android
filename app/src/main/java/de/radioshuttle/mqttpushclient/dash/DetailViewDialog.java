@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
-import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -96,13 +95,8 @@ public class DetailViewDialog extends DialogFragment {
                         view =  inflater.inflate(R.layout.activity_dash_board_item_text, null);
 
                         mTextContent = view.findViewById(R.id.textContent);
-
+                        mContentContainer = mTextContent;
                         mLabel = view.findViewById(R.id.name);
-
-                        ViewGroup.LayoutParams lp = mTextContent.getLayoutParams();
-                        lp.width = Math.min(w, w2);
-                        lp.height = lp.width;
-                        mTextContent.setLayoutParams(lp);
 
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
 
@@ -143,7 +137,22 @@ public class DetailViewDialog extends DialogFragment {
                                 }
                             });
                         }
+                    } else if (mItem instanceof ProgressItem) {
+                        view =  inflater.inflate(R.layout.activity_dash_board_item_progress, null);
+
+                        mContentContainer = view.findViewById(R.id.progressBarContent);
+                        mItemProgressBar = view.findViewById(R.id.itemProgressBar);
+
+                        mTextContent = view.findViewById(R.id.textContent);
+                        mLabel = view.findViewById(R.id.name);
+
+                        mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
                     }
+
+                    ViewGroup.LayoutParams lp = mContentContainer.getLayoutParams();
+                    lp.width = Math.min(w, w2);
+                    lp.height = lp.width;
+                    mContentContainer.setLayoutParams(lp);
 
                     if (view != null) {
 
@@ -193,7 +202,7 @@ public class DetailViewDialog extends DialogFragment {
                         /* error view set size */
                         mErrorLabel = root.findViewById(R.id.errorLabel);
                         mErrorContent = root.findViewById(R.id.errorContent);
-                        ViewGroup.LayoutParams lp = mErrorContent.getLayoutParams();
+                        lp = mErrorContent.getLayoutParams();
                         lp.width = Math.min(w, w2);
                         lp.height = lp.width;
                         mErrorContent.setLayoutParams(lp);
@@ -331,20 +340,54 @@ public class DetailViewDialog extends DialogFragment {
                 mCurrentView.setVisibility(View.VISIBLE);
             }
 
-            if (mTextContent != null) { //mItem instanceof TextItem
+            /* container backgroud */
+            if (mContentContainer != null) {
+                mItem.setViewBackground(mContentContainer, mDefaultBackground);
+            }
+
+            /* text value appearance */
+            if (mTextContent != null) {
                 mItem.setViewTextAppearance(mTextContent, mLabel.getTextColors().getDefaultColor());
-                mItem.setViewBackground(mTextContent, mDefaultBackground);
                 mTextContent.setText((String) mItem.data.get("content"));
+            }
+
+            if (mItem instanceof TextItem) {
                 if (!mAutofillDisabled && mTextViewEditText != null) {
                     mTextViewEditText.setText((String) mItem.data.get("text.value"));
                     // mTextViewEditText.requestFocus();
                     // mTextViewEditText.selectAll();
                 }
+            } else if (mItem instanceof ProgressItem) {
+                if (mItemProgressBar != null) {
+                    int value = 0;
+                    /* if java script error, there is no valid data, set progress bar to 0 */
+                    if (mItem.data.get("error") instanceof String) {
+                    } else {
+                        String val = (String) mItem.data.get("content");
+                        if (!Utils.isEmpty(val)) {
+                            try {
+                                ProgressItem p = (ProgressItem) mItem;
+                                double v = Double.parseDouble(val);
+                                if (p.range_min < p.range_max && v >= p.range_min && v <= p.range_max) {
+                                    double f = ProgressItem.calcProgessInPercent(v, p.range_min, p.range_max) / 100d;
+                                    value = (int) ((double) mItemProgressBar.getMax() * f);
+                                }
+                            } catch(Exception e) {}
+                        }
+                    }
+                    mItemProgressBar.setProgress(value);
+                }
 
-                mLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
+
             } else {
                 //TODO: continue here to set other dash item related data
+
             }
+
+            if (mLabel != null) {
+                mLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
+            }
+
         } else {
             /* make sure current attached dash item is gone and error view is visible */
             if (mErrorContent.getVisibility() != View.VISIBLE) {
@@ -359,7 +402,11 @@ public class DetailViewDialog extends DialogFragment {
             if (mViewMode == VIEW_ERROR_1) {
                 Object javaScriptError = mItem.data.get("error");
                 if (javaScriptError instanceof String) {
-                    displayError = getString(R.string.javascript_err) + " " + javaScriptError;
+                    if (mItem.data.containsKey("error.item")) {
+                        displayError = getString(R.string.dash_item_err) + " " + javaScriptError;
+                    } else {
+                        displayError = getString(R.string.javascript_err) + " " + javaScriptError;
+                    }
                 }
             } else if (mViewMode == VIEW_ERROR_2) {
                 Object outputError = mItem.data.get("error2");
@@ -400,6 +447,7 @@ public class DetailViewDialog extends DialogFragment {
     protected View mCurrentView;
     protected TextView mLabel;
     protected int mDefaultBackground;
+    protected View mContentContainer;
     protected TextView mTextContent;
     protected int mDefaultTextColor;
     protected Item mItem;
@@ -411,6 +459,7 @@ public class DetailViewDialog extends DialogFragment {
     protected ImageButton mErrorButton2;
     protected ProgressBar mProgressBar;
     protected long mCurrentPublishID;
+    protected ProgressBar mItemProgressBar;
 
     /* input controls */
     protected boolean mAutofillDisabled; // when user touches control, autofill (setting default value) is disabled until published
