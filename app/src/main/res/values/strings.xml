@@ -211,20 +211,27 @@ to communicate with the MQTT broker and to receive push notifications
 
     <string name="action_add_text">Text View</string>
     <string name="action_add_group">Group View</string>
+    <string name="action_add_progress">Progress Bar/Slider</string>
 
     <string name="title_add_group">Add Group View</string>
     <string name="title_add_text">Add Text View</string>
+    <string name="title_add_progress">Add Progress Bar/Slider</string>
 
     <string name="title_edit_group">Edit Group View</string>
     <string name="title_edit_text">Edit Text View</string>
+    <string name="title_edit_progress">Eidt Progress Bar/Slider</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
-    <string name="dash_label_text_color">Text color:</string>
+    <string name="dash_label_text_color">Text Color:</string>
     <string name="dash_label_bcolor">Background:</string>
     <string name="dash_label_group">Group:</string>
     <string name="dash_label_position">Pos:</string>
-    <string name="dash_label_textsize">Text size:</string>
+    <string name="dash_label_textsize">Text Size:</string>
+    <string name="dash_label_progress_range">Range:</string>
+    <string name="dash_label_progress_decimal">Decimal:</string>
+    <string name="dash_label_progress_percent">Display in Percent</string>
+
     <string-array name="dash_label_size_array">
         <item name="dash_label_textsize_s">Small</item>
         <item name="dash_label_textsize_m">Medium</item>
@@ -240,6 +247,10 @@ to communicate with the MQTT broker and to receive push notifications
         <item name="dash_label_input_text">Text</item>
         <item name="dash_label_input_number">Number</item>
     </string-array>
+
+    <string name="dash_item_err">Error:</string>
+    <string name="error_input_ge0">Value must be greater than 0</string>
+    <string name="error_input_invalid_range">Invalid range. Max value must be greater than min value</string>
 
     <string name="select_single_dash">Only one dash may be selected for editing</string>
     <string name="new_group_label">New Group</string>
