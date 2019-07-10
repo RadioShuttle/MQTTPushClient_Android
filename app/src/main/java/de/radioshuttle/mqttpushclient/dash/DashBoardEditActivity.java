@@ -268,6 +268,41 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     }
                 }
 
+                /* progress bar/slider range*/
+                TableRow rangeRow = findViewById(R.id.rowProgressRange);
+                if (rangeRow != null) {
+                    mEditTextRangeMin = findViewById(R.id.dash_progress_min);
+                    mEditTextRangeMax = findViewById(R.id.dash_progress_max);
+                    if (!(mItem instanceof ProgressItem)) {
+                        rangeRow.setVisibility(View.GONE);
+                    } else if (savedInstanceState == null) {
+                        mEditTextRangeMin.setText(String.valueOf(((ProgressItem) mItem).range_min));
+                        mEditTextRangeMax.setText(String.valueOf(((ProgressItem) mItem).range_max));
+                    }
+                }
+
+                /* progress bar/slider decimal*/
+                TableRow decimalRow = findViewById(R.id.rowProgressDecimal);
+                if (decimalRow != null) {
+                    mEditTextDecimal = findViewById(R.id.dash_progress_decimal);
+                    if (!(mItem instanceof ProgressItem)) {
+                        decimalRow.setVisibility(View.GONE);
+                    } else if (savedInstanceState == null) {
+                        mEditTextDecimal.setText(String.valueOf(((ProgressItem) mItem).decimal));
+                    }
+                }
+
+                /* progress bar/slider display percent */
+                TableRow percentRow = findViewById(R.id.rowPogressPercent);
+                if (percentRow != null) {
+                    mRangeDisplayPercent = findViewById(R.id.dash_progress_display_percent);
+                    if (!(mItem instanceof ProgressItem)) {
+                        percentRow.setVisibility(View.GONE);
+                    } else if (savedInstanceState == null) {
+                        mRangeDisplayPercent.setChecked(((ProgressItem) mItem).percent);
+                    }
+                }
+
                 /* filter/UI sctipt */
                 TableRow rowFilterScript = findViewById(R.id.rowFilterScript);
                 if (rowFilterScript != null) {
@@ -364,12 +399,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         title = getString(R.string.title_add_group);
                     } else if (mItem instanceof TextItem) {
                         title = getString(R.string.title_add_text);
+                    } else if (mItem instanceof ProgressItem) {
+                        title = getString(R.string.title_add_progress);
                     }
                 } else { // mMode == MODE_EDIT
                     if (mItem instanceof GroupItem) {
                         title = getString(R.string.title_edit_group);
                     } else if (mItem instanceof TextItem) {
                         title = getString(R.string.title_edit_text);
+                    } else if (mItem instanceof ProgressItem) {
+                        title = getString(R.string.title_edit_progress);
                     }
                 }
                 setTitle(title);
@@ -744,6 +783,37 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     valid = false;
                 }
             }
+            if (mItem instanceof ProgressItem) {
+
+                double min = Double.NaN, max = Double.NaN;
+                int decimal = Integer.MIN_VALUE;
+                try {
+                    min = Double.valueOf(mEditTextRangeMin.getText().toString());
+                } catch(Exception e) {
+                    mEditTextRangeMin.setError(getString(R.string.err_invalid_topic_format)); //TODO: consider using own string resource
+                    valid = false;
+                };
+                try {
+                    max = Double.valueOf(mEditTextRangeMax.getText().toString());
+                    if (min >= max) {
+                        mEditTextRangeMax.setError(getString(R.string.error_input_invalid_range));
+                        valid = false;
+                    }
+                } catch(Exception e) {
+                    mEditTextRangeMax.setError(getString(R.string.err_invalid_topic_format));
+                    valid = false;
+                };
+                try {
+                    decimal = Integer.valueOf(mEditTextDecimal.getText().toString());
+                    if (decimal < 0) {
+                        mEditTextDecimal.setError(getString(R.string.error_input_ge0));
+                        valid = false;
+                    }
+                } catch(Exception e) {
+                    mEditTextDecimal.setError(getString(R.string.err_invalid_topic_format));
+                    valid = false;
+                };
+            }
         }
         return valid;
     }
@@ -871,6 +941,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         ((TextItem) cItem).inputtype = mInputTypeSpinner.getSelectedItemPosition();
                     }
                     cItem.script_p = mOutputScriptContent == null ? "" : mOutputScriptContent;
+                    if (cItem instanceof ProgressItem) {
+                        ProgressItem item = (ProgressItem) cItem;
+                        try {item.range_min = Double.valueOf(mEditTextRangeMin.getText().toString());} catch(Exception e) {}
+                        try {item.range_max = Double.valueOf(mEditTextRangeMax.getText().toString());} catch(Exception e) {}
+                        try {item.decimal = Integer.valueOf(mEditTextDecimal.getText().toString());} catch(Exception e) {}
+                        item.percent = mRangeDisplayPercent.isChecked();
+                    }
                 }
                 if (mEditTextLabel != null) {
                     cItem.label = mEditTextLabel.getText().toString();
@@ -928,6 +1005,12 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         setEnabled(mRetainCheckbox, enableFields);
         setEnabled(mInputTypeSpinner, enableFields);
         setEnabled(mOutputScriptButton, enableFields);
+        if (mItem instanceof ProgressItem) {
+            setEnabled(mEditTextRangeMin, enableFields);
+            setEnabled(mEditTextRangeMax, enableFields);
+            setEnabled(mEditTextDecimal, enableFields);
+            setEnabled(mRangeDisplayPercent, enableFields);
+        }
         invalidateOptionsMenu();
     }
 
@@ -995,6 +1078,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
 
             }
+
+            if (!changed && mItem instanceof ProgressItem) {
+                ProgressItem item = (ProgressItem) mItem;
+                double min = Double.NaN, max = Double.NaN;
+                int decimal = Integer.MIN_VALUE;
+                try { min = Double.valueOf(mEditTextRangeMin.getText().toString()); } catch(Exception e) {};
+                try { max = Double.valueOf(mEditTextRangeMax.getText().toString()); } catch(Exception e) {};
+                try { decimal = Integer.valueOf(mEditTextDecimal.getText().toString()); } catch(Exception e) {};
+                changed = min != item.range_min || max != item.range_max || decimal != item.decimal || mRangeDisplayPercent.isChecked() != item.percent;
+            }
+
             if (!changed) {
                 int itemPos = getIntent().getIntExtra(ARG_ITEM_POS, AdapterView.INVALID_POSITION);
                 if (mPosSpinner.getSelectedItemPosition() != itemPos) {
@@ -1030,6 +1124,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected Spinner mPosSpinner;
     protected Spinner mTextSizeSpinner;
     protected Button mOutputScriptButton;
+
+    protected EditText mEditTextRangeMin, mEditTextRangeMax, mEditTextDecimal;
+    protected CheckBox mRangeDisplayPercent;
+
 
     boolean mGinit, mPinit, mTinit;
     boolean mInputTypeInit;
