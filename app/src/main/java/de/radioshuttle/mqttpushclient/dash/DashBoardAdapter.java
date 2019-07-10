@@ -7,11 +7,11 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.res.ColorStateList;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -22,7 +22,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.ImageViewCompat;
-import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
@@ -51,16 +50,29 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         // Log.d(TAG, "onCreateViewHolder: " );
         View view;
         TextView label = null;
-        TextView textContent = null;
+        View contentContainer = null;
+        TextView value = null;
         ImageView selectedImageView = null;
         ImageView errorImageView = null;
         ImageView errorImage2View = null;
+        ProgressBar progressBar = null;
         int defaultColor = 0;
         if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
-            textContent = view.findViewById(R.id.textContent);
+            contentContainer = view.findViewById(R.id.textContent);
+            value = view.findViewById(R.id.textContent);
+            selectedImageView = view.findViewById(R.id.check);
+            errorImageView = view.findViewById(R.id.errorImage);
+            errorImage2View = view.findViewById(R.id.errorImage2);
+        } else if (viewType == TYPE_PROGRESS) {
+            view = mInflater.inflate(R.layout.activity_dash_board_item_progress, parent, false);
+            label = view.findViewById(R.id.name);
+            defaultColor = label.getTextColors().getDefaultColor();
+            contentContainer = view.findViewById(R.id.progressBarContent);
+            progressBar = view.findViewById(R.id.itemProgressBar);
+            value = view.findViewById(R.id.textContent);
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
             errorImage2View = view.findViewById(R.id.errorImage2);
@@ -74,7 +86,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
         holder.viewType = viewType;
-        holder.textContent = textContent; // content for text items
+        holder.contentContainer = contentContainer; // content for text items
+        holder.progressBar = progressBar;
+        holder.value = value;
         holder.selectedImageView = selectedImageView;
         holder.defaultColor = defaultColor;
         holder.errorImage = errorImageView;
@@ -117,9 +131,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         // Log.d(TAG, "onBindViewHolder: " );
         ViewHolder h = (ViewHolder) holder;
         Item item = mData.get(position);
-        if (h.viewType == TYPE_TEXT || h.viewType == TYPE_GROUP) {
-            h.label.setText(item.label);
-        }
+        h.label.setText(item.label);
 
         if (mSelectedItems.contains(item.id)) {
             h.itemView.setActivated(true);
@@ -135,18 +147,17 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
 
-        if (h.viewType == TYPE_TEXT) {
-            lp = h.textContent.getLayoutParams();
+        if (h.viewType != TYPE_GROUP) {
+
+            lp = h.contentContainer.getLayoutParams();
             if (lp.width != mWidth || lp.height != mWidth) {
                 lp.width = mWidth;
                 lp.height = mWidth;
-                h.textContent.setLayoutParams(lp);
+                h.contentContainer.setLayoutParams(lp);
 
             }
-            item.setViewBackground(h.textContent, mDefaultBackground);
-        }
-
-        if (h.viewType == TYPE_GROUP) {
+            item.setViewBackground(h.contentContainer, mDefaultBackground);
+        } else { // if (h.viewType == TYPE_GROUP) {
             if (lp.width != mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2) {
                 lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
                 h.itemView.setLayoutParams(lp);
@@ -172,8 +183,28 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
 
         Object javaScriptError = item.data.get("error");
+
+        if (h.progressBar != null) { // (h.viewType == TYPE_PROGRESS) {
+            int value = 0;
+            /* if java script error, there is no valid data, set progress bar to 0 */
+            if (javaScriptError instanceof String) {
+            } else {
+                String val = (String) item.data.get("content");
+                if (!Utils.isEmpty(val)) {
+                    try {
+                        ProgressItem p = (ProgressItem) item;
+                        double v = Double.parseDouble(val);
+                        if (p.range_min < p.range_max && v >= p.range_min && v <= p.range_max) {
+                            double f = ProgressItem.calcProgessInPercent(v, p.range_min, p.range_max) / 100d;
+                            value = (int) ((double) h.progressBar.getMax() * f);
+                        }
+                    } catch(Exception e) {}
+                }
+            }
+            h.progressBar.setProgress(value);
+        }
         if (h.errorImage != null) {
-            if (javaScriptError instanceof String) { // value set?
+            if (javaScriptError instanceof String) { // TYPE_TEXT
                 ColorStateList csl = ColorStateList.valueOf(item.textcolor == 0 ? h.defaultColor : item.textcolor);
                 ImageViewCompat.setImageTintList(h.errorImage, csl);
 
@@ -189,9 +220,16 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         // if view for text content exists, set content
         // Log.d(TAG, "ui: " + item.label);
-        if (h.textContent != null) {
-            item.setViewTextAppearance(h.textContent, h.defaultColor);
-            h.textContent.setText((String) item.data.get("content"));
+        if (h.value != null) { //TEXT
+            String content = (String) item.data.get("content");
+            if (h.viewType == TYPE_PROGRESS) {
+                if (item.data.get("content.progress") instanceof String) {
+                    content = (String) item.data.get("content.progress");
+                }
+            }
+
+            item.setViewTextAppearance(h.value, h.defaultColor);
+            h.value.setText(content);
         }
 
         // Log.d(TAG, "width: " + lp.width);
@@ -243,7 +281,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             super(v);
         }
         TextView label;
-        TextView textContent;
+        View contentContainer;
+        TextView value;
+        ProgressBar progressBar;
         ImageView selectedImageView;
         ImageView errorImage;
         ImageView errorImage2;
@@ -260,6 +300,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 type = TYPE_GROUP;
             } else if (item instanceof TextItem) {
                 type = TYPE_TEXT;
+            } else  if (item instanceof ProgressItem) {
+                type = TYPE_PROGRESS;
             }
         }
         return type;
@@ -327,6 +369,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
     public final static int TYPE_GROUP = 0;
     public final static int TYPE_TEXT = 1;
+    public final static int TYPE_PROGRESS = 2;
 
     private final static String TAG = DashBoardAdapter.class.getSimpleName();
 }
