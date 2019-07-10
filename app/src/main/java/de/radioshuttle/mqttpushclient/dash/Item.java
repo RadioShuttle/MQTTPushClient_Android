@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 
+import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 
@@ -81,6 +82,7 @@ public abstract class Item {
         switch (type) {
             case "text": item = new TextItem(); break;
             case "group": item = new GroupItem(); break;
+            case "progress" : item = new ProgressItem(); break;
         }
         if (item != null) {
             item.setJSONData(o);
@@ -121,6 +123,9 @@ public abstract class Item {
                 v.setTextColor(defaultColor);
             }
         }
+    }
+
+    protected void updateUIContent(Context context) {
     }
 
     protected int getTextcolor() {
