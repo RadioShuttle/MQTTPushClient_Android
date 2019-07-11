@@ -75,7 +75,11 @@ public class ProgressItem extends Item {
     }
 
     public static double calcProgessInPercent(double v, double min, double max) {
-        return 100d / (max - min) * (v - min);
+        if (min < max) {
+            return 100d / (max - min) * (v - min);
+        } else {
+            return 0;
+        }
     }
 
     public ProgressItem() {
