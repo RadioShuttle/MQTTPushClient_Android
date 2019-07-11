@@ -145,10 +145,25 @@ public class DetailViewDialog extends DialogFragment {
                         mContentContainer = view.findViewById(R.id.progressBarContent);
                         mItemProgressBar = view.findViewById(R.id.itemProgressBar);
                         mSeekBar = view.findViewById(R.id.itemSeekBar);
+
+                        mTextContent = view.findViewById(R.id.textContent);
+                        mLabel = view.findViewById(R.id.name);
+                        mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
+
                         if (publishEnabled) {
+
+                            /* tint send button and value editor */
+                            ImageButton sendButton = view.findViewById(R.id.sendButton);
+                            sendButton.setVisibility(View.VISIBLE);
+                            ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                            ImageViewCompat.setImageTintList(sendButton, csl);
+
                             mProgressFormatter = NumberFormat.getInstance();
                             mProgressFormatter.setMinimumFractionDigits(((ProgressItem) mItem).decimal);
                             mProgressFormatter.setMaximumFractionDigits(((ProgressItem) mItem).decimal);
+                            mProgressFormatterUS = NumberFormat.getInstance(Locale.US);
+                            mProgressFormatterUS.setMinimumFractionDigits(((ProgressItem) mItem).decimal);
+                            mProgressFormatterUS.setMaximumFractionDigits(((ProgressItem) mItem).decimal);
                             mItemProgressBar.setVisibility(View.GONE);
                             mSeekBar.setVisibility(View.VISIBLE);
                             mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -161,12 +176,23 @@ public class DetailViewDialog extends DialogFragment {
                                 }
                                 public void onStopTrackingTouch(SeekBar seekBar) {}
                             });
+
+                            sendButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    try {
+                                        ProgressItem pItem = (ProgressItem) mItem;
+                                        double f = (double) mSeekBar.getProgress() / (double) mSeekBar.getMax();
+                                        double value = ((double) pItem.range_max - (double) pItem.range_min) * f + (double) pItem.range_min;
+                                        //format with "." decimal separator
+                                        performSend(mProgressFormatterUS.format(value).getBytes("UTF-8"));
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Format error (progress item)", e);
+                                    }
+                                }
+                            });
                         }
 
-                        mTextContent = view.findViewById(R.id.textContent);
-                        mLabel = view.findViewById(R.id.name);
-
-                        mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
                     }
 
                     ViewGroup.LayoutParams lp = mContentContainer.getLayoutParams();
@@ -518,6 +544,7 @@ public class DetailViewDialog extends DialogFragment {
     protected ProgressBar mItemProgressBar;
     protected SeekBar mSeekBar;
     protected NumberFormat mProgressFormatter;
+    protected NumberFormat mProgressFormatterUS;
     protected String mSeekBarFormattedValue;
 
 
