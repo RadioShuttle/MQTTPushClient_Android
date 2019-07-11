@@ -219,7 +219,7 @@ to communicate with the MQTT broker and to receive push notifications
 
     <string name="title_edit_group">Edit Group View</string>
     <string name="title_edit_text">Edit Text View</string>
-    <string name="title_edit_progress">Eidt Progress Bar/Slider</string>
+    <string name="title_edit_progress">Edit Progress Bar/Slider</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
@@ -251,6 +251,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_item_err">Error:</string>
     <string name="error_input_ge0">Value must be greater than 0</string>
     <string name="error_input_invalid_range">Invalid range. Max value must be greater than min value</string>
+    <string name="error_out_of_range">Received value is out of range.</string>
 
     <string name="select_single_dash">Only one dash may be selected for editing</string>
     <string name="new_group_label">New Group</string>
