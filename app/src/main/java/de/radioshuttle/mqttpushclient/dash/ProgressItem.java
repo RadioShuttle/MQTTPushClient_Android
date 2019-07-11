@@ -57,17 +57,17 @@ public class ProgressItem extends Item {
                     return;
                 }
                 if (value < range_min || value > range_max) {
-                    data.put("error", context.getString(R.string.error_input_invalid_range));
+                    data.put("error", context.getString(R.string.error_out_of_range));
                     data.put("error.item", true);
                     return;
                 }
                 pc = calcProgessInPercent(value, range_min, range_max);
-                NumberFormat f = NumberFormat.getInstance();
-                f.setMinimumFractionDigits(decimal);
-                f.setMaximumFractionDigits(decimal);
                 if (percent) {
-                    data.put("content.progress", f.format(pc) + "%");
+                    data.put("content.progress", (int) Math.floor(pc + .5d) + "%");
                 } else {
+                    NumberFormat f = NumberFormat.getInstance();
+                    f.setMinimumFractionDigits(decimal);
+                    f.setMaximumFractionDigits(decimal);
                     data.put("content.progress", f.format(value));
                 }
             }
