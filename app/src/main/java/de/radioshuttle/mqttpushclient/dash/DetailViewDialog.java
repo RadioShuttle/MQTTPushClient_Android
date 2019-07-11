@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,7 @@ import androidx.lifecycle.Observer;
 
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -142,6 +144,24 @@ public class DetailViewDialog extends DialogFragment {
 
                         mContentContainer = view.findViewById(R.id.progressBarContent);
                         mItemProgressBar = view.findViewById(R.id.itemProgressBar);
+                        mSeekBar = view.findViewById(R.id.itemSeekBar);
+                        if (publishEnabled) {
+                            mProgressFormatter = NumberFormat.getInstance();
+                            mProgressFormatter.setMinimumFractionDigits(((ProgressItem) mItem).decimal);
+                            mProgressFormatter.setMaximumFractionDigits(((ProgressItem) mItem).decimal);
+                            mItemProgressBar.setVisibility(View.GONE);
+                            mSeekBar.setVisibility(View.VISIBLE);
+                            mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                                    updateProgressView(progress);
+                                }
+                                public void onStartTrackingTouch(SeekBar seekBar) {
+                                    Log.d(TAG, "focus changed: " + true);
+                                    mAutofillDisabled = true;
+                                }
+                                public void onStopTrackingTouch(SeekBar seekBar) {}
+                            });
+                        }
 
                         mTextContent = view.findViewById(R.id.textContent);
                         mLabel = view.findViewById(R.id.name);
@@ -160,7 +180,7 @@ public class DetailViewDialog extends DialogFragment {
                             @Override
                             public void onChanged(List<Item> items) {
                                 // Log.d(TAG, "item data updated.");
-                                updateView();
+                                updateView(); //TODO: check mItem - it might have updated by other client!
                             }
                         });
 
@@ -287,6 +307,36 @@ public class DetailViewDialog extends DialogFragment {
         }
     }
 
+    protected void updateProgressView(int progress) {
+        ProgressItem pItem = (ProgressItem) mItem;
+        double f = (double) progress / (double) mSeekBar.getMax();
+        double value;
+        double valuePC;
+        if (pItem.percent) {
+            valuePC = f * 100d;
+            mSeekBarFormattedValue = mProgressFormatter.format(valuePC) + "%";
+        } else {
+            value = ((double) pItem.range_max - (double) pItem.range_min) * f + (double) pItem.range_min;
+            mSeekBarFormattedValue = mProgressFormatter.format(value);
+        }
+        if (mTextContent != null) {
+            mTextContent.setText(getContent());
+        }
+    }
+
+    protected String getContent() {
+        String content = (String) mItem.data.get("content");
+        if (mItem instanceof ProgressItem) {
+            if (mItem.data.get("content.progress") instanceof String) {
+                content = (String) mItem.data.get("content.progress");
+            }
+            if (!Utils.isEmpty(mSeekBarFormattedValue)) {
+                content += " / " + mSeekBarFormattedValue;
+            }
+        }
+        return content;
+    }
+
     protected void updateView() {
 
         /* if there is an error, show corresonding error button (if not already shown) */
@@ -348,7 +398,8 @@ public class DetailViewDialog extends DialogFragment {
             /* text value appearance */
             if (mTextContent != null) {
                 mItem.setViewTextAppearance(mTextContent, mLabel.getTextColors().getDefaultColor());
-                mTextContent.setText((String) mItem.data.get("content"));
+                String content = getContent();
+                mTextContent.setText(content);
             }
 
             if (mItem instanceof TextItem) {
@@ -358,7 +409,7 @@ public class DetailViewDialog extends DialogFragment {
                     // mTextViewEditText.selectAll();
                 }
             } else if (mItem instanceof ProgressItem) {
-                if (mItemProgressBar != null) {
+                if (mItemProgressBar != null && mSeekBar != null) {
                     int value = 0;
                     /* if java script error, there is no valid data, set progress bar to 0 */
                     if (mItem.data.get("error") instanceof String) {
@@ -375,10 +426,15 @@ public class DetailViewDialog extends DialogFragment {
                             } catch(Exception e) {}
                         }
                     }
-                    mItemProgressBar.setProgress(value);
+                    if (mItemProgressBar.getVisibility() == View.VISIBLE) {
+                        mItemProgressBar.setProgress(value);
+                    }
+                    if (mSeekBar.getVisibility() == View.VISIBLE) {
+                        if (!mAutofillDisabled) {
+                            mSeekBar.setProgress(value);
+                        }
+                    }
                 }
-
-
             } else {
                 //TODO: continue here to set other dash item related data
 
@@ -460,6 +516,10 @@ public class DetailViewDialog extends DialogFragment {
     protected ProgressBar mProgressBar;
     protected long mCurrentPublishID;
     protected ProgressBar mItemProgressBar;
+    protected SeekBar mSeekBar;
+    protected NumberFormat mProgressFormatter;
+    protected String mSeekBarFormattedValue;
+
 
     /* input controls */
     protected boolean mAutofillDisabled; // when user touches control, autofill (setting default value) is disabled until published
