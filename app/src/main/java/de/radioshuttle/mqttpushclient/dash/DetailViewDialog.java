@@ -31,10 +31,13 @@ import androidx.core.content.ContextCompat;
 import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProviders;
 
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -71,6 +74,7 @@ public class DetailViewDialog extends DialogFragment {
             Bundle args = getArguments();
             if (getActivity() instanceof DashBoardActivity) {
                 mViewModel = ((DashBoardActivity) getActivity()).mViewModel;
+                mViewModelPublish = ViewModelProviders.of(this).get(DetailViewDialog.PublishViewModel.class);
 
                 mAutofillDisabled = (savedInstanceState == null ? false : savedInstanceState.getBoolean(KEY_AUTOFILL_DISABLED, false));
 
@@ -134,7 +138,7 @@ public class DetailViewDialog extends DialogFragment {
                                 @Override
                                 public void onClick(View v) {
                                     try {
-                                        performSend(mTextViewEditText != null ? mTextViewEditText.getText().toString().getBytes("UTF-8") : null);
+                                        performSend(mTextViewEditText != null ? mTextViewEditText.getText().toString().getBytes("UTF-8") : null, false);
                                     } catch (UnsupportedEncodingException e) {}
                                 }
                             });
@@ -152,12 +156,6 @@ public class DetailViewDialog extends DialogFragment {
 
                         if (publishEnabled) {
 
-                            /* tint send button and value editor */
-                            ImageButton sendButton = view.findViewById(R.id.sendButton);
-                            sendButton.setVisibility(View.VISIBLE);
-                            ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
-                            ImageViewCompat.setImageTintList(sendButton, csl);
-
                             mProgressFormatter = NumberFormat.getInstance();
                             mProgressFormatter.setMinimumFractionDigits(((ProgressItem) mItem).decimal);
                             mProgressFormatter.setMaximumFractionDigits(((ProgressItem) mItem).decimal);
@@ -169,26 +167,17 @@ public class DetailViewDialog extends DialogFragment {
                             mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                                     updateProgressView(progress);
+                                    if (fromUser) {
+                                        performSendForProgressItem(progress);
+                                    }
                                 }
                                 public void onStartTrackingTouch(SeekBar seekBar) {
                                     Log.d(TAG, "focus changed: " + true);
                                     mAutofillDisabled = true;
                                 }
-                                public void onStopTrackingTouch(SeekBar seekBar) {}
-                            });
-
-                            sendButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    try {
-                                        ProgressItem pItem = (ProgressItem) mItem;
-                                        double f = (double) mSeekBar.getProgress() / (double) mSeekBar.getMax();
-                                        double value = ((double) pItem.range_max - (double) pItem.range_min) * f + (double) pItem.range_min;
-                                        //format with "." decimal separator
-                                        performSend(mProgressFormatterUS.format(value).getBytes("UTF-8"));
-                                    } catch (Exception e) {
-                                        Log.e(TAG, "Format error (progress item)", e);
-                                    }
+                                public void onStopTrackingTouch(SeekBar seekBar) {
+                                    performSendForProgressItem(mSeekBar.getProgress());
+                                    // mAutofillDisabled = false; //TODO: consider enable autofill
                                 }
                             });
                         }
@@ -300,14 +289,29 @@ public class DetailViewDialog extends DialogFragment {
         return root;
     }
 
-    protected void performSend(byte[] value) {
+    protected void performSend(byte[] value, boolean queueRequest) {
         if (mCurrentPublishID > 0) {
-            Toast t = Toast.makeText(getContext(), getString(R.string.op_in_progress), Toast.LENGTH_LONG);
-            t.show();
+            if (!queueRequest) {
+                Toast t = Toast.makeText(getContext(), getString(R.string.op_in_progress), Toast.LENGTH_LONG);
+                t.show();
+            } else {
+                mViewModelPublish.queue.add(value);
+            }
         } else {
             //TODO: consider ignoring empty values
             mProgressBar.setVisibility(View.VISIBLE);
             mCurrentPublishID = mViewModel.publish(mItem.topic_p, value, mItem.retain, mItem);
+        }
+    }
+
+    protected void performSendForProgressItem(int progress) {
+        try {
+            ProgressItem pItem = (ProgressItem) mItem;
+            double f = (double) mSeekBar.getProgress() / (double) mSeekBar.getMax();
+            double value = (pItem.range_max - pItem.range_min) * f + pItem.range_min;
+            performSend(mProgressFormatterUS.format(value).getBytes("UTF-8"), true); // format with "." decimal separator
+        } catch (Exception e) {
+            Log.e(TAG, "Format error (progress item)", e);
         }
     }
 
@@ -318,6 +322,12 @@ public class DetailViewDialog extends DialogFragment {
                 if (!request.hasCompleted()) {
                     mProgressBar.setVisibility(View.VISIBLE);
                 } else {
+                    if (!mViewModelPublish.queue.isEmpty()) {
+                        byte[] lastSetValue = mViewModelPublish.queue.get(mViewModelPublish.queue.size() - 1);
+                        mViewModelPublish.queue.clear();
+                        mCurrentPublishID = mViewModel.publish(mItem.topic_p, lastSetValue, mItem.retain, mItem);
+                        return;
+                    }
                     mProgressBar.setVisibility(View.GONE);
                     DashBoardViewModel.ItemContext ic = mViewModel.getItem(request.getItemID());
                     Toast t;
@@ -340,7 +350,7 @@ public class DetailViewDialog extends DialogFragment {
         double valuePC;
         if (pItem.percent) {
             valuePC = f * 100d;
-            mSeekBarFormattedValue = mProgressFormatter.format(valuePC) + "%";
+            mSeekBarFormattedValue = (int) Math.floor(valuePC + .5d) + "%";
         } else {
             value = ((double) pItem.range_max - (double) pItem.range_min) * f + (double) pItem.range_min;
             mSeekBarFormattedValue = mProgressFormatter.format(value);
@@ -524,6 +534,14 @@ public class DetailViewDialog extends DialogFragment {
         outState.putBoolean(KEY_AUTOFILL_DISABLED, mAutofillDisabled);
 
     }
+
+    protected static class PublishViewModel extends ViewModel {
+        public PublishViewModel() {
+            queue = new ArrayList<>();
+        }
+        public List<byte[]> queue;
+    }
+
     protected DashBoardViewModel mViewModel;
 
     protected View mCurrentView;
@@ -546,7 +564,7 @@ public class DetailViewDialog extends DialogFragment {
     protected NumberFormat mProgressFormatter;
     protected NumberFormat mProgressFormatterUS;
     protected String mSeekBarFormattedValue;
-
+    protected PublishViewModel mViewModelPublish;
 
     /* input controls */
     protected boolean mAutofillDisabled; // when user touches control, autofill (setting default value) is disabled until published
