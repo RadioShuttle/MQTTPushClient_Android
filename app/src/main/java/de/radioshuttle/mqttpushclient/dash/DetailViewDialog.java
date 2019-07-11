@@ -176,8 +176,8 @@ public class DetailViewDialog extends DialogFragment {
                                     mAutofillDisabled = true;
                                 }
                                 public void onStopTrackingTouch(SeekBar seekBar) {
-                                    performSendForProgressItem(mSeekBar.getProgress());
-                                    // mAutofillDisabled = false; //TODO: consider enable autofill
+                                    // performSendForProgressItem(mSeekBar.getProgress());
+                                    mAutofillDisabled = false;
                                 }
                             });
                         }
@@ -307,7 +307,7 @@ public class DetailViewDialog extends DialogFragment {
     protected void performSendForProgressItem(int progress) {
         try {
             ProgressItem pItem = (ProgressItem) mItem;
-            double f = (double) mSeekBar.getProgress() / (double) mSeekBar.getMax();
+            double f = (double) progress / (double) mSeekBar.getMax();
             double value = (pItem.range_max - pItem.range_min) * f + pItem.range_min;
             performSend(mProgressFormatterUS.format(value).getBytes("UTF-8"), true); // format with "." decimal separator
         } catch (Exception e) {
@@ -352,7 +352,7 @@ public class DetailViewDialog extends DialogFragment {
             valuePC = f * 100d;
             mSeekBarFormattedValue = (int) Math.floor(valuePC + .5d) + "%";
         } else {
-            value = ((double) pItem.range_max - (double) pItem.range_min) * f + (double) pItem.range_min;
+            value = (pItem.range_max - pItem.range_min) * f + pItem.range_min;
             mSeekBarFormattedValue = mProgressFormatter.format(value);
         }
         if (mTextContent != null) {
@@ -457,7 +457,7 @@ public class DetailViewDialog extends DialogFragment {
                                 double v = Double.parseDouble(val);
                                 if (p.range_min < p.range_max && v >= p.range_min && v <= p.range_max) {
                                     double f = ProgressItem.calcProgessInPercent(v, p.range_min, p.range_max) / 100d;
-                                    value = (int) ((double) mItemProgressBar.getMax() * f);
+                                    value = (int) (Math.floor((double) mItemProgressBar.getMax() * f +.5d));
                                 }
                             } catch(Exception e) {}
                         }
