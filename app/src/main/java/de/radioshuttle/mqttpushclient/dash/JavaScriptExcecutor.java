@@ -34,11 +34,16 @@ public class JavaScriptExcecutor {
         mExecutors = new HashMap<>();
         mAccount = account;
         mApplication = app;
+        mThrottleOutputScriptExecution = false;
         mHandler = new Handler(Looper.getMainLooper());
     }
 
     interface Callback {
         void onFinshed(Item item, Map<String, Object> result);
+    }
+
+    public void setThrottleOutputScriptExecution(boolean throttle) {
+        this.mThrottleOutputScriptExecution = throttle;
     }
 
     public void executeOutputScript(final Item item, final String topic, final byte[] payload, boolean retain, final Callback callback) {
@@ -49,54 +54,76 @@ public class JavaScriptExcecutor {
         result.put("msg.retain", retain);
 
         if (item != null) {
-            if (!Utils.isEmpty(item.script_p)) {
-                Utils.executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        final DashBoardJavaScript js = DashBoardJavaScript.getInstance(mApplication);
-                        try {
-                            final JavaScript.Context context = js.initSetContent(
-                                    item.script_p,
-                                    mAccount.user,
-                                    new URI(mAccount.uri).getAuthority(),
-                                    mAccount.pushserver);
-                            Future future = Utils.executor.submit(new Runnable() {
+            Utils.executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    if (mThrottleOutputScriptExecution) {
+                        long now = System.currentTimeMillis();
+                        long diff = now - mLastRunOutputScript;
+                        if (diff < MIN_OUTPUTSCRIPT_INTERVAL) {
+                            try {
+                                // Log.d("JavaScriptExe", "publish wait: " + diff);
+                                Thread.sleep(MIN_OUTPUTSCRIPT_INTERVAL - diff);
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                        mLastRunOutputScript = now;
+                    }
+
+                    if (Utils.isEmpty(item.script_p)) {
+                        if (callback != null) { // there is no script to execute
+                            result.put("msg.raw", payload); // if there is no script, result equals argument payload
+                            mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    try {
-                                        String res = js.setContent(context, new String(payload), topic);
-                                        if (!Utils.isEmpty(res)) {
-                                            result.put("msg.raw", Base64.decode(res, Base64.DEFAULT));
-                                        }
-                                    } finally {
-                                        context.close();
-                                    }
+                                    callback.onFinshed(item, result);
                                 }
                             });
-                            future.get(JavaScript.TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                        } catch(Exception e) {
-                            if (e instanceof TimeoutException) {
-                                result.put("error", mApplication.getResources().getString(R.string.javascript_err_timeout));
-                            } else if (e instanceof ExecutionException && e.getCause() != null) {
-                                result.put("error", e.getCause().getMessage());
-                            } else {
-                                result.put("error", e.getMessage());
-                            }
-                        } finally {
-                            if (callback != null) {
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        callback.onFinshed(item, result);
-                                    }
-                                });                                              }
-                            }
+                            return;
+                        }
                     }
-                });
-            } else if (callback != null) { // there is no script to execute
-                result.put("msg.raw", payload); // if there is no script, result equals argument payload
-                callback.onFinshed(item, result);
-            }
+
+                    final DashBoardJavaScript js = DashBoardJavaScript.getInstance(mApplication);
+                    try {
+                        final JavaScript.Context context = js.initSetContent(
+                                item.script_p,
+                                mAccount.user,
+                                new URI(mAccount.uri).getAuthority(),
+                                mAccount.pushserver);
+                        Future future = Utils.executor.submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    String res = js.setContent(context, new String(payload), topic);
+                                    if (!Utils.isEmpty(res)) {
+                                        result.put("msg.raw", Base64.decode(res, Base64.DEFAULT));
+                                    }
+                                } finally {
+                                    context.close();
+                                }
+                            }
+                        });
+                        future.get(JavaScript.TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                    } catch(Exception e) {
+                        if (e instanceof TimeoutException) {
+                            result.put("error", mApplication.getResources().getString(R.string.javascript_err_timeout));
+                        } else if (e instanceof ExecutionException && e.getCause() != null) {
+                            result.put("error", e.getCause().getMessage());
+                        } else {
+                            result.put("error", e.getMessage());
+                        }
+                    } finally {
+                        if (callback != null) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    callback.onFinshed(item, result);
+                                }
+                            });
+                        }
+                    }
+                }
+            });
         }
 
     }
@@ -295,6 +322,10 @@ public class JavaScriptExcecutor {
         Item item;
         Callback callback;
     }
+
+    public static long MIN_OUTPUTSCRIPT_INTERVAL = 500;
+    protected volatile long mLastRunOutputScript = 0;
+    protected volatile boolean mThrottleOutputScriptExecution;
 
     private Handler mHandler;
     private Application mApplication;
