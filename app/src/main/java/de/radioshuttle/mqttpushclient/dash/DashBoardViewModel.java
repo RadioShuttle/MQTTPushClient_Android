@@ -542,6 +542,10 @@ public class DashBoardViewModel extends AndroidViewModel {
         final PublishRequest publish = new PublishRequest(mApplication, mPushAccount, mPublishRequest);
         publish.setMessage(topic, payload, retain, originator.id);
 
+        if (originator instanceof ProgressItem) {
+            mJavaScriptExecutor.setThrottleOutputScriptExecution(true);
+        }
+
         mJavaScriptExecutor.executeOutputScript(originator, topic, payload, retain,
                 new JavaScriptExcecutor.Callback() {
                     @Override
@@ -551,7 +555,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                             originator.outputScriptError = errMsg;
                             publish.outputScriptError = errMsg;
                             publish.setCompleted(true);
-                            mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers (to show dashboard item error image)
+                            // mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers (to show dashboard item error image)
                             mPublishRequest.setValue(publish); // notify observers (to hide dialog progress bar)
                         } else {
                             if (!Utils.isEmpty(topic)) {
