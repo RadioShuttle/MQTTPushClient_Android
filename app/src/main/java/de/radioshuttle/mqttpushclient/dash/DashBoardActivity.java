@@ -543,6 +543,13 @@ public class DashBoardActivity extends AppCompatActivity implements
                     //TODO: hide progress bar
                     DashBoardViewModel.ItemContext ic = mViewModel.getItem(publishRequest.getItemID());
 
+                    /*
+                     * If current publish request was triggered by a slider event (ProgressItem type):
+                     * For performance reasons ui update (repaint) will be skipped (except setting error2 data),
+                     * The UI will be updated after next polling request.
+                     */
+                    boolean skipUIupdate = ic !=null && ic.item instanceof ProgressItem;
+
                      //handleCertError(Cmd.CMD_MQTT_PUBLISH, publishRequest);
 
                     if (b.requestStatus != Cmd.RC_OK) {
@@ -552,13 +559,15 @@ public class DashBoardActivity extends AppCompatActivity implements
                         }
                         if (ic != null && ic.item != null) {
                             ic.item.data.put("error2", t); //TODO: consider showing error in global window too
-                            mViewModel.notifyDataChanged();
+                            if (!skipUIupdate)
+                                mViewModel.notifyDataChanged();
                         }
                     } else if (publishRequest.requestStatus != Cmd.RC_OK) {
                         String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
                         if (ic != null && ic.item != null) {
                             ic.item.data.put("error2", t); //TODO: consider showing error in global window too
-                            mViewModel.notifyDataChanged();
+                            if (!skipUIupdate)
+                                mViewModel.notifyDataChanged();
                         }
                     } else { // reesult OK
                         boolean updateItem = false;
@@ -577,10 +586,10 @@ public class DashBoardActivity extends AppCompatActivity implements
                                 ic.item.data.remove("error2"); // clear error message
                             }
                         }
-                        if (updateItem) {
+                        if (updateItem && !skipUIupdate) {
                             mViewModel.notifyDataChanged();
                         }
-                        if (Utils.isEmpty(publishRequest.outputScriptError)) {
+                        if (Utils.isEmpty(publishRequest.outputScriptError) && !skipUIupdate) {
                             mViewModel.onMessagePublished(publishRequest.getMessage());
                         }
                     }
