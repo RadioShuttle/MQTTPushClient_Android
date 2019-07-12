@@ -176,8 +176,6 @@ public class DetailViewDialog extends DialogFragment {
                                     mAutofillDisabled = true;
                                 }
                                 public void onStopTrackingTouch(SeekBar seekBar) {
-                                    // performSendForProgressItem(mSeekBar.getProgress());
-                                    mAutofillDisabled = false;
                                 }
                             });
                         }
@@ -295,7 +293,7 @@ public class DetailViewDialog extends DialogFragment {
                 Toast t = Toast.makeText(getContext(), getString(R.string.op_in_progress), Toast.LENGTH_LONG);
                 t.show();
             } else {
-                mViewModelPublish.queue.add(value);
+                mViewModelPublish.queue = value;
             }
         } else {
             //TODO: consider ignoring empty values
@@ -322,15 +320,22 @@ public class DetailViewDialog extends DialogFragment {
                 if (!request.hasCompleted()) {
                     mProgressBar.setVisibility(View.VISIBLE);
                 } else {
-                    if (!mViewModelPublish.queue.isEmpty()) {
-                        byte[] lastSetValue = mViewModelPublish.queue.get(mViewModelPublish.queue.size() - 1);
-                        mViewModelPublish.queue.clear();
+                    if (mViewModelPublish.queue != null) {
+                        byte[] lastSetValue = mViewModelPublish.queue;
+                        mViewModelPublish.queue = null;
                         mCurrentPublishID = mViewModel.publish(mItem.topic_p, lastSetValue, mItem.retain, mItem);
                         return;
                     }
                     mProgressBar.setVisibility(View.GONE);
                     DashBoardViewModel.ItemContext ic = mViewModel.getItem(request.getItemID());
                     Toast t;
+                    if (mItem instanceof ProgressItem) {
+                        if (mItem.data.get("error") instanceof String && mErrorButton != null && mErrorButton.getVisibility() != View.VISIBLE) {
+                            updateView();
+                        } else if (mItem.data.get("error2") instanceof String && mErrorButton2 != null && mErrorButton2.getVisibility() != View.VISIBLE) {
+                            updateView();
+                        }
+                    }
                     if (ic != null && ic.item != null && !Utils.isEmpty((String) ic.item.data.get("error2"))) {
                         t = Toast.makeText(getContext(), getString(R.string.errormsg_general_error), Toast.LENGTH_LONG);
                     } else {
@@ -537,9 +542,9 @@ public class DetailViewDialog extends DialogFragment {
 
     protected static class PublishViewModel extends ViewModel {
         public PublishViewModel() {
-            queue = new ArrayList<>();
+            queue = null;
         }
-        public List<byte[]> queue;
+        public byte[] queue;
     }
 
     protected DashBoardViewModel mViewModel;
