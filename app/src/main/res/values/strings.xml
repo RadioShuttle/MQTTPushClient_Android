@@ -231,6 +231,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_label_progress_range">Range:</string>
     <string name="dash_label_progress_decimal">Decimal:</string>
     <string name="dash_label_progress_percent">Display in Percent</string>
+    <string name="dash_label_progress_color">Prog. Color:</string>
 
     <string-array name="dash_label_size_array">
         <item name="dash_label_textsize_s">Small</item>
