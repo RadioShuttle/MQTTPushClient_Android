@@ -21,6 +21,7 @@ public class ProgressItem extends Item {
     public double range_min;
     public double range_max;
     public int decimal;
+    public int progresscolor;
     public boolean percent;
 
     @Override
@@ -30,6 +31,7 @@ public class ProgressItem extends Item {
         o.put("range_max", range_max);
         o.put("decimal", decimal);
         o.put("percent", percent);
+        o.put("progresscolor", progresscolor);
         return o;
     }
 
@@ -39,6 +41,7 @@ public class ProgressItem extends Item {
         range_max = o.optDouble("range_max", 0d);
         decimal = o.optInt("decimal", 0);
         percent = o.optBoolean("percent", false);
+        progresscolor = o.optInt("progresscolor");
     }
 
     @Override
