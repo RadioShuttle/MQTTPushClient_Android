@@ -9,10 +9,12 @@ package de.radioshuttle.mqttpushclient.dash;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 
 import org.json.JSONArray;
@@ -199,6 +201,17 @@ public class DBUtils {
             }
         }
         return dashboardObj;
+    }
+
+    public static int fetchAccentColor(Context context) {
+        TypedValue typedValue = new TypedValue();
+
+        TypedArray a = context.obtainStyledAttributes(typedValue.data, new int[] { R.attr.colorAccent });
+        int color = a.getColor(0, 0);
+
+        a.recycle();
+
+        return color;
     }
 
     public static Thread testDataThread(final DashBoardViewModel vm) {
