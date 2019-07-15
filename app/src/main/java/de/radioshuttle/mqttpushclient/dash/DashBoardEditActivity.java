@@ -37,6 +37,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -49,6 +50,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -303,6 +305,33 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     }
                 }
 
+                /* progress bar color */
+                TableRow probressBarColorsRow = findViewById(R.id.rowProgressColors);
+                if (probressBarColorsRow != null) {
+                    mProgressColor = findViewById(R.id.dash_progress_color);
+                    if (!(mItem instanceof ProgressItem)) {
+                        probressBarColorsRow.setVisibility(View.GONE);
+                    } else {
+                        ProgressItem progressItem = (ProgressItem) mItem;
+                        if (savedInstanceState == null) {
+                            mProgColor = progressItem.progresscolor;
+                        } else {
+                            if (savedInstanceState.containsKey(KEY_PROGCOLOR)) {
+                                mProgColor = savedInstanceState.getInt(KEY_PROGCOLOR);
+                            }
+                        }
+
+                        final int defProgressColor = DBUtils.fetchAccentColor(this);
+                        mProgressColor.setColor(mProgColor == 0 ?  defProgressColor : mProgColor, mColorLabelBorderColor);
+                        mProgressColor.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                showColorDialog(defProgressColor, (mProgColor == 0 ? defProgressColor : mProgColor), mColorLabelBorderColor, "progresscolor");
+                            }
+                        });
+                    }
+                }
+
                 /* filter/UI sctipt */
                 TableRow rowFilterScript = findViewById(R.id.rowFilterScript);
                 if (rowFilterScript != null) {
@@ -435,6 +464,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_TEXTCOLOR, mTextColor);
         outState.putInt(KEY_BACKGROUND, mBackground);
+        outState.putInt(KEY_PROGCOLOR, mProgColor);
         if (!Utils.isEmpty(mFilterScriptContent)) {
             outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
         }
@@ -622,6 +652,14 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mBackground = 0; // default system background color
                 } else {
                     mBackground = color;
+                }
+                break;
+            case "progresscolor" :
+                mProgressColor.setColor(color, mColorLabelBorderColor);
+                if (idx == 0) {
+                    mProgColor = 0;
+                } else {
+                    mProgColor = color;
                 }
                 break;
         }
@@ -947,6 +985,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         try {item.range_max = Double.valueOf(mEditTextRangeMax.getText().toString());} catch(Exception e) {}
                         try {item.decimal = Integer.valueOf(mEditTextDecimal.getText().toString());} catch(Exception e) {}
                         item.percent = mRangeDisplayPercent.isChecked();
+                        item.progresscolor = mProgColor;
                     }
                 }
                 if (mEditTextLabel != null) {
@@ -1010,6 +1049,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             setEnabled(mEditTextRangeMax, enableFields);
             setEnabled(mEditTextDecimal, enableFields);
             setEnabled(mRangeDisplayPercent, enableFields);
+            setEnabled(mProgressColor, enableFields);
         }
         invalidateOptionsMenu();
     }
@@ -1086,7 +1126,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 try { min = Double.valueOf(mEditTextRangeMin.getText().toString()); } catch(Exception e) {};
                 try { max = Double.valueOf(mEditTextRangeMax.getText().toString()); } catch(Exception e) {};
                 try { decimal = Integer.valueOf(mEditTextDecimal.getText().toString()); } catch(Exception e) {};
-                changed = min != item.range_min || max != item.range_max || decimal != item.decimal || mRangeDisplayPercent.isChecked() != item.percent;
+                changed = min != item.range_min || max != item.range_max || decimal != item.decimal || mRangeDisplayPercent.isChecked() != item.percent
+                        || item.progresscolor != mProgColor;
             }
 
             if (!changed) {
@@ -1120,6 +1161,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected Spinner mInputTypeSpinner;
     protected ColorLabel mColorButton;
     protected ColorLabel mBColorButton;
+    protected ColorLabel mProgressColor;
     protected Spinner mGroupSpinner;
     protected Spinner mPosSpinner;
     protected Spinner mTextSizeSpinner;
@@ -1137,8 +1179,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     /* textcolor states */
     protected int mTextColor;
     protected int mBackground;
+    protected int mProgColor;
     protected final static String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
     protected final static String KEY_BACKGROUND = "KEY_BACKGROUND";
+    protected final static String KEY_PROGCOLOR = "KEY_PROGCOLOR";
+
 
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
