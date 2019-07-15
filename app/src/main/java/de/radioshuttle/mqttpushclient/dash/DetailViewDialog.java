@@ -174,8 +174,13 @@ public class DetailViewDialog extends DialogFragment {
                                 public void onStartTrackingTouch(SeekBar seekBar) {
                                     Log.d(TAG, "focus changed: " + true);
                                     mAutofillDisabled = true;
+                                    mSeekbarPressed = true;
                                 }
                                 public void onStopTrackingTouch(SeekBar seekBar) {
+                                    mSeekbarPressed = false;
+                                    if (mCurrentPublishID == -1 && mViewModelPublish.lastCompletedRequest != null) {
+                                        mViewModel.onMessagePublished(mViewModelPublish.lastCompletedRequest.getMessage());
+                                    }
                                 }
                             });
                         }
@@ -316,34 +321,48 @@ public class DetailViewDialog extends DialogFragment {
 
     protected void onPublish(PublishRequest request) {
         if (request != null && mItem != null) {
-            if (request.getItemID() == mItem.id && mCurrentPublishID == request.getmPublishID()) {
-                if (!request.hasCompleted()) {
-                    mProgressBar.setVisibility(View.VISIBLE);
-                } else {
-                    if (mViewModelPublish.queue != null) {
-                        byte[] lastSetValue = mViewModelPublish.queue;
-                        mViewModelPublish.queue = null;
-                        mCurrentPublishID = mViewModel.publish(mItem.topic_p, lastSetValue, mItem.retain, mItem);
-                        return;
-                    }
-                    mProgressBar.setVisibility(View.GONE);
-                    DashBoardViewModel.ItemContext ic = mViewModel.getItem(request.getItemID());
-                    Toast t;
-                    if (mItem instanceof ProgressItem) {
-                        if (mItem.data.get("error") instanceof String && mErrorButton != null && mErrorButton.getVisibility() != View.VISIBLE) {
-                            updateView();
-                        } else if (mItem.data.get("error2") instanceof String && mErrorButton2 != null && mErrorButton2.getVisibility() != View.VISIBLE) {
-                            updateView();
+            if (request.getItemID() == mItem.id) {
+                if (mItem instanceof ProgressItem) {
+                    if (request.hasCompleted()) {
+                        if (!mSeekbarPressed) {
+                            mViewModelPublish.lastCompletedRequest = null;
+                            mViewModel.onMessagePublished(request.getMessage());
+                        } else {
+                            mViewModelPublish.lastCompletedRequest = request; // will be used if seek bar released to update view
                         }
                     }
-                    if (ic != null && ic.item != null && !Utils.isEmpty((String) ic.item.data.get("error2"))) {
-                        t = Toast.makeText(getContext(), getString(R.string.errormsg_general_error), Toast.LENGTH_LONG);
-                    } else {
-                        t = Toast.makeText(getContext(), getString(R.string.dlg_info_message_published), Toast.LENGTH_LONG);
-                    }
-                    t.show();
-                    mCurrentPublishID = -1;
                 }
+
+                if (mCurrentPublishID == request.getmPublishID()) {
+                    if (!request.hasCompleted()) {
+                        mProgressBar.setVisibility(View.VISIBLE);
+                    } else {
+                        if (mViewModelPublish.queue != null) {
+                            byte[] lastSetValue = mViewModelPublish.queue;
+                            mViewModelPublish.queue = null;
+                            mCurrentPublishID = mViewModel.publish(mItem.topic_p, lastSetValue, mItem.retain, mItem);
+                            return;
+                        }
+                        mProgressBar.setVisibility(View.GONE);
+                        DashBoardViewModel.ItemContext ic = mViewModel.getItem(request.getItemID());
+                        Toast t;
+                        if (mItem instanceof ProgressItem) {
+                            if (mItem.data.get("error") instanceof String && mErrorButton != null && mErrorButton.getVisibility() != View.VISIBLE) {
+                                updateView();
+                            } else if (mItem.data.get("error2") instanceof String && mErrorButton2 != null && mErrorButton2.getVisibility() != View.VISIBLE) {
+                                updateView();
+                            }
+                        }
+                        if (ic != null && ic.item != null && !Utils.isEmpty((String) ic.item.data.get("error2"))) {
+                            t = Toast.makeText(getContext(), getString(R.string.errormsg_general_error), Toast.LENGTH_LONG);
+                        } else {
+                            t = Toast.makeText(getContext(), getString(R.string.dlg_info_message_published), Toast.LENGTH_LONG);
+                        }
+                        t.show();
+                        mCurrentPublishID = -1;
+                    }
+                }
+
             }
         }
     }
@@ -545,6 +564,7 @@ public class DetailViewDialog extends DialogFragment {
             queue = null;
         }
         public byte[] queue;
+        public PublishRequest lastCompletedRequest;
     }
 
     protected DashBoardViewModel mViewModel;
@@ -569,6 +589,7 @@ public class DetailViewDialog extends DialogFragment {
     protected NumberFormat mProgressFormatter;
     protected NumberFormat mProgressFormatterUS;
     protected String mSeekBarFormattedValue;
+    protected boolean mSeekbarPressed;
     protected PublishViewModel mViewModelPublish;
 
     /* input controls */
