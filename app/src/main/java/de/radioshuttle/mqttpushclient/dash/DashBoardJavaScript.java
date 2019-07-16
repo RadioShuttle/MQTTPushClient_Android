@@ -47,12 +47,15 @@ public class DashBoardJavaScript extends JavaScript {
         if (jsBody == null) {
             jsBody = "";
         }
-        jsBody += "  if (msg.raw.byteLength > 0) { content = msg.raw; }"; // binary data takes precedence over msg.text
-        jsBody += "  else if (typeof msg.text === 'string') { content = new TextEncoder().encode(msg.text); } ";
-        jsBody += "  else { content = null; } ";
-        jsBody += "  if (content != null) content = Duktape.enc('base64', content);";
+        StringBuilder sb = new StringBuilder();
+        sb.append("  var input = payloadStr; ");
+        sb.append(jsBody);
+        sb.append("  if (msg.raw.byteLength > 0) { content = msg.raw; }"); // binary data takes precedence over msg.text
+        sb.append("  else if (typeof msg.text === 'string') { content = new TextEncoder().encode(msg.text); } ");
+        sb.append("  else { content = null; } ");
+        sb.append("  if (content != null) content = Duktape.enc('base64', content);");
 
-        return initFormatter(jsBody, accUser, accPushServer, accMqttServer);
+        return initFormatter(sb.toString(), accUser, accPushServer, accMqttServer);
     }
 
     public String setContent(Context context, String input, String topic) {
