@@ -148,6 +148,7 @@ public class DetailViewDialog extends DialogFragment {
 
                         mContentContainer = view.findViewById(R.id.progressBarContent);
                         mItemProgressBar = view.findViewById(R.id.itemProgressBar);
+
                         mSeekBar = view.findViewById(R.id.itemSeekBar);
 
                         mTextContent = view.findViewById(R.id.textContent);
@@ -155,7 +156,6 @@ public class DetailViewDialog extends DialogFragment {
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
 
                         if (publishEnabled) {
-
                             mProgressFormatter = NumberFormat.getInstance();
                             mProgressFormatter.setMinimumFractionDigits(((ProgressItem) mItem).decimal);
                             mProgressFormatter.setMaximumFractionDigits(((ProgressItem) mItem).decimal);
@@ -183,6 +183,8 @@ public class DetailViewDialog extends DialogFragment {
                                     }
                                 }
                             });
+                        } else {
+                            /* tint progress bar */
                         }
 
                     }
@@ -470,6 +472,7 @@ public class DetailViewDialog extends DialogFragment {
                 }
             } else if (mItem instanceof ProgressItem) {
                 if (mItemProgressBar != null && mSeekBar != null) {
+                    ProgressItem p = (ProgressItem) mItem;
                     int value = 0;
                     /* if java script error, there is no valid data, set progress bar to 0 */
                     if (mItem.data.get("error") instanceof String) {
@@ -477,7 +480,6 @@ public class DetailViewDialog extends DialogFragment {
                         String val = (String) mItem.data.get("content");
                         if (!Utils.isEmpty(val)) {
                             try {
-                                ProgressItem p = (ProgressItem) mItem;
                                 double v = Double.parseDouble(val);
                                 if (p.range_min < p.range_max && v >= p.range_min && v <= p.range_max) {
                                     double f = ProgressItem.calcProgessInPercent(v, p.range_min, p.range_max) / 100d;
@@ -486,12 +488,47 @@ public class DetailViewDialog extends DialogFragment {
                             } catch(Exception e) {}
                         }
                     }
+                    ProgressBar pb = null;
                     if (mItemProgressBar.getVisibility() == View.VISIBLE) {
                         mItemProgressBar.setProgress(value);
+                        pb = mItemProgressBar;
                     }
                     if (mSeekBar.getVisibility() == View.VISIBLE) {
                         if (!mAutofillDisabled) {
                             mSeekBar.setProgress(value);
+                        }
+                        pb = mSeekBar;
+                    }
+                    int defaultProgressColor = DBUtils.fetchAccentColor(getContext());
+                    if (Build.VERSION.SDK_INT >= 21) {
+                        int pcolor = (p.progresscolor == 0 ? defaultProgressColor : p.progresscolor);
+                        /*
+                        Drawable d = pb.getProgressDrawable();
+                        if (d != null) {
+                            d.setColorFilter(p.progresscolor == 0 ? defaultProgressColor : p.progresscolor, PorterDuff.Mode.SRC_IN);
+                            if (pb instanceof SeekBar) {
+                                ((SeekBar) pb).setThumbTintList(ColorStateList.valueOf(pcolor));
+                            }
+                        }
+                        */
+                        ColorStateList pt = pb.getProgressTintList();
+                        if (pt == null || pt.getDefaultColor() != pcolor) {
+                            pb.setProgressTintList(ColorStateList.valueOf(pcolor));
+                            pb.setProgressBackgroundTintList(ColorStateList.valueOf(pcolor));
+                            if (pb instanceof SeekBar) {
+                                ((SeekBar) pb).setThumbTintList(ColorStateList.valueOf(pcolor));
+                            }
+                        }
+                    } else {
+                        Drawable d = pb.getProgressDrawable();
+                        if (d != null) {
+                            d.setColorFilter(p.progresscolor == 0 ? defaultProgressColor : p.progresscolor, PorterDuff.Mode.SRC_IN);
+                            if (pb instanceof SeekBar) {
+                                Drawable t = ((SeekBar) pb).getThumb();
+                                if (t != null) {
+                                    t.setColorFilter(p.progresscolor == 0 ? defaultProgressColor : p.progresscolor, PorterDuff.Mode.SRC_IN);
+                                }
+                            }
                         }
                     }
                 }

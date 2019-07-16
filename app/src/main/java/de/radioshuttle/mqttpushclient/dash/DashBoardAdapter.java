@@ -7,6 +7,9 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.res.ColorStateList;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +38,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         // setHasStableIds(true);
 
         mDefaultBackground = ContextCompat.getColor(activity, R.color.dashboad_item_background);
+        mDefaultProgressColor = DBUtils.fetchAccentColor(activity);
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
@@ -185,6 +189,27 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         Object javaScriptError = item.data.get("error");
 
         if (h.progressBar != null) { // (h.viewType == TYPE_PROGRESS) {
+            ProgressItem p = (ProgressItem) item;
+            if (Build.VERSION.SDK_INT >= 21) {
+                /*
+                Drawable d = h.progressBar.getProgressDrawable();
+                if (d != null) {
+                    DrawableCompat.setTint(d, p.progresscolor == 0 ? mDefaultProgressColor : p.progresscolor);
+                }
+                */
+                ColorStateList pt = h.progressBar.getProgressTintList();
+                int pcolor = (p.progresscolor == 0 ? mDefaultProgressColor : p.progresscolor);
+                if (pt == null || pt.getDefaultColor() != pcolor) {
+                    h.progressBar.setProgressTintList(ColorStateList.valueOf(pcolor));
+                    h.progressBar.setProgressBackgroundTintList(ColorStateList.valueOf(pcolor));
+                }
+            } else {
+                Drawable d = h.progressBar.getProgressDrawable();
+                if (d != null) {
+                    d.setColorFilter(p.progresscolor == 0 ? mDefaultProgressColor : p.progresscolor, PorterDuff.Mode.SRC_IN);
+                }
+            }
+
             int value = 0;
             /* if java script error, there is no valid data, set progress bar to 0 */
             if (javaScriptError instanceof String) {
@@ -192,7 +217,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 String val = (String) item.data.get("content");
                 if (!Utils.isEmpty(val)) {
                     try {
-                        ProgressItem p = (ProgressItem) item;
                         double v = Double.parseDouble(val);
                         if (p.range_min < p.range_max && v >= p.range_min && v <= p.range_max) {
                             double f = ProgressItem.calcProgessInPercent(v, p.range_min, p.range_max) / 100d;
@@ -361,6 +385,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     private HashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
     private int mDefaultBackground;
+    private int mDefaultProgressColor;
     private int mWidth;
     private int mSpanCnt;
     private int spacing;
