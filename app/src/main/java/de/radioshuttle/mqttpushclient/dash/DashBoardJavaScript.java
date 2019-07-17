@@ -50,7 +50,7 @@ public class DashBoardJavaScript extends JavaScript {
         StringBuilder sb = new StringBuilder();
         sb.append("  var input = payloadStr; ");
         sb.append(jsBody);
-        sb.append("  if (msg.raw.byteLength > 0) { content = msg.raw; }"); // binary data takes precedence over msg.text
+        sb.append(" \n  if (msg.raw.byteLength > 0) { content = msg.raw; }"); // binary data takes precedence over msg.text
         sb.append("  else if (typeof msg.text === 'string') { content = new TextEncoder().encode(msg.text); } ");
         sb.append("  else { content = null; } ");
         sb.append("  if (content != null) content = Duktape.enc('base64', content);");
