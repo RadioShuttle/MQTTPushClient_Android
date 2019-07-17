@@ -499,9 +499,12 @@ public class DetailViewDialog extends DialogFragment {
                         }
                         pb = mSeekBar;
                     }
+
                     int defaultProgressColor = DBUtils.fetchAccentColor(getContext());
+                    int pcolor = (p.data.get("color") != null ? (Integer) p.data.get("color") : p.progresscolor);
+                    pcolor = (pcolor == 0 ? defaultProgressColor : pcolor);
+
                     if (Build.VERSION.SDK_INT >= 21) {
-                        int pcolor = (p.progresscolor == 0 ? defaultProgressColor : p.progresscolor);
                         /*
                         Drawable d = pb.getProgressDrawable();
                         if (d != null) {
@@ -522,7 +525,7 @@ public class DetailViewDialog extends DialogFragment {
                     } else {
                         Drawable d = pb.getProgressDrawable();
                         if (d != null) {
-                            d.setColorFilter(p.progresscolor == 0 ? defaultProgressColor : p.progresscolor, PorterDuff.Mode.SRC_IN);
+                            d.setColorFilter(pcolor, PorterDuff.Mode.SRC_IN);
                             if (pb instanceof SeekBar) {
                                 Drawable t = ((SeekBar) pb).getThumb();
                                 if (t != null) {

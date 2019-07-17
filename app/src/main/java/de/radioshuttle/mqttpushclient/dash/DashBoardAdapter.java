@@ -198,7 +198,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
                 */
                 ColorStateList pt = h.progressBar.getProgressTintList();
-                int pcolor = (p.progresscolor == 0 ? mDefaultProgressColor : p.progresscolor);
+                int pcolor = (p.data.get("color") != null ? (Integer) p.data.get("color") : p.progresscolor);
+                pcolor = (pcolor == 0 ? mDefaultProgressColor : pcolor);
                 if (pt == null || pt.getDefaultColor() != pcolor) {
                     h.progressBar.setProgressTintList(ColorStateList.valueOf(pcolor));
                     h.progressBar.setProgressBackgroundTintList(ColorStateList.valueOf(pcolor));
