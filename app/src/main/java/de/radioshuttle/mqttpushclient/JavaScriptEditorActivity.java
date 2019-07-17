@@ -12,6 +12,8 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+
+import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.utils.Utils;
 
 import android.app.AlertDialog;
@@ -71,6 +73,17 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 TextView pref = findViewById(R.id.functionSuffix);
                 pref.setText(args.getString(ARG_JSSUFFIX));
             }
+
+            if (!Utils.isEmpty(args.getString(ARG_ITEM))) {
+                String jsonStr = args.getString(ARG_ITEM);
+                try {
+                    JSONObject jsonObject = new JSONObject(jsonStr);
+                    mViewModel.mItem = Item.createItemFromJSONObject(jsonObject);
+                } catch (Exception e) {
+                    Log.e(TAG,"Error parsing arg ARG_ITEM", e);
+                }
+            }
+
 
             if (!Utils.isEmpty(args.getString(ARG_ACCOUNT))) {
                 try {
@@ -372,6 +385,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     public final static String ARG_JAVASCRIPT = "ARG_JAVASCRIPT";
     public final static String ARG_ACCOUNT = "ARG_ACCOUNT";
     public final static String ARG_COMPONENT = "ARG_COMPONENT";
+    public final static String ARG_ITEM = "ARG_ITEM";
 
     public final static int CONTENT_FILTER = 1;
     public final static int CONTENT_FILTER_DASHBOARD = 2;
