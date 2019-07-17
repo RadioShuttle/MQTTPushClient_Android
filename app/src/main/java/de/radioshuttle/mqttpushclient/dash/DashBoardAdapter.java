@@ -190,6 +190,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         if (h.progressBar != null) { // (h.viewType == TYPE_PROGRESS) {
             ProgressItem p = (ProgressItem) item;
+            int pcolor = (p.data.get("color") != null ? (Integer) p.data.get("color") : p.progresscolor);
+            pcolor = (pcolor == 0 ? mDefaultProgressColor : pcolor);
             if (Build.VERSION.SDK_INT >= 21) {
                 /*
                 Drawable d = h.progressBar.getProgressDrawable();
@@ -198,8 +200,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
                 */
                 ColorStateList pt = h.progressBar.getProgressTintList();
-                int pcolor = (p.data.get("color") != null ? (Integer) p.data.get("color") : p.progresscolor);
-                pcolor = (pcolor == 0 ? mDefaultProgressColor : pcolor);
                 if (pt == null || pt.getDefaultColor() != pcolor) {
                     h.progressBar.setProgressTintList(ColorStateList.valueOf(pcolor));
                     h.progressBar.setProgressBackgroundTintList(ColorStateList.valueOf(pcolor));
@@ -207,7 +207,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             } else {
                 Drawable d = h.progressBar.getProgressDrawable();
                 if (d != null) {
-                    d.setColorFilter(p.progresscolor == 0 ? mDefaultProgressColor : p.progresscolor, PorterDuff.Mode.SRC_IN);
+                    d.setColorFilter(pcolor, PorterDuff.Mode.SRC_IN);
                 }
             }
 
