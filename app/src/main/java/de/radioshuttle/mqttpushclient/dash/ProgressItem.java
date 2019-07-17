@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.NumberFormat;
+import java.util.HashMap;
 
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
@@ -33,6 +34,14 @@ public class ProgressItem extends Item {
         o.put("percent", percent);
         o.put("progresscolor", progresscolor);
         return o;
+    }
+
+    /** add properties which may be get/set in JS to update view. Also extend DashboarJavascript.ViewProperties */
+    public HashMap<String, Object> getJSViewProperties(HashMap<String, Object> viewProperties) {
+        viewProperties = super.getJSViewProperties(viewProperties);
+        //TODO: add more properties, and implement DashboarJavascript.ViewProperties
+        viewProperties.put("color", data.containsKey("color") ? (Integer) data.get("color") : progresscolor);
+        return viewProperties;
     }
 
     protected void setJSONData(JSONObject o) {

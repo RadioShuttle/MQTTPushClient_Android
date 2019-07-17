@@ -125,6 +125,18 @@ public abstract class Item {
         }
     }
 
+    /** add properties which may be get/set in JS to update view. Also extend DashboarJavascript.ViewProperties */
+    public HashMap<String, Object> getJSViewProperties(HashMap<String, Object> viewProperties) {
+        if (viewProperties == null) {
+            viewProperties = new HashMap<>();
+        }
+        viewProperties.put("textcolor", data.containsKey("textcolor") ? (Integer) data.get("textcolor") : textcolor);
+        viewProperties.put("textsize", data.containsKey("textsize") ?  (Integer) data.get("textsize") : textsize);
+        viewProperties.put("background", data.containsKey("background") ? (Integer) data.get("background") : background);
+
+        return viewProperties;
+    }
+
     protected void updateUIContent(Context context) {
     }
 
