@@ -567,6 +567,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                 publish.setCompleted(true);
                                 mPublishRequest.setValue(publish); // notify observers (e. g. dialog progress bar)
                             }
+                            originator.data.putAll(result); // view properties modified by java script
                         }
                     }
                 });
