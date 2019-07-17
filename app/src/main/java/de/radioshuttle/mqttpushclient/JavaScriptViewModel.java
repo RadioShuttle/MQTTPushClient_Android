@@ -74,7 +74,7 @@ public class JavaScriptViewModel extends AndroidViewModel {
                             context = js.initFormatter(souceCode, accUser, accMqttServer , accPushServer);
                         }
 
-                        if (mMode == JavaScriptEditorActivity.CONTENT_FILTER_DASHBOARD) {
+                        if (mMode == JavaScriptEditorActivity.CONTENT_FILTER_DASHBOARD || mMode == JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD) {
                             HashMap<String, Object> viewProperties = new HashMap<>();
                             js.initViewProperties(context, viewProperties);
                         }
