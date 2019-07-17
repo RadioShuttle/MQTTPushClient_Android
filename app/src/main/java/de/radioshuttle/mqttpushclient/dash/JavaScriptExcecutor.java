@@ -90,6 +90,10 @@ public class JavaScriptExcecutor {
                                 mAccount.user,
                                 new URI(mAccount.uri).getAuthority(),
                                 mAccount.pushserver);
+                        HashMap<String, Object> viewProperties = new HashMap<>();
+                        item.getJSViewProperties(viewProperties);
+                        js.initViewProperties(context, viewProperties);
+
                         Future future = Utils.executor.submit(new Runnable() {
                             @Override
                             public void run() {
@@ -104,6 +108,7 @@ public class JavaScriptExcecutor {
                             }
                         });
                         future.get(JavaScript.TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                        result.putAll(viewProperties);
                     } catch(Exception e) {
                         if (e instanceof TimeoutException) {
                             result.put("error", mApplication.getResources().getString(R.string.javascript_err_timeout));
@@ -224,10 +229,7 @@ public class JavaScriptExcecutor {
                             result.put("error", mApplication.getResources().getString(R.string.javascript_err_timeout));
                         } else {
                             /* set current view propertes */
-                            viewProperties.put("textcolor", task.item.textcolor);
-                            viewProperties.put("color", 0); //TODO
-                            viewProperties.put("background", task.item.background);
-                            viewProperties.put("textsize", task.item.textsize);
+                            task.item.getJSViewProperties(viewProperties);
 
                             /* delegate javascript run to other thread to avoid long blocking times */
                             runJS = new RunJS(jsContext, task.message);
