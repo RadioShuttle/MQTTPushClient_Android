@@ -915,7 +915,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
             String header = getString(R.string.dash_output_script_header);
             intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
-            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function setContent(input, msg, acc) {\n var msg.text = input;");
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function setContent(input, msg, acc, view) {\n var msg.text = input;");
             intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return msg;\n}");
             intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD);
             if (mEditTextTopicPub != null) {
