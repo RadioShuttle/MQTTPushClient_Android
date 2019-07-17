@@ -885,6 +885,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc, view) {\n var content = msg.text;");
             intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
 
+            try {
+                Item cItem = Item.createItemFromJSONObject(mItem.toJSONObject());
+                setItemDataFromInput(cItem);
+                String itemPara = cItem.toJSONObject().toString();
+                intent.putExtra(JavaScriptEditorActivity.ARG_ITEM, itemPara);
+            } catch (Exception e) {
+                Log.e(TAG, "open script editor, error pasrsing json: ", e);
+            }
+
             if (mEditTextTopicSub != null) {
                 String subTopic = mEditTextTopicSub.getText().toString();
                 intent.putExtra(JavaScriptEditorActivity.ARG_TOPIC, subTopic);
@@ -922,6 +931,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 String pubTopic = mEditTextTopicPub.getText().toString();
                 intent.putExtra(JavaScriptEditorActivity.ARG_TOPIC, pubTopic);
             }
+            try {
+                Item cItem = Item.createItemFromJSONObject(mItem.toJSONObject());
+                setItemDataFromInput(cItem);
+                String itemPara = cItem.toJSONObject().toString();
+                intent.putExtra(JavaScriptEditorActivity.ARG_ITEM, itemPara);
+            } catch (Exception e) {
+                Log.e(TAG, "open script editor, error pasrsing json: ", e);
+            }
+
 
             Bundle args = getIntent().getExtras();
             String acc = args.getString(ARG_ACCOUNT);
@@ -955,6 +973,39 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
     }
 
+    protected void setItemDataFromInput(Item cItem) {
+        if (cItem != null) {
+            if (!(cItem instanceof GroupItem) && mGroupSpinner != null) {
+                cItem.topic_s = mEditTextTopicSub.getText().toString();
+                cItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
+
+                cItem.topic_p = mEditTextTopicPub.getText().toString();
+                cItem.retain = mRetainCheckbox.isChecked();
+                if (cItem instanceof TextItem) {
+                    ((TextItem) cItem).inputtype = mInputTypeSpinner.getSelectedItemPosition();
+                }
+                cItem.script_p = mOutputScriptContent == null ? "" : mOutputScriptContent;
+                if (cItem instanceof ProgressItem) {
+                    ProgressItem item = (ProgressItem) cItem;
+                    try {item.range_min = Double.valueOf(mEditTextRangeMin.getText().toString());} catch(Exception e) {}
+                    try {item.range_max = Double.valueOf(mEditTextRangeMax.getText().toString());} catch(Exception e) {}
+                    try {item.decimal = Integer.valueOf(mEditTextDecimal.getText().toString());} catch(Exception e) {}
+                    item.percent = mRangeDisplayPercent.isChecked();
+                    item.progresscolor = mProgColor;
+                }
+            }
+            if (mEditTextLabel != null) {
+                cItem.label = mEditTextLabel.getText().toString();
+            }
+            if (mTextSizeSpinner != null && mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
+                cItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
+            }
+            cItem.textcolor = mTextColor;
+            cItem.background = mBackground;
+
+        }
+    }
+
     protected void save() {
         if (mItem != null) {
             int itemPos = mPosSpinner != null ? mPosSpinner.getSelectedItemPosition() : 0;
@@ -970,32 +1021,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             if (cItem != null) {
                 if (!(cItem instanceof GroupItem) && mGroupSpinner != null) {
                     groupPos = mGroupSpinner.getSelectedItemPosition();
-                    cItem.topic_s = mEditTextTopicSub.getText().toString();
-                    cItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
-
-                    cItem.topic_p = mEditTextTopicPub.getText().toString();
-                    cItem.retain = mRetainCheckbox.isChecked();
-                    if (cItem instanceof TextItem) {
-                        ((TextItem) cItem).inputtype = mInputTypeSpinner.getSelectedItemPosition();
-                    }
-                    cItem.script_p = mOutputScriptContent == null ? "" : mOutputScriptContent;
-                    if (cItem instanceof ProgressItem) {
-                        ProgressItem item = (ProgressItem) cItem;
-                        try {item.range_min = Double.valueOf(mEditTextRangeMin.getText().toString());} catch(Exception e) {}
-                        try {item.range_max = Double.valueOf(mEditTextRangeMax.getText().toString());} catch(Exception e) {}
-                        try {item.decimal = Integer.valueOf(mEditTextDecimal.getText().toString());} catch(Exception e) {}
-                        item.percent = mRangeDisplayPercent.isChecked();
-                        item.progresscolor = mProgColor;
-                    }
                 }
-                if (mEditTextLabel != null) {
-                    cItem.label = mEditTextLabel.getText().toString();
-                }
-                if (mTextSizeSpinner != null && mTextSizeSpinner.getAdapter() != null && mTextSizeSpinner.getAdapter().getCount() > 0) {
-                    cItem.textsize = mTextSizeSpinner.getSelectedItemPosition() + 1;
-                }
-                cItem.textcolor = mTextColor;
-                cItem.background = mBackground;
+                setItemDataFromInput(cItem);
 
                 /* convert complete dashboard to json */
                 LinkedList<GroupItem> groupItems = new LinkedList<>();
