@@ -529,7 +529,7 @@ public class DetailViewDialog extends DialogFragment {
                             if (pb instanceof SeekBar) {
                                 Drawable t = ((SeekBar) pb).getThumb();
                                 if (t != null) {
-                                    t.setColorFilter(p.progresscolor == 0 ? defaultProgressColor : p.progresscolor, PorterDuff.Mode.SRC_IN);
+                                    t.setColorFilter(pcolor, PorterDuff.Mode.SRC_IN);
                                 }
                             }
                         }
