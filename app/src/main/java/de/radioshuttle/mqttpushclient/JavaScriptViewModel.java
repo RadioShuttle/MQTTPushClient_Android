@@ -34,6 +34,7 @@ import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.mqttpushclient.dash.DashBoardJavaScript;
+import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.mqttpushclient.dash.Message;
 import de.radioshuttle.utils.Utils;
 import de.radioshuttle.utils.JavaScript;
@@ -43,6 +44,8 @@ public class JavaScriptViewModel extends AndroidViewModel {
     public MutableLiveData<Request> latestMessage;
     public MutableLiveData<JSResult> javaScriptResult;
     public MutableLiveData<Boolean> runState;
+
+    public Item mItem;
 
     /* used to cache test data */
     public HashMap<String, String> mContentFilterCache = new HashMap<>();
@@ -76,6 +79,9 @@ public class JavaScriptViewModel extends AndroidViewModel {
 
                         if (mMode == JavaScriptEditorActivity.CONTENT_FILTER_DASHBOARD || mMode == JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD) {
                             HashMap<String, Object> viewProperties = new HashMap<>();
+                            if (mItem != null) {
+                                mItem.getJSViewProperties(viewProperties);
+                            }
                             js.initViewProperties(context, viewProperties);
                         }
                         try {
