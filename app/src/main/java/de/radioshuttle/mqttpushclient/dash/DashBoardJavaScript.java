@@ -73,14 +73,16 @@ public class DashBoardJavaScript extends JavaScript {
     }
 
     private interface ViewProperties {
-        void setColor(double color);
+        void setCtrlColor(double color);
+        void setCtrlColor2(double color);
         void setBackgroundColor(double color);
         void setTextColor(double color);
         void setTextSize(double size);
         void setTextFieldValue(String defaultInputValue);
         double getTextColor();
         double getBackgroundColor();
-        double getColor();
+        double getCtrlColor();
+        double getCtrlColor2();
         String getTextFieldValue();
         double getTextSize();
     }
@@ -93,8 +95,13 @@ public class DashBoardJavaScript extends JavaScript {
         public HashMap<String, Object> p;
 
         @Override
-        public void setColor(double color) {
-            p.put("color", doubleToInt(color));
+        public void setCtrlColor(double color) {
+            p.put("ctrl_color", doubleToInt(color));
+        }
+
+        @Override
+        public void setCtrlColor2(double color) {
+            p.put("ctrl_color2", doubleToInt(color));
         }
 
         @Override
@@ -114,8 +121,13 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
-        public double getColor() {
-            return intToDouble((int) (p.get("color") == null ? 0 : p.get("color")));
+        public double getCtrlColor() {
+            return intToDouble((int) (p.get("ctrl_color") == null ? 0 : p.get("ctrl_color")));
+        }
+
+        @Override
+        public double getCtrlColor2() {
+            return intToDouble((int) (p.get("ctrl_color2") == null ? 0 : p.get("ctrl_color2")));
         }
 
         @Override
