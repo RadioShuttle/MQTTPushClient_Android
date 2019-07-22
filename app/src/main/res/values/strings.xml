@@ -210,16 +210,19 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="action_zoom">Zoom</string>
 
     <string name="action_add_text">Text View</string>
+    <string name="action_add_switch">Button/Switch</string>
     <string name="action_add_group">Group View</string>
     <string name="action_add_progress">Progress Bar/Slider</string>
 
     <string name="title_add_group">Add Group View</string>
     <string name="title_add_text">Add Text View</string>
     <string name="title_add_progress">Add Progress Bar/Slider</string>
+    <string name="title_add_switch">Add Button/Switch</string>
 
     <string name="title_edit_group">Edit Group View</string>
     <string name="title_edit_text">Edit Text View</string>
     <string name="title_edit_progress">Edit Progress Bar/Slider</string>
+    <string name="title_edit_switch">Edit Button/Switch</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
@@ -232,6 +235,11 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_label_progress_decimal">Decimal:</string>
     <string name="dash_label_progress_percent">Display in Percent</string>
     <string name="dash_label_progress_color">Prog. Color:</string>
+    <string name="dash_label_active_state">Active state</string>
+    <string name="dash_label_inactive_state">Inactive state</string>
+    <string name="dash_label_active_state_text">Value:</string>
+    <string name="dash_label_inactive_state_text">Value: </string>
+    <string name="dash_label_color">Color:</string>
 
     <string-array name="dash_label_size_array">
         <item name="dash_label_textsize_s">Small</item>
@@ -249,6 +257,7 @@ to communicate with the MQTT broker and to receive push notifications
         <item name="dash_label_input_number">Number</item>
     </string-array>
 
+    <string name="dash_item_unknown">Unknown view type</string>
     <string name="dash_item_err">Error:</string>
     <string name="error_input_ge0">Value must be greater than 0</string>
     <string name="error_input_invalid_range">Invalid range. Max value must be greater than min value</string>
