@@ -36,10 +36,11 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -50,7 +51,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -158,6 +158,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                 int defaultColor = Color.BLACK;
                 TextView tv = findViewById(R.id.dash_text_color_label);
+                TableRow rowColor = findViewById(R.id.rowColor);
                 if (tv != null) {
                     ColorStateList tc = tv.getTextColors();
                     defaultColor = tc.getDefaultColor();
@@ -332,6 +333,83 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     }
                 }
 
+                /* switch acitve state / button */
+                if (!(mItem instanceof Switch)) {
+                    findViewById(R.id.rowSwitchActive).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchActiveText).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchInactive).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchInactiveText).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchActiveBackground).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchInactiveBackground).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchInactiveColor).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchActiveColor).setVisibility(View.GONE);
+                } else {
+                    mEditTextSwitchActive = findViewById(R.id.dash_acitve_state_text);
+                    mEditTextSwitchInactive = findViewById(R.id.dash_inacitve_state_text);
+                    mBColorActiveButton = findViewById(R.id.dash_switch_active_bcolor_button);
+                    mBColorInactiveButton = findViewById(R.id.dash_switch_inactive_bcolor_button);
+                    mColorActiveButton = findViewById(R.id.dash_switch_active_color_button);
+                    mColorInactiveButton = findViewById(R.id.dash_switch_inactive_color_button);
+
+                    Switch sw = (Switch) mItem;
+
+                    if (savedInstanceState == null) {
+                        mActiveBackground = sw.bgcolor;
+                        mInactiveBackground = sw.bgcolor2;
+                        mActiveColor = sw.color;
+                        mInactiveColor = sw.color2;
+                        mEditTextSwitchActive.setText(sw.val);
+                        mEditTextSwitchInactive.setText(sw.val2);
+                    } else {
+                        if (savedInstanceState.containsKey(KEY_ACT_BACKGROUND)) {
+                            mActiveBackground = savedInstanceState.getInt(KEY_ACT_BACKGROUND);
+                        }
+                        if (savedInstanceState.containsKey(KEY_INACT_BACKGROUND)) {
+                            mInactiveBackground = savedInstanceState.getInt(KEY_INACT_BACKGROUND);
+                        }
+                        if (savedInstanceState.containsKey(KEY_INACT_COLOR)) {
+                            mInactiveColor = savedInstanceState.getInt(KEY_INACT_COLOR);
+                        }
+                        if (savedInstanceState.containsKey(KEY_INACT_COLOR)) {
+                            mActiveColor = savedInstanceState.getInt(KEY_ACT_COLOR);
+                        }
+                    }
+
+                    final int buttonDefaultColor = DBUtils.fetchColor(this,  R.attr.colorButtonNormal);
+
+                    mBColorActiveButton.setColor(mActiveBackground == 0 ? buttonDefaultColor : mActiveBackground, mColorLabelBorderColor);
+                    mBColorActiveButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            showColorDialog(buttonDefaultColor, (mActiveBackground == 0 ? buttonDefaultColor : mActiveBackground), mColorLabelBorderColor, "active_bcolor");
+                        }
+                    });
+                    mBColorInactiveButton.setColor(mInactiveBackground == 0 ? buttonDefaultColor : mInactiveBackground, mColorLabelBorderColor);
+                    mBColorInactiveButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            showColorDialog(defaultBackground, (mInactiveBackground == 0 ? buttonDefaultColor : mInactiveBackground), mColorLabelBorderColor,  "inactive_bcolor");
+                        }
+                    });
+                    final int defColor = defaultColor;
+                    mColorActiveButton.setColor((mActiveColor == 0 ? defColor : mActiveColor), mColorLabelBorderColor);
+                    mColorActiveButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            showColorDialog(defColor, (mActiveColor == 0 ? defColor : mActiveColor), mColorLabelBorderColor, "active_color");
+
+                        }
+                    });
+                    mColorInactiveButton.setColor((mInactiveColor == 0 ? defColor : mInactiveColor), mColorLabelBorderColor);
+                    mColorInactiveButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            showColorDialog(defColor, (mInactiveColor == 0 ? defColor : mInactiveColor), mColorLabelBorderColor, "inactive_color");
+                        }
+                    });
+
+                }
+
                 /* filter/UI sctipt */
                 TableRow rowFilterScript = findViewById(R.id.rowFilterScript);
                 if (rowFilterScript != null) {
@@ -430,6 +508,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         title = getString(R.string.title_add_text);
                     } else if (mItem instanceof ProgressItem) {
                         title = getString(R.string.title_add_progress);
+                    } else if (mItem instanceof Switch) {
+                        title = getString(R.string.title_add_switch);
                     }
                 } else { // mMode == MODE_EDIT
                     if (mItem instanceof GroupItem) {
@@ -438,6 +518,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         title = getString(R.string.title_edit_text);
                     } else if (mItem instanceof ProgressItem) {
                         title = getString(R.string.title_edit_progress);
+                    } else if (mItem instanceof Switch) {
+                        title = getString(R.string.title_edit_switch);
                     }
                 }
                 setTitle(title);
@@ -465,6 +547,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         outState.putInt(KEY_TEXTCOLOR, mTextColor);
         outState.putInt(KEY_BACKGROUND, mBackground);
         outState.putInt(KEY_PROGCOLOR, mProgColor);
+        outState.putInt(KEY_ACT_COLOR, mActiveColor);
+        outState.putInt(KEY_ACT_BACKGROUND, mActiveBackground);
+        outState.putInt(KEY_INACT_BACKGROUND, mInactiveBackground);
+        outState.putInt(KEY_INACT_COLOR, mInactiveColor);
         if (!Utils.isEmpty(mFilterScriptContent)) {
             outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
         }
@@ -662,6 +748,38 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mProgColor = color;
                 }
                 break;
+            case "active_bcolor" :
+                mBColorActiveButton.setColor(color, mColorLabelBorderColor);
+                if (idx == 0) {
+                    mActiveBackground = 0;
+                } else {
+                    mActiveBackground = color;
+                }
+                break;
+            case "inactive_bcolor" :
+                mBColorInactiveButton.setColor(color, mColorLabelBorderColor);
+                if (idx == 0) {
+                    mInactiveBackground = 0;
+                } else {
+                    mInactiveBackground = color;
+                }
+                break;
+            case "active_color" :
+                mColorActiveButton.setColor(color, mColorLabelBorderColor);
+                if (idx == 0) {
+                    mActiveColor = 0;
+                } else {
+                    mActiveColor = color;
+                }
+                break;
+            case "inactive_color" :
+                mColorInactiveButton.setColor(color, mColorLabelBorderColor);
+                if (idx == 0) {
+                    mInactiveColor = 0;
+                } else {
+                    mInactiveColor = color;
+                }
+                break;
         }
     }
 
@@ -851,6 +969,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mEditTextDecimal.setError(getString(R.string.err_invalid_topic_format));
                     valid = false;
                 };
+            } else if (mItem instanceof Switch) {
+                if (Utils.isEmpty(mEditTextSwitchActive.getText().toString())) {
+                    mEditTextSwitchActive.setError(getString(R.string.error_empty_field));
+                    valid = false;
+                }
             }
         }
         return valid;
@@ -993,6 +1116,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     item.percent = mRangeDisplayPercent.isChecked();
                     item.progresscolor = mProgColor;
                 }
+                if (cItem instanceof Switch) {
+                    Switch item = (Switch) cItem;
+                    item.val = mEditTextSwitchActive.getText().toString();
+                    item.val2 = mEditTextSwitchInactive.getText().toString();
+                    item.color = mActiveColor;
+                    item.color2 = mInactiveColor;
+                    item.bgcolor = mActiveBackground;
+                    item.bgcolor2 = mInactiveBackground;
+                }
             }
             if (mEditTextLabel != null) {
                 cItem.label = mEditTextLabel.getText().toString();
@@ -1002,7 +1134,6 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             }
             cItem.textcolor = mTextColor;
             cItem.background = mBackground;
-
         }
     }
 
@@ -1077,6 +1208,14 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             setEnabled(mEditTextDecimal, enableFields);
             setEnabled(mRangeDisplayPercent, enableFields);
             setEnabled(mProgressColor, enableFields);
+        }
+        if (mItem instanceof Switch) {
+            setEnabled(mEditTextSwitchActive, enableFields);
+            setEnabled(mEditTextSwitchInactive, enableFields);
+            setEnabled(mBColorActiveButton, enableFields);
+            setEnabled(mBColorInactiveButton, enableFields);
+            setEnabled(mColorActiveButton, enableFields);
+            setEnabled(mColorInactiveButton, enableFields);
         }
         invalidateOptionsMenu();
     }
@@ -1172,6 +1311,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 int textSizePos = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize) - 1;
                 changed = mTextSizeSpinner.getSelectedItemPosition() != textSizePos;
             }
+
+            // switch / button changed?
+            if (!changed && mItem instanceof Switch) {
+                Switch sw = (Switch) mItem;
+                changed = !mEditTextSwitchActive.getText().toString().equals(sw.val) ||
+                        !mEditTextSwitchInactive.getText().toString().equals(sw.val2) ||
+                        sw.bgcolor != mActiveBackground || sw.bgcolor2 != mInactiveBackground ||
+                        sw.color2 != mInactiveColor || sw.color != mActiveColor;
+            }
         }
 
         return changed;
@@ -1188,11 +1336,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected Spinner mInputTypeSpinner;
     protected ColorLabel mColorButton;
     protected ColorLabel mBColorButton;
+    protected ColorLabel mColorActiveButton;
+    protected ColorLabel mColorInactiveButton;
+    protected ColorLabel mBColorActiveButton;
+    protected ColorLabel mBColorInactiveButton;
     protected ColorLabel mProgressColor;
     protected Spinner mGroupSpinner;
     protected Spinner mPosSpinner;
     protected Spinner mTextSizeSpinner;
     protected Button mOutputScriptButton;
+    protected EditText mEditTextSwitchActive;
+    protected EditText mEditTextSwitchInactive;
 
     protected EditText mEditTextRangeMin, mEditTextRangeMax, mEditTextDecimal;
     protected CheckBox mRangeDisplayPercent;
@@ -1207,9 +1361,18 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected int mTextColor;
     protected int mBackground;
     protected int mProgColor;
+    protected int mActiveBackground;
+    protected int mInactiveBackground;
+    protected int mInactiveColor;
+    protected int mActiveColor;
+
     protected final static String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
     protected final static String KEY_BACKGROUND = "KEY_BACKGROUND";
     protected final static String KEY_PROGCOLOR = "KEY_PROGCOLOR";
+    protected final static String KEY_ACT_BACKGROUND = "KEY_ACT_BACKGROUND";
+    protected final static String KEY_ACT_COLOR = "KEY_ACT_COLOR";
+    protected final static String KEY_INACT_BACKGROUND = "KEY_INACT_BACKGROUND";
+    protected final static String KEY_INACT_COLOR = "KEY_INACT_COLOR";
 
 
     protected String mFilterScriptContent;
