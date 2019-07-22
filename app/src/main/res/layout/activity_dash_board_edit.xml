@@ -60,7 +60,7 @@
                         />
                 </TableRow>
 
-                <TableRow android:id="@+id/rowPosition" android:gravity="center_vertical">
+                <TableRow android:id="@+id/rowPosition" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                     <TextView
                         android:gravity="right"
                         android:textAppearance="?android:attr/textAppearanceMedium"
@@ -73,7 +73,7 @@
                         />
                 </TableRow>
 
-                <TableRow android:id="@+id/rowColor" android:layout_marginTop="4dp">
+                <TableRow android:id="@+id/rowColor">
                     <TextView
                         android:layout_gravity="right|center_vertical"
                         android:textAppearance="?android:attr/textAppearanceMedium"
@@ -128,6 +128,136 @@
                             android:layout_marginLeft="4dp"
                             />
                     </LinearLayout>
+                </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchActive" android:layout_marginTop="24dp">
+                    <TextView
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/dash_label_active_state"
+                        android:layout_span="2"
+                        />
+                </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchActiveText">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_acitve_state_text"
+                        android:text="@string/dash_label_active_state_text"
+                        />
+                    <LinearLayout>
+                        <EditText
+                            android:id="@+id/dash_acitve_state_text"
+                            android:ems="5"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:minHeight="48dp"
+                            android:layout_marginLeft="4dp"
+                            />
+                    </LinearLayout>
+                </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchActiveColor">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_switch_active_color_button"
+                        android:text="@string/dash_label_color"
+                        />
+
+                    <LinearLayout>
+                        <de.radioshuttle.mqttpushclient.dash.ColorLabel
+                            android:id="@+id/dash_switch_active_color_button"
+                            android:background="@drawable/color_label_selector"
+                            android:padding="8dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp" />
+                    </LinearLayout>
+
+                </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchActiveBackground">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_switch_active_bcolor_button"
+                        android:text="@string/dash_label_bcolor"
+                        />
+
+                    <LinearLayout>
+                        <de.radioshuttle.mqttpushclient.dash.ColorLabel
+                            android:id="@+id/dash_switch_active_bcolor_button"
+                            android:background="@drawable/color_label_selector"
+                            android:padding="8dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp" />
+                    </LinearLayout>
+
+                </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchInactive" android:layout_marginTop="24dp">
+                    <TextView
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/dash_label_inactive_state"
+                        />
+                </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchInactiveText">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/dash_label_inactive_state_text"
+                        />
+                    <LinearLayout>
+                        <EditText
+                            android:id="@+id/dash_inacitve_state_text"
+                            android:ems="5"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:minHeight="48dp"
+                            android:layout_marginLeft="4dp"
+                            />
+                    </LinearLayout>
+                </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchInactiveColor">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_switch_inactive_color_button"
+                        android:text="@string/dash_label_color"
+                        />
+
+                    <LinearLayout>
+                        <de.radioshuttle.mqttpushclient.dash.ColorLabel
+                            android:id="@+id/dash_switch_inactive_color_button"
+                            android:background="@drawable/color_label_selector"
+                            android:padding="8dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp" />
+                    </LinearLayout>
+
+                </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchInactiveBackground"  android:layout_marginBottom="24dp">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:labelFor="@+id/dash_switch_inactive_bcolor_button"
+                        android:text="@string/dash_label_bcolor"
+                        />
+
+                    <LinearLayout>
+                        <de.radioshuttle.mqttpushclient.dash.ColorLabel
+                            android:id="@+id/dash_switch_inactive_bcolor_button"
+                            android:background="@drawable/color_label_selector"
+                            android:padding="8dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp" />
+                    </LinearLayout>
+
                 </TableRow>
 
 
