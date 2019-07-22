@@ -391,7 +391,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             showColorDialog(defaultBackground, (mInactiveBackground == 0 ? buttonDefaultColor : mInactiveBackground), mColorLabelBorderColor,  "inactive_bcolor");
                         }
                     });
-                    final int defColor = defaultColor;
+                    final int defColor = new Button(this).getTextColors().getDefaultColor();
                     mColorActiveButton.setColor((mActiveColor == 0 ? defColor : mActiveColor), mColorLabelBorderColor);
                     mColorActiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override

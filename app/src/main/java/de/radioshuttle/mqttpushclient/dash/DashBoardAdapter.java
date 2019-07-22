@@ -8,21 +8,16 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
-import android.util.StateSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,7 +42,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         mDefaultBackground = ContextCompat.getColor(activity, R.color.dashboad_item_background);
         mDefaultProgressColor = DBUtils.fetchAccentColor(activity);
-        mDefaultButtonColor = DBUtils.fetchColor(activity, R.attr.colorButtonNormal);
+        mDefaultButtonBackground = DBUtils.fetchColor(activity, R.attr.colorButtonNormal);
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
@@ -97,6 +92,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             defaultColor = label.getTextColors().getDefaultColor();
             contentContainer = view.findViewById(R.id.switchContainer);
             button = view.findViewById(R.id.toggleButton);
+            mDefaultButtonColor = button.getTextColors().getDefaultColor();
             imageButton = view.findViewById(R.id.toggleImageButton);
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
@@ -301,7 +297,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             }
             ColorStateList csl;
             if (bcolor == 0) {
-                csl = ColorStateList.valueOf(mDefaultBackground);
+                csl = ColorStateList.valueOf(mDefaultButtonBackground);
             } else {
                 csl = ColorStateList.valueOf(bcolor);
             }
@@ -316,7 +312,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
                 /* if stateless, show onValue */
                 h.button.setText(val);
-                h.button.setTextColor(fcolor);
+                h.button.setTextColor(fcolor == 0 ? mDefaultButtonColor : fcolor);
                 ViewCompat.setBackgroundTintList(h.button, csl);
 
             } else {
@@ -329,7 +325,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
                 // TODO: tint image
                 ViewCompat.setBackgroundTintList(h.imageButton, csl);
-                // ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? h.defaultColor : fcolor);
+                // ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButttonLabelColor : fcolor);
                 // ImageViewCompat.setImageTintList(h.imageButton, tcsl);
             }
 
@@ -467,8 +463,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     private HashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
     private int mDefaultBackground;
-    private int mDefaultButtonColor;
     private int mDefaultProgressColor;
+    private int mDefaultButtonColor;
+    private int mDefaultButtonBackground;
     private int mWidth;
     private int mSpanCnt;
     private int spacing;

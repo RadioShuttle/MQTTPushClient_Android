@@ -197,7 +197,9 @@ public class DetailViewDialog extends DialogFragment {
 
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
+                        mDefaultButtonBackground = DBUtils.fetchColor(getContext(), R.attr.colorButtonNormal);
                         mSwitchButton = view.findViewById(R.id.toggleButton);
+                        mDefaultButtonTextColor = mSwitchButton.getTextColors().getDefaultColor();
                         mSwitchImageButton = view.findViewById(R.id.toggleImageButton);
                         Switch sw = (Switch) mItem;
                         if (!Utils.isEmpty(sw.uri)) {
@@ -616,7 +618,7 @@ public class DetailViewDialog extends DialogFragment {
                 }
                 ColorStateList csl;
                 if (bcolor == 0) {
-                    csl = ColorStateList.valueOf(mDefaultBackground);
+                    csl = ColorStateList.valueOf(mDefaultButtonBackground);
                 } else {
                     csl = ColorStateList.valueOf(bcolor);
                 }
@@ -626,7 +628,7 @@ public class DetailViewDialog extends DialogFragment {
                     // button
                     /* if stateless, show onValue */
                     mSwitchButton.setText(val);
-                    mSwitchButton.setTextColor(fcolor);
+                    mSwitchButton.setTextColor(fcolor == 0 ? mDefaultButtonTextColor : fcolor);
                     ViewCompat.setBackgroundTintList(mSwitchButton, csl);
                 } else {
                     // image button
@@ -712,6 +714,8 @@ public class DetailViewDialog extends DialogFragment {
     protected View mCurrentView;
     protected TextView mLabel;
     protected int mDefaultBackground;
+    protected int mDefaultButtonTextColor;
+    protected int mDefaultButtonBackground;
     protected View mContentContainer;
     protected TextView mTextContent;
     protected int mDefaultTextColor;
