@@ -40,7 +40,7 @@ public class ProgressItem extends Item {
     public HashMap<String, Object> getJSViewProperties(HashMap<String, Object> viewProperties) {
         viewProperties = super.getJSViewProperties(viewProperties);
         //TODO: add more properties, and implement DashboarJavascript.ViewProperties
-        viewProperties.put("color", data.containsKey("color") ? (Integer) data.get("color") : progresscolor);
+        viewProperties.put("ctrl_color", data.containsKey("ctrl_color") ? (Integer) data.get("ctrl_color") : progresscolor);
         return viewProperties;
     }
 
