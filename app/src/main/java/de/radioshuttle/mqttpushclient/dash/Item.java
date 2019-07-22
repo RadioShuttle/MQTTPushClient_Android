@@ -83,6 +83,7 @@ public abstract class Item {
             case "text": item = new TextItem(); break;
             case "group": item = new GroupItem(); break;
             case "progress" : item = new ProgressItem(); break;
+            case "switch" : item = new Switch(); break;
         }
         if (item != null) {
             item.setJSONData(o);
