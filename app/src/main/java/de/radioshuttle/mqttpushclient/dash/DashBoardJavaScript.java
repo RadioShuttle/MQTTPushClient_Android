@@ -76,11 +76,15 @@ public class DashBoardJavaScript extends JavaScript {
         void setCtrlColor(double color);
         void setCtrlColor2(double color);
         void setBackgroundColor(double color);
+        void setCtrlBackgroundColor(double color);
+        void setCtrlBackgroundColor2(double color);
         void setTextColor(double color);
         void setTextSize(double size);
         void setTextFieldValue(String defaultInputValue);
         double getTextColor();
         double getBackgroundColor();
+        double getCtrlBackgroundColor();
+        double getCtrlBackgroundColor2();
         double getCtrlColor();
         double getCtrlColor2();
         String getTextFieldValue();
@@ -121,6 +125,16 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
+        public void setCtrlBackgroundColor(double color) {
+            p.put("ctrl_background", doubleToInt(color));
+        }
+
+        @Override
+        public void setCtrlBackgroundColor2(double color) {
+            p.put("ctrl_background2", doubleToInt(color));
+        }
+
+        @Override
         public double getCtrlColor() {
             return intToDouble((int) (p.get("ctrl_color") == null ? 0 : p.get("ctrl_color")));
         }
@@ -133,6 +147,15 @@ public class DashBoardJavaScript extends JavaScript {
         @Override
         public double getBackgroundColor() {
             return intToDouble((int) (p.get("background") == null ? 0 : p.get("background")));
+        }
+        @Override
+        public double getCtrlBackgroundColor() {
+            return intToDouble((int) (p.get("ctrl_background") == null ? 0 : p.get("ctrl_background")));
+        }
+
+        @Override
+        public double getCtrlBackgroundColor2() {
+            return intToDouble((int) (p.get("ctrl_background2") == null ? 0 : p.get("ctrl_background2")));
         }
 
         @Override
