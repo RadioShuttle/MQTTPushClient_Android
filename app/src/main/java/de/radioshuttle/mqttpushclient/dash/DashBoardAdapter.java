@@ -8,14 +8,21 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
+import android.util.StateSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,6 +31,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import de.radioshuttle.mqttpushclient.R;
@@ -39,6 +47,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         mDefaultBackground = ContextCompat.getColor(activity, R.color.dashboad_item_background);
         mDefaultProgressColor = DBUtils.fetchAccentColor(activity);
+        mDefaultButtonColor = DBUtils.fetchColor(activity, R.attr.colorButtonNormal);
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
@@ -52,7 +61,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, final int viewType) {
         // Log.d(TAG, "onCreateViewHolder: " );
-        View view;
+        View view = null;
         TextView label = null;
         View contentContainer = null;
         TextView value = null;
@@ -60,6 +69,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         ImageView errorImageView = null;
         ImageView errorImage2View = null;
         ProgressBar progressBar = null;
+        Button button = null;
+        ImageButton imageButton = null;
         int defaultColor = 0;
         if (viewType == TYPE_TEXT) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
@@ -80,12 +91,22 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
             errorImage2View = view.findViewById(R.id.errorImage2);
-        } else {
+        } else if (viewType == TYPE_SWITCH) {
+            view = mInflater.inflate(R.layout.activity_dash_board_item_switch, parent, false);
+            label = view.findViewById(R.id.name);
+            defaultColor = label.getTextColors().getDefaultColor();
+            contentContainer = view.findViewById(R.id.switchContainer);
+            button = view.findViewById(R.id.toggleButton);
+            imageButton = view.findViewById(R.id.toggleImageButton);
+            selectedImageView = view.findViewById(R.id.check);
+            errorImageView = view.findViewById(R.id.errorImage);
+            errorImage2View = view.findViewById(R.id.errorImage2);
+        } else if (viewType == TYPE_GROUP) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_group, parent, false);
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
             selectedImageView = view.findViewById(R.id.check);
-        }
+        } // TODO: handle unknown view type
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
@@ -94,6 +115,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         holder.progressBar = progressBar;
         holder.value = value;
         holder.selectedImageView = selectedImageView;
+        holder.button = button;
+        holder.imageButton = imageButton;
         holder.defaultColor = defaultColor;
         holder.errorImage = errorImageView;
         holder.errorImage2 = errorImage2View;
@@ -190,7 +213,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         if (h.progressBar != null) { // (h.viewType == TYPE_PROGRESS) {
             ProgressItem p = (ProgressItem) item;
-            int pcolor = (p.data.get("color") != null ? (Integer) p.data.get("color") : p.progresscolor);
+            int pcolor = (p.data.get("ctrl_color") != null ? (Integer) p.data.get("ctrl_color") : p.progresscolor);
             pcolor = (pcolor == 0 ? mDefaultProgressColor : pcolor);
             if (Build.VERSION.SDK_INT >= 21) {
                 /*
@@ -257,6 +280,60 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             h.value.setText(content);
         }
 
+        // switch
+        if (item instanceof Switch) {
+            Switch sw = (Switch) item;
+
+            /* if stateless, show onValue */
+            String val = null;
+            int fcolor;
+            int bcolor;
+            boolean isActiveState = sw.isActiveState();
+
+            if (isActiveState) {
+                val = sw.val;
+                fcolor = sw.data.containsKey("ctrl_color") ? (Integer) sw.data.get("ctrl_color") : sw.color;
+                bcolor = sw.data.containsKey("ctrl_background") ? (Integer) sw.data.get("ctrl_background") : sw.bgcolor;
+            } else {
+                val = sw.val2;
+                fcolor = sw.data.containsKey("ctrl_color2") ? (Integer) sw.data.get("ctrl_color2") : sw.color2;
+                bcolor = sw.data.containsKey("ctrl_background2") ? (Integer) sw.data.get("ctrl_background2") : sw.bgcolor2;
+            }
+            ColorStateList csl;
+            if (bcolor == 0) {
+                csl = ColorStateList.valueOf(mDefaultBackground);
+            } else {
+                csl = ColorStateList.valueOf(bcolor);
+            }
+
+            /* show button or image button */
+            if (Utils.isEmpty(sw.uri)) {
+                if (h.button.getVisibility() != View.VISIBLE) {
+                    h.button.setVisibility(View.VISIBLE);
+                }
+                if (h.imageButton.getVisibility() != View.GONE) {
+                    h.imageButton.setVisibility(View.GONE);;
+                }
+                /* if stateless, show onValue */
+                h.button.setText(val);
+                h.button.setTextColor(fcolor);
+                ViewCompat.setBackgroundTintList(h.button, csl);
+
+            } else {
+                if (h.button.getVisibility() != View.GONE) {
+                    h.button.setVisibility(View.GONE);
+                }
+                if (h.imageButton.getVisibility() != View.VISIBLE) {
+                    h.imageButton.setVisibility(View.VISIBLE);;
+                    // h.imageButton.setImage
+                }
+                // TODO: tint image
+                ViewCompat.setBackgroundTintList(h.imageButton, csl);
+                // ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? h.defaultColor : fcolor);
+                // ImageViewCompat.setImageTintList(h.imageButton, tcsl);
+            }
+
+        }
         // Log.d(TAG, "width: " + lp.width);
         // Log.d(TAG, "height: " + lp.height);
     }
@@ -312,6 +389,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         ImageView selectedImageView;
         ImageView errorImage;
         ImageView errorImage2;
+        Button button;
+        ImageButton imageButton;
         int defaultColor;
         int viewType;
     }
@@ -327,6 +406,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 type = TYPE_TEXT;
             } else  if (item instanceof ProgressItem) {
                 type = TYPE_PROGRESS;
+            } else if (item instanceof Switch) {
+                type = TYPE_SWITCH;
             }
         }
         return type;
@@ -386,6 +467,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     private HashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
     private int mDefaultBackground;
+    private int mDefaultButtonColor;
     private int mDefaultProgressColor;
     private int mWidth;
     private int mSpanCnt;
@@ -396,6 +478,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     public final static int TYPE_GROUP = 0;
     public final static int TYPE_TEXT = 1;
     public final static int TYPE_PROGRESS = 2;
+    public final static int TYPE_SWITCH = 3;
 
     private final static String TAG = DashBoardAdapter.class.getSimpleName();
 }

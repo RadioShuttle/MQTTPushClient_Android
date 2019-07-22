@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
@@ -187,6 +189,41 @@ public class DetailViewDialog extends DialogFragment {
                             /* tint progress bar */
                         }
 
+                    } else if (mItem instanceof Switch) {
+                        view = inflater.inflate(R.layout.activity_dash_board_item_switch, null);
+                        mContentContainer = view.findViewById(R.id.switchContainer);
+                        int padding = (int) (40d * getResources().getDisplayMetrics().density);
+                        mContentContainer.setPadding(padding, padding, padding, padding);
+
+                        mLabel = view.findViewById(R.id.name);
+                        mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
+                        mSwitchButton = view.findViewById(R.id.toggleButton);
+                        mSwitchImageButton = view.findViewById(R.id.toggleImageButton);
+                        Switch sw = (Switch) mItem;
+                        if (!Utils.isEmpty(sw.uri)) {
+                            /* use image button*/
+                            mSwitchButton.setVisibility(View.GONE);
+                            mSwitchImageButton.setVisibility(View.VISIBLE);
+                            mSwitchImageButton.setClickable(true);
+                            mSwitchImageButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    onButtonClicked();
+                                }
+                            });
+                        } else {
+                            /* use text button*/
+                            mSwitchButton.setClickable(true);
+                            mSwitchButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    onButtonClicked();
+                                }
+                            });
+                        }
+
+                        // mContentContainer = view.findViewById()
+                    } else { // unknown or deprecated type
                     }
 
                     ViewGroup.LayoutParams lp = mContentContainer.getLayoutParams();
@@ -206,6 +243,7 @@ public class DetailViewDialog extends DialogFragment {
 
                         /* tint buttons */
                         ImageButton closeButton = root.findViewById(R.id.closeButton);
+                        //TODO: button tint colors for switch (2 cols possible)
                         ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
                         ImageViewCompat.setImageTintList(closeButton, csl);
                         closeButton.setOnClickListener(new View.OnClickListener() {
@@ -334,7 +372,6 @@ public class DetailViewDialog extends DialogFragment {
                         }
                     }
                 }
-
                 if (mCurrentPublishID == request.getmPublishID()) {
                     if (!request.hasCompleted()) {
                         mProgressBar.setVisibility(View.VISIBLE);
@@ -397,6 +434,29 @@ public class DetailViewDialog extends DialogFragment {
             }
         }
         return content;
+    }
+
+    protected void onButtonClicked() {
+        if (mItem instanceof Switch) {
+            Switch sw = (Switch) mItem;
+            /* is switch? then toggle state */
+            String t;
+            if (!Utils.isEmpty(sw.val2)) {
+                if (sw.isActiveState()) {
+                    t = sw.val2;
+                } else {
+                    t = sw.val;
+                }
+            } else {
+                t = sw.val;
+            }
+            if (t == null) {
+                t = "";
+            }
+            try {
+                performSend(t.getBytes("UTF-8"), false);
+            } catch (UnsupportedEncodingException e) {}
+        }
     }
 
     protected void updateView() {
@@ -483,9 +543,10 @@ public class DetailViewDialog extends DialogFragment {
                                 double v = Double.parseDouble(val);
                                 if (p.range_min < p.range_max && v >= p.range_min && v <= p.range_max) {
                                     double f = ProgressItem.calcProgessInPercent(v, p.range_min, p.range_max) / 100d;
-                                    value = (int) (Math.floor((double) mItemProgressBar.getMax() * f +.5d));
+                                    value = (int) (Math.floor((double) mItemProgressBar.getMax() * f + .5d));
                                 }
-                            } catch(Exception e) {}
+                            } catch (Exception e) {
+                            }
                         }
                     }
                     ProgressBar pb = null;
@@ -501,7 +562,7 @@ public class DetailViewDialog extends DialogFragment {
                     }
 
                     int defaultProgressColor = DBUtils.fetchAccentColor(getContext());
-                    int pcolor = (p.data.get("color") != null ? (Integer) p.data.get("color") : p.progresscolor);
+                    int pcolor = (p.data.get("ctrl_color") != null ? (Integer) p.data.get("ctrl_color") : p.progresscolor);
                     pcolor = (pcolor == 0 ? defaultProgressColor : pcolor);
 
                     if (Build.VERSION.SDK_INT >= 21) {
@@ -535,9 +596,48 @@ public class DetailViewDialog extends DialogFragment {
                         }
                     }
                 }
+            } else if (mItem instanceof Switch) {
+                Switch sw = (Switch) mItem;
+
+                /* if stateless, show onValue */
+                String val = null;
+                int fcolor;
+                int bcolor;
+                boolean isActiveState = sw.isActiveState();
+
+                if (isActiveState) {
+                    val = sw.val;
+                    fcolor = sw.data.containsKey("ctrl_color") ? (Integer) sw.data.get("ctrl_color") : sw.color;
+                    bcolor = sw.data.containsKey("ctrl_background") ? (Integer) sw.data.get("ctrl_background") : sw.bgcolor;
+                } else {
+                    val = sw.val2;
+                    fcolor = sw.data.containsKey("ctrl_color2") ? (Integer) sw.data.get("ctrl_color2") : sw.color2;
+                    bcolor = sw.data.containsKey("ctrl_background2") ? (Integer) sw.data.get("ctrl_background2") : sw.bgcolor2;
+                }
+                ColorStateList csl;
+                if (bcolor == 0) {
+                    csl = ColorStateList.valueOf(mDefaultBackground);
+                } else {
+                    csl = ColorStateList.valueOf(bcolor);
+                }
+
+                /* button or image button */
+                if (Utils.isEmpty(sw.uri)) {
+                    // button
+                    /* if stateless, show onValue */
+                    mSwitchButton.setText(val);
+                    mSwitchButton.setTextColor(fcolor);
+                    ViewCompat.setBackgroundTintList(mSwitchButton, csl);
+                } else {
+                    // image button
+                    // TODO: tint image
+                    ViewCompat.setBackgroundTintList(mSwitchImageButton, csl);
+                    // ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultTextColor : fcolor);
+                    // ImageViewCompat.setImageTintList(mSwitchImageButton, tcsl);
+                }
+
             } else {
                 //TODO: continue here to set other dash item related data
-
             }
 
             if (mLabel != null) {
@@ -623,6 +723,9 @@ public class DetailViewDialog extends DialogFragment {
     protected ImageButton mErrorButton;
     protected ImageButton mErrorButton2;
     protected ProgressBar mProgressBar;
+    protected Button mSwitchButton;
+    protected ImageButton mSwitchImageButton;
+
     protected long mCurrentPublishID;
     protected ProgressBar mItemProgressBar;
     protected SeekBar mSeekBar;
