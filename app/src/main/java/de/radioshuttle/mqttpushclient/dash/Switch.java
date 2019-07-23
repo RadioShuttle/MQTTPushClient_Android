@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.graphics.drawable.Drawable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,6 +25,14 @@ public class Switch extends Item {
     public String uri2;
     public int color2;
     public int bgcolor2;
+
+    //transient
+    public Drawable image;
+    public Drawable image2;
+    public Drawable imageDetail;
+    public Drawable imageDetail2;
+    public String imageUri;
+    public String imageUri2;
 
     @Override
     public String getType() {
@@ -54,7 +63,7 @@ public class Switch extends Item {
         o.put("bgcolor", bgcolor);
         if (!Utils.isEmpty(val2)) {
             o.put("val2", val2);
-            o.put("uri2", uri2 == null ? "" : uri);
+            o.put("uri2", uri2 == null ? "" : uri2);
             o.put("bgcolor2", bgcolor2);
             o.put("color2", color2);
         }
@@ -71,5 +80,13 @@ public class Switch extends Item {
         bgcolor2 = o.optInt("bgcolor2");
         color = o.optInt("color");
         color2 = o.optInt("color2");
+        //TODO: remove:
+        // uri = "res://internal/notifications_active";
+        // uri2 = "res://internal/notifications_off";
     }
+
+    public static boolean isInternalResource(String uri) {
+        return !Utils.isEmpty(uri) && IconHelper.INTENRAL_ICONS.containsKey(uri);
+    }
+
 }
