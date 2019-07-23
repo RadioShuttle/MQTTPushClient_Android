@@ -39,7 +39,6 @@ import androidx.lifecycle.ViewModelProviders;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -202,28 +201,21 @@ public class DetailViewDialog extends DialogFragment {
                         mDefaultButtonTextColor = mSwitchButton.getTextColors().getDefaultColor();
                         mSwitchImageButton = view.findViewById(R.id.toggleImageButton);
                         Switch sw = (Switch) mItem;
-                        if (!Utils.isEmpty(sw.uri)) {
-                            /* use image button*/
-                            mSwitchButton.setVisibility(View.GONE);
-                            mSwitchImageButton.setVisibility(View.VISIBLE);
-                            mSwitchImageButton.setClickable(true);
-                            mSwitchImageButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    onButtonClicked();
-                                }
-                            });
-                        } else {
-                            /* use text button*/
-                            mSwitchButton.setClickable(true);
-                            mSwitchButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    onButtonClicked();
-                                }
-                            });
-                        }
 
+                        mSwitchButton.setClickable(true);
+                        mSwitchButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                onButtonClicked();
+                            }
+                        });
+                        mSwitchImageButton.setClickable(true);
+                        mSwitchImageButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                onButtonClicked();
+                            }
+                        });
                         // mContentContainer = view.findViewById()
                     } else { // unknown or deprecated type
                     }
@@ -245,7 +237,6 @@ public class DetailViewDialog extends DialogFragment {
 
                         /* tint buttons */
                         ImageButton closeButton = root.findViewById(R.id.closeButton);
-                        //TODO: button tint colors for switch (2 cols possible)
                         ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
                         ImageViewCompat.setImageTintList(closeButton, csl);
                         closeButton.setOnClickListener(new View.OnClickListener() {
@@ -606,15 +597,22 @@ public class DetailViewDialog extends DialogFragment {
                 int fcolor;
                 int bcolor;
                 boolean isActiveState = sw.isActiveState();
+                boolean internalImage;
+
+                Drawable icon;
 
                 if (isActiveState) {
                     val = sw.val;
                     fcolor = sw.data.containsKey("ctrl_color") ? (Integer) sw.data.get("ctrl_color") : sw.color;
                     bcolor = sw.data.containsKey("ctrl_background") ? (Integer) sw.data.get("ctrl_background") : sw.bgcolor;
+                    icon = sw.imageDetail;
+                    internalImage = Switch.isInternalResource(sw.uri);
                 } else {
                     val = sw.val2;
                     fcolor = sw.data.containsKey("ctrl_color2") ? (Integer) sw.data.get("ctrl_color2") : sw.color2;
                     bcolor = sw.data.containsKey("ctrl_background2") ? (Integer) sw.data.get("ctrl_background2") : sw.bgcolor2;
+                    icon = sw.imageDetail2;
+                    internalImage = Switch.isInternalResource(sw.uri2);
                 }
                 ColorStateList csl;
                 if (bcolor == 0) {
@@ -623,19 +621,37 @@ public class DetailViewDialog extends DialogFragment {
                     csl = ColorStateList.valueOf(bcolor);
                 }
 
-                /* button or image button */
-                if (Utils.isEmpty(sw.uri)) {
-                    // button
+                /* show button or image button */
+                if (icon == null) {
+                    if (mSwitchButton.getVisibility() != View.VISIBLE) {
+                        mSwitchButton.setVisibility(View.VISIBLE);
+                    }
+                    if (mSwitchImageButton.getVisibility() != View.GONE) {
+                        mSwitchImageButton.setVisibility(View.GONE);;
+                    }
                     /* if stateless, show onValue */
                     mSwitchButton.setText(val);
                     mSwitchButton.setTextColor(fcolor == 0 ? mDefaultButtonTextColor : fcolor);
                     ViewCompat.setBackgroundTintList(mSwitchButton, csl);
+
                 } else {
-                    // image button
-                    // TODO: tint image
+                    if (mSwitchButton.getVisibility() != View.GONE) {
+                        mSwitchButton.setVisibility(View.GONE);
+                    }
+                    if (mSwitchImageButton.getVisibility() != View.VISIBLE) {
+                        mSwitchImageButton.setVisibility(View.VISIBLE);;
+                    }
+                    if (mSwitchImageButton.getDrawable() != icon) {
+                        mSwitchImageButton.setImageDrawable(icon);
+                    }
+
                     ViewCompat.setBackgroundTintList(mSwitchImageButton, csl);
-                    // ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultTextColor : fcolor);
-                    // ImageViewCompat.setImageTintList(mSwitchImageButton, tcsl);
+                    ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonTextColor : fcolor);
+                    if (fcolor == 0 && !internalImage) { // no tint for user/external images with color 0
+                        ImageViewCompat.setImageTintList(mSwitchImageButton, null);
+                    } else {
+                        ImageViewCompat.setImageTintList(mSwitchImageButton, tcsl);
+                    }
                 }
 
             } else {
