@@ -6,10 +6,13 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -278,22 +281,29 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         // switch
         if (item instanceof Switch) {
-            Switch sw = (Switch) item;
+            final Switch sw = (Switch) item;
 
             /* if stateless, show onValue */
             String val = null;
             int fcolor;
             int bcolor;
             boolean isActiveState = sw.isActiveState();
+            boolean internalImage;
+
+            Drawable icon;
 
             if (isActiveState) {
                 val = sw.val;
                 fcolor = sw.data.containsKey("ctrl_color") ? (Integer) sw.data.get("ctrl_color") : sw.color;
                 bcolor = sw.data.containsKey("ctrl_background") ? (Integer) sw.data.get("ctrl_background") : sw.bgcolor;
+                icon = sw.image;
+                internalImage = Switch.isInternalResource(sw.uri);
             } else {
                 val = sw.val2;
                 fcolor = sw.data.containsKey("ctrl_color2") ? (Integer) sw.data.get("ctrl_color2") : sw.color2;
                 bcolor = sw.data.containsKey("ctrl_background2") ? (Integer) sw.data.get("ctrl_background2") : sw.bgcolor2;
+                icon = sw.image2;
+                internalImage = Switch.isInternalResource(sw.uri2);
             }
             ColorStateList csl;
             if (bcolor == 0) {
@@ -303,7 +313,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             }
 
             /* show button or image button */
-            if (Utils.isEmpty(sw.uri)) {
+            if (icon == null) {
                 if (h.button.getVisibility() != View.VISIBLE) {
                     h.button.setVisibility(View.VISIBLE);
                 }
@@ -321,12 +331,18 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
                 if (h.imageButton.getVisibility() != View.VISIBLE) {
                     h.imageButton.setVisibility(View.VISIBLE);;
-                    // h.imageButton.setImage
                 }
-                // TODO: tint image
+                if (h.imageButton.getDrawable() != icon) {
+                    h.imageButton.setImageDrawable(icon);
+                }
+
                 ViewCompat.setBackgroundTintList(h.imageButton, csl);
-                // ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButttonLabelColor : fcolor);
-                // ImageViewCompat.setImageTintList(h.imageButton, tcsl);
+                ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonColor : fcolor);
+                if (fcolor == 0 && !internalImage) { // no tint for user/external images with color 0
+                    ImageViewCompat.setImageTintList(h.imageButton, null);
+                } else {
+                    ImageViewCompat.setImageTintList(h.imageButton, tcsl);
+                }
             }
 
         }
@@ -458,7 +474,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     public HashSet<Integer> getSelectedItems() {
         return mSelectedItems;
     }
-
 
     private HashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
