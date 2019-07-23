@@ -6,9 +6,10 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
-import android.content.Context;
 import android.database.sqlite.SQLiteConstraintException;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
@@ -40,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -225,7 +227,56 @@ public class DashBoardViewModel extends AndroidViewModel {
                 Log.e(TAG, "Load items: Parsing json failed: " + e.getMessage());
             }
         }
-        mDashBoardItemsLiveData.setValue(buildDisplayList());
+        final List<Item> list = buildDisplayList();
+
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask loadImages = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                for(Item item : list) {
+                    if (item instanceof Switch) {
+                        Switch sw = (Switch) item;
+                        /* check if we have the image already loaded */
+                        if (!Utils.isEmpty(sw.uri) && Utils.isEmpty(sw.imageUri)) {
+                            try {
+                                if (Switch.isInternalResource(sw.uri)) {
+                                    sw.image = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri));
+                                    if (sw.image != null) {
+                                        sw.imageDetail = sw.image.getConstantState().newDrawable();
+
+                                    }
+                                    sw.imageUri = sw.uri;
+                                } else {
+                                    //TODO: load external resource
+                                }
+                            } catch(Exception e) {
+                                Log.e(TAG, "error loading image: ", e);
+                                //TODO: error handling
+                            }
+                        }
+                        if (!Utils.isEmpty(sw.uri2) && Utils.isEmpty(sw.imageUri2)) {
+                            try {
+                                if (Switch.isInternalResource(sw.uri2)) {
+                                    sw.image2 = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri2));
+                                    if (sw.image2 != null) {
+                                        sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
+                                    }
+                                    sw.imageUri2 = sw.uri2;
+                                } else {
+                                    //TODO: load external resource
+                                }
+                            } catch(Exception e) {
+                                Log.e(TAG, "error loading image: ", e);
+                                //TODO: error handling
+                            }
+                        }
+                    }
+                }
+                mDashBoardItemsLiveData.postValue(list);
+                return null;
+            }
+        };
+        loadImages.executeOnExecutor(Utils.executor, (Object[]) null);
     }
 
     public void notifyDataChanged() {
