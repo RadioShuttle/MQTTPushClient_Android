@@ -6,13 +6,11 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
-import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,6 +42,11 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         // setHasStableIds(true);
 
         mDefaultBackground = ContextCompat.getColor(activity, R.color.dashboad_item_background);
+        mDefaultButtonTintColor = ContextCompat.getColor(activity, R.color.button_tint_default);
+        Log.d(TAG, "default item bg: " + mDefaultBackground);
+
+        // mDefaultButtonTintColor
+
         mDefaultProgressColor = DBUtils.fetchAccentColor(activity);
         mDefaultButtonBackground = DBUtils.fetchColor(activity, R.attr.colorButtonNormal);
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
@@ -95,8 +98,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             defaultColor = label.getTextColors().getDefaultColor();
             contentContainer = view.findViewById(R.id.switchContainer);
             button = view.findViewById(R.id.toggleButton);
-            mDefaultButtonColor = button.getTextColors().getDefaultColor();
             imageButton = view.findViewById(R.id.toggleImageButton);
+            mDefaultButtonTextColor = button.getTextColors().getDefaultColor();  //TODO: default text color should be default tint color
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
             errorImage2View = view.findViewById(R.id.errorImage2);
@@ -322,7 +325,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
                 /* if stateless, show onValue */
                 h.button.setText(val);
-                h.button.setTextColor(fcolor == 0 ? mDefaultButtonColor : fcolor);
+                h.button.setTextColor(fcolor == 0 ? mDefaultButtonTextColor : fcolor);
                 ViewCompat.setBackgroundTintList(h.button, csl);
 
             } else {
@@ -337,8 +340,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
 
                 ViewCompat.setBackgroundTintList(h.imageButton, csl);
-                ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonColor : fcolor);
-                if (fcolor == 0 && !internalImage) { // no tint for user/external images with color 0
+                ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonTintColor : fcolor);
+                if (fcolor == 0 && !internalImage) { // TODO no tint for user/external images with color 0, android 4
                     ImageViewCompat.setImageTintList(h.imageButton, null);
                 } else {
                     ImageViewCompat.setImageTintList(h.imageButton, tcsl);
@@ -479,7 +482,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     private DashBoardActionListener mListener;
     private int mDefaultBackground;
     private int mDefaultProgressColor;
-    private int mDefaultButtonColor;
+    private int mDefaultButtonTextColor;
+    private int mDefaultButtonTintColor;
     private int mDefaultButtonBackground;
     private int mWidth;
     private int mSpanCnt;

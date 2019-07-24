@@ -198,7 +198,9 @@ public class DetailViewDialog extends DialogFragment {
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
                         mDefaultButtonBackground = DBUtils.fetchColor(getContext(), R.attr.colorButtonNormal);
                         mSwitchButton = view.findViewById(R.id.toggleButton);
-                        mDefaultButtonTextColor = mSwitchButton.getTextColors().getDefaultColor();
+                        mDefaultButtonTextColor = mSwitchButton.getTextColors().getDefaultColor(); //TODO use color bewlow?
+                        mDefaultButtonTintColor = ContextCompat.getColor(getContext(), R.color.button_tint_default);
+
                         mSwitchImageButton = view.findViewById(R.id.toggleImageButton);
                         Switch sw = (Switch) mItem;
 
@@ -646,7 +648,7 @@ public class DetailViewDialog extends DialogFragment {
                     }
 
                     ViewCompat.setBackgroundTintList(mSwitchImageButton, csl);
-                    ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonTextColor : fcolor);
+                    ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonTintColor : fcolor);
                     if (fcolor == 0 && !internalImage) { // no tint for user/external images with color 0
                         ImageViewCompat.setImageTintList(mSwitchImageButton, null);
                     } else {
@@ -731,6 +733,7 @@ public class DetailViewDialog extends DialogFragment {
     protected TextView mLabel;
     protected int mDefaultBackground;
     protected int mDefaultButtonTextColor;
+    protected int mDefaultButtonTintColor;
     protected int mDefaultButtonBackground;
     protected View mContentContainer;
     protected TextView mTextContent;

@@ -7,6 +7,7 @@
 package de.radioshuttle.utils;
 
 import android.content.Context;
+import android.content.res.Configuration;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -95,6 +96,12 @@ public class Utils {
             }
         }
         return sw.toString();
+    }
+
+    public static boolean isNightMode(Context context) {
+        Configuration configuration = context.getResources().getConfiguration();
+        int currentNightMode = configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
     }
 
     public static final Charset UTF_8 = Charset.forName("UTF-8");
