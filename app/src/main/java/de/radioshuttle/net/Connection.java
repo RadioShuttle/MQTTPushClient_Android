@@ -329,6 +329,12 @@ public class Connection {
 
             errorCode = (m.containsKey("err_code") ? (short) m.get("err_code") : 0);
             errorTxt = (m.containsKey("err_msg") ? (String) m.get("err_msg") : "");
+            //TODO
+            /*
+            if (errorCode != 0 && Utils.isEmpty(errorTxt)) {
+                errorTxt = "error code " + errorCode;
+            }
+            */
 
             if (response.rc == Cmd.RC_MQTT_ERROR) {
                 throw new MQTTException(errorCode, errorTxt);
