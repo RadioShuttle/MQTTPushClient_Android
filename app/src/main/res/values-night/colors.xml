@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+
+    <color name="row_selection">#004D40</color>
+
+    <color name="circle_error">#D84315</color>
+    <color name="circle_ok">#4CAF50</color>
+    <color name="circle_warning">#FDD835</color>
+
+    <color name="highlight_newitem">#1B5E20</color>
+
+    <color name="colorHeader">#00000000</color>
+    <color name="colorNewMessages">#FF7043</color>
+
+    <color name="linkcolor">#9dafff</color>
+    <color name="about_background">#00000000</color>
+
+    <color name="button_tint_default">#FFFFFFFF</color>
+
+    <color name="dashboard_selected_background">#80000000</color>
+    <color name="dashboard_color_label_pressed">#35FFFFFF</color>
+    <color name="dashboad_item_background">#616161</color>
+
+</resources>
