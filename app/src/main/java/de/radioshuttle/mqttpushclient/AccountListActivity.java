@@ -602,6 +602,10 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
         if (m != null) {
             m.setChecked(true);
         }
+        m = menu.findItem(R.id.menu_theme_system);
+        if (Build.VERSION.SDK_INT <= 28) {
+            m.setTitle(R.string.menu_theme_battery_saver);
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 
