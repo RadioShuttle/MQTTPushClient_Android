@@ -391,20 +391,21 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             showColorDialog(defaultBackground, (mInactiveBackground == 0 ? buttonDefaultColor : mInactiveBackground), mColorLabelBorderColor,  "inactive_bcolor");
                         }
                     });
-                    final int defColor = new Button(this).getTextColors().getDefaultColor();
-                    mColorActiveButton.setColor((mActiveColor == 0 ? defColor : mActiveColor), mColorLabelBorderColor);
+                    final int buttonTintColor = ContextCompat.getColor(this, R.color.button_tint_default);
+
+                    mColorActiveButton.setColor((mActiveColor == 0 ? buttonTintColor : mActiveColor), mColorLabelBorderColor);
                     mColorActiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defColor, (mActiveColor == 0 ? defColor : mActiveColor), mColorLabelBorderColor, "active_color");
+                            showColorDialog(buttonTintColor, (mActiveColor == 0 ? buttonTintColor : mActiveColor), mColorLabelBorderColor, "active_color");
 
                         }
                     });
-                    mColorInactiveButton.setColor((mInactiveColor == 0 ? defColor : mInactiveColor), mColorLabelBorderColor);
+                    mColorInactiveButton.setColor((mInactiveColor == 0 ? buttonTintColor : mInactiveColor), mColorLabelBorderColor);
                     mColorInactiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defColor, (mInactiveColor == 0 ? defColor : mInactiveColor), mColorLabelBorderColor, "inactive_color");
+                            showColorDialog(buttonTintColor, (mInactiveColor == 0 ? buttonTintColor : mInactiveColor), mColorLabelBorderColor, "inactive_color");
                         }
                     });
 

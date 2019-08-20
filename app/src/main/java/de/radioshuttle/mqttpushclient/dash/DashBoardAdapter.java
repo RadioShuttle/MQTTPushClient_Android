@@ -45,8 +45,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         mDefaultButtonTintColor = ContextCompat.getColor(activity, R.color.button_tint_default);
         Log.d(TAG, "default item bg: " + mDefaultBackground);
 
-        // mDefaultButtonTintColor
-
         mDefaultProgressColor = DBUtils.fetchAccentColor(activity);
         mDefaultButtonBackground = DBUtils.fetchColor(activity, R.attr.colorButtonNormal);
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
@@ -77,6 +75,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
+
             contentContainer = view.findViewById(R.id.textContent);
             value = view.findViewById(R.id.textContent);
             selectedImageView = view.findViewById(R.id.check);
@@ -99,7 +98,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             contentContainer = view.findViewById(R.id.switchContainer);
             button = view.findViewById(R.id.toggleButton);
             imageButton = view.findViewById(R.id.toggleImageButton);
-            mDefaultButtonTextColor = button.getTextColors().getDefaultColor();  //TODO: default text color should be default tint color
+            mDefaultButtonTextColor = mDefaultButtonTintColor;
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
             errorImage2View = view.findViewById(R.id.errorImage2);

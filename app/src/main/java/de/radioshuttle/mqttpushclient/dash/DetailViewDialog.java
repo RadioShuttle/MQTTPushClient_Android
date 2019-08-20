@@ -155,6 +155,7 @@ public class DetailViewDialog extends DialogFragment {
                         mTextContent = view.findViewById(R.id.textContent);
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
+                        mDefaultProgressColor = DBUtils.fetchAccentColor(getContext());
 
                         if (publishEnabled) {
                             mProgressFormatter = NumberFormat.getInstance();
@@ -198,7 +199,6 @@ public class DetailViewDialog extends DialogFragment {
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
                         mDefaultButtonBackground = DBUtils.fetchColor(getContext(), R.attr.colorButtonNormal);
                         mSwitchButton = view.findViewById(R.id.toggleButton);
-                        mDefaultButtonTextColor = mSwitchButton.getTextColors().getDefaultColor(); //TODO use color bewlow?
                         mDefaultButtonTintColor = ContextCompat.getColor(getContext(), R.color.button_tint_default);
 
                         mSwitchImageButton = view.findViewById(R.id.toggleImageButton);
@@ -556,9 +556,8 @@ public class DetailViewDialog extends DialogFragment {
                         pb = mSeekBar;
                     }
 
-                    int defaultProgressColor = DBUtils.fetchAccentColor(getContext());
                     int pcolor = (p.data.get("ctrl_color") != null ? (Integer) p.data.get("ctrl_color") : p.progresscolor);
-                    pcolor = (pcolor == 0 ? defaultProgressColor : pcolor);
+                    pcolor = (pcolor == 0 ? mDefaultProgressColor : pcolor);
 
                     if (Build.VERSION.SDK_INT >= 21) {
                         /*
@@ -633,7 +632,7 @@ public class DetailViewDialog extends DialogFragment {
                     }
                     /* if stateless, show onValue */
                     mSwitchButton.setText(val);
-                    mSwitchButton.setTextColor(fcolor == 0 ? mDefaultButtonTextColor : fcolor);
+                    mSwitchButton.setTextColor(fcolor == 0 ? mDefaultButtonTintColor : fcolor);
                     ViewCompat.setBackgroundTintList(mSwitchButton, csl);
 
                 } else {
@@ -732,9 +731,9 @@ public class DetailViewDialog extends DialogFragment {
     protected View mCurrentView;
     protected TextView mLabel;
     protected int mDefaultBackground;
-    protected int mDefaultButtonTextColor;
     protected int mDefaultButtonTintColor;
     protected int mDefaultButtonBackground;
+    protected int mDefaultProgressColor;
     protected View mContentContainer;
     protected TextView mTextContent;
     protected int mDefaultTextColor;
