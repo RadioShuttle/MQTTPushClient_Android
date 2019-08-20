@@ -10,7 +10,8 @@
     <string name="menu_theme">Theme</string>
     <string name="menu_theme_light">Light</string>
     <string name="menu_theme_dark">Dark</string>
-    <string name="menu_theme_system_default">Default</string>
+    <string name="menu_theme_battery_saver">Set by Battery Saver</string>
+    <string name="menu_theme_system_default">System default</string>
 
     <string name="info_no_topics">Add at least one topic to receive notifications. Navigate into the server account edit mode and tap on MQTT TOPICS.</string>
 
