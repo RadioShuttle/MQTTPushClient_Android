@@ -11,18 +11,22 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import androidx.annotation.Nullable;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.fragment.app.DialogFragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Build;
 import android.os.Bundle;
 import androidx.appcompat.view.ActionMode;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -45,8 +49,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessageDao;
@@ -107,6 +109,12 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             e.putString(UUID, Utils.byteArrayToHex(Utils.randomUUID()));
             e.commit();
         }
+
+        /* UI prefs */
+        SharedPreferences uprefs = getSharedPreferences(PREFS_UI, Activity.MODE_PRIVATE);
+        mTheme = uprefs.getInt(THEME, 0);
+        invalidateOptionsMenu();
+        setNightMode();
 
         mViewModel = ViewModelProviders.of(this).get(AccountViewModel.class);
         boolean accountsChecked = mViewModel.initialized;
@@ -496,6 +504,27 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             case R.id.menu_refresh:
                 refresh();
                 return true;
+            case R.id.menu_theme_system:
+                if (mTheme != 0) {
+                    mTheme = 0;
+                    saveTheme();
+                    setNightMode();
+                }
+                return true;
+            case R.id.menu_theme_light:
+                if (mTheme != 1) {
+                    mTheme = 1;
+                    saveTheme();
+                    setNightMode();
+                }
+                return true;
+            case R.id.menu_theme_dark:
+                if (mTheme != 2) {
+                    mTheme = 2;
+                    saveTheme();
+                    setNightMode();
+                }
+                return true;
             case R.id.menu_about:
                 intent = new Intent(this, AboutActivity.class);
                 if (!mActivityStarted) {
@@ -505,6 +534,30 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    protected void saveTheme() {
+        SharedPreferences uprefs = getSharedPreferences(PREFS_UI, Activity.MODE_PRIVATE);
+        SharedPreferences.Editor e = uprefs.edit();
+        e.putInt(THEME, mTheme);
+        e.apply();
+        invalidateOptionsMenu();
+    }
+
+    protected void setNightMode() {
+        if (mTheme == 1) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        } else if (mTheme == 2) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else { // mTheme == 0
+            if (Build.VERSION.SDK_INT <= 28) {
+                // Android 9 and lower: set by battery saver
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY);
+            } else {
+                // Android 9 and up: system default
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+            }
         }
     }
 
@@ -534,6 +587,22 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             super.onBackPressed();
         }
 
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem m = null;
+        if (mTheme == 0) {
+            m = menu.findItem(R.id.menu_theme_system);
+        } else if (mTheme == 1) {
+            m = menu.findItem(R.id.menu_theme_light);
+        }  else if (mTheme == 2) {
+            m = menu.findItem(R.id.menu_theme_dark);
+        }
+        if (m != null) {
+            m.setChecked(true);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     private boolean checkGooglePlayServices() {
@@ -681,9 +750,11 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     /* preferneces */
     public final static String PREFS_NAME = "mqttpushclient_prefs";
     public final static String PREFS_INST = "instance_prefs";
+    public final static String PREFS_UI = "ui_prefs";
 
     public final static String ACCOUNTS = "accounts";
     public final static String UUID = "uuid";
+    public final static String THEME = "theme";
 
     public final static String ARG_MQTT_ACCOUNT = "ARG_MQTT_ACCOUNT";
     public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ADDR";
@@ -712,5 +783,6 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     private AccountRecyclerViewAdapter mAdapter;
     private RecyclerView mListView;
     private AccountViewModel mViewModel;
+    private int mTheme;
 
 }
