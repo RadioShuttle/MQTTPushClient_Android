@@ -120,7 +120,7 @@ public class ActionsRequest extends Request {
     public ActionsViewModel.Action mActionArg;
 
     private ArrayList<ActionsViewModel.Action> tmpRes;
-    public Boolean mHasTopics;
+    // public Boolean mHasTopics;
 
     /** contains the reuslt if request was successful  */
     public volatile ArrayList<ActionsViewModel.Action> mActions;
