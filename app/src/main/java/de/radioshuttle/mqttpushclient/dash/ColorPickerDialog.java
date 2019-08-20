@@ -15,24 +15,30 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.Utils;
 
 public class ColorPickerDialog extends DialogFragment {
 
-    static ColorPickerDialog newInstance(String name, ArrayList<Integer> colors, int labelBorderColor) {
+    static ColorPickerDialog newInstance(String name, ArrayList<Integer> colors, int labelBorderColor, ArrayList<String> labels) {
         Bundle args = new Bundle();
         args.putString("name", name == null ? "colors" : name);
         args.putInt("border", labelBorderColor);
         args.putIntegerArrayList("palette", colors == null ? simplePalette() : colors);
+        if (labels != null) {
+            args.putStringArrayList("labels", labels);
+        }
         ColorPickerDialog dlg = new ColorPickerDialog();
         dlg.setArguments(args);
 
@@ -57,7 +63,7 @@ public class ColorPickerDialog extends DialogFragment {
             Bundle args = getArguments();
 
             ColorListAdapter adapter = new ColorListAdapter(this);
-            adapter.setData(args.getIntegerArrayList("palette"));
+            adapter.setData(args.getIntegerArrayList("palette"), args.getStringArrayList("labels"));
             mColorList.setAdapter(adapter);
 
 
@@ -146,7 +152,8 @@ public class ColorPickerDialog extends DialogFragment {
 
             View view = mInflater.inflate(R.layout.dialog_color_cell, parent, false);
             final ColorListAdapter.ViewHolder holder = new ViewHolder(view);
-            holder.colorLabel = (ColorLabel) view;
+            holder.colorLabel = view.findViewById(R.id.colorLabel);
+            holder.label = view.findViewById(R.id.label);
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                    @Override
                    public void onClick(View v) {
@@ -166,7 +173,30 @@ public class ColorPickerDialog extends DialogFragment {
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder vhholder, int position) {
             Integer color = mData.get(position);
             ColorListAdapter.ViewHolder holder = (ColorListAdapter.ViewHolder) vhholder;
-            ((ViewHolder) vhholder).colorLabel.setColor(color, mBorderColor);
+            holder.colorLabel.setColor(color, mBorderColor);
+
+            boolean showLabel = false;
+            if (mLabels != null && position >= 0 && position < mLabels.size()) {
+                String label = mLabels.get(position);
+                if (!Utils.isEmpty(label)) {
+                    int c = mData.get(position);
+                    double l = ColorUtils.calculateLuminance(c);
+                    holder.label.setText(label);
+                    if (l < .25d) {
+                        holder.label.setTextColor(0xFFFFFFFF);
+                    } else {
+                        holder.label.setTextColor(0xFF000000);
+                    }
+                    holder.label.setVisibility(View.VISIBLE);
+                    showLabel = true;
+                }
+            }
+            if (showLabel && holder.label.getVisibility() != View.VISIBLE) {
+                holder.label.setVisibility(View.VISIBLE);
+            }
+            if (!showLabel && holder.label.getVisibility() != View.GONE) {
+                holder.label.setVisibility(View.GONE);
+            }
         }
 
         @Override
@@ -174,8 +204,9 @@ public class ColorPickerDialog extends DialogFragment {
             return mData == null ? 0 : mData.size();
         }
 
-        public void setData(List<Integer> colors) {
+        public void setData(List<Integer> colors, ArrayList<String> labels) {
             mData = colors;
+            mLabels = labels;
             notifyDataSetChanged();
         }
 
@@ -184,6 +215,7 @@ public class ColorPickerDialog extends DialogFragment {
                 super(v);
             }
             ColorLabel colorLabel;
+            TextView label;
         }
 
         String mPaletteName;
@@ -191,6 +223,7 @@ public class ColorPickerDialog extends DialogFragment {
         ColorPickerDialog mDialog;
         LayoutInflater mInflater;
         List<Integer> mData;
+        ArrayList<String> mLabels;
 
     }
 

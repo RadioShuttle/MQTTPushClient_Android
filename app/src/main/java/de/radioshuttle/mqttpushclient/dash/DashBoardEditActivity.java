@@ -712,7 +712,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
             }
 
-            DialogFragment newFragment = ColorPickerDialog.newInstance(id, palette, labelBorderColor);
+            ArrayList<String> labels = new ArrayList<String>();
+            labels.add(getString(R.string.dash_label_system_default));
+            DialogFragment newFragment = ColorPickerDialog.newInstance(id, palette, labelBorderColor, labels);
             newFragment.show(ft, ColorPickerDialog.class.getSimpleName());
         }
     }
