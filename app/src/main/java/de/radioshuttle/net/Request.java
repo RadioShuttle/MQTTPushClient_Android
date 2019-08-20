@@ -613,7 +613,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected String mSenderID;
 
     protected String mToken;
-    protected Boolean mHasTopics;
+    public Boolean mHasTopics;
     protected volatile boolean mAccountUpdated;
     protected boolean mGetTopicFilterScripts;
     protected boolean mSync;
