@@ -17,6 +17,8 @@
     <color name="linkcolor">#3F51B5</color>
     <color name="about_background">#dedede</color>
 
+    <color name="topic_icon_color">#FF000000</color>
+
     <color name="button_tint_default">#89000000</color>
 
     <color name="dashboard_selected_background">#80000000</color>
