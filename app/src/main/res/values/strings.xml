@@ -278,6 +278,10 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_err_version_err_replaced">Version error. Dashboard has been replaced by a newer version.</string>
     <string name="dash_err_subscribe_failed">Subscribe to topic failed.</string>
 
+    <string name="dash_update_dlg_title">Update required</string>
+    <string name="dash_update_dlg_msg">This dashboard was created with a newer version. To modify the dashboard, update this app.</string>
+    <string name="dash_update_dlg_update">Update now</string>
+
     <!-- delete dialog -->
     <string name="dlg_del_dash_title">Delete</string>
     <string name="dlg_dash_items_all">All items</string>
