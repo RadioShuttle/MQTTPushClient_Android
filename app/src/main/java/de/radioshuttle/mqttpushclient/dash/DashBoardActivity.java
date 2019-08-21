@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.FragmentManager;
@@ -30,7 +31,9 @@ import de.radioshuttle.net.PublishRequest;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.Utils;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -439,6 +442,9 @@ public class DashBoardActivity extends AppCompatActivity implements
     // add
     protected void openEditor(Class<? extends Item> type) {
         if (!mActivityStarted) {
+            if (checkIfUpdateRequired()) {
+                return;
+            }
             mActivityStarted = true;
             Intent intent = new Intent(this, DashBoardEditActivity.class);
             intent.putExtra(DashBoardEditActivity.ARG_ACCOUNT, getIntent().getStringExtra(PARAM_ACCOUNT_JSON));
@@ -468,9 +474,37 @@ public class DashBoardActivity extends AppCompatActivity implements
         }
     }
 
+    protected boolean checkIfUpdateRequired() {
+        boolean updateRequired = false;
+        if (mViewModel.mVersion != -1 && mViewModel.mVersion != Item.DASHBOARD_VERSION ) {
+            updateRequired = true;
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.dash_update_dlg_title);
+            builder.setMessage(R.string.dash_update_dlg_msg);
+            builder.setPositiveButton(R.string.dash_update_dlg_update, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(
+                            "https://play.google.com/store/apps/details?id=" + getPackageName()));
+                    // intent.setPackage("com.android.vending");
+                    startActivity(intent);
+                }
+            });
+            builder.setNegativeButton(R.string.action_cancel, null);
+            AlertDialog dlg = builder.create();
+            dlg.show();
+        }
+        return updateRequired;
+    }
+
+
     // edit
     protected void openEditor(DashBoardViewModel.ItemContext selectedItem) {
         if (!mActivityStarted && selectedItem != null && selectedItem.item != null) {
+            if (checkIfUpdateRequired()) {
+                return;
+            }
             mActivityStarted = true;
             Intent intent = new Intent(this, DashBoardEditActivity.class);
             intent.putExtra(DashBoardEditActivity.ARG_ACCOUNT, getIntent().getStringExtra(PARAM_ACCOUNT_JSON));
