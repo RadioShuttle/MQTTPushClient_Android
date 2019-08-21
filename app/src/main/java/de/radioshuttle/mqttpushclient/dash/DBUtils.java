@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
@@ -119,11 +120,15 @@ public class DBUtils {
         dlg.show();
     }
 
-    public static int createItemsFromJSONString(String json, LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems) {
+    public static int createItemsFromJSONString(String json, LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems, Map<String, Object> props) {
         int maxID = 0;
         if (!Utils.isEmpty(json) && groups != null && groupItems != null) {
             try {
                 JSONObject dashboardObj = new JSONObject(json);
+                int version = dashboardObj.optInt("version", 0);
+                if (props != null) {
+                    props.put("version", version);
+                }
                 JSONArray groupArray = dashboardObj.getJSONArray("groups");
                 GroupItem groupItem;
                 Item item;
@@ -160,6 +165,7 @@ public class DBUtils {
         JSONObject dashboardObj = new JSONObject();
         JSONArray groupItemArray = new JSONArray();
         try {
+            dashboardObj.put("version", Item.DASHBOARD_VERSION);
             dashboardObj.put("groups", groupItemArray);
         } catch (JSONException e) {
             Log.d(Item.TAG, "Error createJSONStrFromItems: " + e.getMessage());
