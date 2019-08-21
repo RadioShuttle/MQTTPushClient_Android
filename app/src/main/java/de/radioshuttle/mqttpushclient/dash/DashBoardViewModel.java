@@ -78,6 +78,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         currentSyncRequest = null;
         currentSaveRequest = null;
         mMaxID = 0;
+        mVersion = -1;
         mTimer = Executors.newScheduledThreadPool(1);
         mRequestExecutor = Utils.newSingleThreadPool();
     }
@@ -221,8 +222,12 @@ public class DashBoardViewModel extends AndroidViewModel {
         mModificationDate = modificationDate;
         mMaxID = 0;
         if (!Utils.isEmpty(json)) {
+            HashMap<String, Object> props = new HashMap<>();
             try {
-                mMaxID = DBUtils.createItemsFromJSONString(json, mGroups, mItemsPerGroup);
+                mMaxID = DBUtils.createItemsFromJSONString(json, mGroups, mItemsPerGroup, props);
+                if (props.containsKey("version")) {
+                    mVersion = (Integer) props.get("version");
+                }
             } catch(Exception e) {
                 Log.e(TAG, "Load items: Parsing json failed: " + e.getMessage());
             }
@@ -891,6 +896,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     private Application mApplication;
     private Thread mTestDataThread; //TODO: remove after test
     protected JavaScriptExcecutor mJavaScriptExecutor;
+    protected int mVersion;
     private ScheduledExecutorService mTimer;
     private ScheduledFuture<?> mGetMessagesTask;
 
