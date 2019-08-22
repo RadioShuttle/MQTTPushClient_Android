@@ -8,9 +8,13 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -42,14 +46,55 @@ public class ColorLabel extends View
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (mTransparent) {
+            Canvas bcanvas = new Canvas(mBitmap);
+            bcanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
 
-        canvas.drawCircle((mRight - mLeft) / 2f + mLeft, (mBottom - mTop) / 2f + mTop, Math.min(mRight - mLeft, mBottom - mTop) / 2f, mPaintCircle);
-        canvas.drawCircle((mRight - mLeft) / 2f + mLeft, (mBottom - mTop) / 2f + mTop, Math.min(mRight - mLeft, mBottom - mTop) / 2f, mPaintCircleBorder);
+            bcanvas.drawCircle((mRight - mLeft) / 2f + mLeft, (mBottom - mTop) / 2f + mTop, Math.min(mRight - mLeft, mBottom - mTop) / 2f, mPaintCircle);
+            mPaintSquare.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+
+            float s = mSquareWidth;
+
+            for(int i = 0; i < Math.ceil((mRight - mLeft) / s); i++ ) {
+                for(int j = 0; j < Math.ceil((mBottom - mTop) / s); j++) {
+                    if (j % 2 == 0) {
+                        if ((i % 2 == 0)) {
+                            bcanvas.drawRect(i * s + mLeft, j * s + mTop, (i * s) + s + mLeft, (j * s) + s + mTop, mPaintSquare);
+                        }
+                    } else {
+                        if ((i % 2 != 0)) {
+                            bcanvas.drawRect(i * s + mLeft, j * s + mTop, (i * s) + s + mLeft, (j * s) + s + mTop, mPaintSquare);
+                        }
+                    }
+
+                }
+            }
+            mPaintSquare.setXfermode(null);
+            bcanvas.drawCircle((mRight - mLeft) / 2f + mLeft, (mBottom - mTop) / 2f + mTop, Math.min(mRight - mLeft, mBottom - mTop) / 2f, mPaintCircleBorder);
+            canvas.drawBitmap(mBitmap, 0, 0, null);
+        } else {
+            canvas.drawCircle((mRight - mLeft) / 2f + mLeft, (mBottom - mTop) / 2f + mTop, Math.min(mRight - mLeft, mBottom - mTop) / 2f, mPaintCircle);
+            canvas.drawCircle((mRight - mLeft) / 2f + mLeft, (mBottom - mTop) / 2f + mTop, Math.min(mRight - mLeft, mBottom - mTop) / 2f, mPaintCircleBorder);
+        }
     }
 
     protected void setColor(int color, int borderColor) {
         mPaintCircle.setColor(color);
         mPaintCircleBorder.setColor(borderColor);
+        if (color == 0) {
+            mTransparent = true;
+            DisplayMetrics dm = getResources().getDisplayMetrics();
+            mBitmap = Bitmap.createBitmap(dm.widthPixels, dm.heightPixels, Bitmap.Config.ARGB_8888);
+            mPaintCircle.setColor(Color.WHITE);
+            mSquareWidth = TRANSPARENT_SQUARE_SIZE_DP * dm.density;
+
+            mPaintSquare = new Paint();
+            mPaintSquare.setAntiAlias(true);
+            mPaintSquare.setStyle(Paint.Style.FILL);
+            mPaintSquare.setColor(Color.LTGRAY);
+        } else {
+            mTransparent = false;
+        }
         invalidate();
     }
 
@@ -77,13 +122,17 @@ public class ColorLabel extends View
         mBottom = h - getPaddingBottom();
     }
 
+    private Bitmap mBitmap;
+    private boolean mTransparent;
+    private float mSquareWidth;
     private Paint mPaintCircleBorder;
     private Paint mPaintCircle;
+    private Paint mPaintSquare;
     private float mLeft;
     private float mRight;
     private float mTop;
     private float mBottom;
 
     private final static int DEFALUT_STROKE_WIDTH_DP = 1;
-
+    private final static int TRANSPARENT_SQUARE_SIZE_DP = 6;
 }
