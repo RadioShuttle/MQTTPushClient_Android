@@ -196,6 +196,30 @@
 
                 </TableRow>
 
+                <TableRow android:id="@+id/rowSwitchActiveImage">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/dash_label_image"
+                        />
+                    <LinearLayout android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/dash_active_text_button"
+                            android:text="@string/dash_label_empty_image_btn"
+                            android:minHeight="48dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp" />
+
+                        <ImageButton
+                            android:id="@+id/dash_active_image_button"
+                            android:visibility="gone"
+                            android:scaleType="fitCenter"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"/>
+                    </LinearLayout>
+
+                </TableRow>
+
                 <TableRow android:id="@+id/rowSwitchInactive" android:layout_marginTop="24dp">
                     <TextView
                         android:textAppearance="?android:attr/textAppearanceMedium"
@@ -241,7 +265,7 @@
 
                 </TableRow>
 
-                <TableRow android:id="@+id/rowSwitchInactiveBackground"  android:layout_marginBottom="24dp">
+                <TableRow android:id="@+id/rowSwitchInactiveBackground">
                     <TextView
                         android:layout_gravity="right|center_vertical"
                         android:textAppearance="?android:attr/textAppearanceMedium"
@@ -259,6 +283,32 @@
                     </LinearLayout>
 
                 </TableRow>
+
+                <TableRow android:id="@+id/rowSwitchInactiveImage"  android:layout_marginBottom="24dp">
+                    <TextView
+                        android:layout_gravity="right|center_vertical"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/dash_label_image"
+                        />
+
+                    <LinearLayout android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/dash_inactive_text_button"
+                            android:text="@string/dash_label_empty_image_btn"
+                            android:minHeight="48dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp" />
+
+                        <ImageButton
+                            android:id="@+id/dash_inactive_image_button"
+                            android:visibility="gone"
+                            android:scaleType="fitCenter"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"/>
+                    </LinearLayout>
+
+                </TableRow>
+
 
 
                 <TableRow android:id="@+id/rowProgressRange">
