@@ -597,7 +597,7 @@ public class DetailViewDialog extends DialogFragment {
                 String val = null;
                 int fcolor;
                 int bcolor;
-                boolean transparent;
+                boolean noTint;
                 boolean isActiveState = sw.isActiveState();
 
                 Drawable icon;
@@ -607,13 +607,13 @@ public class DetailViewDialog extends DialogFragment {
                     fcolor = sw.data.containsKey("ctrl_color") ? (Integer) sw.data.get("ctrl_color") : sw.color;
                     bcolor = sw.data.containsKey("ctrl_background") ? (Integer) sw.data.get("ctrl_background") : sw.bgcolor;
                     icon = sw.imageDetail;
-                    transparent = sw.transparent;
+                    noTint = sw.noTint;
                 } else {
                     val = sw.val2;
                     fcolor = sw.data.containsKey("ctrl_color2") ? (Integer) sw.data.get("ctrl_color2") : sw.color2;
                     bcolor = sw.data.containsKey("ctrl_background2") ? (Integer) sw.data.get("ctrl_background2") : sw.bgcolor2;
                     icon = sw.imageDetail2;
-                    transparent = sw.transparent2;
+                    noTint = sw.noTint2;
                 }
                 ColorStateList csl;
                 if (bcolor == 0) {
@@ -648,7 +648,7 @@ public class DetailViewDialog extends DialogFragment {
 
                     ViewCompat.setBackgroundTintList(mSwitchImageButton, csl);
                     ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonTintColor : fcolor);
-                    if (transparent) {
+                    if (noTint) {
                         ImageViewCompat.setImageTintList(mSwitchImageButton, null);
                     } else {
                         ImageViewCompat.setImageTintList(mSwitchImageButton, tcsl);
