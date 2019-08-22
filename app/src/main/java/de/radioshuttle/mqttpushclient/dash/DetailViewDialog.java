@@ -597,8 +597,8 @@ public class DetailViewDialog extends DialogFragment {
                 String val = null;
                 int fcolor;
                 int bcolor;
+                boolean transparent;
                 boolean isActiveState = sw.isActiveState();
-                boolean internalImage;
 
                 Drawable icon;
 
@@ -607,13 +607,13 @@ public class DetailViewDialog extends DialogFragment {
                     fcolor = sw.data.containsKey("ctrl_color") ? (Integer) sw.data.get("ctrl_color") : sw.color;
                     bcolor = sw.data.containsKey("ctrl_background") ? (Integer) sw.data.get("ctrl_background") : sw.bgcolor;
                     icon = sw.imageDetail;
-                    internalImage = Switch.isInternalResource(sw.uri);
+                    transparent = sw.transparent;
                 } else {
                     val = sw.val2;
                     fcolor = sw.data.containsKey("ctrl_color2") ? (Integer) sw.data.get("ctrl_color2") : sw.color2;
                     bcolor = sw.data.containsKey("ctrl_background2") ? (Integer) sw.data.get("ctrl_background2") : sw.bgcolor2;
                     icon = sw.imageDetail2;
-                    internalImage = Switch.isInternalResource(sw.uri2);
+                    transparent = sw.transparent2;
                 }
                 ColorStateList csl;
                 if (bcolor == 0) {
@@ -648,7 +648,7 @@ public class DetailViewDialog extends DialogFragment {
 
                     ViewCompat.setBackgroundTintList(mSwitchImageButton, csl);
                     ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonTintColor : fcolor);
-                    if (fcolor == 0 && !internalImage) { // no tint for user/external images with color 0
+                    if (transparent) {
                         ImageViewCompat.setImageTintList(mSwitchImageButton, null);
                     } else {
                         ImageViewCompat.setImageTintList(mSwitchImageButton, tcsl);
