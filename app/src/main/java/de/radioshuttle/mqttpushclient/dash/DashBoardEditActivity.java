@@ -391,8 +391,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         }
                         mActiveImageURI = savedInstanceState.getString(KEY_ACT_IMAGE_URI);
                         mInactiveImageURI = savedInstanceState.getString(KEY_INACT_IMAGE_URI);
-                        mActiveNoTint = savedInstanceState.getBoolean(KEY_ACT_TRANSPAREMT);
-                        mInactiveNoTint = savedInstanceState.getBoolean(KEY_INACT_TRANSPAREMT);
+                        mActiveNoTint = savedInstanceState.getBoolean(KEY_ACT_NOTINT);
+                        mInactiveNoTint = savedInstanceState.getBoolean(KEY_INACT_NOTINT);
                     }
 
                     mBColorActiveButton.setColor(mActiveBackground == 0 ? mDefaultButtonBackground : mActiveBackground, mColorLabelBorderColor);
@@ -663,8 +663,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         outState.putInt(KEY_INACT_COLOR, mInactiveColor);
         outState.putString(KEY_ACT_IMAGE_URI, mActiveImageURI);
         outState.putString(KEY_INACT_IMAGE_URI, mInactiveImageURI);
-        outState.putBoolean(KEY_ACT_TRANSPAREMT, mActiveNoTint);
-        outState.putBoolean(KEY_INACT_TRANSPAREMT, mInactiveNoTint);
+        outState.putBoolean(KEY_ACT_NOTINT, mActiveNoTint);
+        outState.putBoolean(KEY_INACT_NOTINT, mInactiveNoTint);
 
         if (!Utils.isEmpty(mFilterScriptContent)) {
             outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
@@ -1535,8 +1535,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static String KEY_INACT_COLOR = "KEY_INACT_COLOR";
     protected final static String KEY_ACT_IMAGE_URI = "KEY_ACT_IMAGE_URI";
     protected final static String KEY_INACT_IMAGE_URI = "KEY_INACT_IMAGE_URI";
-    protected final static String KEY_ACT_TRANSPAREMT = "KEY_ACT_TRANSPAREMT";
-    protected final static String KEY_INACT_TRANSPAREMT = "KEY_INACT_TRANSPAREMT";
+    protected final static String KEY_ACT_NOTINT = "KEY_ACT_NOTINT";
+    protected final static String KEY_INACT_NOTINT = "KEY_INACT_NOTINT";
 
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
