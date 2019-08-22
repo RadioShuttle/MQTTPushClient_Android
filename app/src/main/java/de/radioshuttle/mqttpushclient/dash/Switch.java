@@ -18,12 +18,14 @@ public class Switch extends Item {
 
     public String val;
     public String uri; // res://internal/ic_alarm_on.png; res://user/2131231
-    public int color;
+    public boolean transparent; // images may be transparent (no tint color, then color value  will be ignored)
+    public int color; // 0 and transparent false = default color, 0 and transparent true = transparent color, else color value
     public int bgcolor;
 
     public String val2; // inactive state (if switch), unused if button
     public String uri2;
-    public int color2;
+    public boolean transparent2; // images may be transparent (no tint color, then color2 will be ignored)
+    public int color2;// 0 and transparent2 false = default color, 0 and transparent2 true = transparent color, else color value
     public int bgcolor2;
 
     //transient
@@ -61,11 +63,13 @@ public class Switch extends Item {
         o.put("uri", uri == null ? "" : uri);
         o.put("color", color);
         o.put("bgcolor", bgcolor);
+        o.put("transparent", transparent);
         if (!Utils.isEmpty(val2)) {
             o.put("val2", val2);
             o.put("uri2", uri2 == null ? "" : uri2);
             o.put("bgcolor2", bgcolor2);
             o.put("color2", color2);
+            o.put("transparent2", transparent2);
         }
         return o;
     }
@@ -76,10 +80,12 @@ public class Switch extends Item {
         uri = o.optString("uri");
         val2 = o.optString("val2");
         uri2 = o.optString("uri2");
+        transparent = o.optBoolean("transparent");
         bgcolor = o.optInt("bgcolor");
         bgcolor2 = o.optInt("bgcolor2");
         color = o.optInt("color");
         color2 = o.optInt("color2");
+        transparent2 = o.optBoolean("transparent2");
         //TODO: remove:
         // uri = "res://internal/notifications_active";
         // uri2 = "res://internal/notifications_off";
