@@ -245,7 +245,10 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_label_active_state_text">Value:</string>
     <string name="dash_label_inactive_state_text">Value: </string>
     <string name="dash_label_color">Color:</string>
-    <string name="dash_label_system_default">System</string>
+    <string name="dash_label_system_default">Default</string>
+    <string name="dash_label_transparent">Transp.</string>
+    <string name="dash_label_image">Image:</string>
+    <string name="dash_label_empty_image_btn">None</string>
 
     <string-array name="dash_label_size_array">
         <item name="dash_label_textsize_s">Small</item>
