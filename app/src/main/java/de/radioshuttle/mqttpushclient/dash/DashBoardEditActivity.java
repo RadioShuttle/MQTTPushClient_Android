@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -36,11 +38,9 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -51,6 +51,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -174,7 +175,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mColorButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defColor, (mTextColor == 0 ? defColor : mTextColor), mColorLabelBorderColor, "textcolor");
+                            showColorDialog(defColor, (mTextColor == 0 ? defColor : mTextColor), mColorLabelBorderColor, "textcolor", false);
 
                         }
                     });
@@ -186,7 +187,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mBColorButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defaultBackground, (mBackground == 0 ? defaultBackground : mBackground), mColorLabelBorderColor,  "bcolor");
+                            showColorDialog(defaultBackground, (mBackground == 0 ? defaultBackground : mBackground), mColorLabelBorderColor,  "bcolor", false);
                         }
                     });
                 }
@@ -327,7 +328,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         mProgressColor.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                showColorDialog(defProgressColor, (mProgColor == 0 ? defProgressColor : mProgColor), mColorLabelBorderColor, "progresscolor");
+                                showColorDialog(defProgressColor, (mProgColor == 0 ? defProgressColor : mProgColor), mColorLabelBorderColor, "progresscolor", false);
                             }
                         });
                     }
@@ -343,6 +344,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     findViewById(R.id.rowSwitchInactiveBackground).setVisibility(View.GONE);
                     findViewById(R.id.rowSwitchInactiveColor).setVisibility(View.GONE);
                     findViewById(R.id.rowSwitchActiveColor).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchActiveImage).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchInactiveImage).setVisibility(View.GONE);
                 } else {
                     mEditTextSwitchActive = findViewById(R.id.dash_acitve_state_text);
                     mEditTextSwitchInactive = findViewById(R.id.dash_inacitve_state_text);
@@ -350,6 +353,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mBColorInactiveButton = findViewById(R.id.dash_switch_inactive_bcolor_button);
                     mColorActiveButton = findViewById(R.id.dash_switch_active_color_button);
                     mColorInactiveButton = findViewById(R.id.dash_switch_inactive_color_button);
+                    mButtonSwitchActiveEmpty = findViewById(R.id.dash_active_text_button);
+                    mButtonSwitchActive = findViewById(R.id.dash_active_image_button);
+                    mButtonSwitchInactiveEmpty = findViewById(R.id.dash_inactive_text_button);
+                    mButtonSwitchInactive = findViewById(R.id.dash_inactive_image_button);
+
+                    mDefaultButtonTintColor = ContextCompat.getColor(this, R.color.button_tint_default);;
+                    mDefaultButtonBackground = DBUtils.fetchColor(this, R.attr.colorButtonNormal);
 
                     Switch sw = (Switch) mItem;
 
@@ -360,6 +370,12 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         mInactiveColor = sw.color2;
                         mEditTextSwitchActive.setText(sw.val);
                         mEditTextSwitchInactive.setText(sw.val2);
+                        mActiveImageURI = sw.uri;
+                        mInactiveImageURI = sw.uri2;
+                        mActiveTransparent = sw.transparent;
+                        mInactiveTransparent = sw.transparent2;
+                        updateSwitchButtons();
+                        tintSwitchButtons();
                     } else {
                         if (savedInstanceState.containsKey(KEY_ACT_BACKGROUND)) {
                             mActiveBackground = savedInstanceState.getInt(KEY_ACT_BACKGROUND);
@@ -373,39 +389,40 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         if (savedInstanceState.containsKey(KEY_INACT_COLOR)) {
                             mActiveColor = savedInstanceState.getInt(KEY_ACT_COLOR);
                         }
+                        mActiveImageURI = savedInstanceState.getString(KEY_ACT_IMAGE_URI);
+                        mInactiveImageURI = savedInstanceState.getString(KEY_INACT_IMAGE_URI);
+                        mActiveTransparent = savedInstanceState.getBoolean(KEY_ACT_TRANSPAREMT);
+                        mInactiveTransparent = savedInstanceState.getBoolean(KEY_INACT_TRANSPAREMT);
                     }
 
-                    final int buttonDefaultColor = DBUtils.fetchColor(this,  R.attr.colorButtonNormal);
-
-                    mBColorActiveButton.setColor(mActiveBackground == 0 ? buttonDefaultColor : mActiveBackground, mColorLabelBorderColor);
+                    mBColorActiveButton.setColor(mActiveBackground == 0 ? mDefaultButtonBackground : mActiveBackground, mColorLabelBorderColor);
                     mBColorActiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(buttonDefaultColor, (mActiveBackground == 0 ? buttonDefaultColor : mActiveBackground), mColorLabelBorderColor, "active_bcolor");
+                            showColorDialog(mDefaultButtonBackground, (mActiveBackground == 0 ? mDefaultButtonBackground : mActiveBackground), mColorLabelBorderColor, "active_bcolor", false);
                         }
                     });
-                    mBColorInactiveButton.setColor(mInactiveBackground == 0 ? buttonDefaultColor : mInactiveBackground, mColorLabelBorderColor);
+                    mBColorInactiveButton.setColor(mInactiveBackground == 0 ? mDefaultButtonBackground : mInactiveBackground, mColorLabelBorderColor);
                     mBColorInactiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defaultBackground, (mInactiveBackground == 0 ? buttonDefaultColor : mInactiveBackground), mColorLabelBorderColor,  "inactive_bcolor");
+                            showColorDialog(defaultBackground, (mInactiveBackground == 0 ? mDefaultButtonBackground : mInactiveBackground), mColorLabelBorderColor,  "inactive_bcolor", false);
                         }
                     });
-                    final int buttonTintColor = ContextCompat.getColor(this, R.color.button_tint_default);
 
-                    mColorActiveButton.setColor((mActiveColor == 0 ? buttonTintColor : mActiveColor), mColorLabelBorderColor);
+                    mColorActiveButton.setColor((mActiveColor == 0 ? (mActiveTransparent ? 0 :  mDefaultButtonTintColor) : mActiveColor), mColorLabelBorderColor);
                     mColorActiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(buttonTintColor, (mActiveColor == 0 ? buttonTintColor : mActiveColor), mColorLabelBorderColor, "active_color");
+                            showColorDialog(mDefaultButtonTintColor, (mActiveColor == 0 ? mDefaultButtonTintColor : mActiveColor), mColorLabelBorderColor, "active_color", true);
 
                         }
                     });
-                    mColorInactiveButton.setColor((mInactiveColor == 0 ? buttonTintColor : mInactiveColor), mColorLabelBorderColor);
+                    mColorInactiveButton.setColor((mInactiveColor == 0 ? (mInactiveTransparent ? 0 : mDefaultButtonTintColor) : mInactiveColor), mColorLabelBorderColor);
                     mColorInactiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(buttonTintColor, (mInactiveColor == 0 ? buttonTintColor : mInactiveColor), mColorLabelBorderColor, "inactive_color");
+                            showColorDialog(mDefaultButtonTintColor, (mInactiveColor == 0 ? mDefaultButtonTintColor : mInactiveColor), mColorLabelBorderColor, "inactive_color", true);
                         }
                     });
 
@@ -541,6 +558,98 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     }
 
+    protected void tintSwitchButtons() {
+        if (mItem instanceof Switch) {
+            Switch sw = (Switch) mItem;
+
+            ColorStateList foreground = ColorStateList.valueOf(mActiveColor == 0 ? mDefaultButtonTintColor : mActiveColor);
+            ColorStateList background = ColorStateList.valueOf(mActiveBackground == 0 ? mDefaultButtonBackground : mActiveBackground);
+
+            if (Utils.isEmpty(sw.uri)) {
+                mButtonSwitchActiveEmpty.setTextColor(foreground);
+                ViewCompat.setBackgroundTintList(mButtonSwitchActiveEmpty, background);
+            } else {
+                if (mActiveTransparent) {
+                    foreground = null;
+                }
+                ImageViewCompat.setImageTintList(mButtonSwitchActive, foreground);
+                ViewCompat.setBackgroundTintList(mButtonSwitchActive, background);
+            }
+
+            foreground = ColorStateList.valueOf(mInactiveColor == 0 ? mDefaultButtonTintColor : mInactiveColor);
+            background = ColorStateList.valueOf(mInactiveBackground == 0 ? mDefaultButtonBackground : mInactiveBackground);
+
+            if (Utils.isEmpty(sw.uri2)) {
+                mButtonSwitchInactiveEmpty.setTextColor(foreground);
+                ViewCompat.setBackgroundTintList(mButtonSwitchInactiveEmpty, background);
+            } else {
+                if (mInactiveTransparent) {
+                    foreground = null;
+                }
+                ImageViewCompat.setImageTintList(mButtonSwitchInactive, foreground);
+                ViewCompat.setBackgroundTintList(mButtonSwitchInactive, background);
+            }
+
+        }
+    }
+
+    protected void updateSwitchButtons() {
+        if (mItem instanceof Switch) {
+            Switch sw = (Switch) mItem;
+
+            if (Utils.isEmpty(sw.uri)) {
+                if (mButtonSwitchActiveEmpty.getVisibility() != View.VISIBLE) {
+                    mButtonSwitchActiveEmpty.setVisibility(View.VISIBLE);
+                }
+                if (mButtonSwitchActive.getVisibility() != View.GONE) {
+                    mButtonSwitchActive.setVisibility(View.GONE);
+                }
+            } else {
+                if (mButtonSwitchActiveEmpty.getVisibility() != View.GONE) {
+                    mButtonSwitchActiveEmpty.setVisibility(View.GONE);
+                }
+                if (mButtonSwitchActive.getVisibility() != View.VISIBLE) {
+                    mButtonSwitchActive.setVisibility(View.VISIBLE);
+                }
+
+                if (IconHelper.INTENRAL_ICONS.containsKey(sw.uri)) {
+                    //TODO: load asnyc
+                    mButtonSwitchActive.setImageResource(IconHelper.INTENRAL_ICONS.get(sw.uri));
+                } else if (sw.uri.indexOf("internal") != -1) {
+                    //TODO: resource not found
+                } else {
+                    //TODO: handle external resource
+                }
+            }
+
+            if (Utils.isEmpty(sw.uri2)) {
+                if (mButtonSwitchInactiveEmpty.getVisibility() != View.VISIBLE) {
+                    mButtonSwitchInactiveEmpty.setVisibility(View.VISIBLE);
+                }
+                if (mButtonSwitchInactive.getVisibility() != View.GONE) {
+                    mButtonSwitchInactive.setVisibility(View.GONE);
+                }
+            } else {
+                if (mButtonSwitchInactiveEmpty.getVisibility() != View.GONE) {
+                    mButtonSwitchInactiveEmpty.setVisibility(View.GONE);
+                }
+                if (mButtonSwitchInactive.getVisibility() != View.VISIBLE) {
+                    mButtonSwitchInactive.setVisibility(View.VISIBLE);
+                }
+                //TODO: load asnyc
+                if (IconHelper.INTENRAL_ICONS.containsKey(sw.uri2)) {
+                    // mButtonSwitchActive.setD
+                    mButtonSwitchInactive.setImageResource(IconHelper.INTENRAL_ICONS.get(sw.uri2));
+                } else if (sw.uri.indexOf("internal") != -1) {
+                    //TODO: resource not found
+                } else {
+                    //TODO: handle external resource
+                }
+            }
+        }
+    }
+
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -552,6 +661,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         outState.putInt(KEY_ACT_BACKGROUND, mActiveBackground);
         outState.putInt(KEY_INACT_BACKGROUND, mInactiveBackground);
         outState.putInt(KEY_INACT_COLOR, mInactiveColor);
+        outState.putString(KEY_ACT_IMAGE_URI, mActiveImageURI);
+        outState.putString(KEY_INACT_IMAGE_URI, mInactiveImageURI);
+        outState.putBoolean(KEY_ACT_TRANSPAREMT, mActiveTransparent);
+        outState.putBoolean(KEY_INACT_TRANSPAREMT, mInactiveTransparent);
+
         if (!Utils.isEmpty(mFilterScriptContent)) {
             outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
         }
@@ -687,7 +801,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
     }
 
-    protected void showColorDialog(int defaultColor, int currentColor, int labelBorderColor, String id) {
+    protected void showColorDialog(int defaultColor, int currentColor, int labelBorderColor, String id, boolean addTransparent) {
         Fragment currentColorPickerDlg = getSupportFragmentManager().findFragmentByTag(ColorPickerDialog.class.getSimpleName());
         if (currentColorPickerDlg == null) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -712,8 +826,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
             }
 
+            if (addTransparent) {
+            }
+
             ArrayList<String> labels = new ArrayList<String>();
             labels.add(getString(R.string.dash_label_system_default));
+            if (addTransparent) {
+                palette.add(1, 0);
+                // labels.add(getString(R.string.dash_label_transparent));
+            }
             DialogFragment newFragment = ColorPickerDialog.newInstance(id, palette, labelBorderColor, labels);
             newFragment.show(ft, ColorPickerDialog.class.getSimpleName());
         }
@@ -758,6 +879,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else {
                     mActiveBackground = color;
                 }
+                tintSwitchButtons();
                 break;
             case "inactive_bcolor" :
                 mBColorInactiveButton.setColor(color, mColorLabelBorderColor);
@@ -766,22 +888,37 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else {
                     mInactiveBackground = color;
                 }
+                tintSwitchButtons();
                 break;
             case "active_color" :
+                if (idx == 1) { // tranparent selected
+                    color = 0;
+                    mActiveTransparent = true;
+                } else {
+                    mActiveTransparent = false;
+                }
                 mColorActiveButton.setColor(color, mColorLabelBorderColor);
                 if (idx == 0) {
                     mActiveColor = 0;
                 } else {
                     mActiveColor = color;
                 }
+                tintSwitchButtons();
                 break;
             case "inactive_color" :
+                if (idx == 1) { // tranparent selected
+                    color = 0;
+                    mInactiveTransparent = true;
+                } else {
+                    mInactiveTransparent = false;
+                }
                 mColorInactiveButton.setColor(color, mColorLabelBorderColor);
                 if (idx == 0) {
                     mInactiveColor = 0;
                 } else {
                     mInactiveColor = color;
                 }
+                tintSwitchButtons();
                 break;
         }
     }
@@ -1127,6 +1264,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     item.color2 = mInactiveColor;
                     item.bgcolor = mActiveBackground;
                     item.bgcolor2 = mInactiveBackground;
+                    item.uri = mActiveImageURI;
+                    item.uri2 = mInactiveImageURI;
+                    item.transparent = mActiveTransparent;
+                    item.transparent2 = mInactiveTransparent;
                 }
             }
             if (mEditTextLabel != null) {
@@ -1219,6 +1360,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             setEnabled(mBColorInactiveButton, enableFields);
             setEnabled(mColorActiveButton, enableFields);
             setEnabled(mColorInactiveButton, enableFields);
+            setEnabled(mButtonSwitchActiveEmpty, enableFields);
+            setEnabled(mButtonSwitchActive, enableFields);
+            setEnabled(mButtonSwitchInactiveEmpty, enableFields);
+            setEnabled(mButtonSwitchInactive, enableFields);
         }
         invalidateOptionsMenu();
     }
@@ -1321,7 +1466,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 changed = !mEditTextSwitchActive.getText().toString().equals(sw.val) ||
                         !mEditTextSwitchInactive.getText().toString().equals(sw.val2) ||
                         sw.bgcolor != mActiveBackground || sw.bgcolor2 != mInactiveBackground ||
-                        sw.color2 != mInactiveColor || sw.color != mActiveColor;
+                        sw.color2 != mInactiveColor || sw.color != mActiveColor ||
+                        sw.transparent != mActiveTransparent || sw.transparent2 != mInactiveTransparent ||
+                        !Utils.equals(sw.uri, mActiveImageURI) || !Utils.equals(sw.uri2, mInactiveImageURI);
             }
         }
 
@@ -1348,8 +1495,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected Spinner mPosSpinner;
     protected Spinner mTextSizeSpinner;
     protected Button mOutputScriptButton;
+
     protected EditText mEditTextSwitchActive;
     protected EditText mEditTextSwitchInactive;
+    protected int mDefaultButtonTintColor;
+    protected int mDefaultButtonBackground;
+    protected Button mButtonSwitchActiveEmpty;
+    protected ImageButton mButtonSwitchActive;
+    protected Button mButtonSwitchInactiveEmpty;
+    protected ImageButton mButtonSwitchInactive;
+    protected String mInactiveImageURI, mActiveImageURI;
 
     protected EditText mEditTextRangeMin, mEditTextRangeMax, mEditTextDecimal;
     protected CheckBox mRangeDisplayPercent;
@@ -1368,6 +1523,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected int mInactiveBackground;
     protected int mInactiveColor;
     protected int mActiveColor;
+    protected boolean mActiveTransparent;
+    protected boolean mInactiveTransparent;
 
     protected final static String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
     protected final static String KEY_BACKGROUND = "KEY_BACKGROUND";
@@ -1376,7 +1533,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static String KEY_ACT_COLOR = "KEY_ACT_COLOR";
     protected final static String KEY_INACT_BACKGROUND = "KEY_INACT_BACKGROUND";
     protected final static String KEY_INACT_COLOR = "KEY_INACT_COLOR";
-
+    protected final static String KEY_ACT_IMAGE_URI = "KEY_ACT_IMAGE_URI";
+    protected final static String KEY_INACT_IMAGE_URI = "KEY_INACT_IMAGE_URI";
+    protected final static String KEY_ACT_TRANSPAREMT = "KEY_ACT_TRANSPAREMT";
+    protected final static String KEY_INACT_TRANSPAREMT = "KEY_INACT_TRANSPAREMT";
 
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
