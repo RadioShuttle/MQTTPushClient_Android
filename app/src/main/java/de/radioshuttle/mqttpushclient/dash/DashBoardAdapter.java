@@ -45,8 +45,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         mDefaultButtonTintColor = ContextCompat.getColor(activity, R.color.button_tint_default);
         Log.d(TAG, "default item bg: " + mDefaultBackground);
 
-        mDefaultProgressColor = DBUtils.fetchAccentColor(activity);
-        mDefaultButtonBackground = DBUtils.fetchColor(activity, R.attr.colorButtonNormal);
+        mDefaultProgressColor = DColor.fetchAccentColor(activity);
+        mDefaultButtonBackground = DColor.fetchColor(activity, R.attr.colorButtonNormal);
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
@@ -190,6 +190,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
                 h.itemView.setLayoutParams(lp);
             }
+
             item.setViewBackground(h.itemView, mDefaultBackground);
             item.setViewTextAppearance(h.label, h.defaultColor);
         }
@@ -197,7 +198,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         Object publishError = item.data.get("error2");
         if (h.errorImage2 != null) {
             if (publishError instanceof String) { // value set?
-                ColorStateList csl = ColorStateList.valueOf(item.textcolor == 0 ? h.defaultColor : item.textcolor);
+                int color;
+                if (item.textcolor == DColor.OS_DEFAULT || item.textcolor == DColor.CLEAR) {
+                    color = h.defaultColor;
+                } else {
+                    color = (int) item.textcolor;
+                }
+                ColorStateList csl = ColorStateList.valueOf(color);
                 ImageViewCompat.setImageTintList(h.errorImage2, csl);
 
                 if (h.errorImage2.getVisibility() != View.VISIBLE) {
@@ -214,8 +221,15 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         if (h.progressBar != null) { // (h.viewType == TYPE_PROGRESS) {
             ProgressItem p = (ProgressItem) item;
-            int pcolor = (p.data.get("ctrl_color") != null ? (Integer) p.data.get("ctrl_color") : p.progresscolor);
-            pcolor = (pcolor == 0 ? mDefaultProgressColor : pcolor);
+            long pcolor = (p.data.get("ctrl_color") != null ? (Long) p.data.get("ctrl_color") : p.progresscolor);
+
+            int color;
+            if (pcolor ==  DColor.OS_DEFAULT || pcolor == DColor.CLEAR) {
+                color = mDefaultProgressColor;
+            } else {
+                color = (int) pcolor;
+            }
+
             if (Build.VERSION.SDK_INT >= 21) {
                 /*
                 Drawable d = h.progressBar.getProgressDrawable();
@@ -225,13 +239,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 */
                 ColorStateList pt = h.progressBar.getProgressTintList();
                 if (pt == null || pt.getDefaultColor() != pcolor) {
-                    h.progressBar.setProgressTintList(ColorStateList.valueOf(pcolor));
-                    h.progressBar.setProgressBackgroundTintList(ColorStateList.valueOf(pcolor));
+                    h.progressBar.setProgressTintList(ColorStateList.valueOf(color));
+                    h.progressBar.setProgressBackgroundTintList(ColorStateList.valueOf(color));
                 }
             } else {
                 Drawable d = h.progressBar.getProgressDrawable();
                 if (d != null) {
-                    d.setColorFilter(pcolor, PorterDuff.Mode.SRC_IN);
+                    d.setColorFilter(color, PorterDuff.Mode.SRC_IN);
                 }
             }
 
@@ -254,7 +268,14 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
         if (h.errorImage != null) {
             if (javaScriptError instanceof String) { // TYPE_TEXT
-                ColorStateList csl = ColorStateList.valueOf(item.textcolor == 0 ? h.defaultColor : item.textcolor);
+                int color;
+                if (item.textcolor == DColor.OS_DEFAULT || item.textcolor == DColor.CLEAR) {
+                    color = h.defaultColor;
+                } else {
+                    color = (int) item.textcolor;
+                }
+
+                ColorStateList csl = ColorStateList.valueOf(color);
                 ImageViewCompat.setImageTintList(h.errorImage, csl);
 
                 if (h.errorImage.getVisibility() != View.VISIBLE) {
@@ -287,8 +308,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
             /* if stateless, show onValue */
             String val = null;
-            int fcolor;
-            int bcolor;
+            long fcolor;
+            long bcolor;
             boolean noTint;
             boolean isActiveState = sw.isActiveState();
 
@@ -296,22 +317,22 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
             if (isActiveState) {
                 val = sw.val;
-                fcolor = sw.data.containsKey("ctrl_color") ? (Integer) sw.data.get("ctrl_color") : sw.color;
-                bcolor = sw.data.containsKey("ctrl_background") ? (Integer) sw.data.get("ctrl_background") : sw.bgcolor;
+                fcolor = sw.data.containsKey("ctrl_color") ? (Long) sw.data.get("ctrl_color") : sw.color;
+                bcolor = sw.data.containsKey("ctrl_background") ? (Long) sw.data.get("ctrl_background") : sw.bgcolor;
                 icon = sw.image;
-                noTint = sw.noTint;
+                noTint = fcolor == DColor.CLEAR;
             } else {
                 val = sw.val2;
-                fcolor = sw.data.containsKey("ctrl_color2") ? (Integer) sw.data.get("ctrl_color2") : sw.color2;
-                bcolor = sw.data.containsKey("ctrl_background2") ? (Integer) sw.data.get("ctrl_background2") : sw.bgcolor2;
+                fcolor = sw.data.containsKey("ctrl_color2") ? (Long) sw.data.get("ctrl_color2") : sw.color2;
+                bcolor = sw.data.containsKey("ctrl_background2") ? (Long) sw.data.get("ctrl_background2") : sw.bgcolor2;
                 icon = sw.image2;
-                noTint = sw.noTint2;
+                noTint = fcolor == DColor.CLEAR;
             }
             ColorStateList csl;
-            if (bcolor == 0) {
+            if (bcolor == DColor.OS_DEFAULT || bcolor == DColor.CLEAR) {
                 csl = ColorStateList.valueOf(mDefaultButtonBackground);
             } else {
-                csl = ColorStateList.valueOf(bcolor);
+                csl = ColorStateList.valueOf((int) bcolor);
             }
 
             /* show button or image button */
@@ -324,7 +345,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
                 /* if stateless, show onValue */
                 h.button.setText(val);
-                h.button.setTextColor(fcolor == 0 ? mDefaultButtonTextColor : fcolor);
+                int color;
+                if (fcolor == DColor.OS_DEFAULT || fcolor == DColor.CLEAR) {
+                    color = mDefaultButtonTextColor;
+                } else {
+                    color = (int) fcolor;
+                }
+                h.button.setTextColor(color);
                 ViewCompat.setBackgroundTintList(h.button, csl);
 
             } else {
@@ -339,7 +366,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 }
 
                 ViewCompat.setBackgroundTintList(h.imageButton, csl);
-                ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonTintColor : fcolor);
+                int color;
+                if (fcolor == DColor.OS_DEFAULT) {
+                    color = mDefaultButtonTintColor;
+                } else {
+                    color = (int) fcolor;
+                }
+                ColorStateList tcsl = ColorStateList.valueOf(color);
                 if (noTint) {
                     ImageViewCompat.setImageTintList(h.imageButton, null);
                 } else {

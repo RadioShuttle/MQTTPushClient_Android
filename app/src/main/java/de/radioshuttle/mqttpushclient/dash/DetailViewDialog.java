@@ -111,7 +111,13 @@ public class DetailViewDialog extends DialogFragment {
                             /* tint send button and value editor */
                             ImageButton sendButton = view.findViewById(R.id.sendButton);
                             sendButton.setVisibility(View.VISIBLE);
-                            ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                            int color;
+                            if (mItem.textcolor == DColor.OS_DEFAULT || mItem.textcolor == DColor.CLEAR) {
+                                color = mDefaultTextColor;
+                            } else {
+                                color = (int) mItem.textcolor;
+                            }
+                            ColorStateList csl = ColorStateList.valueOf(color);
                             ImageViewCompat.setImageTintList(sendButton, csl);
 
                             mTextViewEditText = view.findViewById(R.id.editValue);
@@ -133,7 +139,7 @@ public class DetailViewDialog extends DialogFragment {
                             });
 
                             mTextViewEditText.setVisibility(View.VISIBLE);
-                            mTextViewEditText.setTextColor(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                            mTextViewEditText.setTextColor(color);
 
                             sendButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
@@ -155,7 +161,7 @@ public class DetailViewDialog extends DialogFragment {
                         mTextContent = view.findViewById(R.id.textContent);
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
-                        mDefaultProgressColor = DBUtils.fetchAccentColor(getContext());
+                        mDefaultProgressColor = DColor.fetchAccentColor(getContext());
 
                         if (publishEnabled) {
                             mProgressFormatter = NumberFormat.getInstance();
@@ -197,7 +203,7 @@ public class DetailViewDialog extends DialogFragment {
 
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
-                        mDefaultButtonBackground = DBUtils.fetchColor(getContext(), R.attr.colorButtonNormal);
+                        mDefaultButtonBackground = DColor.fetchColor(getContext(), R.attr.colorButtonNormal);
                         mSwitchButton = view.findViewById(R.id.toggleButton);
                         mDefaultButtonTintColor = ContextCompat.getColor(getContext(), R.color.button_tint_default);
 
@@ -237,9 +243,16 @@ public class DetailViewDialog extends DialogFragment {
                             }
                         });
 
+                        int color;
+                        if (mItem.textcolor == DColor.OS_DEFAULT || mItem.textcolor == DColor.CLEAR) {
+                            color = mDefaultTextColor;
+                        } else {
+                            color = (int) mItem.textcolor;
+                        }
+
                         /* tint buttons */
                         ImageButton closeButton = root.findViewById(R.id.closeButton);
-                        ColorStateList csl = ColorStateList.valueOf(mItem.textcolor == 0 ? mDefaultTextColor : mItem.textcolor);
+                        ColorStateList csl = ColorStateList.valueOf(color);
                         ImageViewCompat.setImageTintList(closeButton, csl);
                         closeButton.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -556,8 +569,14 @@ public class DetailViewDialog extends DialogFragment {
                         pb = mSeekBar;
                     }
 
-                    int pcolor = (p.data.get("ctrl_color") != null ? (Integer) p.data.get("ctrl_color") : p.progresscolor);
+                    long pcolor = (p.data.get("ctrl_color") != null ? (Long) p.data.get("ctrl_color") : p.progresscolor);
                     pcolor = (pcolor == 0 ? mDefaultProgressColor : pcolor);
+                    int color;
+                    if (pcolor == DColor.OS_DEFAULT || pcolor == DColor.CLEAR) {
+                        color = mDefaultProgressColor;
+                    } else {
+                        color = (int) pcolor;
+                    }
 
                     if (Build.VERSION.SDK_INT >= 21) {
                         /*
@@ -570,21 +589,21 @@ public class DetailViewDialog extends DialogFragment {
                         }
                         */
                         ColorStateList pt = pb.getProgressTintList();
-                        if (pt == null || pt.getDefaultColor() != pcolor) {
-                            pb.setProgressTintList(ColorStateList.valueOf(pcolor));
-                            pb.setProgressBackgroundTintList(ColorStateList.valueOf(pcolor));
+                        if (pt == null || pt.getDefaultColor() != color) {
+                            pb.setProgressTintList(ColorStateList.valueOf(color));
+                            pb.setProgressBackgroundTintList(ColorStateList.valueOf(color));
                             if (pb instanceof SeekBar) {
-                                ((SeekBar) pb).setThumbTintList(ColorStateList.valueOf(pcolor));
+                                ((SeekBar) pb).setThumbTintList(ColorStateList.valueOf(color));
                             }
                         }
                     } else {
                         Drawable d = pb.getProgressDrawable();
                         if (d != null) {
-                            d.setColorFilter(pcolor, PorterDuff.Mode.SRC_IN);
+                            d.setColorFilter(color, PorterDuff.Mode.SRC_IN);
                             if (pb instanceof SeekBar) {
                                 Drawable t = ((SeekBar) pb).getThumb();
                                 if (t != null) {
-                                    t.setColorFilter(pcolor, PorterDuff.Mode.SRC_IN);
+                                    t.setColorFilter(color, PorterDuff.Mode.SRC_IN);
                                 }
                             }
                         }
@@ -595,8 +614,8 @@ public class DetailViewDialog extends DialogFragment {
 
                 /* if stateless, show onValue */
                 String val = null;
-                int fcolor;
-                int bcolor;
+                long fcolor;
+                long bcolor;
                 boolean noTint;
                 boolean isActiveState = sw.isActiveState();
 
@@ -604,22 +623,22 @@ public class DetailViewDialog extends DialogFragment {
 
                 if (isActiveState) {
                     val = sw.val;
-                    fcolor = sw.data.containsKey("ctrl_color") ? (Integer) sw.data.get("ctrl_color") : sw.color;
-                    bcolor = sw.data.containsKey("ctrl_background") ? (Integer) sw.data.get("ctrl_background") : sw.bgcolor;
+                    fcolor = sw.data.containsKey("ctrl_color") ? (Long) sw.data.get("ctrl_color") : sw.color;
+                    bcolor = sw.data.containsKey("ctrl_background") ? (Long) sw.data.get("ctrl_background") : sw.bgcolor;
                     icon = sw.imageDetail;
-                    noTint = sw.noTint;
+                    noTint = fcolor == DColor.CLEAR;
                 } else {
                     val = sw.val2;
-                    fcolor = sw.data.containsKey("ctrl_color2") ? (Integer) sw.data.get("ctrl_color2") : sw.color2;
-                    bcolor = sw.data.containsKey("ctrl_background2") ? (Integer) sw.data.get("ctrl_background2") : sw.bgcolor2;
+                    fcolor = sw.data.containsKey("ctrl_color2") ? (Long) sw.data.get("ctrl_color2") : sw.color2;
+                    bcolor = sw.data.containsKey("ctrl_background2") ? (Long) sw.data.get("ctrl_background2") : sw.bgcolor2;
                     icon = sw.imageDetail2;
-                    noTint = sw.noTint2;
+                    noTint = fcolor == DColor.CLEAR;
                 }
                 ColorStateList csl;
-                if (bcolor == 0) {
+                if (bcolor == DColor.OS_DEFAULT || bcolor == DColor.CLEAR) {
                     csl = ColorStateList.valueOf(mDefaultButtonBackground);
                 } else {
-                    csl = ColorStateList.valueOf(bcolor);
+                    csl = ColorStateList.valueOf((int) bcolor);
                 }
 
                 /* show button or image button */
@@ -628,11 +647,17 @@ public class DetailViewDialog extends DialogFragment {
                         mSwitchButton.setVisibility(View.VISIBLE);
                     }
                     if (mSwitchImageButton.getVisibility() != View.GONE) {
-                        mSwitchImageButton.setVisibility(View.GONE);;
+                        mSwitchImageButton.setVisibility(View.GONE);
                     }
                     /* if stateless, show onValue */
                     mSwitchButton.setText(val);
-                    mSwitchButton.setTextColor(fcolor == 0 ? mDefaultButtonTintColor : fcolor);
+                    int color;
+                    if (fcolor == DColor.OS_DEFAULT || fcolor == DColor.CLEAR) {
+                        color = mDefaultButtonTintColor;
+                    } else {
+                        color = (int) fcolor;
+                    }
+                    mSwitchButton.setTextColor(color);
                     ViewCompat.setBackgroundTintList(mSwitchButton, csl);
 
                 } else {
@@ -640,14 +665,20 @@ public class DetailViewDialog extends DialogFragment {
                         mSwitchButton.setVisibility(View.GONE);
                     }
                     if (mSwitchImageButton.getVisibility() != View.VISIBLE) {
-                        mSwitchImageButton.setVisibility(View.VISIBLE);;
+                        mSwitchImageButton.setVisibility(View.VISIBLE);
                     }
                     if (mSwitchImageButton.getDrawable() != icon) {
                         mSwitchImageButton.setImageDrawable(icon);
                     }
 
                     ViewCompat.setBackgroundTintList(mSwitchImageButton, csl);
-                    ColorStateList tcsl = ColorStateList.valueOf(fcolor == 0 ? mDefaultButtonTintColor : fcolor);
+                    int color;
+                    if (fcolor == DColor.OS_DEFAULT) {
+                        color = mDefaultButtonTintColor;
+                    } else {
+                        color = (int) fcolor;
+                    }
+                    ColorStateList tcsl = ColorStateList.valueOf(color);
                     if (noTint) {
                         ImageViewCompat.setImageTintList(mSwitchImageButton, null);
                     } else {
@@ -691,8 +722,15 @@ public class DetailViewDialog extends DialogFragment {
             }
 
             mItem.setViewBackground(mErrorContent, mDefaultBackground);
-            if (mItem.textcolor != 0) {
-                mErrorContent.setTextColor(mItem.textcolor);
+            int color;
+            if (mItem.textcolor == DColor.OS_DEFAULT || mItem.textcolor == DColor.CLEAR) {
+                color = mDefaultTextColor;
+            } else {
+                color = (int) mItem.textcolor;
+            }
+
+            if (mItem.textcolor != 0) { //TODO: if transparent (=0) consider using system default
+                mErrorContent.setTextColor(color);
             }
 
             mErrorContent.setText(displayError);
