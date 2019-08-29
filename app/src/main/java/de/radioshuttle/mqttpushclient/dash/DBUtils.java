@@ -209,21 +209,6 @@ public class DBUtils {
         return dashboardObj;
     }
 
-    public static int fetchAccentColor(Context context) {
-        return fetchColor(context, R.attr.colorAccent);
-    }
-
-    public static int fetchColor(Context context, int attr) {
-        TypedValue typedValue = new TypedValue();
-
-        TypedArray a = context.obtainStyledAttributes(typedValue.data, new int[] { attr });
-        int color = a.getColor(0, 0);
-
-        a.recycle();
-
-        return color;
-    }
-
     public static Thread testDataThread(final DashBoardViewModel vm) {
         return new Thread(new Runnable() {
             @Override
