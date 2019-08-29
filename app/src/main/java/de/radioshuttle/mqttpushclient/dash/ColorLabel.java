@@ -14,7 +14,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
-import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -69,6 +68,7 @@ public class ColorLabel extends View
 
                 }
             }
+
             mPaintSquare.setXfermode(null);
             bcanvas.drawCircle((mRight - mLeft) / 2f + mLeft, (mBottom - mTop) / 2f + mTop, Math.min(mRight - mLeft, mBottom - mTop) / 2f, mPaintCircleBorder);
             canvas.drawBitmap(mBitmap, 0, 0, null);
@@ -79,9 +79,8 @@ public class ColorLabel extends View
     }
 
     protected void setColor(int color, int borderColor) {
-        mPaintCircle.setColor(color);
         mPaintCircleBorder.setColor(borderColor);
-        if (color == 0) {
+        if (Color.alpha(color) == 0) {
             mTransparent = true;
             DisplayMetrics dm = getResources().getDisplayMetrics();
             mBitmap = Bitmap.createBitmap(dm.widthPixels, dm.heightPixels, Bitmap.Config.ARGB_8888);
@@ -93,6 +92,7 @@ public class ColorLabel extends View
             mPaintSquare.setStyle(Paint.Style.FILL);
             mPaintSquare.setColor(Color.LTGRAY);
         } else {
+            mPaintCircle.setColor(color);
             mTransparent = false;
         }
         invalidate();
