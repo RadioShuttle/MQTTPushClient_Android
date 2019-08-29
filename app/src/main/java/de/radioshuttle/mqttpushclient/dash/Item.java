@@ -25,11 +25,13 @@ import de.radioshuttle.utils.Utils;
 public abstract class Item {
     public Item() {
         data = new HashMap<>();
+        textcolor = DColor.OS_DEFAULT;
+        background = DColor.OS_DEFAULT;
     }
 
     public int id;
-    public int textcolor;
-    public int background;
+    public long textcolor; // flag, alpha, r, g, b
+    public long background; // flag, alpha, r, g, b
     public int textsize; // 0 - default, 1 - small, 2 - medium, 3 - large
     public String topic_s;
     public String script_f;
@@ -65,8 +67,8 @@ public abstract class Item {
 
     protected void setJSONData(JSONObject o) {
         label = o.optString("label");
-        background = o.optInt("background");
-        textcolor = o.optInt("textcolor");
+        background = o.optLong("background");
+        textcolor = o.optLong("textcolor");
         textsize = o.optInt("textsize");
         topic_s = o.optString("topic_s");
         script_f = o.optString("script_f");
@@ -93,17 +95,18 @@ public abstract class Item {
 
     /* helper for view component (used in adapter and detail dialog */
 
-    public void setViewBackground(View v, Integer defalutBackgroundColor) {
+    public void setViewBackground(View v, int defalutBackgroundColor) {
         if (v != null) {
-            int color;
-            if (defalutBackgroundColor == null) {
-                color = ContextCompat.getColor(v.getContext(), R.color.dashboad_item_background);
+            long bg = data.containsKey("background") ? (Long) data.get("background") : background;
+            // int background = (bg == 0 ? defalutBackgroundColor : bg);
+            int background;
+            if (bg == DColor.OS_DEFAULT) {
+                background = defalutBackgroundColor;
+            } else if (bg == DColor.CLEAR) {
+                background = defalutBackgroundColor; // chose default color as background TODO: consider transparent
             } else {
-                color = defalutBackgroundColor;
+                background = (int) bg;
             }
-            int bg = data.containsKey("background") ? (Integer) data.get("background") : background;
-            int background = (bg == 0 ? color : bg);
-
             v.setBackgroundColor(background);
         }
     }
@@ -117,12 +120,13 @@ public abstract class Item {
                 TextViewCompat.setTextAppearance(v, TEXTAPP[textSizeIdx]);
             }
 
-            int color = getTextcolor();
-            if (color != 0) {
-                v.setTextColor(color);
-            } else if (defaultColor != 0) { // && color == 0
+            long color = getTextcolor();
+            if (color == DColor.OS_DEFAULT || color == DColor.CLEAR) { // clear is inavalid, treat as DEFAULT
                 v.setTextColor(defaultColor);
+            } else {
+                v.setTextColor((int) color);
             }
+
         }
     }
 
@@ -131,9 +135,9 @@ public abstract class Item {
         if (viewProperties == null) {
             viewProperties = new HashMap<>();
         }
-        viewProperties.put("textcolor", data.containsKey("textcolor") ? (Integer) data.get("textcolor") : textcolor);
+        viewProperties.put("textcolor", data.containsKey("textcolor") ? (Long) data.get("textcolor") : textcolor);
         viewProperties.put("textsize", data.containsKey("textsize") ?  (Integer) data.get("textsize") : textsize);
-        viewProperties.put("background", data.containsKey("background") ? (Integer) data.get("background") : background);
+        viewProperties.put("background", data.containsKey("background") ? (Long) data.get("background") : background);
 
         return viewProperties;
     }
@@ -141,9 +145,8 @@ public abstract class Item {
     protected void updateUIContent(Context context) {
     }
 
-    protected int getTextcolor() {
-        int color = data.containsKey("textcolor") ? (Integer) data.get("textcolor") : textcolor;
-        return color;
+    protected long getTextcolor() {
+        return data.containsKey("textcolor") ? (Long) data.get("textcolor") : textcolor;
     }
 
     final static int[] TEXTAPP = new int[] {android.R.style.TextAppearance_Small, android.R.style.TextAppearance_Medium, android.R.style.TextAppearance_Large};

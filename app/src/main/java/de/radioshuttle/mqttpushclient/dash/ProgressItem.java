@@ -22,7 +22,7 @@ public class ProgressItem extends Item {
     public double range_min;
     public double range_max;
     public int decimal;
-    public int progresscolor;
+    public long progresscolor;
     public boolean percent;
 
     @Override
@@ -40,7 +40,7 @@ public class ProgressItem extends Item {
     public HashMap<String, Object> getJSViewProperties(HashMap<String, Object> viewProperties) {
         viewProperties = super.getJSViewProperties(viewProperties);
         //TODO: add more properties, and implement DashboarJavascript.ViewProperties
-        viewProperties.put("ctrl_color", data.containsKey("ctrl_color") ? (Integer) data.get("ctrl_color") : progresscolor);
+        viewProperties.put("ctrl_color", data.containsKey("ctrl_color") ? (Long) data.get("ctrl_color") : progresscolor);
         return viewProperties;
     }
 
@@ -50,7 +50,7 @@ public class ProgressItem extends Item {
         range_max = o.optDouble("range_max", 0d);
         decimal = o.optInt("decimal", 0);
         percent = o.optBoolean("percent", false);
-        progresscolor = o.optInt("progresscolor");
+        progresscolor = o.optLong("progresscolor");
     }
 
     @Override
@@ -96,6 +96,7 @@ public class ProgressItem extends Item {
 
     public ProgressItem() {
         range_max = 100d; // default
+        progresscolor = DColor.OS_DEFAULT;
     }
 
     @Override

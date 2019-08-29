@@ -18,15 +18,13 @@ public class Switch extends Item {
 
     public String val;
     public String uri; // res://internal/ic_alarm_on.png; res://user/2131231
-    public boolean noTint; // true, do not tint image (active), if uri contains an image resource
-    public int color; // 0 = default system color, else color value (value will not be used for tinting, if noTint = true and uri contains an image)
-    public int bgcolor;
+    public long color; // 0 = default system color, else color value (value will not be used for tinting, if noTint = true and uri contains an image)
+    public long bgcolor;
 
     public String val2; // inactive state (if switch), unused if button
     public String uri2;
-    public boolean noTint2; // true, do not tint image (inactive), if uri2 contains an image resource
-    public int color2;// 0 and transparent2 false = default color, 0 and transparent2 true = noTint color, else color value
-    public int bgcolor2;
+    public long color2;// 0 and transparent2 false = default color, 0 and transparent2 true = noTint color, else color value
+    public long bgcolor2;
 
     //transient
     public Drawable image;
@@ -35,6 +33,13 @@ public class Switch extends Item {
     public Drawable imageDetail2;
     public String imageUri;
     public String imageUri2;
+
+    public Switch () {
+        color = DColor.OS_DEFAULT;
+        bgcolor = DColor.OS_DEFAULT;
+        color2 = DColor.OS_DEFAULT;
+        bgcolor2 = DColor.OS_DEFAULT;
+    }
 
     @Override
     public String getType() {
@@ -49,10 +54,10 @@ public class Switch extends Item {
     public HashMap<String, Object> getJSViewProperties(HashMap<String, Object> viewProperties) {
         viewProperties = super.getJSViewProperties(viewProperties);
         //TODO:consider adding props for images (resource ids), and implement DashboarJavascript.ViewProperties
-        viewProperties.put("ctrl_color", data.containsKey("ctrl_color") ? (Integer) data.get("ctrl_color") : color);
-        viewProperties.put("ctrl_background", data.containsKey("ctrl_background") ? (Integer) data.get("ctrl_background") : color);
-        viewProperties.put("ctrl_color2", data.containsKey("ctrl_color2") ? (Integer) data.get("ctrl_color2") : color);
-        viewProperties.put("ctrl_background2", data.containsKey("ctrl_background2") ? (Integer) data.get("ctrl_background2") : color);
+        viewProperties.put("ctrl_color", data.containsKey("ctrl_color") ? (Long) data.get("ctrl_color") : color);
+        viewProperties.put("ctrl_background", data.containsKey("ctrl_background") ? (Long) data.get("ctrl_background") : color);
+        viewProperties.put("ctrl_color2", data.containsKey("ctrl_color2") ? (Long) data.get("ctrl_color2") : color);
+        viewProperties.put("ctrl_background2", data.containsKey("ctrl_background2") ? (Long) data.get("ctrl_background2") : color);
         return viewProperties;
     }
 
@@ -63,13 +68,11 @@ public class Switch extends Item {
         o.put("uri", uri == null ? "" : uri);
         o.put("color", color);
         o.put("bgcolor", bgcolor);
-        o.put("no_tint", noTint);
         if (!Utils.isEmpty(val2)) {
             o.put("val2", val2);
             o.put("uri2", uri2 == null ? "" : uri2);
             o.put("bgcolor2", bgcolor2);
             o.put("color2", color2);
-            o.put("no_tint2", noTint2);
         }
         return o;
     }
@@ -80,12 +83,10 @@ public class Switch extends Item {
         uri = o.optString("uri");
         val2 = o.optString("val2");
         uri2 = o.optString("uri2");
-        noTint = o.optBoolean("no_tint");
-        bgcolor = o.optInt("bgcolor");
-        bgcolor2 = o.optInt("bgcolor2");
-        color = o.optInt("color");
-        color2 = o.optInt("color2");
-        noTint2 = o.optBoolean("no_tint2");
+        bgcolor = o.optLong("bgcolor");
+        bgcolor2 = o.optLong("bgcolor2");
+        color = o.optLong("color");
+        color2 = o.optLong("color2");
         //TODO: remove:
         // uri = "res://internal/notifications_active";
         // uri2 = "res://internal/notifications_off";
