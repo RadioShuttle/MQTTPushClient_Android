@@ -7,7 +7,6 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Application;
-import android.util.Base64;
 import android.util.Log;
 
 import com.squareup.duktape.Duktape;
@@ -100,17 +99,17 @@ public class DashBoardJavaScript extends JavaScript {
 
         @Override
         public void setCtrlColor(double color) {
-            p.put("ctrl_color", doubleToInt(color));
+            p.put("ctrl_color", doubleToLong(color));
         }
 
         @Override
         public void setCtrlColor2(double color) {
-            p.put("ctrl_color2", doubleToInt(color));
+            p.put("ctrl_color2", doubleToLong(color));
         }
 
         @Override
         public void setTextColor(double color) {
-            p.put("textcolor", doubleToInt(color));
+            p.put("textcolor", doubleToLong(color));
         }
 
         @Override
@@ -121,46 +120,46 @@ public class DashBoardJavaScript extends JavaScript {
         @Override
         public void setBackgroundColor(double color) {
             // Log.d(TAG, "c: " + color);
-            p.put("background", doubleToInt(color));
+            p.put("background", doubleToLong(color));
         }
 
         @Override
         public void setCtrlBackgroundColor(double color) {
-            p.put("ctrl_background", doubleToInt(color));
+            p.put("ctrl_background", doubleToLong(color));
         }
 
         @Override
         public void setCtrlBackgroundColor2(double color) {
-            p.put("ctrl_background2", doubleToInt(color));
+            p.put("ctrl_background2", doubleToLong(color));
         }
 
         @Override
         public double getCtrlColor() {
-            return intToDouble((int) (p.get("ctrl_color") == null ? 0 : p.get("ctrl_color")));
+            return longToDouble((long) (p.get("ctrl_color") == null ? 0 : p.get("ctrl_color")));
         }
 
         @Override
         public double getCtrlColor2() {
-            return intToDouble((int) (p.get("ctrl_color2") == null ? 0 : p.get("ctrl_color2")));
+            return longToDouble((long) (p.get("ctrl_color2") == null ? 0 : p.get("ctrl_color2")));
         }
 
         @Override
         public double getBackgroundColor() {
-            return intToDouble((int) (p.get("background") == null ? 0 : p.get("background")));
+            return longToDouble((long) (p.get("background") == null ? 0 : p.get("background")));
         }
         @Override
         public double getCtrlBackgroundColor() {
-            return intToDouble((int) (p.get("ctrl_background") == null ? 0 : p.get("ctrl_background")));
+            return longToDouble((long) (p.get("ctrl_background") == null ? 0 : p.get("ctrl_background")));
         }
 
         @Override
         public double getCtrlBackgroundColor2() {
-            return intToDouble((int) (p.get("ctrl_background2") == null ? 0 : p.get("ctrl_background2")));
+            return longToDouble((long) (p.get("ctrl_background2") == null ? 0 : p.get("ctrl_background2")));
         }
 
         @Override
         public double getTextColor() {
-            return intToDouble((int) (p.get("textcolor") == null ? 0 : p.get("textcolor")));
+            return longToDouble((long) (p.get("textcolor") == null ? 0 : p.get("textcolor")));
         }
 
         @Override
@@ -174,8 +173,33 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
+
         public double getTextSize() {
             return intToDouble((int) (p.get("textsize") == null ? 0 : p.get("textsize")));
+        }
+
+        protected double longToDouble(long i) {
+            double v;
+            if (i == DColor.CLEAR) {
+                v = DColor.CLEAR;
+            } else if (i == DColor.OS_DEFAULT) {
+                v = DColor.OS_DEFAULT;
+            } else {
+                v = i & 0xFFFFFFFFL;
+            }
+            return v;
+        }
+
+        protected long doubleToLong(double d) {
+            long v;
+            if (d == (double) DColor.CLEAR) {
+                v = DColor.CLEAR;
+            } else if (d == (double) DColor.OS_DEFAULT) {
+                v = DColor.OS_DEFAULT;
+            } else {
+                v = (long) d & 0xFFFFFFFFL;
+            }
+            return v;
         }
 
         protected double intToDouble(int i) {
@@ -186,7 +210,6 @@ public class DashBoardJavaScript extends JavaScript {
             return (int) ((long) d & 0xFFFFFFFFL);
         }
     }
-
 
     private String color_js;
     private static DashBoardJavaScript js;
