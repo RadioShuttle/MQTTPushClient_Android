@@ -247,6 +247,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_label_color">Color:</string>
     <string name="dash_label_system_default">Default</string>
     <string name="dash_label_transparent">Transp.</string>
+    <string name="dash_label_clear">Clear</string>
     <string name="dash_label_image">Image:</string>
     <string name="dash_label_empty_image_btn">None</string>
 
