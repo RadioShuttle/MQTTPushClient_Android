@@ -24,4 +24,16 @@
         android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+    <ImageView
+        android:id="@+id/clear_image"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:tint="@color/label_textcolor_clear"
+        app:srcCompat="@drawable/ic_button_close"
+        android:layout_width="48dp"
+        android:layout_height="48dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
