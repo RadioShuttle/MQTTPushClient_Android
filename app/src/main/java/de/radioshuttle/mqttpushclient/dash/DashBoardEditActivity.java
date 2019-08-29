@@ -664,7 +664,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             noTint = false;
             if (mInactiveColor == DColor.OS_DEFAULT) {
                 color = mDefaultButtonTintColor;
-            } else if (mActiveColor == DColor.CLEAR) {
+            } else if (mInactiveColor == DColor.CLEAR) {
                 noTint = true;
                 color = mDefaultButtonTintColor; //TODO: check
             } else {
