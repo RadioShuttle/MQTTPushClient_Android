@@ -40,5 +40,7 @@ const Color = {
 	CYAN : 0xff29d0d0,
 	LT_BLUE : 0xff9dafff,
 	BLUE : 0xff2a4bd7,
-	DEFAULT : 0
+	TRANSPARENT : 0,
+	OS_DEFAULT : 0x0100000000,
+	CLEAR : 0x0200000000
 };
