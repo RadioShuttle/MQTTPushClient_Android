@@ -15,6 +15,7 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -53,7 +54,6 @@ public class ColorPickerDialog extends DialogFragment {
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View  v = inflater.inflate(R.layout.dialog_color_body, null);
 
-
         mColorList = v.findViewById(R.id.colorList);
         if (mColorList != null) {
 
@@ -65,7 +65,6 @@ public class ColorPickerDialog extends DialogFragment {
             ColorListAdapter adapter = new ColorListAdapter(this);
             adapter.setData(args.getIntegerArrayList("palette"), args.getStringArrayList("labels"));
             mColorList.setAdapter(adapter);
-
 
         }
 
@@ -144,6 +143,8 @@ public class ColorPickerDialog extends DialogFragment {
             Bundle args = dlg.getArguments();
             mBorderColor = args.getInt("border");
             mPaletteName = args.getString("name", "colors");
+            mClearText = dlg.getString(R.string.dash_label_clear);
+
         }
 
         @NonNull
@@ -154,6 +155,7 @@ public class ColorPickerDialog extends DialogFragment {
             final ColorListAdapter.ViewHolder holder = new ViewHolder(view);
             holder.colorLabel = view.findViewById(R.id.colorLabel);
             holder.label = view.findViewById(R.id.label);
+            holder.clearImage = view.findViewById(R.id.clear_image);
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                    @Override
                    public void onClick(View v) {
@@ -176,19 +178,24 @@ public class ColorPickerDialog extends DialogFragment {
             holder.colorLabel.setColor(color, mBorderColor);
 
             boolean showLabel = false;
+            boolean showClearImage = false;
             if (mLabels != null && position >= 0 && position < mLabels.size()) {
                 String label = mLabels.get(position);
                 if (!Utils.isEmpty(label)) {
                     int c = mData.get(position);
-                    double l = ColorUtils.calculateLuminance(c);
-                    holder.label.setText(label);
-                    if (l < .25d) {
-                        holder.label.setTextColor(0xFFFFFFFF);
+                    if (label.equals(mClearText)) {
+                        showClearImage = true;
                     } else {
-                        holder.label.setTextColor(0xFF000000);
+                        double l = ColorUtils.calculateLuminance(c);
+                        holder.label.setText(label);
+                        if (l < .25d) {
+                            holder.label.setTextColor(0xFFFFFFFF);
+                        } else {
+                            holder.label.setTextColor(0xFF000000);
+                        }
+                        holder.label.setVisibility(View.VISIBLE);
+                        showLabel = true;
                     }
-                    holder.label.setVisibility(View.VISIBLE);
-                    showLabel = true;
                 }
             }
             if (showLabel && holder.label.getVisibility() != View.VISIBLE) {
@@ -196,6 +203,12 @@ public class ColorPickerDialog extends DialogFragment {
             }
             if (!showLabel && holder.label.getVisibility() != View.GONE) {
                 holder.label.setVisibility(View.GONE);
+            }
+            if (showClearImage && holder.clearImage.getVisibility() != View.VISIBLE) {
+                holder.clearImage.setVisibility(View.VISIBLE);
+            }
+            if (!showClearImage && holder.clearImage.getVisibility() != View.GONE) {
+                holder.clearImage.setVisibility(View.GONE);
             }
         }
 
@@ -216,8 +229,10 @@ public class ColorPickerDialog extends DialogFragment {
             }
             ColorLabel colorLabel;
             TextView label;
+            ImageView clearImage;
         }
 
+        String mClearText;
         String mPaletteName;
         int mBorderColor;
         ColorPickerDialog mDialog;
