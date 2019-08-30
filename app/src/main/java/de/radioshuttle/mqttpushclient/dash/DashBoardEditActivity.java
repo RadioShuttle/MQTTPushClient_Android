@@ -39,6 +39,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -107,7 +109,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         itemID = args.getInt(ARG_ITEM_ID, -1);
         dashboardContentRaw = args.getString(ARG_DASHBOARD, "");
         dashboardContentVersion =  args.getLong(ARG_DASHBOARD_VERSION, 0L);
-        mDefaultClearColor = ContextCompat.getColor(this, R.color.label_color_clear);
+        // mDefaultClearColor = DColor.fetchColor(this, R.attr.background);
+        mDefaultClearColor = Color.TRANSPARENT;
 
         /* check arguemnts */
         if (!(json == null || itemClassName == null || (mMode == MODE_EDIT && itemID == -1))) {
@@ -446,6 +449,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     } else {
                         color = (int) mActiveColor;
                     }
+                    mColorActiveButton.setDisableTransparentImage(mActiveColor == DColor.CLEAR);
                     mColorActiveButton.setColor(color, mColorLabelBorderColor);
                     mColorActiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -462,6 +466,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     } else {
                         color = (int) mInactiveColor;
                     }
+                    mColorInactiveButton.setDisableTransparentImage(mInactiveColor == DColor.CLEAR);
                     mColorInactiveButton.setColor(color, mColorLabelBorderColor);
                     mColorInactiveButton.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -947,7 +952,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             labels.add(getString(R.string.dash_label_system_default));
             if (addClear) {
                 labels.add(getString(R.string.dash_label_clear));
-                palette.add(1, ContextCompat.getColor(this, R.color.label_color_clear));
+                palette.add(1, mDefaultClearColor);
                 // labels.add(getString(R.string.dash_label_transparent));
             }
             DialogFragment newFragment = ColorPickerDialog.newInstance(id, palette, labelBorderColor, labels);
@@ -1014,6 +1019,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else {
                     mActiveColor = color;
                 }
+                mColorActiveButton.setDisableTransparentImage(mActiveColor == DColor.CLEAR);
                 mColorActiveButton.setColor(color, mColorLabelBorderColor);
                 tintSwitchButtons();
                 break;
@@ -1026,6 +1032,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else {
                     mInactiveColor = color;
                 }
+                mColorActiveButton.setDisableTransparentImage(mInactiveColor == DColor.CLEAR);
                 mColorInactiveButton.setColor(color, mColorLabelBorderColor);
                 tintSwitchButtons();
                 break;

@@ -175,7 +175,6 @@ public class ColorPickerDialog extends DialogFragment {
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder vhholder, int position) {
             Integer color = mData.get(position);
             ColorListAdapter.ViewHolder holder = (ColorListAdapter.ViewHolder) vhholder;
-            holder.colorLabel.setColor(color, mBorderColor);
 
             boolean showLabel = false;
             boolean showClearImage = false;
@@ -184,6 +183,7 @@ public class ColorPickerDialog extends DialogFragment {
                 if (!Utils.isEmpty(label)) {
                     int c = mData.get(position);
                     if (label.equals(mClearText)) {
+                        holder.colorLabel.setDisableTransparentImage(true);
                         showClearImage = true;
                     } else {
                         double l = ColorUtils.calculateLuminance(c);
@@ -198,6 +198,8 @@ public class ColorPickerDialog extends DialogFragment {
                     }
                 }
             }
+            holder.colorLabel.setColor(color, mBorderColor);
+
             if (showLabel && holder.label.getVisibility() != View.VISIBLE) {
                 holder.label.setVisibility(View.VISIBLE);
             }
