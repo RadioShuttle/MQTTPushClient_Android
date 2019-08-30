@@ -39,8 +39,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -155,10 +153,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mBackground = mItem.background;
                 } else {
                     if (savedInstanceState.containsKey(KEY_TEXTCOLOR)) {
-                        mTextColor = savedInstanceState.getInt(KEY_TEXTCOLOR);
+                        mTextColor = savedInstanceState.getLong(KEY_TEXTCOLOR);
                     }
                     if (savedInstanceState.containsKey(KEY_BACKGROUND)) {
-                        mBackground = savedInstanceState.getInt(KEY_BACKGROUND);
+                        mBackground = savedInstanceState.getLong(KEY_BACKGROUND);
                     }
                 }
 
@@ -335,7 +333,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             mProgColor = progressItem.progresscolor;
                         } else {
                             if (savedInstanceState.containsKey(KEY_PROGCOLOR)) {
-                                mProgColor = savedInstanceState.getInt(KEY_PROGCOLOR);
+                                mProgColor = savedInstanceState.getLong(KEY_PROGCOLOR);
                             }
                         }
 
@@ -396,24 +394,24 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         mEditTextSwitchInactive.setText(sw.val2);
                         mActiveImageURI = sw.uri;
                         mInactiveImageURI = sw.uri2;
-                        updateSwitchButtons();
-                        tintSwitchButtons();
                     } else {
                         if (savedInstanceState.containsKey(KEY_ACT_BACKGROUND)) {
-                            mActiveBackground = savedInstanceState.getInt(KEY_ACT_BACKGROUND);
+                            mActiveBackground = savedInstanceState.getLong(KEY_ACT_BACKGROUND);
                         }
                         if (savedInstanceState.containsKey(KEY_INACT_BACKGROUND)) {
-                            mInactiveBackground = savedInstanceState.getInt(KEY_INACT_BACKGROUND);
+                            mInactiveBackground = savedInstanceState.getLong(KEY_INACT_BACKGROUND);
                         }
                         if (savedInstanceState.containsKey(KEY_INACT_COLOR)) {
-                            mInactiveColor = savedInstanceState.getInt(KEY_INACT_COLOR);
+                            mInactiveColor = savedInstanceState.getLong(KEY_INACT_COLOR);
                         }
                         if (savedInstanceState.containsKey(KEY_ACT_COLOR)) {
-                            mActiveColor = savedInstanceState.getInt(KEY_ACT_COLOR);
+                            mActiveColor = savedInstanceState.getLong(KEY_ACT_COLOR);
                         }
                         mActiveImageURI = savedInstanceState.getString(KEY_ACT_IMAGE_URI);
                         mInactiveImageURI = savedInstanceState.getString(KEY_INACT_IMAGE_URI);
                     }
+                    updateSwitchButtons();
+                    tintSwitchButtons();
 
                     int color;
                     if (mActiveBackground == DColor.OS_DEFAULT || mActiveBackground == DColor.CLEAR) {
