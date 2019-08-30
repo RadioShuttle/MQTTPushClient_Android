@@ -20,7 +20,6 @@
     <color name="topic_notification_type_icon_color">#FF000000</color>
 
     <color name="button_tint_default">#89000000</color>
-    <color name="label_color_clear">#FFFFFFFF</color>
     <color name="label_textcolor_clear">#FF000000</color>
 
     <color name="dashboard_selected_background">#80000000</color>
