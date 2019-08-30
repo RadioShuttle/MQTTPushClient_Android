@@ -78,9 +78,14 @@ public class ColorLabel extends View
         }
     }
 
+    /** must be called before setColor() to take effect */
+    protected void setDisableTransparentImage(boolean disable) {
+        mDisableTransparentMatrixDrawing = disable;
+    }
+
     protected void setColor(int color, int borderColor) {
         mPaintCircleBorder.setColor(borderColor);
-        if (Color.alpha(color) == 0) {
+        if (Color.alpha(color) == 0 && !mDisableTransparentMatrixDrawing) {
             mTransparent = true;
             DisplayMetrics dm = getResources().getDisplayMetrics();
             mBitmap = Bitmap.createBitmap(dm.widthPixels, dm.heightPixels, Bitmap.Config.ARGB_8888);
@@ -112,6 +117,8 @@ public class ColorLabel extends View
         mPaintCircle.setAntiAlias(true);
         mPaintCircle.setStyle(Paint.Style.FILL);
         mPaintCircle.setColor(Color.WHITE);
+
+        mDisableTransparentMatrixDrawing = false;
     }
 
     @Override
@@ -124,6 +131,7 @@ public class ColorLabel extends View
 
     private Bitmap mBitmap;
     private boolean mTransparent;
+    private boolean mDisableTransparentMatrixDrawing;
     private float mSquareWidth;
     private Paint mPaintCircleBorder;
     private Paint mPaintCircle;
