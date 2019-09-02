@@ -18,8 +18,14 @@ public class IconHelper {
 
     static {
         INTENRAL_ICONS = new LinkedHashMap<>();
+        INTENRAL_ICONS.put("res://internal/notifications", R.drawable.xic_notifications);
         INTENRAL_ICONS.put("res://internal/notifications_active", R.drawable.xic_notifications_active);
+        INTENRAL_ICONS.put("res://internal/notifications_none", R.drawable.xic_notifications_none);
         INTENRAL_ICONS.put("res://internal/notifications_off", R.drawable.xic_notifications_off);
+        INTENRAL_ICONS.put("res://internal/notifications_paused", R.drawable.xic_notifications_paused);
+
+        INTENRAL_ICONS.put("res://internal/emoji_objects", R.drawable.xic_emoji_objects);
+
     }
 
     public static String getURIForResourceID(int resourceID) {
