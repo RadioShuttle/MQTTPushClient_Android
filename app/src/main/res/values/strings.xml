@@ -205,6 +205,14 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="menu_topicfilter_binary_title">Binary</string>
     <string name="menu_topicfilter_hexdump_title">Hex Dump</string>
 
+    <!-- Image Chooser Activity -->
+    <string name="title_chooser">Select an Image</string>
+    <string name="tab_title_internal">Internal</string>
+    <string name="tab_title_user">User</string>
+    <string name="no_image">None</string>
+
+    <string name="action_import">Import</string>
+
     <!-- Dashboard -->
     <string name="action_dashboard">Dashboard</string>
     <string name="action_list">List View</string>
