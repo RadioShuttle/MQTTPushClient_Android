@@ -18,6 +18,8 @@ public class IconHelper {
 
     static {
         INTENRAL_ICONS = new LinkedHashMap<>();
+
+
         INTENRAL_ICONS.put("res://internal/notifications", R.drawable.xic_notifications);
         INTENRAL_ICONS.put("res://internal/notifications_active", R.drawable.xic_notifications_active);
         INTENRAL_ICONS.put("res://internal/notifications_none", R.drawable.xic_notifications_none);
@@ -25,6 +27,12 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/notifications_paused", R.drawable.xic_notifications_paused);
 
         INTENRAL_ICONS.put("res://internal/emoji_objects", R.drawable.xic_emoji_objects);
+
+        INTENRAL_ICONS.put("res://internal/sentiment_dissatisfied", R.drawable.xic_sentiment_dissatisfied);
+        INTENRAL_ICONS.put("res://internal/sentiment_satisfied", R.drawable.xic_sentiment_satisfied);
+        INTENRAL_ICONS.put("res://internal/sentiment_very_dissatisfied", R.drawable.xic_sentiment_very_dissatisfied);
+        INTENRAL_ICONS.put("res://internal/sentiment_very_satisfied", R.drawable.xic_sentiment_very_satisfied);
+
 
     }
 
