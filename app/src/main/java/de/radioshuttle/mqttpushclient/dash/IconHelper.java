@@ -7,6 +7,8 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 import de.radioshuttle.mqttpushclient.R;
 
@@ -20,4 +22,15 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/notifications_off", R.drawable.xic_notifications_off);
     }
 
+    public static String getURIForResourceID(int resourceID) {
+        String uri = null;
+        Set<Map.Entry<String, Integer>> es = IconHelper.INTENRAL_ICONS.entrySet();
+        for(Map.Entry<String, Integer> e : es) {
+            if (resourceID == e.getValue()) {
+                uri = e.getKey();
+                break;
+            }
+        }
+        return uri;
+    }
 }
