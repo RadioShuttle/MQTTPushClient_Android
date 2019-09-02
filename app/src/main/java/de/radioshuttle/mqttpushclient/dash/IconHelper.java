@@ -25,7 +25,6 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/check_box", R.drawable.xic_check_box);
         INTENRAL_ICONS.put("res://internal/check_box_outline_blank", R.drawable.xic_check_box_outline_blank);
         INTENRAL_ICONS.put("res://internal/indeterminate_check_box", R.drawable.xic_indeterminate_check_box);
-
         INTENRAL_ICONS.put("res://internal/radio_button_checked", R.drawable.xic_radio_button_checked);
         INTENRAL_ICONS.put("res://internal/radio_button_unchecked", R.drawable.xic_radio_button_unchecked);
 
