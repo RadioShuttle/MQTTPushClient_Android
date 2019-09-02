@@ -476,25 +476,25 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mButtonSwitchActiveEmpty.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            openImageChooser(0);
+                            openImageChooser(CTRL_ACTIVE_STATE);
                         }
                     });
                     mButtonSwitchActive.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            openImageChooser(0);
+                            openImageChooser(CTRL_ACTIVE_STATE);
                         }
                     });
                     mButtonSwitchInactiveEmpty.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            openImageChooser(1);
+                            openImageChooser(CTRL_INACTIVE_STATE);
                         }
                     });
                     mButtonSwitchInactive.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            openImageChooser(1);
+                            openImageChooser(CTRL_INACTIVE_STATE);
                         }
                     });
                 }
@@ -631,7 +631,6 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     protected void tintSwitchButtons() {
         if (mItem instanceof Switch) {
-            Switch sw = (Switch) mItem;
 
             boolean noTint = false;
             int color;
@@ -653,7 +652,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             ColorStateList foreground = ColorStateList.valueOf(color);
             ColorStateList background = ColorStateList.valueOf(bg);
 
-            if (Utils.isEmpty(sw.uri)) {
+            if (Utils.isEmpty(mActiveImageURI)) {
                 mButtonSwitchActiveEmpty.setTextColor(foreground);
                 ViewCompat.setBackgroundTintList(mButtonSwitchActiveEmpty, background);
             } else {
@@ -683,7 +682,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             foreground = ColorStateList.valueOf(color);
             background = ColorStateList.valueOf(bg);
 
-            if (Utils.isEmpty(sw.uri2)) {
+            if (Utils.isEmpty(mInactiveImageURI)) {
                 mButtonSwitchInactiveEmpty.setTextColor(foreground);
                 ViewCompat.setBackgroundTintList(mButtonSwitchInactiveEmpty, background);
             } else {
@@ -719,9 +718,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     protected void updateSwitchButtons() {
         if (mItem instanceof Switch) {
-            Switch sw = (Switch) mItem;
 
-            if (Utils.isEmpty(sw.uri)) {
+            if (Utils.isEmpty(mActiveImageURI)) {
                 if (mButtonSwitchActiveEmpty.getVisibility() != View.VISIBLE) {
                     mButtonSwitchActiveEmpty.setVisibility(View.VISIBLE);
                 }
@@ -736,17 +734,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mButtonSwitchActive.setVisibility(View.VISIBLE);
                 }
 
-                if (IconHelper.INTENRAL_ICONS.containsKey(sw.uri)) {
+                if (IconHelper.INTENRAL_ICONS.containsKey(mActiveImageURI)) {
                     //TODO: load asnyc
-                    mButtonSwitchActive.setImageResource(IconHelper.INTENRAL_ICONS.get(sw.uri));
-                } else if (sw.uri.indexOf("internal") != -1) {
+                    mButtonSwitchActive.setImageResource(IconHelper.INTENRAL_ICONS.get(mActiveImageURI));
+                } else if (mActiveImageURI.indexOf("internal") != -1) {
                     //TODO: resource not found
                 } else {
                     //TODO: handle external resource
                 }
             }
 
-            if (Utils.isEmpty(sw.uri2)) {
+            if (Utils.isEmpty(mInactiveImageURI)) {
                 if (mButtonSwitchInactiveEmpty.getVisibility() != View.VISIBLE) {
                     mButtonSwitchInactiveEmpty.setVisibility(View.VISIBLE);
                 }
@@ -761,10 +759,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mButtonSwitchInactive.setVisibility(View.VISIBLE);
                 }
                 //TODO: load asnyc
-                if (IconHelper.INTENRAL_ICONS.containsKey(sw.uri2)) {
+                if (IconHelper.INTENRAL_ICONS.containsKey(mInactiveImageURI)) {
                     // mButtonSwitchActive.setD
-                    mButtonSwitchInactive.setImageResource(IconHelper.INTENRAL_ICONS.get(sw.uri2));
-                } else if (sw.uri.indexOf("internal") != -1) {
+                    mButtonSwitchInactive.setImageResource(IconHelper.INTENRAL_ICONS.get(mInactiveImageURI));
+                } else if (mInactiveImageURI.indexOf("internal") != -1) {
                     //TODO: resource not found
                 } else {
                     //TODO: handle external resource
@@ -1360,7 +1358,32 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             mOutputScriptContent = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
             setFilterButtonText(mOutputScriptButton, mOutputScriptContent, (mItem != null ? mItem.script_p : null));
         } else if (requestCode == 3) {
-            //TODO
+            if (resultCode == AppCompatActivity.RESULT_OK) {
+                /* if no URI submitted, user has choosen NO IMAGE */
+                String uri = data.getStringExtra(ImageChooserActivity.ARG_RESOURCE_URI);
+                int ctrlIdx = data.getIntExtra(ImageChooserActivity.ARG_CTRL_IDX, -1);
+                if (ctrlIdx == CTRL_ACTIVE_STATE) {
+                    if (Utils.isEmpty(uri)) {
+                        Log.i(TAG, "selected image (active): none");
+                        mActiveImageURI = "";
+                    } else {
+                        Log.i(TAG, "selected image (active): " + uri);
+                        mActiveImageURI = uri;
+                    }
+                    updateSwitchButtons();
+                    tintSwitchButtons();
+                } else if (ctrlIdx == CTRL_INACTIVE_STATE) {
+                    if (Utils.isEmpty(uri)) {
+                        Log.i(TAG, "selected image (inactive): none");
+                        mInactiveImageURI = "";
+                    } else {
+                        Log.i(TAG, "selected image (inactive): " + uri);
+                        mInactiveImageURI = uri;
+                    }
+                    updateSwitchButtons();
+                    tintSwitchButtons();
+                }
+            }
         }
     }
 
@@ -1706,4 +1729,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     public final static String ARG_ITEM_POS = "ARG_ITEM_POS";
     public final static String ARG_DASHBOARD = "ARG_DASHBOARD";
     public final static String ARG_DASHBOARD_VERSION = "ARG_DASHBOARD_VERSION";
+
+    protected final static int CTRL_ACTIVE_STATE = 0;
+    protected final static int CTRL_INACTIVE_STATE = 1;
 }
