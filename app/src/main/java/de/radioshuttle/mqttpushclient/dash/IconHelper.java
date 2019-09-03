@@ -18,7 +18,6 @@ public class IconHelper {
 
     static {
         INTENRAL_ICONS = new LinkedHashMap<>();
-
         // toggle
         INTENRAL_ICONS.put("res://internal/toggle_on", R.drawable.xic_toggle_on);
         INTENRAL_ICONS.put("res://internal/toggle_off", R.drawable.xic_toggle_off);
@@ -27,17 +26,37 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/indeterminate_check_box", R.drawable.xic_indeterminate_check_box);
         INTENRAL_ICONS.put("res://internal/radio_button_checked", R.drawable.xic_radio_button_checked);
         INTENRAL_ICONS.put("res://internal/radio_button_unchecked", R.drawable.xic_radio_button_unchecked);
+        INTENRAL_ICONS.put("res://internal/lock", R.drawable.xic_lock);
+        INTENRAL_ICONS.put("res://internal/lock_open", R.drawable.xic_lock_open);
+        INTENRAL_ICONS.put("res://internal/notifications_active", R.drawable.xic_notifications_active);
+        INTENRAL_ICONS.put("res://internal/notifications_off", R.drawable.xic_notifications_off);
+        INTENRAL_ICONS.put("res://internal/signal_wifi_4_bar", R.drawable.xic_signal_wifi_4_bar);
+        INTENRAL_ICONS.put("res://internal/signal_wifi_off", R.drawable.xic_signal_wifi_off);
+        INTENRAL_ICONS.put("res://internal/wifi", R.drawable.xic_wifi);
+        INTENRAL_ICONS.put("res://internal/wifi_off", R.drawable.xic_wifi_off);
+        INTENRAL_ICONS.put("res://internal/airplanemode_active", R.drawable.xic_airplanemode_active);
+        INTENRAL_ICONS.put("res://internal/airplanemode_inactive", R.drawable.xic_airplanemode_inactive);
+
+        // msic
+        INTENRAL_ICONS.put("res://internal/ac_unit", R.drawable.xic_ac_unit);
+        INTENRAL_ICONS.put("res://internal/emoji_objects", R.drawable.xic_emoji_objects);
+        INTENRAL_ICONS.put("res://internal/error", R.drawable.xic_error);
+        INTENRAL_ICONS.put("res://internal/error_outline", R.drawable.xic_error_outline);
+        INTENRAL_ICONS.put("res://internal/house", R.drawable.xic_house);
+        INTENRAL_ICONS.put("res://internal/warning", R.drawable.xic_warning);
+        INTENRAL_ICONS.put("res://internal/access_alarms", R.drawable.xic_access_alarms);
+        INTENRAL_ICONS.put("res://internal/access_time", R.drawable.xic_access_time);
+        INTENRAL_ICONS.put("res://internal/battery_alert", R.drawable.xic_battery_alert);
+        INTENRAL_ICONS.put("res://internal/battery_full", R.drawable.xic_battery_full);
 
         // alarm
         INTENRAL_ICONS.put("res://internal/notifications", R.drawable.xic_notifications);
-        INTENRAL_ICONS.put("res://internal/notifications_active", R.drawable.xic_notifications_active);
         INTENRAL_ICONS.put("res://internal/notifications_none", R.drawable.xic_notifications_none);
-        INTENRAL_ICONS.put("res://internal/notifications_off", R.drawable.xic_notifications_off);
         INTENRAL_ICONS.put("res://internal/notifications_paused", R.drawable.xic_notifications_paused);
+        INTENRAL_ICONS.put("res://internal/add_alert", R.drawable.xic_add_alert);
+        INTENRAL_ICONS.put("res://internal/notification_important", R.drawable.xic_notification_important);
 
-        // msic
-        INTENRAL_ICONS.put("res://internal/emoji_objects", R.drawable.xic_emoji_objects);
-
+        // emojis
         INTENRAL_ICONS.put("res://internal/sentiment_dissatisfied", R.drawable.xic_sentiment_dissatisfied);
         INTENRAL_ICONS.put("res://internal/sentiment_satisfied", R.drawable.xic_sentiment_satisfied);
         INTENRAL_ICONS.put("res://internal/sentiment_very_dissatisfied", R.drawable.xic_sentiment_very_dissatisfied);
