@@ -402,10 +402,12 @@ public class DetailViewDialog extends DialogFragment {
                         }
                         if (ic != null && ic.item != null && !Utils.isEmpty((String) ic.item.data.get("error2"))) {
                             t = Toast.makeText(getContext(), getString(R.string.errormsg_general_error), Toast.LENGTH_LONG);
+                            t.show();
                         } else {
-                            t = Toast.makeText(getContext(), getString(R.string.dlg_info_message_published), Toast.LENGTH_LONG);
+                            /* show sent confirmation message */
+                            // t = Toast.makeText(getContext(), getString(R.string.dlg_info_message_published), Toast.LENGTH_LONG);
+                            // t.show();
                         }
-                        t.show();
                         mCurrentPublishID = -1;
                     }
                 }
