@@ -51,6 +51,7 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/error_outline", R.drawable.xic_error_outline);
         INTENRAL_ICONS.put("res://internal/house", R.drawable.xic_house);
         INTENRAL_ICONS.put("res://internal/warning", R.drawable.xic_warning);
+        INTENRAL_ICONS.put("res://internal/not_interested", R.drawable.xic_not_interested);
         INTENRAL_ICONS.put("res://internal/update", R.drawable.xic_update);
         INTENRAL_ICONS.put("res://internal/access_alarms", R.drawable.xic_access_alarms);
         INTENRAL_ICONS.put("res://internal/access_time", R.drawable.xic_access_time);
@@ -63,6 +64,16 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/notifications_paused", R.drawable.xic_notifications_paused);
         INTENRAL_ICONS.put("res://internal/add_alert", R.drawable.xic_add_alert);
         INTENRAL_ICONS.put("res://internal/notification_important", R.drawable.xic_notification_important);
+
+        // AV
+        INTENRAL_ICONS.put("res://internal/forward_10", R.drawable.xic_forward_10);
+        INTENRAL_ICONS.put("res://internal/forward_30", R.drawable.xic_forward_30);
+        INTENRAL_ICONS.put("res://internal/forward_5", R.drawable.xic_forward_5);
+        INTENRAL_ICONS.put("res://internal/pause_circle_filled", R.drawable.xic_pause_circle_filled);
+        INTENRAL_ICONS.put("res://internal/pause_circle_outline", R.drawable.xic_pause_circle_outline);
+        INTENRAL_ICONS.put("res://internal/pause_play_arrow", R.drawable.xic_play_arrow);
+        INTENRAL_ICONS.put("res://internal/play_circle_filled", R.drawable.xic_play_circle_filled);
+        INTENRAL_ICONS.put("res://internal/play_circle_outline", R.drawable.xic_play_circle_outline);
 
         // emojis
         INTENRAL_ICONS.put("res://internal/sentiment_dissatisfied", R.drawable.xic_sentiment_dissatisfied);
