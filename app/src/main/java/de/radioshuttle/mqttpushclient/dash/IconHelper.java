@@ -37,6 +37,8 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/signal_wifi_off", R.drawable.xic_signal_wifi_off);
         INTENRAL_ICONS.put("res://internal/wifi", R.drawable.xic_wifi);
         INTENRAL_ICONS.put("res://internal/wifi_off", R.drawable.xic_wifi_off);
+        INTENRAL_ICONS.put("res://internal/alarm_on", R.drawable.xic_alarm_on);
+        INTENRAL_ICONS.put("res://internal/alarm_off", R.drawable.xic_alarm_off);
         INTENRAL_ICONS.put("res://internal/timer", R.drawable.xic_timer);
         INTENRAL_ICONS.put("res://internal/timer_off", R.drawable.xic_timer_off);
         INTENRAL_ICONS.put("res://internal/airplanemode_active", R.drawable.xic_airplanemode_active);
@@ -47,6 +49,8 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/thumbs_up", R.drawable.xic_thumbs_up);
 
         // msic
+        INTENRAL_ICONS.put("res://internal/check_circle", R.drawable.xic_check_circle);
+        INTENRAL_ICONS.put("res://internal/check_circle_outline", R.drawable.xic_check_circle_outline);
         INTENRAL_ICONS.put("res://internal/ac_unit", R.drawable.xic_ac_unit);
         INTENRAL_ICONS.put("res://internal/emoji_objects", R.drawable.xic_emoji_objects);
         INTENRAL_ICONS.put("res://internal/error", R.drawable.xic_error);
