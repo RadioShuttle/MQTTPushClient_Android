@@ -45,14 +45,23 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/airplanemode_inactive", R.drawable.xic_airplanemode_inactive);
         INTENRAL_ICONS.put("res://internal/visibility", R.drawable.xic_visibility);
         INTENRAL_ICONS.put("res://internal/visibility_off", R.drawable.xic_visibility_off);
+        INTENRAL_ICONS.put("res://internal/phone_enabled", R.drawable.xic_phone_enabled);
+        INTENRAL_ICONS.put("res://internal/phone_disabled", R.drawable.xic_phone_disabled);
         INTENRAL_ICONS.put("res://internal/thumbs_down", R.drawable.xic_thumbs_down);
         INTENRAL_ICONS.put("res://internal/thumbs_up", R.drawable.xic_thumbs_up);
 
         // msic
         INTENRAL_ICONS.put("res://internal/check_circle", R.drawable.xic_check_circle);
         INTENRAL_ICONS.put("res://internal/check_circle_outline", R.drawable.xic_check_circle_outline);
+        INTENRAL_ICONS.put("res://internal/wb_send", R.drawable.xic_send);
+        INTENRAL_ICONS.put("res://internal/clear", R.drawable.xic_clear);
+        INTENRAL_ICONS.put("res://internal/mail", R.drawable.xic_mail);
+        INTENRAL_ICONS.put("res://internal/vpn_key", R.drawable.xic_vpn_key);
+        INTENRAL_ICONS.put("res://internal/rss_feed", R.drawable.xic_rss_feed);
         INTENRAL_ICONS.put("res://internal/ac_unit", R.drawable.xic_ac_unit);
         INTENRAL_ICONS.put("res://internal/emoji_objects", R.drawable.xic_emoji_objects);
+        INTENRAL_ICONS.put("res://internal/wb_incandescent", R.drawable.xic_wb_incandescent);
+        INTENRAL_ICONS.put("res://internal/wb_sunny", R.drawable.xic_wb_sunny);
         INTENRAL_ICONS.put("res://internal/error", R.drawable.xic_error);
         INTENRAL_ICONS.put("res://internal/error_outline", R.drawable.xic_error_outline);
         INTENRAL_ICONS.put("res://internal/house", R.drawable.xic_house);
@@ -61,6 +70,7 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/update", R.drawable.xic_update);
         INTENRAL_ICONS.put("res://internal/access_alarms", R.drawable.xic_access_alarms);
         INTENRAL_ICONS.put("res://internal/access_time", R.drawable.xic_access_time);
+        INTENRAL_ICONS.put("res://internal/security", R.drawable.xic_security);
         INTENRAL_ICONS.put("res://internal/battery_alert", R.drawable.xic_battery_alert);
         INTENRAL_ICONS.put("res://internal/battery_full", R.drawable.xic_battery_full);
 
