@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -35,7 +36,7 @@ import de.radioshuttle.utils.Utils;
 
 public class DashBoardAdapter extends RecyclerView.Adapter {
 
-    public DashBoardAdapter(AppCompatActivity activity, int width, int spanCount, HashSet<Integer> selectedItems) {
+    public DashBoardAdapter(AppCompatActivity activity, int width, int spanCount, LinkedHashSet<Integer> selectedItems) {
         mInflater = activity.getLayoutInflater();
         mData = new ArrayList<>();
         mWidth = width;
@@ -510,7 +511,16 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         return mSelectedItems;
     }
 
-    private HashSet<Integer> mSelectedItems;
+    public Integer getLastSelectedItem() {
+        Integer lastSel = null;
+        if (mSelectedItems != null && mSelectedItems.size() > 0) {
+            ArrayList<Integer> tmp = new ArrayList<>(mSelectedItems);
+            lastSel = tmp.get(tmp.size() - 1);
+        }
+        return lastSel;
+    }
+
+    private LinkedHashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
     private int mDefaultBackground;
     private int mDefaultProgressColor;
