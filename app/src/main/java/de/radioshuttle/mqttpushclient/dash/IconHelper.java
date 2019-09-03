@@ -31,6 +31,8 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/lock_open", R.drawable.xic_lock_open);
         INTENRAL_ICONS.put("res://internal/notifications_active", R.drawable.xic_notifications_active);
         INTENRAL_ICONS.put("res://internal/notifications_off", R.drawable.xic_notifications_off);
+        INTENRAL_ICONS.put("res://internal/videocam", R.drawable.xic_videocam);
+        INTENRAL_ICONS.put("res://internal/videocam_off", R.drawable.xic_videocam_off);
         INTENRAL_ICONS.put("res://internal/signal_wifi_4_bar", R.drawable.xic_signal_wifi_4_bar);
         INTENRAL_ICONS.put("res://internal/signal_wifi_off", R.drawable.xic_signal_wifi_off);
         INTENRAL_ICONS.put("res://internal/wifi", R.drawable.xic_wifi);
@@ -74,6 +76,14 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/pause_play_arrow", R.drawable.xic_play_arrow);
         INTENRAL_ICONS.put("res://internal/play_circle_filled", R.drawable.xic_play_circle_filled);
         INTENRAL_ICONS.put("res://internal/play_circle_outline", R.drawable.xic_play_circle_outline);
+        INTENRAL_ICONS.put("res://internal/replay", R.drawable.xic_replay);
+        INTENRAL_ICONS.put("res://internal/replay_10", R.drawable.xic_replay_10);
+        INTENRAL_ICONS.put("res://internal/replay_30", R.drawable.xic_replay_30);
+        INTENRAL_ICONS.put("res://internal/replay_5", R.drawable.xic_replay_5);
+        INTENRAL_ICONS.put("res://internal/volume_down", R.drawable.xic_volume_down);
+        INTENRAL_ICONS.put("res://internal/volume_mute", R.drawable.xic_volume_mute);
+        INTENRAL_ICONS.put("res://internal/volume_off", R.drawable.xic_volume_off);
+        INTENRAL_ICONS.put("res://internal/volume_up", R.drawable.xic_volume_up);
 
         // emojis
         INTENRAL_ICONS.put("res://internal/sentiment_dissatisfied", R.drawable.xic_sentiment_dissatisfied);
