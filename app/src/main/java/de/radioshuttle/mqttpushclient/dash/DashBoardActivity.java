@@ -53,6 +53,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -147,7 +148,7 @@ public class DashBoardActivity extends AppCompatActivity implements
 
             mControllerList.setLayoutManager(layoutManager);
             mControllerList.addItemDecoration(new DBUtils.ItemDecoration(getApplication()));
-            HashSet<Integer> selectedItems = new HashSet<>();
+            LinkedHashSet<Integer> selectedItems = new LinkedHashSet<>();
             if (savedInstanceState != null) {
                 List<Integer> itemsList= savedInstanceState.getIntegerArrayList(KEY_SELECTED_ITEMS);
                 if (itemsList != null && itemsList.size() > 0) {
@@ -412,18 +413,13 @@ public class DashBoardActivity extends AppCompatActivity implements
 
     public void onItemEdit() {
         Log.d(TAG, "edit item: ");
-        HashSet<Integer> selItems = mAdapter.getSelectedItems();
-        if (selItems != null && selItems.size() > 0) {
-            if (selItems.size() > 1) {
-                Toast.makeText(getApplicationContext(), R.string.select_single_dash, Toast.LENGTH_LONG).show();
-            } else {
-                DashBoardViewModel.ItemContext ic = mViewModel.getItem(selItems.iterator().next());
-                if (ic != null && ic.item != null) {
-                    openEditor(ic);
-                }
+        Integer lastSelectedItem = mAdapter.getLastSelectedItem();
+        if (lastSelectedItem != null) {
+            DashBoardViewModel.ItemContext ic = mViewModel.getItem(lastSelectedItem);
+            if (ic != null && ic.item != null) {
+                openEditor(ic);
             }
         }
-
     }
 
     public void onItemsDelete(boolean all) {
