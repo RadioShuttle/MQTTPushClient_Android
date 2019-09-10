@@ -20,6 +20,7 @@ import java.net.UnknownHostException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -154,7 +155,7 @@ public class Connection {
     public Cmd.RawCmd login(PushAccount b, String uuid) throws IOException, ServerError, InterruptedException {
         Cmd.RawCmd response = mCmd.loginRequest(++mSeqNo, b.uri, b.user, b.password, uuid);
 
-        handleError(response);
+        handleLoginError(response);
         return response;
     }
 
@@ -338,6 +339,34 @@ public class Connection {
 
             if (response.rc == Cmd.RC_MQTT_ERROR) {
                 throw new MQTTException(errorCode, errorTxt);
+            }
+            if (response.rc == Cmd.RC_SERVER_ERROR) {
+                throw new ServerError(errorCode, errorTxt);
+            }
+        }
+    }
+
+    protected void handleLoginError(Cmd.RawCmd response) throws IOException, ServerError {
+        lastReturnCode = response.rc;
+        int errorCode = 0;
+        String errorTxt = "";
+
+        if (response.rc == Cmd.RC_MQTT_ERROR || response.rc == Cmd.RC_SERVER_ERROR) {
+
+            HashMap<String, Object> m = new HashMap<>();
+            DataInputStream is = mCmd.getDataInputStream(response.data);
+            m.put("err_code", is.readShort());
+            m.put("err_msg", Cmd.readString(is));
+
+            errorCode = (m.containsKey("err_code") ? (short) m.get("err_code") : 0);
+            errorTxt = (m.containsKey("err_msg") ? (String) m.get("err_msg") : "");
+
+            if (response.rc == Cmd.RC_MQTT_ERROR) {
+                int accountInfo = 0;
+                if (is.available() > 0) {
+                    accountInfo = is.read();
+                }
+                throw new MQTTException(errorCode, errorTxt, accountInfo);
             }
             if (response.rc == Cmd.RC_SERVER_ERROR) {
                 throw new ServerError(errorCode, errorTxt);

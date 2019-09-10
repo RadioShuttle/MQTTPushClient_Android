@@ -18,17 +18,18 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 
 public class DeleteToken extends Request {
 
     public DeleteToken(Context context, boolean deleteToken, PushAccount pushAccount, MutableLiveData<Request> accountLiveData) {
         super(context, pushAccount, accountLiveData);
-        mDeleteToken = deleteToken;
+        mDeleteTokenArg = deleteToken;
         deviceRemoved = false;
+        deletionAborted = false;
     }
 
     @Override
@@ -42,22 +43,30 @@ public class DeleteToken extends Request {
 
     @Override
     protected void onPostExecute(PushAccount pushAccount) {
-        // Log.d(TAG, "onPostExecute: deleteToken: " + mDeleteToken + ", deviceRemoved: " + deviceRemoved);
+        // Log.d(TAG, "onPostExecute: deleteToken: " + mDeleteTokenArg + ", deviceRemoved: " + deviceRemoved);
 
-        if (!(mDeleteToken && !deviceRemoved)) {
-            /* do not call onPostExecute, if device was not removed and token shall be deleted in next op */
+        if (mPushAccount.certException == null && !mPushAccount.inSecureConnectionAsk) {
+            // call
+            if (!mDeleteTokenArg || deviceRemoved) {
+                super.onPostExecute(pushAccount); // finish update UI
+            }
+
+            /* even if device has reomved from server , fcm token must be deleted */
+            if (mDeleteTokenArg) {
+                mPushAccount.status = 1;
+                Utils.executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        deleteToken();
+                    }
+                });
+            }
+        } else {
+            // certificate error
+            deletionAborted = true;
             super.onPostExecute(pushAccount);
         }
-        if (mDeleteToken) {
-            // TODO: if delete account request failed, deletion of token will also fail: senderID and FirebaseApp data must be stored locally to use in DeleteToken.deleteToken() when push server is no available
-            mPushAccount.status = 1;
-            Utils.executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    deleteToken();
-                }
-            });
-        }
+
     }
 
     protected void deleteToken() {
@@ -126,9 +135,12 @@ public class DeleteToken extends Request {
         }
     }
 
-    /** set if eiter removeDevice() request was succesfull or deleteInstanceID*/
+    /** set if eihter removeDevice() request was succesfull or deleteInstanceID*/
     public boolean deviceRemoved;
-    private boolean mDeleteToken;
+    /** request parameter: if FCM token has to be deleted (multiple accounts may share the same token) */
+    private boolean mDeleteTokenArg;
+    /** if deletion process has been aborted (in this case do not remove account locally) */
+    public volatile boolean deletionAborted;
 
     private final static String TAG = DeleteToken.class.getSimpleName();
 }

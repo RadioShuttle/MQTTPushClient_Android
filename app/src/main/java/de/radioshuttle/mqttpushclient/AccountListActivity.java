@@ -163,7 +163,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                         mSwipeRefreshLayout.setRefreshing(false);
                                     }
 
-                                    if (request instanceof DeleteToken) {
+                                    if (request instanceof DeleteToken && !((DeleteToken) request).deletionAborted ) {
                                         /* success */
                                         DeleteToken dt = (DeleteToken) request;
                                         if (dt.deviceRemoved) {
@@ -173,6 +173,10 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                             removeAccountData(pushAccount);
                                             return;
                                         }
+                                        //TODO: consider checking dt.dt.deviceRemoved (=successful removed from server and/or fcm token deleted)
+                                        /* even if removal failed, the account will be removed */
+                                        removeAccountData(pushAccount);
+                                        return;
                                     }
                                 }
 
