@@ -34,6 +34,8 @@ import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.R;
+
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -42,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -98,6 +101,9 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
             SharedPreferences settings = mAppContext.getSharedPreferences(AccountListActivity.PREFS_INST, Activity.MODE_PRIVATE);
             String uuid = settings.getString(AccountListActivity.UUID, "");
+
+            boolean isDeleteRequest = (this instanceof DeleteToken); // to disable some steps
+            boolean isRestrictedAccess = false;
 
             /* connect */
             if (cont) {
@@ -166,7 +172,22 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             /* login */
             if (cont) {
                 cont = false;
-                Cmd.RawCmd rawCmd = mConnection.login(mPushAccount, uuid);
+                Cmd.RawCmd rawCmd = null;
+                try {
+                    rawCmd = mConnection.login(mPushAccount, uuid);
+                } catch(MQTTException mq) {
+                    if (isDeleteRequest && mq.accountInfo == 1) {
+                        /* special case: MQTT broker not available, but login matches stored user credentials
+                        * -> continue with deletion, but set error codes */
+                        // requestStatus = Cmd.RC_MQTT_ERROR;
+                        requestErrorCode = mq.errorCode;
+                        requestErrorTxt = mq.getMessage();
+                        isRestrictedAccess = true;
+                        cont = true;
+                    } else {
+                        throw mq;
+                    }
+                }
                 requestStatus = mConnection.lastReturnCode;
                 if (mConnection.lastReturnCode == Cmd.RC_OK) {
                     requestErrorTxt = mAppContext.getString(R.string.status_ok);
@@ -190,7 +211,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             Task<InstanceIdResult> instanceIdTask = null;
 
             /* de.radioshuttle.fcm data*/
-            if (cont) {
+            if (cont && !isRestrictedAccess) {
                 cont = false;
 
                 Map<String, String> m = mConnection.getFCMData();
@@ -247,21 +268,23 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             if (cont) {
                 cont = perform();
 
-                /* if the fcm token was not set as request argument, get fcm token from instanceid task */
-                if (mToken == null && instanceIdTask != null) {
-                    if (instanceIdTask.isSuccessful()) {
-                        mToken = instanceIdTask.getResult().getToken();
-                    } else if (!instanceIdTask.isComplete()) {
-                        /* "get token" is still in progress? then wait and notify (async) */
-                        FirebaseTokens.getInstance(mAppContext)
-                                .waitForTokenAndNotifyPushServer(mPushAccount, instanceIdTask);
+                if (!isDeleteRequest) {
+                    /* if the fcm token was not set as request argument, get fcm token from instanceid task */
+                    if (mToken == null && instanceIdTask != null) {
+                        if (instanceIdTask.isSuccessful()) {
+                            mToken = instanceIdTask.getResult().getToken();
+                        } else if (!instanceIdTask.isComplete()) {
+                            /* "get token" is still in progress? then wait and notify (async) */
+                            FirebaseTokens.getInstance(mAppContext)
+                                    .waitForTokenAndNotifyPushServer(mPushAccount, instanceIdTask);
+                        }
                     }
-                }
 
-                mConnection.setDeviceInfo(mToken);
-                /* set info that token was send to pushserver for the given account */
-                if (mToken != null) {
-                    FirebaseTokens.getInstance(mAppContext).setTokenSent(mPushAccount.getKey(), mToken);
+                    mConnection.setDeviceInfo(mToken);
+                    /* set info that token was send to pushserver for the given account */
+                    if (mToken != null) {
+                        FirebaseTokens.getInstance(mAppContext).setTokenSent(mPushAccount.getKey(), mToken);
+                    }
                 }
             }
 
@@ -292,6 +315,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             requestErrorTxt = mAppContext.getString(R.string.errormsg_unexpected_error);
         } finally {
             if (mCancelled.get()) { // override error code which may be caused by cancellation
+                mPushAccount.status = 0;
                 requestStatus = Connection.STATUS_CANCELED;
                 requestErrorTxt = mAppContext.getString(R.string.errormsg_op_canceled);
                 if (mAccountLiveData != null) {
@@ -308,7 +332,6 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             mPushAccount.requestErrorTxt = requestErrorTxt;
             mPushAccount.certException = mCertException;
             mPushAccount.inSecureConnectionAsk = mInsecureConnectionAsk;
-            mPushAccount.status = 0;
         }
 
         return null;
@@ -419,6 +442,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     @Override
     protected void onPostExecute(PushAccount pushAccount) {
         super.onPostExecute(pushAccount);
+        mPushAccount.status = 0;
         if (mAccountLiveData != null) {
             mAccountLiveData.setValue(this);
         }
