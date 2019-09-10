@@ -8,6 +8,7 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,6 +34,8 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         setContentView(R.layout.activity_image_chooser);
 
         setTitle(R.string.title_chooser);
+
+        mViewModel = ViewModelProviders.of(this, new ImageChooserViewModel.Factory(getApplication())).get(ImageChooserViewModel.class);
 
         /* internal images */
         mInternalImageList = findViewById(R.id.internalImageList);
@@ -176,6 +179,8 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         setResult(AppCompatActivity.RESULT_OK, data);
         finish();
     }
+
+    ImageChooserViewModel mViewModel;
 
     protected int mSelectedTAB;
     protected RecyclerView mInternalImageList;
