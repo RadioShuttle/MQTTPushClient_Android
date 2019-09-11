@@ -8,7 +8,9 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.paging.PagedList;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -47,16 +49,22 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
         GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
         mInternalImageList.setLayoutManager(layoutManager);
-        ImageChooserAdapter intenalResources = new ImageChooserAdapter(this);
-        intenalResources.setInternalImageData(IconHelper.INTENRAL_ICONS);
-        mInternalImageList.setAdapter(intenalResources);
+        mInternalImageAdapter = new ImageChooserAdapter(this);
+        mInternalImageList.setAdapter(mInternalImageAdapter);
+        mViewModel.mLiveDataInternalImages.observe(this, new Observer<PagedList<ImageResource>>() {
+            @Override
+            public void onChanged(PagedList<ImageResource> imageResources) {
+                mInternalImageAdapter.submitList(imageResources);
+            }
+        });
 
         /* user images */
         mUserImageList = findViewById(R.id.userImageList);
         layoutManager = new GridLayoutManager(this, spanCount);
         mUserImageList.setLayoutManager(layoutManager);
-        ImageChooserAdapter userImagesAdaper = new ImageChooserAdapter(this); //TODO:
-        mUserImageList.setAdapter(userImagesAdaper);
+        // ImageChooserAdapter userImagesAdaper = new ImageChooserAdapter(this); //TODO:
+        // mUserImageList.setAdapter(userImagesAdaper);
+
 
         /* tabs */
         TabLayout tabLayout = findViewById(R.id.tabs);
@@ -184,6 +192,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
     protected int mSelectedTAB;
     protected RecyclerView mInternalImageList;
+    protected ImageChooserAdapter mInternalImageAdapter;
     protected RecyclerView mUserImageList;
 
     protected final static int TAB_INTERNAL = 0;
