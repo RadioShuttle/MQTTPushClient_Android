@@ -7,7 +7,6 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,36 +14,25 @@ import android.widget.Button;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
+import androidx.paging.PagedListAdapter;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 
 import de.radioshuttle.mqttpushclient.R;
 
-public class ImageChooserAdapter extends RecyclerView.Adapter {
+public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageChooserAdapter.ViewHolder> {
 
     public ImageChooserAdapter(Context context) {
+        super(DIFF_CALLBACK);
         mInflater = LayoutInflater.from(context);
         if (context instanceof OnImageSelectListener) {
             callback = (OnImageSelectListener) context;
         }
     }
 
-    public void setInternalImageData(LinkedHashMap<String, Integer> resourceIDs) {
-        mInternalResourceIDs = resourceIDs;
-        if (resourceIDs == null) {
-            mResouceIDs = null;
-        } else {
-            mResouceIDs = new ArrayList<>(mInternalResourceIDs.values());
-        }
-        notifyDataSetChanged();
-    }
-
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view;
         if (viewType == VIEW_TYPE_NO_SELECTION) { // no image
             view = mInflater.inflate(R.layout.activity_image_chooser_cell_none, parent, false);
@@ -60,8 +48,9 @@ public class ImageChooserAdapter extends RecyclerView.Adapter {
         return holder;
     }
 
+
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         ImageChooserAdapter.ViewHolder vh = (ImageChooserAdapter.ViewHolder) holder;
 
         if (getItemViewType(position) == VIEW_TYPE_NO_SELECTION) {
@@ -74,19 +63,15 @@ public class ImageChooserAdapter extends RecyclerView.Adapter {
                 }
             });
         } else { // VIEW_TYPE_IMAGE_BUTTON
-            vh.image.setImageResource(mResouceIDs.get(position - 1));
+            ImageResource item = getItem(position - 1);
+            final String uri = item.uri;
+
+            vh.image.setImageDrawable(item.drawable);
             vh.image.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (callback != null) {
-                        if (mInternalResourceIDs != null) {
-                            String uri = IconHelper.getURIForResourceID(mResouceIDs.get(position - 1));
-                            // Log.d(TAG, "uri selected: " + uri);
-                            callback.onImageSelected(position, uri);
-                        } else {
-                            //TODO:
-                            callback.onImageSelected(position, null);
-                        }
+                        callback.onImageSelected(position, uri);
                     }
                 }
             });
@@ -95,13 +80,27 @@ public class ImageChooserAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemCount() {
-        return (mInternalResourceIDs != null ? mInternalResourceIDs.size() : 0) + 1;
+        return super.getItemCount() + 1;
     }
 
     @Override
     public int getItemViewType(int position) {
         return position == 0 ? VIEW_TYPE_NO_SELECTION : VIEW_TYPE_IMAGE_BUTTON;
     }
+
+    private static DiffUtil.ItemCallback<ImageResource> DIFF_CALLBACK =
+            new DiffUtil.ItemCallback<ImageResource>() {
+                @Override
+                public boolean areItemsTheSame(ImageResource o, ImageResource n) {
+                    return o.tag == n.tag;
+                }
+
+                @Override
+                public boolean areContentsTheSame(ImageResource o,
+                                                  ImageResource n) {
+                    return o.drawable == n.drawable;
+                }
+            };
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public ViewHolder(View v) {
@@ -120,8 +119,6 @@ public class ImageChooserAdapter extends RecyclerView.Adapter {
     OnImageSelectListener callback;
 
     LayoutInflater mInflater;
-    LinkedHashMap<String, Integer> mInternalResourceIDs;
-    List<Integer> mResouceIDs;
 
     protected static final int VIEW_TYPE_NO_SELECTION = 1;
     protected static final int VIEW_TYPE_IMAGE_BUTTON = 2;
