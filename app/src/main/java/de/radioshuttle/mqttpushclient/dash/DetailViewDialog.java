@@ -710,7 +710,7 @@ public class DetailViewDialog extends DialogFragment {
             if (mViewMode == VIEW_ERROR_1) {
                 Object javaScriptError = mItem.data.get("error");
                 if (javaScriptError instanceof String) {
-                    if (mItem.data.containsKey("error.item")) {
+                    if (mItem.data.containsKey("error.item") || ((String) javaScriptError).equals(getString(R.string.error_image_not_found))) {
                         displayError = getString(R.string.dash_item_err) + " " + javaScriptError;
                     } else {
                         displayError = getString(R.string.javascript_err) + " " + javaScriptError;
