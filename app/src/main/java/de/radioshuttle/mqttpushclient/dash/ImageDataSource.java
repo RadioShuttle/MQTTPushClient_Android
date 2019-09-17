@@ -31,14 +31,17 @@ public class ImageDataSource extends PositionalDataSource<ImageResource> {
         Map.Entry<String, Integer> entry;
         int i = 0;
         ImageResource res;
+
         while(it.hasNext() && i < startPosition + loadCount) {
             if (i >= startPosition) {
-                entry = it.next();
                 res = new ImageResource();
-                res.uri = entry.getKey();
-                res.tag = entry.getValue();
-                res.drawable = VectorDrawableCompat.create(
-                        mViewModel.getApplication().getResources(), res.tag, null);
+                if (i > 0) { // i == 0 contains an empty entry (= selection none)
+                    entry = it.next();
+                    res.uri = entry.getKey();
+                    res.id = entry.getValue();
+                    res.drawable = VectorDrawableCompat.create(
+                            mViewModel.getApplication().getResources(), res.id, null);
+                }
                 result.add(res);
             }
             i++;
@@ -48,7 +51,7 @@ public class ImageDataSource extends PositionalDataSource<ImageResource> {
 
     @Override
     public void loadInitial(@NonNull LoadInitialParams params, @NonNull LoadInitialCallback callback) {
-        int totalCount = IconHelper.INTENRAL_ICONS.size();
+        int totalCount = IconHelper.INTENRAL_ICONS.size() + 1; // +1 for none selection entry
         int position = computeInitialLoadPosition(params, totalCount);
         int loadSize = computeInitialLoadSize(params, position, totalCount);
         callback.onResult(loadRangeInternal(position, loadSize), position, totalCount);
