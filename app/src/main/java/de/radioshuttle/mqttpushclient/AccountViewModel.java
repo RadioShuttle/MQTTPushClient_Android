@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.db.MqttMessage;
+import de.radioshuttle.mqttpushclient.dash.ImportFiles;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.DeleteToken;
 import de.radioshuttle.utils.FirebaseTokens;
@@ -74,6 +75,10 @@ public class AccountViewModel extends ViewModel {
                     a.executor.shutdown();
                 }
             }
+        }
+        Log.d(TAG, "app == null? " + (app == null));
+        if (app != null) {
+            ImportFiles.deleteImportedFilesDir(app);
         }
     }
 
