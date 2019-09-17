@@ -14,6 +14,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.UUID;
@@ -102,6 +105,14 @@ public class Utils {
         Configuration configuration = context.getResources().getConfiguration();
         int currentNightMode = configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK;
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    public static String urlEncode(String s) throws UnsupportedEncodingException {
+        return URLEncoder.encode(s, "UTF-8");
+    }
+
+    public static String urlDecode(String s)  throws UnsupportedEncodingException {
+        return URLDecoder.decode(s, "UTF-8");
     }
 
     public static final Charset UTF_8 = Charset.forName("UTF-8");
