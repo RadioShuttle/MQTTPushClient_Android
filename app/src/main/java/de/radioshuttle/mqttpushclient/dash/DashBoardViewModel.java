@@ -51,6 +51,7 @@ import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.Code;
 import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.net.DashboardRequest;
 import de.radioshuttle.net.PublishRequest;
 import de.radioshuttle.net.Request;
@@ -142,6 +143,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     item.data.put("msg.content", msg);
                                     item.data.put("content", msg);
                                     item.data.remove("error"); // remove previous set error
+                                    checkForResourceNotFoundError(item);
                                     item.updateUIContent(getApplication());
                                     updated = true;
                                 } else {
@@ -244,7 +246,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                         /* check if we have the image already loaded */
                         if (!Utils.isEmpty(sw.uri) && Utils.isEmpty(sw.imageUri)) {
                             try {
-                                if (Switch.isInternalResource(sw.uri)) {
+                                if (ImageResource.isInternalResource(sw.uri)) {
                                     sw.image = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri));
                                     if (sw.image != null) {
                                         sw.imageDetail = sw.image.getConstantState().newDrawable();
@@ -252,29 +254,36 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     }
                                     sw.imageUri = sw.uri;
                                 } else {
-                                    //TODO: load external resource
+                                    sw.image = ImageResource.loadExternalImage(getApplication(), sw.uri);
+                                    if (sw.image != null) {
+                                        sw.imageDetail = sw.image.getConstantState().newDrawable();
+                                    }
+                                    sw.imageUri = sw.uri;
                                 }
                             } catch(Exception e) {
                                 Log.e(TAG, "error loading image: ", e);
-                                //TODO: error handling
                             }
                         }
                         if (!Utils.isEmpty(sw.uri2) && Utils.isEmpty(sw.imageUri2)) {
                             try {
-                                if (Switch.isInternalResource(sw.uri2)) {
+                                if (ImageResource.isInternalResource(sw.uri2)) {
                                     sw.image2 = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri2));
                                     if (sw.image2 != null) {
                                         sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
                                     }
                                     sw.imageUri2 = sw.uri2;
                                 } else {
-                                    //TODO: load external resource
+                                    sw.image2 = ImageResource.loadExternalImage(getApplication(), sw.uri2);
+                                    if (sw.image2 != null) {
+                                        sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
+                                    }
+                                    sw.imageUri2 = sw.uri2;
                                 }
                             } catch(Exception e) {
                                 Log.e(TAG, "error loading image: ", e);
-                                //TODO: error handling
                             }
                         }
+                        checkForResourceNotFoundError(item);
                     }
                 }
                 mDashBoardItemsLiveData.postValue(list);
@@ -282,6 +291,28 @@ public class DashBoardViewModel extends AndroidViewModel {
             }
         };
         loadImages.executeOnExecutor(Utils.executor, (Object[]) null);
+    }
+
+    protected void checkForResourceNotFoundError(Item item) {
+        if (item instanceof Switch) {
+            Switch sw = (Switch) item;
+            /* an error occured while loading the image (probably server sync was not possible due to network no availabe) */
+            if (sw.image == null) {
+                String error = (String) item.data.get("error");
+                if (Utils.isEmpty(error)) { // only show error, if no other error occured
+                    error = mApplication.getString(R.string.error_image_not_found);
+                    item.data.put("error", error);
+                }
+            }
+            /* an error occured while loading the image (probably server sync was not possible due to network no availabe) */
+            if (sw.image2 == null) {
+                String error = (String) item.data.get("error");
+                if (Utils.isEmpty(error)) { // only show error, if no other error occured
+                    error = mApplication.getString(R.string.error_image_not_found);
+                    item.data.put("error", error);
+                }
+            }
+        }
     }
 
     public void notifyDataChanged() {
