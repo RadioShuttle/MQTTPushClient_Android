@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,11 +15,13 @@ import android.widget.Button;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
+import androidx.core.widget.ImageViewCompat;
 import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.Utils;
 
 public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageChooserAdapter.ViewHolder> {
 
@@ -63,10 +66,15 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
                 }
             });
         } else { // VIEW_TYPE_IMAGE_BUTTON
-            ImageResource item = getItem(position - 1);
+            ImageResource item = getItem(position);
             final String uri = item.uri;
+            // Log.d(TAG, "onBindViewHolder: " + position + ", " + item.uri);
 
             vh.image.setImageDrawable(item.drawable);
+            /* remove tint if user image */
+            if (!ImageResource.isInternalResource(uri)) {
+                ImageViewCompat.setImageTintList(vh.image, null);
+            }
             vh.image.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -79,11 +87,6 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
     }
 
     @Override
-    public int getItemCount() {
-        return super.getItemCount() + 1;
-    }
-
-    @Override
     public int getItemViewType(int position) {
         return position == 0 ? VIEW_TYPE_NO_SELECTION : VIEW_TYPE_IMAGE_BUTTON;
     }
@@ -92,12 +95,14 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
             new DiffUtil.ItemCallback<ImageResource>() {
                 @Override
                 public boolean areItemsTheSame(ImageResource o, ImageResource n) {
-                    return o.tag == n.tag;
+                    // Log.d(TAG, "areItemsTheSame = " + o.uri + ", " + n.uri + " bool: " + Utils.equals(o.uri, n.uri));
+                    return Utils.equals(o.uri, n.uri);
                 }
 
                 @Override
                 public boolean areContentsTheSame(ImageResource o,
                                                   ImageResource n) {
+                    // Log.d(TAG, "areContentsTheSame = " + o.uri + ", " + n.uri + " bool: " + (o.drawable == n.drawable));
                     return o.drawable == n.drawable;
                 }
             };
