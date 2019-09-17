@@ -14,7 +14,11 @@ import androidx.paging.PagedList;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
+import android.content.ClipData;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -24,9 +28,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.Utils;
 
 public class ImageChooserActivity extends AppCompatActivity  implements ImageChooserAdapter.OnImageSelectListener  {
 
@@ -62,9 +72,70 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         mUserImageList = findViewById(R.id.userImageList);
         layoutManager = new GridLayoutManager(this, spanCount);
         mUserImageList.setLayoutManager(layoutManager);
-        // ImageChooserAdapter userImagesAdaper = new ImageChooserAdapter(this); //TODO:
-        // mUserImageList.setAdapter(userImagesAdaper);
+        mUserImageAdapter = new ImageChooserAdapter(this);
 
+        mUserImageList.setAdapter(mUserImageAdapter);
+        mViewModel.mLiveDataUserImages.observe(this, new Observer<PagedList<ImageResource>>() {
+            @Override
+            public void onChanged(PagedList<ImageResource> imageResources) {
+                /*
+                Log.d(TAG, "Paged list entries: ");
+                for(int i = 0; i < imageResources.size(); i++) {
+                    Log.d(TAG, "" + imageResources.get(i).uri);
+                }
+                */
+                mUserImageAdapter.submitList(imageResources);
+            }
+        });
+
+        /* display import error */
+        mViewModel.mImportedFilesErrorLiveData.observe(this, new Observer<JSONArray>() {
+            @Override
+            public void onChanged(JSONArray jsonArray) {
+                if (jsonArray != null) {
+                    int status;
+                    JSONObject e;
+                    int error = 0;
+                    for(int i = 0; i < jsonArray.length(); i++) {
+                        try {
+                            e = jsonArray.getJSONObject(i);
+                            status = e.optInt("status", -1);
+                            if (status > 0) {
+                                if (status > error) { // only show one error (with most importance)
+                                    error = status;
+                                }
+                            }
+                        } catch (JSONException ex) {
+                            Log.d(TAG, "Error parsing import result", ex);
+                        }
+                    }
+                    if (error > 0) {
+                        String msg = null;
+                        switch (error) {
+                            case ImportFiles.STATUS_SECURITY_ERROR:
+                                msg = getString(R.string.import_error_security);
+                                break;
+                            case ImportFiles.STATUS_LOWMEM_ERROR:
+                                msg = getString(R.string.import_error_lowmem);
+                                break;
+                            case ImportFiles.STATUS_FORMAT_ERROR:
+                                msg = getString(R.string.import_error_format);
+                                break;
+                            default:
+                                msg = getString(R.string.import_error);
+                                break;
+                        }
+                        showErrorMsg(msg);
+                    } else {
+                        if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
+                            mSnackbar.dismiss();
+                        }
+                    }
+                    // only use once
+                    mViewModel.mImportedFilesErrorLiveData.setValue(null);
+                }
+            }
+        });
 
         /* tabs */
         TabLayout tabLayout = findViewById(R.id.tabs);
@@ -82,7 +153,18 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        mSelectedTAB = (savedInstanceState == null ? TAB_INTERNAL : savedInstanceState.getInt(KEY_SELECTED_TAB));
+        Bundle receivedArgs = getIntent().getExtras();
+        if (savedInstanceState == null) {
+            String u = receivedArgs.getString(ARG_RESOURCE_URI);
+            if (ImageResource.isExternalResource(u)) {
+                mSelectedTAB = TAB_USER;
+            } else {
+                mSelectedTAB = TAB_INTERNAL;
+            }
+        } else {
+            mSelectedTAB = savedInstanceState.getInt(KEY_SELECTED_TAB);
+        }
+
         if (tabLayout.getSelectedTabPosition() != mSelectedTAB) {
             tabLayout.getTabAt(mSelectedTAB).select();
         }
@@ -102,7 +184,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
                 break;
             case R.id.menu_import :
                 handled = true;
-                Toast.makeText(getApplicationContext(), "Not impelemented yet.", Toast.LENGTH_LONG).show();
+                importFiles();
                 break;
             default:
                 handled = super.onOptionsItemSelected(item);
@@ -126,13 +208,14 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
                 mUserImageList.setVisibility(View.VISIBLE);
             }
         }
+        invalidateOptionsMenu();
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem m = menu.findItem(R.id.menu_import);
         if (m != null) {
-            //TODO: consider hiding menu item when TAB internal is active
+            m.setVisible(mSelectedTAB == TAB_USER);
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -188,11 +271,65 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         finish();
     }
 
+    protected void importFiles() {
+        Intent requestFiles = new Intent(Intent.ACTION_GET_CONTENT);
+        requestFiles.setType("image/*");
+        requestFiles.addCategory(Intent.CATEGORY_OPENABLE);
+        requestFiles.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)
+            requestFiles.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        if (requestFiles.resolveActivity(getPackageManager()) != null) {
+            Intent browser = Intent.createChooser(requestFiles, getString(R.string.action_import));
+            startActivityForResult(browser, RC_IMPORT_IMAGE);
+        } else {
+            Toast.makeText(getApplicationContext(), R.string.import_no_files, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onActivityResult (int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG, "import ...");
+        if (requestCode == RC_IMPORT_IMAGE) {
+
+            if (resultCode == Activity.RESULT_OK) {
+                boolean hasClipData = false;
+                /* multiple selections supported since android 4.3 */
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    ClipData files = data.getClipData();
+
+                    if (files != null) {
+                        Utils.executor.submit(new ImportFiles(this, files));
+                        hasClipData = true;
+                    }
+                }
+                if (!hasClipData) {
+                    Uri fileUri = data.getData();
+                    if (fileUri != null) {
+                        Utils.executor.submit(new ImportFiles(this, fileUri));
+                    }
+                }
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                // handle cancel
+            }
+        }
+    }
+
+    protected void showErrorMsg(String msg) {
+        View v = findViewById(R.id.root_view);
+        if (v != null) {
+            mSnackbar = Snackbar.make(v, msg, Snackbar.LENGTH_INDEFINITE);
+            mSnackbar.show();
+        }
+    }
+
     ImageChooserViewModel mViewModel;
+    Snackbar mSnackbar;
 
     protected int mSelectedTAB;
     protected RecyclerView mInternalImageList;
     protected ImageChooserAdapter mInternalImageAdapter;
+    protected ImageChooserAdapter mUserImageAdapter;
     protected RecyclerView mUserImageList;
 
     protected final static int TAB_INTERNAL = 0;
@@ -203,6 +340,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
     protected final static String KEY_SELECTED_TAB = " KEY_SELECTED_TAB";
 
+    private final static int RC_IMPORT_IMAGE = 1;
     public final static String TAG = ImageChooserActivity.class.getSimpleName();
 
 }
