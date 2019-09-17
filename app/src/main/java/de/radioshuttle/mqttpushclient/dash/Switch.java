@@ -92,8 +92,4 @@ public class Switch extends Item {
         // uri2 = "res://internal/notifications_off";
     }
 
-    public static boolean isInternalResource(String uri) {
-        return !Utils.isEmpty(uri) && IconHelper.INTENRAL_ICONS.containsKey(uri);
-    }
-
 }
