@@ -229,6 +229,13 @@
                             android:scaleType="fitCenter"
                             android:layout_width="48dp"
                             android:layout_height="48dp"/>
+
+                        <TextView
+                            android:id="@+id/dash_active_button_note"
+                            android:textAppearance="?android:textAppearanceSmall"
+                            android:layout_gravity="center_vertical"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
                     </LinearLayout>
 
                 </TableRow>
@@ -331,6 +338,14 @@
                             android:scaleType="fitCenter"
                             android:layout_width="48dp"
                             android:layout_height="48dp"/>
+
+                        <TextView
+                            android:id="@+id/dash_inactive_button_note"
+                            android:textAppearance="?android:textAppearanceSmall"
+                            android:layout_gravity="center_vertical"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
                     </LinearLayout>
 
                 </TableRow>
