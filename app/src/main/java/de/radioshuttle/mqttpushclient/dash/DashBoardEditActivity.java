@@ -39,7 +39,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -366,6 +368,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     findViewById(R.id.rowSwitchActiveColor).setVisibility(View.GONE);
                     findViewById(R.id.rowSwitchActiveImage).setVisibility(View.GONE);
                     findViewById(R.id.rowSwitchInactiveImage).setVisibility(View.GONE);
+                    findViewById(R.id.dash_active_button_note).setVisibility(View.GONE);
+                    findViewById(R.id.dash_inactive_button_note).setVisibility(View.GONE);
+
                 } else {
                     mEditTextSwitchActive = findViewById(R.id.dash_acitve_state_text);
                     mEditTextSwitchInactive = findViewById(R.id.dash_inacitve_state_text);
@@ -379,6 +384,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mButtonSwitchInactive = findViewById(R.id.dash_inactive_image_button);
                     mActiveClearImage = findViewById(R.id.dash_switch_active_color_clear);
                     mInactiveClearImage = findViewById(R.id.dash_switch_inactive_color_clear);
+                    mActiveNoteText = findViewById(R.id.dash_active_button_note);
+                    mInactiveNoteText = findViewById(R.id.dash_inactive_button_note);
 
                     mDefaultButtonTintColor = ContextCompat.getColor(this, R.color.button_tint_default);
                     mDefaultButtonBackground = DColor.fetchColor(this, R.attr.colorButtonNormal);
@@ -726,6 +733,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (mButtonSwitchActive.getVisibility() != View.GONE) {
                     mButtonSwitchActive.setVisibility(View.GONE);
                 }
+                if (mActiveNoteText.getVisibility() != View.GONE) {
+                    mActiveNoteText.setVisibility(View.GONE);
+                }
             } else {
                 if (mButtonSwitchActiveEmpty.getVisibility() != View.GONE) {
                     mButtonSwitchActiveEmpty.setVisibility(View.GONE);
@@ -733,14 +743,30 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (mButtonSwitchActive.getVisibility() != View.VISIBLE) {
                     mButtonSwitchActive.setVisibility(View.VISIBLE);
                 }
+                if (mActiveNoteText.getVisibility() != View.VISIBLE) {
+                    mActiveNoteText.setVisibility(View.VISIBLE);
+                }
 
-                if (IconHelper.INTENRAL_ICONS.containsKey(mActiveImageURI)) {
-                    //TODO: load asnyc
+                //TODO: consider loading asnyc
+                boolean found = false;
+                if (ImageResource.isInternalResource(mActiveImageURI)) {
                     mButtonSwitchActive.setImageResource(IconHelper.INTENRAL_ICONS.get(mActiveImageURI));
-                } else if (mActiveImageURI.indexOf("internal") != -1) {
-                    //TODO: resource not found
+                    found = true;
+                } else if (ImageResource.isExternalResource(mActiveImageURI)) {
+                    try {
+                        BitmapDrawable bm = ImageResource.loadExternalImage(this, mActiveImageURI);
+                        mButtonSwitchActive.setImageDrawable(bm);
+                        if (bm != null) {
+                            found = true;
+                        }
+                    } catch(Exception e) {
+                        Log.d(TAG, "error loading image (ext): " , e);
+                    }
+                }
+                if (!found) {
+                    mActiveNoteText.setText(getString(R.string.error_image_not_found));
                 } else {
-                    //TODO: handle external resource
+                    mActiveNoteText.setText("");
                 }
             }
 
@@ -751,6 +777,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (mButtonSwitchInactive.getVisibility() != View.GONE) {
                     mButtonSwitchInactive.setVisibility(View.GONE);
                 }
+                if (mInactiveNoteText.getVisibility() != View.GONE) {
+                    mInactiveNoteText.setVisibility(View.GONE);
+                }
             } else {
                 if (mButtonSwitchInactiveEmpty.getVisibility() != View.GONE) {
                     mButtonSwitchInactiveEmpty.setVisibility(View.GONE);
@@ -758,14 +787,29 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (mButtonSwitchInactive.getVisibility() != View.VISIBLE) {
                     mButtonSwitchInactive.setVisibility(View.VISIBLE);
                 }
-                //TODO: load asnyc
-                if (IconHelper.INTENRAL_ICONS.containsKey(mInactiveImageURI)) {
-                    // mButtonSwitchActive.setD
+                if (mInactiveNoteText.getVisibility() != View.VISIBLE) {
+                    mInactiveNoteText.setVisibility(View.VISIBLE);
+                }
+                //TODO: consider loading asnyc
+                boolean found = false;
+                if (ImageResource.isInternalResource(mInactiveImageURI)) {
                     mButtonSwitchInactive.setImageResource(IconHelper.INTENRAL_ICONS.get(mInactiveImageURI));
-                } else if (mInactiveImageURI.indexOf("internal") != -1) {
-                    //TODO: resource not found
-                } else {
-                    //TODO: handle external resource
+                    found = true;
+                } else if (ImageResource.isExternalResource(mInactiveImageURI)) {
+                    try {
+                        BitmapDrawable bm = ImageResource.loadExternalImage(this, mInactiveImageURI);
+                        mButtonSwitchInactive.setImageDrawable(bm);
+                        if (bm != null) {
+                            found = true;
+                        }
+                    } catch(Exception e) {
+                        Log.d(TAG, "error loading image (ext): " , e);
+                    }
+                    if (!found) {
+                        mInactiveNoteText.setText(getString(R.string.error_image_not_found));
+                    } else {
+                        mInactiveNoteText.setText("");
+                    }
                 }
             }
         }
@@ -1028,7 +1072,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else {
                     mInactiveColor = color;
                 }
-                mColorActiveButton.setDisableTransparentImage(mInactiveColor == DColor.CLEAR);
+                mColorInactiveButton.setDisableTransparentImage(mInactiveColor == DColor.CLEAR);
                 mColorInactiveButton.setColor(color, mColorLabelBorderColor);
                 tintSwitchButtons();
                 break;
@@ -1251,7 +1295,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                 Intent intent = new Intent(this, ImageChooserActivity.class);
                 intent.putExtra(ImageChooserActivity.ARG_CTRL_IDX, ctrlIdx);
-                intent.putExtra(ImageChooserActivity.ARG_RESOURCE_URI,(ctrlIdx == 0 ? sw.uri : sw.uri2));
+                intent.putExtra(ImageChooserActivity.ARG_RESOURCE_URI,(ctrlIdx == 0 ? mActiveImageURI : mInactiveImageURI));
 
                 Bundle args = getIntent().getExtras();
                 String acc = args.getString(ARG_ACCOUNT);
@@ -1369,6 +1413,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     } else {
                         Log.i(TAG, "selected image (active): " + uri);
                         mActiveImageURI = uri;
+                        // user image? then clear tint color
+                        if (ImageResource.isExternalResource(mActiveImageURI)) {
+                            mActiveColor = DColor.CLEAR;
+                            int color = mDefaultClearColor;
+                            mColorActiveButton.setDisableTransparentImage(true);
+                            mColorActiveButton.setColor(color, mColorLabelBorderColor);
+                        }
                     }
                     updateSwitchButtons();
                     tintSwitchButtons();
@@ -1379,6 +1430,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     } else {
                         Log.i(TAG, "selected image (inactive): " + uri);
                         mInactiveImageURI = uri;
+                        // user image? then clear tint color
+                        if (ImageResource.isExternalResource(mInactiveImageURI)) {
+                            mInactiveColor = DColor.CLEAR;
+                            int color = mDefaultClearColor;
+                            mColorInactiveButton.setDisableTransparentImage(true);
+                            mColorInactiveButton.setColor(color, mColorLabelBorderColor);
+                        }
                     }
                     updateSwitchButtons();
                     tintSwitchButtons();
@@ -1661,6 +1719,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected ImageButton mButtonSwitchActive;
     protected Button mButtonSwitchInactiveEmpty;
     protected ImageButton mButtonSwitchInactive;
+    protected TextView mActiveNoteText, mInactiveNoteText;
     protected ImageView mInactiveClearImage, mActiveClearImage;
 
     protected String mInactiveImageURI, mActiveImageURI;
