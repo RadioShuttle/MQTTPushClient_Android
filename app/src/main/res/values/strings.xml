@@ -212,6 +212,11 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="no_image">None</string>
 
     <string name="action_import">Import</string>
+    <string name="import_no_files">No files found</string>
+    <string name="import_error">An error occured. Import failed.</string>
+    <string name="import_error_format">Format not supported or image too small.</string>
+    <string name="import_error_lowmem">Not enough memory.</string>
+    <string name="import_error_security">Import failed. System denies access to the selected document provider.</string>
 
     <!-- Dashboard -->
     <string name="action_dashboard">Dashboard</string>
@@ -280,6 +285,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="error_input_ge0">Value must be greater than 0</string>
     <string name="error_input_invalid_range">Invalid range. Max value must be greater than min value</string>
     <string name="error_out_of_range">Received value is out of range.</string>
+    <string name="error_image_not_found">Image file could not be loaded.</string>
 
     <string name="select_single_dash">Only one dash may be selected for editing</string>
     <string name="new_group_label">New Group</string>
