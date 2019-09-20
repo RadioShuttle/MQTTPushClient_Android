@@ -9,20 +9,20 @@ package de.radioshuttle.net;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import androidx.lifecycle.MutableLiveData;
-import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.mqttpushclient.dash.ImageResource;
+import de.radioshuttle.mqttpushclient.dash.ImportFiles;
 import de.radioshuttle.mqttpushclient.dash.Message;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
 
@@ -35,6 +35,7 @@ public class DashboardRequest extends Request {
         invalidVersion = false;
         mStoreDashboardLocally = false;
         mReceivedDashboard = null;
+        mDeleteFiles = new ArrayList<>();
     }
 
     public void saveDashboard(JSONObject dashboard, int itemID) { // TODO: pass json str
@@ -43,11 +44,126 @@ public class DashboardRequest extends Request {
         mItemIDPara = itemID;
     }
 
+    protected void saveImportedResources() throws IOException, ServerError, JSONException {
+        /*
+         * Interate over all elemnts to find imported file uris
+         */
+        if (mDashboardPara != null) {
+            JSONArray groupArray = mDashboardPara.getJSONArray("groups");
+            JSONObject groupJSON, itemJSON;
+            for (int i = 0; i < groupArray.length(); i++) {
+                groupJSON = groupArray.getJSONObject(i);
+                JSONArray itemArray = groupJSON.getJSONArray("items");
+
+                String encodedFilename;
+                String cleanFilename; // decoded filename
+                File importedFile;
+                String finalResourceName;
+                String uri, uri2;
+
+                for (int j = 0; j < itemArray.length(); j++) {
+                    itemJSON = itemArray.getJSONObject(j);
+
+                    uri = itemJSON.optString("uri");
+                    uri2 = itemJSON.optString("uri2");
+                    if (ImageResource.isImportedResource(uri)) {
+                        Log.d(TAG, "Save image on server: " + uri);
+                        encodedFilename = ImageResource.getURIPath(uri);
+
+                        cleanFilename = ImageResource.removeImportedFilePrefix(encodedFilename);
+                        cleanFilename = ImageResource.removeExtension(cleanFilename);
+                        cleanFilename = ImageResource.decodeFilename(cleanFilename);
+
+                        importedFile = new File(ImportFiles.getImportedFilesDir(mAppContext), encodedFilename);
+
+                        finalResourceName = mConnection.addResource(cleanFilename, Cmd.DASH512_PNG, importedFile);
+                        if (mConnection.lastReturnCode != Cmd.RC_OK) {
+                            throw new ServerError(0, mAppContext.getString(R.string.error_send_image_invalid_args));
+                        }
+
+                        /* move imported file to user file dir and rename it */
+                        encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
+
+                        File userDir = ImportFiles.getUserFilesDir(mAppContext);
+                        if (!userDir.exists()) {
+                            userDir.mkdirs();
+                        }
+                        File userFile = new File(userDir, encodedFilename);
+                        try {
+                            ImportFiles.copyFile(importedFile, userFile);
+                        } catch(Exception e) {
+                            if (userFile.exists()) {
+                                userFile.delete();
+                            }
+                            throw e;
+                        }
+
+                        mDeleteFiles.add(importedFile); // delete later, save might fail
+
+                        itemJSON.putOpt("uri", ImageResource.buildUserResourceURI(finalResourceName));
+                        if (uri.equals(uri2)) {
+                            itemJSON.putOpt("uri2", ImageResource.buildUserResourceURI(finalResourceName));
+                            continue;
+                        }
+                        Log.d(TAG, "Saved image on server: " + finalResourceName);
+                    }
+
+                    if (ImageResource.isImportedResource(uri2)) {
+                        Log.d(TAG, "Save image2 on server: " + uri2);
+                        encodedFilename = ImageResource.getURIPath(uri2);
+
+                        cleanFilename = ImageResource.removeImportedFilePrefix(encodedFilename);
+                        cleanFilename = ImageResource.removeExtension(cleanFilename);
+                        cleanFilename = ImageResource.decodeFilename(cleanFilename);
+
+                        importedFile = new File(ImportFiles.getImportedFilesDir(mAppContext), encodedFilename);
+
+                        finalResourceName = mConnection.addResource(cleanFilename, Cmd.DASH512_PNG, importedFile);
+                        if (mConnection.lastReturnCode != Cmd.RC_OK) {
+                            throw new ServerError(0, mAppContext.getString(R.string.error_send_image_invalid_args));
+                        }
+
+                        /* move imported file to user file dir and rename it */
+                        encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
+
+                        File userDir = ImportFiles.getUserFilesDir(mAppContext);
+                        if (!userDir.exists()) {
+                            userDir.mkdirs();
+                        }
+                        File userFile = new File(userDir, encodedFilename);
+                        try {
+                            ImportFiles.copyFile(importedFile, userFile);
+                        } catch(Exception e) {
+                            if (userFile.exists()) {
+                                userFile.delete();
+                            }
+                            throw e;
+                        }
+                        mDeleteFiles.add(importedFile); // delete later, save might fail
+                        itemJSON.putOpt("uri2", ImageResource.buildUserResourceURI(finalResourceName));
+
+                        Log.d(TAG, "Saved image2 on server: " + finalResourceName);
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public boolean perform() throws Exception {
 
         if (mCmd == Cmd.CMD_SET_DASHBOARD) {
             try {
+                /* if images where added, they must be saved first -> check all resource uris */
+                try {
+                    saveImportedResources();
+                } catch(ServerError e) {
+                    String msg = mAppContext.getString(R.string.error_send_image_prefix);
+                    msg += ' ' +  e.getMessage();
+                    throw new ServerError(0, msg);
+                }
+                // deleteNonReferencedResorces();
+
                 String jsonStr = mDashboardPara.toString();
 
                 long result = mConnection.setDashboardRequest(mLocalVersion, mItemIDPara, jsonStr);
@@ -56,6 +172,11 @@ public class DashboardRequest extends Request {
                     mReceivedDashboard = jsonStr;
                     mStoreDashboardLocally = true;
                     mSaved = true;
+                    // delete dsf
+                    for(File f : mDeleteFiles) {
+                        f.delete();
+                    }
+
                 } else {
                     invalidVersion = true;
                 }
@@ -158,6 +279,7 @@ public class DashboardRequest extends Request {
     public int requestErrorCode;
     public String requestErrorTxt;
 
+    List<File> mDeleteFiles;
     List<Message> mReceivedMessages;
 
     boolean mSaved;
@@ -172,4 +294,5 @@ public class DashboardRequest extends Request {
 
     protected boolean mStoreDashboardLocally; // indicates if mReceivedDashboard must be stored in onPostExecute()
 
+    private final static String TAG = DashboardRequest.class.getSimpleName();
 }
