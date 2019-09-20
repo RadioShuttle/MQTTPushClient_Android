@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import de.radioshuttle.net.Cmd;
+import de.radioshuttle.utils.HeliosUTF8Decoder;
+import de.radioshuttle.utils.HeliosUTF8Encoder;
 import de.radioshuttle.utils.Utils;
 
 public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
@@ -34,6 +37,7 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
         ArrayList<ImageResource> result = new ArrayList<>();
         ImageResource r, resource;
         String filename;
+        HeliosUTF8Encoder dec = new HeliosUTF8Encoder();
         for(int i = startPosition; i < startPosition + loadCount && i < mUserImageResources.size(); i++) {
             r = mUserImageResources.get(i);
             if (i == 0) {
@@ -48,9 +52,18 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
                 resource.id = r.id;
                 resource.drawable = null;
                 result.add(resource);
-                if (u.getAuthority().equals("imported")) {
-                    filename = Utils.urlDecode(u.getPath());
-                    File imageFile = new File(ImportFiles.getImportedFilesDir(mViewModel.getApplication()), filename);
+                if (ImageResource.isExternalResource(r.uri)) {
+                    filename = u.getPath();
+                    if (filename.startsWith("/")) {
+                        filename = filename.substring(1);
+                    }
+                    File imageFile = null;
+                    if (ImageResource.isImportedResource(r.uri)) {
+                        imageFile = new File(ImportFiles.getImportedFilesDir(mViewModel.getApplication()), filename);
+                    } else { // user resource
+                        filename = dec.format(filename) + '.' + Cmd.DASH512_PNG;
+                        imageFile = new File(ImportFiles.getUserFilesDir(mViewModel.getApplication()), filename);
+                    }
                     resource.drawable = new BitmapDrawable(
                             mViewModel.getApplication().getResources(),
                             BitmapFactory.decodeFile(imageFile.getAbsolutePath()));
@@ -71,9 +84,31 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
 
         //TODO: add user images (=already used images) to list (they should be shorted by number)
         List<ImageResource> serverImages = new ArrayList<>();
-        // Collections.sort(serverImages, new ImageResource.IDComparator());
+        File userImagesDir = ImportFiles.getUserFilesDir(mViewModel.getApplication());
+        String[] userFiles = userImagesDir.list();
+        if (userImagesDir != null) {
+            ImageResource r;
+            String resourcename;
+            HeliosUTF8Decoder dec = new HeliosUTF8Decoder();
+            for(String userFile : userFiles) {
+                r = new ImageResource();
+                try {
+                    resourcename = ImageResource.removeExtension(userFile);
+                    resourcename = dec.format(resourcename);
+                    r.uri = "res://user/" + Utils.urlEncode(resourcename);
+                    r.id = 0;
+                    r.label = resourcename;
+                    serverImages.add(r);
+                    Log.d(TAG, "label: " + r.label + ", id: " + r.id + ", url: " + r.uri); //TODO: raus
+                } catch(Exception e) {
+                    Log.d(TAG, "Error parsing imported filename", e);
+                }
+            }
+        }
+        Collections.sort(serverImages, new ImageResource.LabelComparator());
         mUserImageResources.addAll(serverImages);
 
+        HeliosUTF8Decoder mFilenameDecoder = new HeliosUTF8Decoder();
 
         List<ImageResource> importedImages = new ArrayList<>();
         File importedFilesDir = ImportFiles.getImportedFilesDir(mViewModel.getApplication());
@@ -91,7 +126,7 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
                     try {
                         r.uri="res://imported/" + Utils.urlEncode(s);
                         r.id = Integer.valueOf(s.substring(0, idx));
-                        r.label = s.substring(idx + 1);
+                        r.label = mFilenameDecoder.format(s.substring(idx + 1));
                         Log.d(TAG, "label: " + r.label + ", id: " + r.id + ", url: " + r.uri); //TODO: raus
                     } catch(Exception e) {
                         Log.d(TAG, "Error parsing imported filename", e);
