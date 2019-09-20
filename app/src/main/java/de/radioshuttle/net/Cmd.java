@@ -6,12 +6,15 @@
 
 package de.radioshuttle.net;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -51,6 +54,9 @@ public class Cmd {
     public final static int CMD_GET_DASHBOARD = 23;
     public final static int CMD_GET_MESSAGES_DASH = 24;
     public final static int CMD_BACKUP_DASH = 25;
+    public final static int CMD_ADD_RESOURCE = 26;
+    public final static int CMD_GET_RESOURCE = 27;
+    public final static int CMD_DEL_RESOURCE = 28;
 
     public RawCmd helloRequest(int seqNo, boolean ssl) throws IOException {
         int flags = FLAG_REQUEST;
@@ -63,6 +69,56 @@ public class Cmd {
     public RawCmd helloRequest(int seqNo, int flags) throws IOException {
         writeCommand(CMD_HELLO, seqNo, flags, 0, new byte[] { PROTOCOL_MAJOR, PROTOCOL_MINOR });
         return readCommand();
+    }
+
+    public RawCmd addResourceRequest(int seqNo, String name, String type, File resource) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(name, os);
+        writeString(type, os);
+        os.writeLong(resource.lastModified() / 1000L);
+        long s = resource.length();
+        if (s <= 0 || s > MAX_PAYLOAD_RESOURCE) {
+            throw new RuntimeException("Invalid size");
+        }
+        os.writeInt((int) s); // blob size
+        byte[] args = ba.toByteArray();
+        writeHeader(CMD_ADD_RESOURCE, seqNo, FLAG_REQUEST, 0, args.length + (int) s);
+        bos.write(args);
+        bos.flush();
+        /* attach file, file size first */
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(resource));
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int read;
+        try {
+            while((read = bis.read(buffer)) != -1) {
+                bos.write(buffer, 0, read);
+            }
+            bos.flush();
+        } finally {
+            if (bis != null) {
+                try { bis.close();} catch(Exception  io) {}
+            }
+        }
+        return readCommand();
+    }
+
+    public void addResourceResponse(RawCmd request, String resourceName, String type) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(resourceName, os);
+        writeString(type, os);
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    /* reads and returns args of request until blob */
+    public Map<String, Object>  readAddResourceArgs() throws IOException {
+        Map<String, Object> args = new HashMap<>();
+        args.put("name", readString(dis));
+        args.put("type", readString(dis));
+        args.put("mdate", dis.readLong() * 1000L);
+        args.put("bsize", dis.readInt());
+        return args;
     }
 
     public RawCmd loginRequest(int seqNo, String uri, String user, char[] password, String uuid) throws IOException {
@@ -127,10 +183,17 @@ public class Cmd {
 
     /* rc should be RC_SERVER_ERROR or RC_MQTT_ERROR */
     public void errorResponse(RawCmd request, int rc, int errorCode, String errorMsg) throws IOException {
+        errorResponse(request, rc, errorCode, errorMsg, null);
+    }
+
+    public void errorResponse(RawCmd request, int rc, int errorCode, String errorMsg, byte[] extra) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         os.writeShort(errorCode);
         writeString(errorMsg, os);
+        if (extra != null) {
+            os.write(extra);
+        }
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, rc, ba.toByteArray());
     }
 
@@ -229,7 +292,7 @@ public class Cmd {
         return actions;
     }
 
-    public Map<String, String> readActionData(int cmd, byte[] data) throws IOException {
+    public Map<String, String> readActionData(int cmd, byte[] data, Ref<byte[]> rawContent) throws IOException {
         HashMap<String, String> map = new HashMap<>();
         DataInputStream is = getDataInputStream(data);
         if (cmd == CMD_UPD_ACTION) {
@@ -239,7 +302,7 @@ public class Cmd {
             map.put("actionname", readString(is));
         }
         map.put("topic", readString(is));
-        map.put("content", readString(is));
+        rawContent.value = readByteArray(is);
         map.put("retain", is.readBoolean() ? "true" : "false");
         return map;
     }
@@ -596,6 +659,23 @@ public class Cmd {
         cmd.flags = di.readUnsignedShort();
         cmd.rc = di.readUnsignedShort();
         int len = di.readInt();
+
+        boolean loadDataPart = true;
+
+        /* if blobs are attached, do not load data here */
+        if (cmd.command == CMD_ADD_RESOURCE && (cmd.flags & FLAG_RESPONSE) == 0) {
+            loadDataPart = false;
+        } else if ( cmd.command == CMD_GET_RESOURCE && (cmd.flags & FLAG_RESPONSE) > 0) {
+            loadDataPart = false;
+        }
+
+        if (!loadDataPart) {
+            if (len > MAX_PAYLOAD_RESOURCE) {
+                throw new IOException("Invalid content length");
+            }
+            len = 0;
+        }
+
         if (len > MAX_PAYLOAD)
             throw new IOException("Invalid content length");
         cmd.data = new byte[len];
@@ -783,6 +863,10 @@ public class Cmd {
         public String script;
     }
 
+    public static class Ref<T> {
+        public T value;
+    }
+
     /* return codes */
     public final static int RC_OK = 0;
     public final static int RC_INVALID_ARGS = 400;
@@ -803,11 +887,16 @@ public class Cmd {
     public final static int MAGIC_SIZE = 4;
     public final static byte[] MAGIC_BLOCK;
 
+    /* file types */
+    public final static String DASH512_PNG =  "dash512png";
+
     public byte clientProtocolMinor;
 
     public final static int MAX_TOPICS_SIZE = 65536;
     public final static int MAX_STRING_SIZE = MAX_TOPICS_SIZE;
     public final static int MAX_PAYLOAD = 1024 * 256;
+    public final static long MAX_PAYLOAD_RESOURCE = MAX_PAYLOAD * 10L;
+    public final static int BUFFER_SIZE = 1024 * 16;
     static {
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
         try {

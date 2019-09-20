@@ -12,6 +12,7 @@ import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -158,6 +159,16 @@ public class Connection {
         handleLoginError(response);
         return response;
     }
+
+    public String addResource(String filename, String type, File resourceFile) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.addResourceRequest(++mSeqNo, filename, type, resourceFile);
+
+        handleError(response);
+        DataInputStream d = mCmd.getDataInputStream(response.data);
+
+        return Cmd.readString(d);
+    }
+
 
     public Map<String, String> getFCMData() throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_FCM_DATA, ++mSeqNo);
