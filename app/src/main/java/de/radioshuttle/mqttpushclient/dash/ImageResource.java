@@ -11,16 +11,16 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.provider.ContactsContract;
-import android.util.Log;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.util.Comparator;
 
+import de.radioshuttle.net.Cmd;
+import de.radioshuttle.utils.HeliosUTF8Decoder;
+import de.radioshuttle.utils.HeliosUTF8Encoder;
 import de.radioshuttle.utils.Utils;
 
 public final class ImageResource {
@@ -83,21 +83,92 @@ public final class ImageResource {
         return !Utils.isEmpty(uri) && uri.toLowerCase().startsWith("res://imported/");
     }
 
+    public static boolean isUserResource(String uri) {
+        return !Utils.isEmpty(uri) && uri.toLowerCase().startsWith("res://user/");
+    }
+
+    public static String buildUserResourceURI(String resourceName){
+        if (resourceName != null) {
+            try {
+                resourceName = "res://user/" + Utils.urlEncode(resourceName);
+            } catch(UnsupportedEncodingException e) {
+            }
+        }
+        return resourceName;
+    }
+
+    public static String getURIPath(String uri) {
+        String uriPath = null;
+        URI u = null;
+        try {
+            if (uri != null) {
+                u = new URI(uri);
+                uriPath = u.getPath();
+                if (uriPath.startsWith("/")) {
+                    uriPath = uriPath.substring(1);
+                }
+            }
+        } catch(Exception e) {}
+        return uriPath;
+    }
+
+    public static String decodeFilename(String filename) {
+        if (filename != null) {
+            HeliosUTF8Decoder dec = new HeliosUTF8Decoder();
+            filename = dec.format(filename);
+        }
+        return filename;
+    }
+
+    public static String encodeFilename(String filename) {
+        if (filename != null) {
+            HeliosUTF8Encoder enc = new HeliosUTF8Encoder();
+            filename = enc.format(filename);
+        }
+        return filename;
+    }
+
+    public static String removeExtension(String file) {
+        if (file != null) {
+            int idx = file.lastIndexOf('.');
+            if (idx != -1 && idx > 0) {
+                file = file.substring(0, idx);
+            }
+        }
+        return file;
+    }
+
+    public static String removeImportedFilePrefix(String file) {
+        if (file != null) {
+            int idx = file.indexOf('_');
+            if (idx != -1) {
+                file = file.substring(idx + 1);
+            }
+        }
+        return file;
+    }
+
     public static boolean isExternalResource(String uri) {
-        return (!Utils.isEmpty(uri) && uri.toLowerCase().startsWith("res://user/")) || isImportedResource(uri);
+        return isUserResource(uri) || isImportedResource(uri);
     }
 
     public static BitmapDrawable loadExternalImage(Context context, String uri) throws URISyntaxException, UnsupportedEncodingException {
-        URI u;
-        u = new URI(uri);
         File dir = null;
-        if (u.getAuthority().equals("imported")) {
+        String name = null;
+        if (isImportedResource(uri)) {
             dir = ImportFiles.getImportedFilesDir(context);
-        } else if (u.getAuthority().equals("user")) {
-            //TODO
-            throw new RuntimeException("Not supported yet");
+            name = getURIPath(uri);
+        } else if (isUserResource(uri)) {
+            dir = ImportFiles.getUserFilesDir(context);
+            name = getURIPath(uri) + '.' + Cmd.DASH512_PNG;
         }
-        Bitmap bm = BitmapFactory.decodeFile(dir.getAbsolutePath() + Utils.urlDecode(u.getPath()));
+        String path = dir.getAbsolutePath();
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        path += name;
+
+        Bitmap bm = BitmapFactory.decodeFile(path);
         BitmapDrawable bd = null;
         if (bm != null) {
             bd = new BitmapDrawable(context.getResources(), bm);
