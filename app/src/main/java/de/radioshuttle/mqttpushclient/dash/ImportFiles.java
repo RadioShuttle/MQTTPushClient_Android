@@ -29,12 +29,17 @@ import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+
+import de.radioshuttle.net.Cmd;
+import de.radioshuttle.utils.HeliosUTF8Encoder;
 
 public class ImportFiles implements Runnable {
 
@@ -68,6 +73,8 @@ public class ImportFiles implements Runnable {
     @Override
     public void run() {
         // android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+
+        HeliosUTF8Encoder fileNameEncoder = new HeliosUTF8Encoder();
         JSONArray fileArray = new JSONArray();
 
         if (mClipData != null && mFileUris == null) {
@@ -164,8 +171,8 @@ public class ImportFiles implements Runnable {
                             }
                         }
                         /* a document provider may have retruned an invalid file name */
-                        name = replaceInvalidChars(name);
-                        fileInfo.put("name", name);
+                        name = fileNameEncoder.format(name);
+                        fileInfo.put("name", name); //TODO: required?
 
                         // filesize
                         boolean fileSizeKnown = filesize > -1L;
@@ -217,6 +224,10 @@ public class ImportFiles implements Runnable {
                         if (bm == null) {
                             throw new ImportException(STATUS_FORMAT_ERROR);
                         }
+
+                        /* remove old extension */
+                        name = ImageResource.removeExtension(name);
+                        name += '.' + Cmd.DASH512_PNG;
 
                         name = String.format("%04d", maxID) + '_' + name;
                         File convertedImage = new File(importedFilesDir, name);
@@ -290,6 +301,33 @@ public class ImportFiles implements Runnable {
     public static File getImportedFilesDir(Context context) {
         return new File(context.getFilesDir(), LOCAL_IMPORTED_FILES_DIR);
     }
+
+    public static File getUserFilesDir(Context context) {
+        return new File(context.getFilesDir(), LOCAL_USER_FILES_DIR);
+    }
+
+    public static void copyFile(File src, File dst) throws IOException {
+        FileInputStream in = null;
+        FileOutputStream out = null;
+        boolean ok = false;
+        try {
+            in = new FileInputStream(src);
+            out = new FileOutputStream(dst);
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int read;
+            while((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+        } finally {
+            if (in != null) {
+                try {in.close();} catch(IOException io) {}
+            }
+            if (out != null) {
+                try {out.close();} catch(IOException io) {}
+            }
+        }
+    }
+
 
     private long getFreeSpace() {
         return mAppContext.getFilesDir().getFreeSpace();
@@ -409,6 +447,7 @@ public class ImportFiles implements Runnable {
     private final static String TMP_PREFIX = "tmp_";
     private final static String LOCAL_IMAGE_DIR = "images";
     private final static String LOCAL_IMPORTED_FILES_DIR = LOCAL_IMAGE_DIR + "/" + "imported";
+    private final static String LOCAL_USER_FILES_DIR = LOCAL_IMAGE_DIR + "/" + "user";
 
     public final static long MIN_FREE_SPACE_INT = 100L * 1024L * 1024L;
     public final static int MAX_IMAGE_SIZE_PX = 512;
