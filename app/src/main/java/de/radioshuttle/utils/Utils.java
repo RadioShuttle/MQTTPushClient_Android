@@ -108,7 +108,7 @@ public class Utils {
     }
 
     public static String urlEncode(String s) throws UnsupportedEncodingException {
-        return URLEncoder.encode(s, "UTF-8");
+        return URLEncoder.encode(s, "UTF-8").replace("+", "%20");
     }
 
     public static String urlDecode(String s)  throws UnsupportedEncodingException {
