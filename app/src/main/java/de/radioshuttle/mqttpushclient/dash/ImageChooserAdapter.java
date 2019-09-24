@@ -53,8 +53,8 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
 
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
-        ImageChooserAdapter.ViewHolder vh = (ImageChooserAdapter.ViewHolder) holder;
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        final ImageChooserAdapter.ViewHolder vh = (ImageChooserAdapter.ViewHolder) holder;
 
         if (getItemViewType(position) == VIEW_TYPE_NO_SELECTION) {
             vh.noImageButton.setOnClickListener(new View.OnClickListener() {
@@ -67,7 +67,7 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
             });
         } else { // VIEW_TYPE_IMAGE_BUTTON
             ImageResource item = getItem(position);
-            final String uri = item.uri;
+            String uri = item.uri;
             // Log.d(TAG, "onBindViewHolder: " + position + ", " + item.uri);
 
             vh.image.setImageDrawable(item.drawable);
@@ -79,7 +79,12 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
                 @Override
                 public void onClick(View v) {
                     if (callback != null) {
-                        callback.onImageSelected(position, uri);
+                        int pos = vh.getAdapterPosition();
+                        if (pos != RecyclerView.NO_POSITION) {
+                            ImageResource item = getItem(pos);
+                            String uri = item.uri;
+                            callback.onImageSelected(pos, uri);
+                        }
                     }
                 }
             });
