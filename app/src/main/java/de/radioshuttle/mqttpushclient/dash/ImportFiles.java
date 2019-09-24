@@ -283,12 +283,19 @@ public class ImportFiles implements Runnable {
     }
 
     public static void deleteImportedFilesDir(Context context) {
-        File importedFilesDir = getImportedFilesDir(context);
-        String files[] = importedFilesDir.list();
+        deleteFilesDir(context, getImportedFilesDir(context));
+    }
+
+    public static void deleteUserFilesDir(Context context) {
+        deleteFilesDir(context, getUserFilesDir(context));
+    }
+
+    public static void deleteFilesDir(Context context, File dir) {
+        String files[] = dir.list();
         File td;
         if (files != null) {
             for(String f : files) {
-                td = new File(importedFilesDir, f);
+                td = new File(dir, f);
                 if (td.delete()) {
                     Log.d(TAG, "file " + f + " deleted");
                 } else {
@@ -298,12 +305,21 @@ public class ImportFiles implements Runnable {
         }
     }
 
+
     public static File getImportedFilesDir(Context context) {
-        return new File(context.getFilesDir(), LOCAL_IMPORTED_FILES_DIR);
+        File dir = new File(context.getFilesDir(), LOCAL_IMPORTED_FILES_DIR);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return dir;
     }
 
     public static File getUserFilesDir(Context context) {
-        return new File(context.getFilesDir(), LOCAL_USER_FILES_DIR);
+        File dir = new File(context.getFilesDir(), LOCAL_USER_FILES_DIR);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return dir;
     }
 
     public static void copyFile(File src, File dst) throws IOException {
@@ -329,16 +345,20 @@ public class ImportFiles implements Runnable {
     }
 
 
-    private long getFreeSpace() {
-        return mAppContext.getFilesDir().getFreeSpace();
+    private static long getFreeSpace(Context context) {
+        return context.getFilesDir().getFreeSpace();
     }
-    /** returns true if internal memory less than 100 MB  space are free */
     public boolean lowInternalMemory(long datasize) {
-        return lowMemory(datasize);
+        return lowMemory(mAppContext, datasize);
     }
 
-    public boolean lowMemory(long datasize) {
-        return getFreeSpace() - datasize  < MIN_FREE_SPACE_INT;
+    /** returns true if internal memory less than 100 MB  space are free */
+    public static boolean lowInternalMemory(Context context, long datasize) {
+        return lowMemory(context, datasize);
+    }
+
+    public static boolean lowMemory(Context context, long datasize) {
+        return getFreeSpace(context) - datasize  < MIN_FREE_SPACE_INT;
     }
 
     public static ArrayList<Uri> getUriListFromClipData(ClipData data) {
