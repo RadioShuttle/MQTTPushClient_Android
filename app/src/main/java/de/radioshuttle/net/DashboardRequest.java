@@ -13,7 +13,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +27,8 @@ import de.radioshuttle.mqttpushclient.dash.ImageResource;
 import de.radioshuttle.mqttpushclient.dash.ImportFiles;
 import de.radioshuttle.mqttpushclient.dash.Message;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
+import de.radioshuttle.utils.HeliosUTF8Encoder;
+import de.radioshuttle.utils.Utils;
 
 public class DashboardRequest extends Request {
 
@@ -35,10 +39,11 @@ public class DashboardRequest extends Request {
         invalidVersion = false;
         mStoreDashboardLocally = false;
         mReceivedDashboard = null;
+        mCurrentDashboard =ViewState.getInstance(context).getDashBoardContent(pushAccount.getKey());
         mDeleteFiles = new ArrayList<>();
     }
 
-    public void saveDashboard(JSONObject dashboard, int itemID) { // TODO: pass json str
+    public void saveDashboard(JSONObject dashboard, int itemID) {
         mCmd = Cmd.CMD_SET_DASHBOARD;
         mDashboardPara = dashboard;
         mItemIDPara = itemID;
@@ -85,9 +90,6 @@ public class DashboardRequest extends Request {
                         encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
 
                         File userDir = ImportFiles.getUserFilesDir(mAppContext);
-                        if (!userDir.exists()) {
-                            userDir.mkdirs();
-                        }
                         File userFile = new File(userDir, encodedFilename);
                         try {
                             ImportFiles.copyFile(importedFile, userFile);
@@ -107,6 +109,7 @@ public class DashboardRequest extends Request {
                         }
                         Log.d(TAG, "Saved image on server: " + finalResourceName);
                     }
+                    //TODO: check if user resource exists on server
 
                     if (ImageResource.isImportedResource(uri2)) {
                         Log.d(TAG, "Save image2 on server: " + uri2);
@@ -127,9 +130,6 @@ public class DashboardRequest extends Request {
                         encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
 
                         File userDir = ImportFiles.getUserFilesDir(mAppContext);
-                        if (!userDir.exists()) {
-                            userDir.mkdirs();
-                        }
                         File userFile = new File(userDir, encodedFilename);
                         try {
                             ImportFiles.copyFile(importedFile, userFile);
@@ -144,6 +144,8 @@ public class DashboardRequest extends Request {
 
                         Log.d(TAG, "Saved image2 on server: " + finalResourceName);
                     }
+                    //TODO: check if user resource exists on server
+
                 }
             }
         }
@@ -241,7 +243,114 @@ public class DashboardRequest extends Request {
             }
         }
 
+        syncImages();
+
         return true;
+    }
+
+    protected void syncImages() {
+        try {
+            /* sync image resources */
+            if (requestStatus == Cmd.RC_OK) {
+                String currentDash = null;
+                if (!Utils.isEmpty(mReceivedDashboard)) {
+                    currentDash = mReceivedDashboard;
+                } else if (!Utils.isEmpty(mCurrentDashboard)) {
+                    currentDash = mCurrentDashboard;
+                }
+                String uri, uri2; File f;
+                HeliosUTF8Encoder enc = new HeliosUTF8Encoder();
+                String resourceName;
+                String internalFileName;
+                File localDir = ImportFiles.getUserFilesDir(mAppContext);
+                ArrayList<String> resourceNames = new ArrayList<>();
+                if (!Utils.isEmpty(currentDash)) {
+                    JSONObject jsonObject = new JSONObject(currentDash);
+                    JSONArray groupArray = jsonObject.getJSONArray("groups");
+                    JSONObject groupJSON, itemJSON;
+                    for (int i = 0; i < groupArray.length(); i++) {
+                        groupJSON = groupArray.getJSONObject(i);
+                        JSONArray itemArray = groupJSON.getJSONArray("items");
+
+                        for (int j = 0; j < itemArray.length(); j++) {
+                            try {
+                                itemJSON = itemArray.getJSONObject(j);
+                                uri = itemJSON.optString("uri");
+                                uri2 = itemJSON.optString("uri2");
+                                if (ImageResource.isUserResource(uri)) {
+                                    resourceName = ImageResource.getURIPath(uri);
+                                    internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                    f = new File(localDir, internalFileName);
+                                    if (!f.exists()) {
+                                        resourceNames.add(resourceName);
+                                    }
+                                }
+                                if (ImageResource.isUserResource(uri2)) {
+                                    resourceName = ImageResource.getURIPath(uri);
+                                    internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                    f = new File(localDir, internalFileName);
+                                    if (!f.exists()) {
+                                        resourceNames.add(resourceName);
+                                    }
+                                }
+                            } catch(Exception e) {
+                                Log.d(TAG, "Error checking resource names: ", e);
+                            }
+                        }
+                    }
+                    DataInputStream is = null;
+                    for(String r : resourceNames) {
+                        /* resource errors are not handled as long as there are not caused by an IO error */
+                        // Log.d(TAG, "missing local resources: " + resourceNames);
+                        int len = 0;
+                        try {
+                            is = mConnection.getResource(r, Cmd.DASH512_PNG);
+                            if (mConnection.lastReturnCode == Cmd.RC_INVALID_ARGS) {
+                                // Log.d(TAG, "Requested resource does not exist: " + r);
+                                break;
+                            }
+                            if (is != null) {
+                                len = is.readInt();
+                                if (ImportFiles.lowInternalMemory(mAppContext, len)) {
+                                    Log.d(TAG, "low mem, skipping get resource file " + r);
+                                    continue;
+                                }
+                                String tmpFilename = System.nanoTime() + enc.format(r)  + '.' + Cmd.DASH512_PNG;
+                                File tempFile = new File(ImportFiles.getUserFilesDir(mAppContext), tmpFilename);
+                                File destFile = new File(ImportFiles.getUserFilesDir(mAppContext), enc.format(r)  + '.' + Cmd.DASH512_PNG);
+                                FileOutputStream fos = null;
+                                try {
+                                    fos = new FileOutputStream(tempFile);
+                                    int total = 0, read;
+                                    byte[] buffer = new byte[Cmd.BUFFER_SIZE];
+                                    while(total < len && (read = is.read(buffer, 0, Math.min(len - total, buffer.length))) != -1) {
+                                        total += read;
+                                        fos.write(buffer, 0, read);
+                                    }
+                                } finally {
+                                    if (fos != null) {
+                                        try {fos.close(); } catch(IOException io) {}
+                                    }
+                                    if (tempFile.exists()) {
+                                        if (!tempFile.renameTo(destFile)) {
+                                            tempFile.delete();
+                                        } else {
+                                            Log.d(TAG, "Error renaming file: " + tempFile.getName());
+                                        }
+                                    }
+                                }
+                            }
+                        } catch(ServerError e) {
+                            Log.d(TAG, "Error try to get resource: " + r, e);
+                        }
+
+                    }
+
+                }
+            }
+        } catch(Exception e) {
+            Log.d(TAG, "Error syncing images: ", e);
+        }
     }
 
     @Override
@@ -287,6 +396,7 @@ public class DashboardRequest extends Request {
     int mItemIDPara;
     JSONObject mDashboardPara;
     String mReceivedDashboard;
+    String mCurrentDashboard;
     long mLocalVersion;
     long mServerVersion;
 
