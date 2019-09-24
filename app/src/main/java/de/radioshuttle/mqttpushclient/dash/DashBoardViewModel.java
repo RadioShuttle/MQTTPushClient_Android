@@ -296,20 +296,28 @@ public class DashBoardViewModel extends AndroidViewModel {
     protected void checkForResourceNotFoundError(Item item) {
         if (item instanceof Switch) {
             Switch sw = (Switch) item;
+
+            boolean resourceMissing = false;
             /* an error occured while loading the image (probably server sync was not possible due to network no availabe) */
-            if (sw.image == null) {
-                String error = (String) item.data.get("error");
-                if (Utils.isEmpty(error)) { // only show error, if no other error occured
-                    error = mApplication.getString(R.string.error_image_not_found);
-                    item.data.put("error", error);
-                }
+            if (sw.image == null && !Utils.isEmpty(sw.uri)) {
+                resourceMissing = true;
             }
+
             /* an error occured while loading the image (probably server sync was not possible due to network no availabe) */
-            if (sw.image2 == null) {
-                String error = (String) item.data.get("error");
+            if (sw.image2 == null && !Utils.isEmpty(sw.uri2)) {
+                resourceMissing = true;
+            }
+
+            String error = (String) item.data.get("error");
+            String errorMsg = mApplication.getString(R.string.error_image_not_found);
+            if (resourceMissing) {
                 if (Utils.isEmpty(error)) { // only show error, if no other error occured
-                    error = mApplication.getString(R.string.error_image_not_found);
-                    item.data.put("error", error);
+                    item.data.put("error", errorMsg);
+                }
+            } else {
+                if (errorMsg.equals(error)) {
+                    // no resource missing anymore -> remove message
+                    item.data.remove("error"); //
                 }
             }
         }
@@ -622,6 +630,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         // Log.d(TAG, "loadMessages: " + mModificationDate);
         DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSyncRequest, mModificationDate);
         currentSyncRequest = request;
+
         request.executeOnExecutor(mRequestExecutor);
     }
 
