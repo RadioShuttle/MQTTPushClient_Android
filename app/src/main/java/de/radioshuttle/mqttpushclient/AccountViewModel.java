@@ -79,6 +79,7 @@ public class AccountViewModel extends ViewModel {
         Log.d(TAG, "app == null? " + (app == null));
         if (app != null) {
             ImportFiles.deleteImportedFilesDir(app);
+            // ImportFiles.deleteUserFilesDir(app);//TODO: raus
         }
     }
 
