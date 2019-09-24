@@ -209,35 +209,4 @@ public class DBUtils {
         return dashboardObj;
     }
 
-    public static Thread testDataThread(final DashBoardViewModel vm) {
-        return new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Handler uiHandler = new Handler(Looper.getMainLooper());
-                final Random random = new Random();
-
-                while(!Thread.interrupted()) {
-                    try {
-                        Thread.sleep(5000L);
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Message m = new Message();
-                                m.setWhen(System.currentTimeMillis());
-                                m.setTopic("test");
-                                m.filter = "test";
-                                m.status = 0;
-                                m.setPayload(String.valueOf(15 + random.nextInt(15)).getBytes());
-                                vm.onMessageReceived(m);
-                            }
-                        });
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-                Log.d(DashBoardViewModel.TAG, "test data thread terminated");
-            }
-        });
-    };
-
 }
