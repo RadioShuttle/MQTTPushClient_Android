@@ -82,7 +82,6 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
         mUserImageResources.clear();
         mUserImageResources.add(new ImageResource()); // selection none entry
 
-        //TODO: add user images (=already used images) to list (they should be shorted by number)
         List<ImageResource> serverImages = new ArrayList<>();
         File userImagesDir = ImportFiles.getUserFilesDir(mViewModel.getApplication());
         String[] userFiles = userImagesDir.list();
