@@ -14,6 +14,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -167,6 +168,18 @@ public class Connection {
         DataInputStream d = mCmd.getDataInputStream(response.data);
 
         return Cmd.readString(d);
+    }
+
+    public DataInputStream getResource(String filename, String type) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.getResourceRequest(++mSeqNo, filename, type);
+        DataInputStream dataInputStream = null;
+
+        handleError(response);
+        if (response.rc == Cmd.RC_OK) { // handle error does not throw exception if invalid args error (= file not found)
+            dataInputStream = mCmd.getInputStream();
+        }
+
+        return dataInputStream;
     }
 
 

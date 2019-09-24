@@ -86,7 +86,7 @@ public class Cmd {
         writeHeader(CMD_ADD_RESOURCE, seqNo, FLAG_REQUEST, 0, args.length + (int) s);
         bos.write(args);
         bos.flush();
-        /* attach file, file size first */
+        /* attach file */
         BufferedInputStream bis = new BufferedInputStream(new FileInputStream(resource));
         byte[] buffer = new byte[BUFFER_SIZE];
         int read;
@@ -112,13 +112,60 @@ public class Cmd {
     }
 
     /* reads and returns args of request until blob */
-    public Map<String, Object>  readAddResourceArgs() throws IOException {
+    public Map<String, Object> readAddResourceArgs() throws IOException {
         Map<String, Object> args = new HashMap<>();
         args.put("name", readString(dis));
         args.put("type", readString(dis));
         args.put("mdate", dis.readLong() * 1000L);
         args.put("bsize", dis.readInt());
         return args;
+    }
+
+    public RawCmd getResourceRequest(int seqNo, String name, String type) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(name, os);
+        writeString(type, os);
+        writeCommand(CMD_GET_RESOURCE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public Map<String, Object> readGetResourceArgs(byte[] data) throws IOException {
+        DataInputStream is = getDataInputStream(data);
+        Map<String, Object> args = new HashMap<>();
+        args.put("name", readString(is));
+        args.put("type", readString(is));
+        return args;
+    }
+
+    public void getResourceResponse(RawCmd request, File resource) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+
+        long s = resource.length();
+        if (s <= 0 || s > MAX_PAYLOAD_RESOURCE) {
+            throw new RuntimeException("Invalid size");
+        }
+        os.writeInt((int) s); // blob size
+        byte[] args = ba.toByteArray();
+        writeHeader(request.command, request.seqNo, FLAG_RESPONSE, 0, args.length + (int) s);
+        bos.write(args);
+        bos.flush();
+
+        /* attach file */
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(resource));
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int read;
+        try {
+            while((read = bis.read(buffer)) != -1) {
+                bos.write(buffer, 0, read);
+            }
+            bos.flush();
+        } finally {
+            if (bis != null) {
+                try { bis.close();} catch(Exception  io) {}
+            }
+        }
     }
 
     public RawCmd loginRequest(int seqNo, String uri, String user, char[] password, String uuid) throws IOException {
