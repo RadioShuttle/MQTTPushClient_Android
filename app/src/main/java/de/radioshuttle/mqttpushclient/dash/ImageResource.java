@@ -11,13 +11,21 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 
+import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.utils.HeliosUTF8Decoder;
 import de.radioshuttle.utils.HeliosUTF8Encoder;
@@ -175,6 +183,74 @@ public final class ImageResource {
         }
         return bd;
     }
+
+    /** removes all image resources which are not referenced */
+    public static void removeUnreferencedImageResources(Context context, List<PushAccount> accounts) {
+        try {
+            if (context == null) {
+                return;
+            }
+            /* delete all file in imported files dir */
+            ImportFiles.deleteImportedFilesDir(context);
+
+            /* delete all files in user dir which are unreferenced (not included in any dashbard) */
+            if (accounts != null) {
+                final HashSet<String> referencedFiles = new HashSet<>();
+                ViewState vs = ViewState.getInstance(context);
+                for(PushAccount p : accounts) {
+                    String jsonDash = vs.getDashBoardContent(p.getKey());
+                    if (!Utils.isEmpty(jsonDash)) {
+                        JSONObject jo = new JSONObject(jsonDash);
+
+                        JSONArray groupArray = jo.getJSONArray("groups");
+                        JSONObject groupJSON, itemJSON;
+                        String uri, resourceName, internalFileName;
+                        HeliosUTF8Encoder enc = new HeliosUTF8Encoder();
+                        for (int i = 0; i < groupArray.length(); i++) {
+                            groupJSON = groupArray.getJSONObject(i);
+                            JSONArray itemArray = groupJSON.getJSONArray("items");
+
+                            for (int j = 0; j < itemArray.length(); j++) {
+                                try {
+                                    itemJSON = itemArray.getJSONObject(j);
+                                    uri = itemJSON.optString("uri");
+                                    if (ImageResource.isUserResource(uri)) {
+                                        resourceName = ImageResource.getURIPath(uri);
+                                        internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                        referencedFiles.add(internalFileName);
+                                    }
+                                    uri = itemJSON.optString("uri2");
+                                    if (ImageResource.isUserResource(uri)) {
+                                        resourceName = ImageResource.getURIPath(uri);
+                                        internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                        referencedFiles.add(internalFileName);
+                                    }
+                                } catch(Exception e) {
+                                    Log.d(TAG, "removeUnreferencedImageResources: error checking resource names: ", e);
+                                }
+                            }
+                        }
+                    }
+                }
+                File dir = ImportFiles.getUserFilesDir(context);
+                if (dir.isDirectory() && dir.exists()) {
+                    File[] unreferencedFiles = dir.listFiles(new FilenameFilter() {
+                        @Override
+                        public boolean accept(File file, String name) {
+                            return !referencedFiles.contains(name);
+                        }
+                    });
+                    for(File f : unreferencedFiles) {
+                        Log.d(TAG, "removing unreferenced file: " + f.getName());
+                        f.delete();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "removeUnreferencedImageResources error: ", e);
+        }
+    }
+
 
     private final static String TAG = ImageResource.class.getSimpleName();
 }
