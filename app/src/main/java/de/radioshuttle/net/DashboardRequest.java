@@ -41,6 +41,7 @@ public class DashboardRequest extends Request {
         mReceivedDashboard = null;
         mCurrentDashboard =ViewState.getInstance(context).getDashBoardContent(pushAccount.getKey());
         mDeleteFiles = new ArrayList<>();
+        mReceivedResources = false;
     }
 
     public void saveDashboard(JSONObject dashboard, int itemID) {
@@ -333,9 +334,11 @@ public class DashboardRequest extends Request {
                                     }
                                     if (tempFile.exists()) {
                                         if (!tempFile.renameTo(destFile)) {
+                                            Log.d(TAG, "Error renaming file: " + tempFile.getName());
                                             tempFile.delete();
                                         } else {
-                                            Log.d(TAG, "Error renaming file: " + tempFile.getName());
+                                            mReceivedResources = true;
+                                            Log.d(TAG, "Loaded resource from server: " + r + ", " + destFile.getName());
                                         }
                                     }
                                 }
@@ -372,6 +375,10 @@ public class DashboardRequest extends Request {
         return invalidVersion;
     }
 
+    public boolean hasNewResourcesReceived() {
+        return mReceivedResources;
+    }
+
     /** not defined if requestStatus != Cmd.RC_OK*/
     public long getServerVersion() {
         return mServerVersion;
@@ -399,6 +406,7 @@ public class DashboardRequest extends Request {
     String mCurrentDashboard;
     long mLocalVersion;
     long mServerVersion;
+    boolean mReceivedResources;
 
     public int mCmd;
 
