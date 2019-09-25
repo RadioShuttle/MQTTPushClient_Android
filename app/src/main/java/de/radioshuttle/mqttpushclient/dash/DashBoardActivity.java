@@ -549,6 +549,10 @@ public class DashBoardActivity extends AppCompatActivity implements
                             String t = getString(R.string.dash_err_version_err_replaced);
                             showErrorMsg(t);
                         } else { // no errors. hide previous shown error message
+                            if (request.hasNewResourcesReceived()) {
+                                Log.d(TAG, "new resource onLoadMessagesFinished, calling refresh ");
+                                mViewModel.refresh(LOAD_IMAGES);
+                            }
                             mViewModel.setLastReceivedMessages(request.getReceivedMessages()); // to be cached later
                             mLastErrorStr = null;
                             if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
@@ -593,14 +597,14 @@ public class DashBoardActivity extends AppCompatActivity implements
                         if (ic != null && ic.item != null) {
                             ic.item.data.put("error2", t); //TODO: consider showing error in global window too
                             if (!skipUIupdate)
-                                mViewModel.notifyDataChanged();
+                                mViewModel.refresh(UPDATE_VALUES);
                         }
                     } else if (publishRequest.requestStatus != Cmd.RC_OK) {
                         String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
                         if (ic != null && ic.item != null) {
                             ic.item.data.put("error2", t); //TODO: consider showing error in global window too
                             if (!skipUIupdate)
-                                mViewModel.notifyDataChanged();
+                                mViewModel.refresh(UPDATE_VALUES);
                         }
                     } else { // reesult OK
                         boolean updateItem = false;
@@ -620,7 +624,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                             }
                         }
                         if (updateItem && !skipUIupdate) {
-                            mViewModel.notifyDataChanged();
+                            mViewModel.refresh(UPDATE_VALUES);
                         }
                         if (Utils.isEmpty(publishRequest.outputScriptError) && !skipUIupdate) {
                             mViewModel.onMessagePublished(publishRequest.getMessage());
@@ -827,6 +831,9 @@ public class DashBoardActivity extends AppCompatActivity implements
     private int ZOOM_LEVEL_1 = 0; // dpi
     private int ZOOM_LEVEL_2 = 0;
     private int ZOOM_LEVEL_3 = 0;
+
+    private final static boolean LOAD_IMAGES = true;
+    private final static boolean UPDATE_VALUES = false;
 
     private final static int RC_EDIT_ITEM = 1;
 
