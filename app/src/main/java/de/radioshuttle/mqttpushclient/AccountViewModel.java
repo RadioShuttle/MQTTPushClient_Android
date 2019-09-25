@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.db.MqttMessage;
+import de.radioshuttle.mqttpushclient.dash.ImageResource;
 import de.radioshuttle.mqttpushclient.dash.ImportFiles;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.DeleteToken;
@@ -78,8 +79,7 @@ public class AccountViewModel extends ViewModel {
         }
         Log.d(TAG, "app == null? " + (app == null));
         if (app != null) {
-            ImportFiles.deleteImportedFilesDir(app);
-            // ImportFiles.deleteUserFilesDir(app);//TODO: raus
+            ImageResource.removeUnreferencedImageResources(app, accounts);
         }
     }
 
@@ -116,6 +116,7 @@ public class AccountViewModel extends ViewModel {
             }
         }
         accountList.setValue(pushAccounts);
+
     }
 
     public String getAccountsJSON() throws JSONException {
