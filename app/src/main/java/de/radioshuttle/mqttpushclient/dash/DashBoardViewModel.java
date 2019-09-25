@@ -100,9 +100,6 @@ public class DashBoardViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        if (mTestDataThread != null) {
-            mTestDataThread.interrupt();
-        }
         if (mJavaScriptExecutor != null) {
             mJavaScriptExecutor.shutdown();
         }
@@ -180,7 +177,6 @@ public class DashBoardViewModel extends AndroidViewModel {
                     mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers
                 }
             }
-
         }
     }
 
@@ -234,64 +230,98 @@ public class DashBoardViewModel extends AndroidViewModel {
                 Log.e(TAG, "Load items: Parsing json failed: " + e.getMessage());
             }
         }
-        final List<Item> list = buildDisplayList();
+        refresh(true);
+    }
 
-        @SuppressLint("StaticFieldLeak")
-        AsyncTask loadImages = new AsyncTask() {
-            @Override
-            protected Object doInBackground(Object[] objects) {
-                for(Item item : list) {
-                    if (item instanceof Switch) {
-                        Switch sw = (Switch) item;
-                        /* check if we have the image already loaded */
-                        if (!Utils.isEmpty(sw.uri) && Utils.isEmpty(sw.imageUri)) {
-                            try {
-                                if (ImageResource.isInternalResource(sw.uri)) {
-                                    sw.image = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri));
-                                    if (sw.image != null) {
-                                        sw.imageDetail = sw.image.getConstantState().newDrawable();
+    /** refreshes UI (does not perform a reload). For fast updates (without reloading images) set reloadImages to false */
+    public void refresh(boolean reloadImages) {
+        List<Item> list = buildDisplayList();
+        if (!reloadImages) {
+            mDashBoardItemsLiveData.setValue(list);
+        } else {
+            // like above, but also loads images for each item async
+            loadImages(list);
+        }
+    }
 
+    protected void loadImages(final List<Item> list) {
+        if (list != null) {
+            @SuppressLint("StaticFieldLeak")
+            AsyncTask<List<Item>, Void, List<Item>> loadImages = new AsyncTask<List<Item>, Void, List<Item>>() {
+                @Override
+                protected List<Item> doInBackground(List<Item>... lists) {
+                    List<Item> list = lists[0];
+                    ArrayList<Item> updatedItems = new ArrayList<>();
+                    boolean itemUpdated;
+                    for(Item item : list) {
+                        itemUpdated = false;
+                        if (item instanceof Switch) {
+                            Switch sw = (Switch) item;
+                            /* check if we have the image already loaded */
+                            if (!Utils.isEmpty(sw.uri) && Utils.isEmpty(sw.imageUri)) {
+                                try {
+                                    if (ImageResource.isInternalResource(sw.uri)) {
+                                        sw.image = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri));
+                                        if (sw.image != null) {
+                                            sw.imageDetail = sw.image.getConstantState().newDrawable();
+                                            sw.imageUri = sw.uri;
+                                        }
+                                    } else {
+                                        sw.image = ImageResource.loadExternalImage(getApplication(), sw.uri);
+                                        if (sw.image != null) {
+                                            sw.imageDetail = sw.image.getConstantState().newDrawable();
+                                            sw.imageUri = sw.uri;
+                                        }
                                     }
-                                    sw.imageUri = sw.uri;
-                                } else {
-                                    sw.image = ImageResource.loadExternalImage(getApplication(), sw.uri);
-                                    if (sw.image != null) {
-                                        sw.imageDetail = sw.image.getConstantState().newDrawable();
-                                    }
-                                    sw.imageUri = sw.uri;
+                                    itemUpdated = true;
+                                } catch(Exception e) {
+                                    Log.e(TAG, "error loading image: ", e);
                                 }
-                            } catch(Exception e) {
-                                Log.e(TAG, "error loading image: ", e);
+                            }
+                            if (!Utils.isEmpty(sw.uri2) && Utils.isEmpty(sw.imageUri2)) {
+                                try {
+                                    if (ImageResource.isInternalResource(sw.uri2)) {
+                                        sw.image2 = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri2));
+                                        if (sw.image2 != null) {
+                                            sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
+                                            sw.imageUri2 = sw.uri2;
+                                        }
+                                    } else {
+                                        sw.image2 = ImageResource.loadExternalImage(getApplication(), sw.uri2);
+                                        if (sw.image2 != null) {
+                                            sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
+                                            sw.imageUri2 = sw.uri2;
+                                        }
+                                    }
+                                    itemUpdated = true;
+                                } catch(Exception e) {
+                                    Log.e(TAG, "error loading image: ", e);
+                                }
+                            }
+                            if (itemUpdated) {
+                                updatedItems.add(item);
                             }
                         }
-                        if (!Utils.isEmpty(sw.uri2) && Utils.isEmpty(sw.imageUri2)) {
-                            try {
-                                if (ImageResource.isInternalResource(sw.uri2)) {
-                                    sw.image2 = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri2));
-                                    if (sw.image2 != null) {
-                                        sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
-                                    }
-                                    sw.imageUri2 = sw.uri2;
-                                } else {
-                                    sw.image2 = ImageResource.loadExternalImage(getApplication(), sw.uri2);
-                                    if (sw.image2 != null) {
-                                        sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
-                                    }
-                                    sw.imageUri2 = sw.uri2;
-                                }
-                            } catch(Exception e) {
-                                Log.e(TAG, "error loading image: ", e);
-                            }
+                    }
+                    return updatedItems;
+                }
+
+                @Override
+                protected void onPostExecute(List<Item> items) {
+                    super.onPostExecute(items);
+                    if (items != null) {
+                        for(Item item : items) {
+                            checkForResourceNotFoundError(item);
                         }
-                        checkForResourceNotFoundError(item);
+                        // Log.d(TAG, "new resource loadImages, onPostExecute " + items.size());
+                        mDashBoardItemsLiveData.setValue(list);
                     }
                 }
-                mDashBoardItemsLiveData.postValue(list);
-                return null;
-            }
-        };
-        loadImages.executeOnExecutor(Utils.executor, (Object[]) null);
+            };
+            loadImages.executeOnExecutor(Utils.executor, (List<Item>[]) new List[] {list});
+        }
     }
+
 
     protected void checkForResourceNotFoundError(Item item) {
         if (item instanceof Switch) {
@@ -321,10 +351,6 @@ public class DashBoardViewModel extends AndroidViewModel {
                 }
             }
         }
-    }
-
-    public void notifyDataChanged() {
-        mDashBoardItemsLiveData.setValue(buildDisplayList());
     }
 
     public int incrementAndGetID() {
@@ -934,7 +960,6 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     private int mMaxID;
     private Application mApplication;
-    private Thread mTestDataThread; //TODO: remove after test
     protected JavaScriptExcecutor mJavaScriptExecutor;
     protected int mVersion;
     private ScheduledExecutorService mTimer;
