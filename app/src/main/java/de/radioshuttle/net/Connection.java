@@ -182,6 +182,12 @@ public class Connection {
         return dataInputStream;
     }
 
+    public List<String> enumResources(String type) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.enumResourcesRequest(++mSeqNo, type);
+        handleError(response);
+        return mCmd.readEnumResourcesData(response.data);
+    }
+
 
     public Map<String, String> getFCMData() throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_FCM_DATA, ++mSeqNo);

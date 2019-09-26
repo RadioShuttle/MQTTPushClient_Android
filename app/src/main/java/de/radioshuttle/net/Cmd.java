@@ -57,6 +57,7 @@ public class Cmd {
     public final static int CMD_ADD_RESOURCE = 26;
     public final static int CMD_GET_RESOURCE = 27;
     public final static int CMD_DEL_RESOURCE = 28;
+    public final static int CMD_ENUM_RESOURCES = 29;
 
     public RawCmd helloRequest(int seqNo, boolean ssl) throws IOException {
         int flags = FLAG_REQUEST;
@@ -166,6 +167,38 @@ public class Cmd {
                 try { bis.close();} catch(Exception  io) {}
             }
         }
+    }
+
+    public RawCmd enumResourcesRequest(int seqNo, String type) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(type, os);
+        writeCommand(CMD_ENUM_RESOURCES, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public void enumResourcesResponse(RawCmd request, List<String> resources) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        if (resources == null || resources.size() == 0) {
+            os.writeShort(0);
+        } else {
+            os.writeShort(resources.size());
+            for (String r : resources) {
+                writeString(r, os);
+            }
+        }
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public List<String> readEnumResourcesData(byte[] data) throws IOException {
+        ArrayList<String> resources = new ArrayList<>();
+        DataInputStream is = getDataInputStream(data);
+        int len = is.readUnsignedShort();
+        for(int i = 0; i < len; i++) {
+            resources.add(readString(is));
+        }
+        return resources;
     }
 
     public RawCmd loginRequest(int seqNo, String uri, String user, char[] password, String uuid) throws IOException {
