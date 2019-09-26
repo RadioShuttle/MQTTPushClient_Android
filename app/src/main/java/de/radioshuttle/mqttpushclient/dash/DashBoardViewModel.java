@@ -80,6 +80,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         currentSaveRequest = null;
         mMaxID = 0;
         mVersion = -1;
+        mImageLoaderActive = false;
         mTimer = Executors.newScheduledThreadPool(1);
         mRequestExecutor = Utils.newSingleThreadPool();
     }
@@ -309,6 +310,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                 @Override
                 protected void onPostExecute(List<Item> items) {
                     super.onPostExecute(items);
+                    mImageLoaderActive = false;
                     if (items != null) {
                         for(Item item : items) {
                             checkForResourceNotFoundError(item);
@@ -318,12 +320,16 @@ public class DashBoardViewModel extends AndroidViewModel {
                     }
                 }
             };
+            mImageLoaderActive = true;
             loadImages.executeOnExecutor(Utils.executor, (List<Item>[]) new List[] {list});
         }
     }
 
 
     protected void checkForResourceNotFoundError(Item item) {
+        if (mImageLoaderActive) {
+            return;
+        }
         if (item instanceof Switch) {
             Switch sw = (Switch) item;
 
@@ -964,6 +970,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     protected int mVersion;
     private ScheduledExecutorService mTimer;
     private ScheduledFuture<?> mGetMessagesTask;
+    private boolean mImageLoaderActive;
 
     private ThreadPoolExecutor mRequestExecutor;
 
