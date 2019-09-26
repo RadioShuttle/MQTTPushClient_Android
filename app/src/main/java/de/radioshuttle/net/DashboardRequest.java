@@ -287,7 +287,7 @@ public class DashboardRequest extends Request {
                                     }
                                 }
                                 if (ImageResource.isUserResource(uri2)) {
-                                    resourceName = ImageResource.getURIPath(uri);
+                                    resourceName = ImageResource.getURIPath(uri2);
                                     internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
                                     f = new File(localDir, internalFileName);
                                     if (!f.exists()) {
