@@ -68,12 +68,10 @@ public class Switch extends Item {
         o.put("uri", uri == null ? "" : uri);
         o.put("color", color);
         o.put("bgcolor", bgcolor);
-        if (!Utils.isEmpty(val2)) {
-            o.put("val2", val2);
-            o.put("uri2", uri2 == null ? "" : uri2);
-            o.put("bgcolor2", bgcolor2);
-            o.put("color2", color2);
-        }
+        o.put("val2", val2);
+        o.put("uri2", uri2 == null ? "" : uri2);
+        o.put("bgcolor2", bgcolor2);
+        o.put("color2", color2);
         return o;
     }
 
@@ -87,9 +85,6 @@ public class Switch extends Item {
         bgcolor2 = o.optLong("bgcolor2");
         color = o.optLong("color");
         color2 = o.optLong("color2");
-        //TODO: remove:
-        // uri = "res://internal/notifications_active";
-        // uri2 = "res://internal/notifications_off";
     }
 
 }
