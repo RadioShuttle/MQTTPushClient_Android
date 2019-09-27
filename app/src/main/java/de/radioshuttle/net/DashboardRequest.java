@@ -52,6 +52,7 @@ public class DashboardRequest extends Request {
     }
 
     protected void saveImportedResources(List<String> serverResourceList) throws IOException, ServerError, JSONException {
+
         /*
          * Interate over all elemnts to find imported file uris and save/send to server
          */
@@ -231,11 +232,13 @@ public class DashboardRequest extends Request {
                 List<String> serverResourceList = null;
                 try {
                     serverResourceList = mConnection.enumResources(Cmd.DASH512_PNG);
-                    if (serverResourceList != null) { //TODO: remove log after test
+                    /*
+                    if (serverResourceList != null) {
                         for (String s : serverResourceList) {
                             Log.d(TAG, "server entry: " + s);
                         }
                     }
+                     */
                 } catch(ServerError e) {
                     /* ignonre server error, which are not impotant here (connection errors will not be caught here) */
                     Log.d(TAG, "enum resources server error: " +  e.getMessage());
@@ -261,6 +264,16 @@ public class DashboardRequest extends Request {
                     // delete dsf
                     for(File f : mDeleteFiles) {
                         f.delete();
+                    }
+                    // clean up (delete unused image resources)
+                    try {
+                        List<String> unusedResources = findUnusedResources(serverResourceList);
+                        if (unusedResources.size() > 0) {
+                            mConnection.deleteResources(unusedResources, Cmd.DASH512_PNG);
+                        }
+                    } catch(ServerError e) {
+                        // igonre error handling for server error
+                        Log.d(TAG, "Error deleting resources: " + e.getMessage());
                     }
 
                 } else {
@@ -437,6 +450,37 @@ public class DashboardRequest extends Request {
         } catch(Exception e) {
             Log.d(TAG, "Error syncing images: ", e);
         }
+    }
+
+    protected List<String> findUnusedResources(List<String> serverResourceList) throws JSONException {
+        ArrayList<String> unusedResources = new ArrayList<>();
+        if (serverResourceList != null && serverResourceList.size() > 0 && !isEmptyDashboard()) {
+            unusedResources.addAll(serverResourceList);
+            HashSet<String> usedResoureces = new HashSet<>();
+            JSONArray groupArray = mDashboardPara.getJSONArray("groups");
+            JSONObject groupJSON, itemJSON;
+            String uri, uri2;
+            for (int i = 0; i < groupArray.length(); i++) {
+                groupJSON = groupArray.getJSONObject(i);
+                if (groupJSON.has("items")) {
+                    JSONArray itemArray = groupJSON.getJSONArray("items");
+                    for (int j = 0; j < itemArray.length(); j++) {
+                        itemJSON = itemArray.getJSONObject(j);
+                        uri = itemJSON.optString("uri");
+                        uri2 = itemJSON.optString("uri2");
+                        if (ImageResource.isUserResource(uri)) {
+                            usedResoureces.add(ImageResource.getURIPath(uri));
+                        }
+                        if (ImageResource.isUserResource(uri2)) {
+                            usedResoureces.add(ImageResource.getURIPath(uri2));
+                        }
+
+                    }
+                }
+            }
+            unusedResources.removeAll(usedResoureces);
+        }
+        return unusedResources;
     }
 
     protected boolean isEmptyDashboard() {
