@@ -201,6 +201,36 @@ public class Cmd {
         return resources;
     }
 
+    public RawCmd deleteResourcesRequest(int seqNo, List<String> resourceNames, String type) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(type, os);
+        if (resourceNames == null || resourceNames.size() == 0) {
+            os.writeShort(0);
+        } else {
+            os.writeShort(resourceNames.size());
+            for(String r : resourceNames) {
+                writeString(r, os);
+            }
+        }
+        writeCommand(CMD_DEL_RESOURCE, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
+        return readCommand();
+    }
+
+    public List<String> readDeleteResourcesData(byte[] data, Cmd.Ref<String> type) throws IOException {
+        DataInputStream is = getDataInputStream(data);
+        String ts = readString(is);
+        if (type != null) {
+            type.value = ts;
+        }
+        int len = is.readUnsignedShort();
+        ArrayList<String> resourceNames = new ArrayList<>();
+        for(int i = 0; i < len; i++) {
+            resourceNames.add(readString(is));
+        }
+        return resourceNames;
+    }
+
     public RawCmd loginRequest(int seqNo, String uri, String user, char[] password, String uuid) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);

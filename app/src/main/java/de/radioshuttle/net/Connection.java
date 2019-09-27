@@ -170,6 +170,12 @@ public class Connection {
         return Cmd.readString(d);
     }
 
+    public int[] deleteResources(List<String> resourceNames, String type) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.deleteResourcesRequest(++mSeqNo, resourceNames, type);
+        handleError(response);
+        return mCmd.readIntArray(response.data);
+    }
+
     public DataInputStream getResource(String filename, String type) throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.getResourceRequest(++mSeqNo, filename, type);
         DataInputStream dataInputStream = null;
