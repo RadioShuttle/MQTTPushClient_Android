@@ -68,7 +68,7 @@ public class Switch extends Item {
         o.put("uri", uri == null ? "" : uri);
         o.put("color", color);
         o.put("bgcolor", bgcolor);
-        o.put("val2", val2);
+        o.put("val2",  val2 == null ? "" : val2);
         o.put("uri2", uri2 == null ? "" : uri2);
         o.put("bgcolor2", bgcolor2);
         o.put("color2", color2);
