@@ -55,11 +55,13 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
         int image_width_px = getResources().getDimensionPixelSize(R.dimen.image_selection_cell_image_width);
         int image_cell_margin = getResources().getDimensionPixelSize(R.dimen.image_selection_cell_margin);
-        int spanCount = dm.widthPixels / (image_width_px + image_cell_margin * 2);
+        int container_margin = (int) (12f * 2f * dm.density); // 16dp (minus cell margin 4 = 12) * 2
+        int spanCount = (dm.widthPixels - container_margin) / (image_width_px + image_cell_margin * 2);
+        int maxCellWidth = (dm.widthPixels - container_margin) / spanCount;
 
         GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
         mInternalImageList.setLayoutManager(layoutManager);
-        mInternalImageAdapter = new ImageChooserAdapter(this);
+        mInternalImageAdapter = new ImageChooserAdapter(this, maxCellWidth);
         mInternalImageList.setAdapter(mInternalImageAdapter);
         mViewModel.mLiveDataInternalImages.observe(this, new Observer<PagedList<ImageResource>>() {
             @Override
@@ -72,7 +74,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         mUserImageList = findViewById(R.id.userImageList);
         layoutManager = new GridLayoutManager(this, spanCount);
         mUserImageList.setLayoutManager(layoutManager);
-        mUserImageAdapter = new ImageChooserAdapter(this);
+        mUserImageAdapter = new ImageChooserAdapter(this, maxCellWidth);
 
         mUserImageList.setAdapter(mUserImageAdapter);
         mViewModel.mLiveDataUserImages.observe(this, new Observer<PagedList<ImageResource>>() {
