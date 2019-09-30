@@ -120,6 +120,27 @@ public final class ImageResource {
         return uriPath;
     }
 
+    public static String getLabel(String uri) {
+        String label = null;
+        URI u = null;
+        try {
+            if (uri != null) {
+                u = new URI(uri);
+                String a = u.getAuthority();
+                if ("imported".equals(a)) {
+                    label = getURIPath(uri);
+                    label = removeImportedFilePrefix(label);
+                    label = removeExtension(label);
+                    label = "tmp/" + label;
+
+                } else {
+                    label = getURIPath(uri);
+                }
+            }
+        } catch(Exception e) {}
+        return label;
+    }
+
     public static String decodeFilename(String filename) {
         if (filename != null) {
             HeliosUTF8Decoder dec = new HeliosUTF8Decoder();
