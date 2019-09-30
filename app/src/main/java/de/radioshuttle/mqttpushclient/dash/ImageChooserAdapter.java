@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.widget.ImageViewCompat;
@@ -25,12 +26,14 @@ import de.radioshuttle.utils.Utils;
 
 public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageChooserAdapter.ViewHolder> {
 
-    public ImageChooserAdapter(Context context) {
+    public ImageChooserAdapter(Context context, int cellWidth) {
         super(DIFF_CALLBACK);
         mInflater = LayoutInflater.from(context);
         if (context instanceof OnImageSelectListener) {
             callback = (OnImageSelectListener) context;
         }
+        mShowLabels = true; //TODO
+        mCellWidth = cellWidth;
     }
 
     @NonNull
@@ -42,11 +45,15 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
         } else { // VIEW_TYPE_IMAGE_BUTTON
             view = mInflater.inflate(R.layout.activity_image_chooser_cell, parent, false);
         }
+        if (view.getLayoutParams() != null && mCellWidth > 0) {
+            view.getLayoutParams().width = mCellWidth;
+        }
         final ViewHolder holder = new ViewHolder(view);
         if (viewType == VIEW_TYPE_NO_SELECTION) {
             holder.noImageButton = view.findViewById(R.id.noneButton);
         } else { // VIEW_TYPE_IMAGE_BUTTON
             holder.image = view.findViewById(R.id.image);
+            holder.label = view.findViewById(R.id.label);
         }
         return holder;
     }
@@ -69,6 +76,11 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
             ImageResource item = getItem(position);
             String uri = item.uri;
             // Log.d(TAG, "onBindViewHolder: " + position + ", " + item.uri);
+            String label = null;
+            if (!Utils.isEmpty(uri)) {
+                label = ImageResource.getLabel(uri);
+            }
+            vh.label.setText(label);
 
             vh.image.setImageDrawable(item.drawable);
             /* remove tint if user image */
@@ -118,6 +130,7 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
         }
         public ImageButton image;
         public Button noImageButton;
+        public TextView label;
     }
 
     public interface OnImageSelectListener {
@@ -128,7 +141,9 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
 
     OnImageSelectListener callback;
 
+    int mCellWidth;
     LayoutInflater mInflater;
+    boolean mShowLabels;
 
     protected static final int VIEW_TYPE_NO_SELECTION = 1;
     protected static final int VIEW_TYPE_IMAGE_BUTTON = 2;
