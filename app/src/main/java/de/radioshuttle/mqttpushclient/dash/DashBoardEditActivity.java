@@ -359,32 +359,32 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (!(mItem instanceof Switch)) {
                     findViewById(R.id.rowSwitchActive).setVisibility(View.GONE);
                     findViewById(R.id.rowSwitchActiveText).setVisibility(View.GONE);
-                    findViewById(R.id.rowSwitchInactive).setVisibility(View.GONE);
-                    findViewById(R.id.rowSwitchInactiveText).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchOff).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchOffText).setVisibility(View.GONE);
                     findViewById(R.id.rowSwitchActiveBackground).setVisibility(View.GONE);
-                    findViewById(R.id.rowSwitchInactiveBackground).setVisibility(View.GONE);
-                    findViewById(R.id.rowSwitchInactiveColor).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchOffBackground).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchOffColor).setVisibility(View.GONE);
                     findViewById(R.id.rowSwitchActiveColor).setVisibility(View.GONE);
                     findViewById(R.id.rowSwitchActiveImage).setVisibility(View.GONE);
-                    findViewById(R.id.rowSwitchInactiveImage).setVisibility(View.GONE);
+                    findViewById(R.id.rowSwitchOffImage).setVisibility(View.GONE);
                     findViewById(R.id.dash_active_button_note).setVisibility(View.GONE);
-                    findViewById(R.id.dash_inactive_button_note).setVisibility(View.GONE);
+                    findViewById(R.id.dash_off_button_note).setVisibility(View.GONE);
 
                 } else {
                     mEditTextSwitchActive = findViewById(R.id.dash_acitve_state_text);
-                    mEditTextSwitchInactive = findViewById(R.id.dash_inacitve_state_text);
+                    mEditTextSwitchOff = findViewById(R.id.dash_inacitve_state_text);
                     mBColorActiveButton = findViewById(R.id.dash_switch_active_bcolor_button);
-                    mBColorInactiveButton = findViewById(R.id.dash_switch_inactive_bcolor_button);
+                    mBColorOffButton = findViewById(R.id.dash_switch_off_bcolor_button);
                     mColorActiveButton = findViewById(R.id.dash_switch_active_color_button);
-                    mColorInactiveButton = findViewById(R.id.dash_switch_inactive_color_button);
+                    mColorOffButton = findViewById(R.id.dash_switch_off_color_button);
                     mButtonSwitchActiveEmpty = findViewById(R.id.dash_active_text_button);
                     mButtonSwitchActive = findViewById(R.id.dash_active_image_button);
-                    mButtonSwitchInactiveEmpty = findViewById(R.id.dash_inactive_text_button);
-                    mButtonSwitchInactive = findViewById(R.id.dash_inactive_image_button);
+                    mButtonSwitchOffEmpty = findViewById(R.id.dash_off_text_button);
+                    mButtonSwitchOff = findViewById(R.id.dash_off_image_button);
                     mActiveClearImage = findViewById(R.id.dash_switch_active_color_clear);
-                    mInactiveClearImage = findViewById(R.id.dash_switch_inactive_color_clear);
+                    mOffClearImage = findViewById(R.id.dash_switch_off_color_clear);
                     mActiveNoteText = findViewById(R.id.dash_active_button_note);
-                    mInactiveNoteText = findViewById(R.id.dash_inactive_button_note);
+                    mOffNoteText = findViewById(R.id.dash_off_button_note);
 
                     mDefaultButtonTintColor = ContextCompat.getColor(this, R.color.button_tint_default);
                     mDefaultButtonBackground = DColor.fetchColor(this, R.attr.colorButtonNormal);
@@ -393,28 +393,28 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                     if (savedInstanceState == null) {
                         mActiveBackground = sw.bgcolor;
-                        mInactiveBackground = sw.bgcolorOff;
+                        mOffBackground = sw.bgcolorOff;
                         mActiveColor = sw.color;
-                        mInactiveColor = sw.colorOff;
+                        mOffColor = sw.colorOff;
                         mEditTextSwitchActive.setText(sw.val);
-                        mEditTextSwitchInactive.setText(sw.valOff);
+                        mEditTextSwitchOff.setText(sw.valOff);
                         mActiveImageURI = sw.uri;
-                        mInactiveImageURI = sw.uriOff;
+                        mOffImageURI = sw.uriOff;
                     } else {
                         if (savedInstanceState.containsKey(KEY_ACT_BACKGROUND)) {
                             mActiveBackground = savedInstanceState.getLong(KEY_ACT_BACKGROUND);
                         }
-                        if (savedInstanceState.containsKey(KEY_INACT_BACKGROUND)) {
-                            mInactiveBackground = savedInstanceState.getLong(KEY_INACT_BACKGROUND);
+                        if (savedInstanceState.containsKey(KEY_OFF_BACKGROUND)) {
+                            mOffBackground = savedInstanceState.getLong(KEY_OFF_BACKGROUND);
                         }
-                        if (savedInstanceState.containsKey(KEY_INACT_COLOR)) {
-                            mInactiveColor = savedInstanceState.getLong(KEY_INACT_COLOR);
+                        if (savedInstanceState.containsKey(KEY_OFF_COLOR)) {
+                            mOffColor = savedInstanceState.getLong(KEY_OFF_COLOR);
                         }
                         if (savedInstanceState.containsKey(KEY_ACT_COLOR)) {
                             mActiveColor = savedInstanceState.getLong(KEY_ACT_COLOR);
                         }
                         mActiveImageURI = savedInstanceState.getString(KEY_ACT_IMAGE_URI);
-                        mInactiveImageURI = savedInstanceState.getString(KEY_INACT_IMAGE_URI);
+                        mOffImageURI = savedInstanceState.getString(KEY_OFF_IMAGE_URI);
                     }
                     updateSwitchButtons();
                     tintSwitchButtons();
@@ -433,16 +433,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         }
                     });
 
-                    if (mInactiveBackground == DColor.OS_DEFAULT || mInactiveBackground == DColor.CLEAR) {
+                    if (mOffBackground == DColor.OS_DEFAULT || mOffBackground == DColor.CLEAR) {
                         color = mDefaultButtonBackground;
                     } else {
-                        color = (int) mInactiveBackground;
+                        color = (int) mOffBackground;
                     }
-                    mBColorInactiveButton.setColor(color, mColorLabelBorderColor);
-                    mBColorInactiveButton.setOnClickListener(new View.OnClickListener() {
+                    mBColorOffButton.setColor(color, mColorLabelBorderColor);
+                    mBColorOffButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(mDefaultButtonBackground, mInactiveBackground, mColorLabelBorderColor,  "inactive_bcolor", false);
+                            showColorDialog(mDefaultButtonBackground, mOffBackground, mColorLabelBorderColor,  "off_bcolor", false);
                         }
                     });
 
@@ -463,19 +463,19 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         }
                     });
 
-                    if (mInactiveColor == DColor.OS_DEFAULT) {
+                    if (mOffColor == DColor.OS_DEFAULT) {
                         color = mDefaultButtonTintColor;
-                    } else if (mInactiveColor == DColor.CLEAR){
+                    } else if (mOffColor == DColor.CLEAR){
                         color = mDefaultClearColor;
                     } else {
-                        color = (int) mInactiveColor;
+                        color = (int) mOffColor;
                     }
-                    mColorInactiveButton.setDisableTransparentImage(mInactiveColor == DColor.CLEAR);
-                    mColorInactiveButton.setColor(color, mColorLabelBorderColor);
-                    mColorInactiveButton.setOnClickListener(new View.OnClickListener() {
+                    mColorOffButton.setDisableTransparentImage(mOffColor == DColor.CLEAR);
+                    mColorOffButton.setColor(color, mColorLabelBorderColor);
+                    mColorOffButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(mDefaultButtonTintColor, mInactiveColor, mColorLabelBorderColor, "inactive_color", true);
+                            showColorDialog(mDefaultButtonTintColor, mOffColor, mColorLabelBorderColor, "off_color", true);
                         }
                     });
 
@@ -491,16 +491,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             openImageChooser(CTRL_ACTIVE_STATE);
                         }
                     });
-                    mButtonSwitchInactiveEmpty.setOnClickListener(new View.OnClickListener() {
+                    mButtonSwitchOffEmpty.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            openImageChooser(CTRL_INACTIVE_STATE);
+                            openImageChooser(CTRL_OFF_STATE);
                         }
                     });
-                    mButtonSwitchInactive.setOnClickListener(new View.OnClickListener() {
+                    mButtonSwitchOff.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            openImageChooser(CTRL_INACTIVE_STATE);
+                            openImageChooser(CTRL_OFF_STATE);
                         }
                     });
                 }
@@ -670,33 +670,33 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             }
 
             noTint = false;
-            if (mInactiveColor == DColor.OS_DEFAULT) {
+            if (mOffColor == DColor.OS_DEFAULT) {
                 color = mDefaultButtonTintColor;
-            } else if (mInactiveColor == DColor.CLEAR) {
+            } else if (mOffColor == DColor.CLEAR) {
                 noTint = true;
                 color = mDefaultButtonTintColor; //TODO: check
             } else {
-                color = (int) mInactiveColor;
+                color = (int) mOffColor;
             }
 
-            if (mInactiveBackground == DColor.OS_DEFAULT || mInactiveBackground == DColor.CLEAR) {
+            if (mOffBackground == DColor.OS_DEFAULT || mOffBackground == DColor.CLEAR) {
                 bg = mDefaultButtonBackground;
             } else {
-                bg = (int) mInactiveBackground;
+                bg = (int) mOffBackground;
             }
 
             foreground = ColorStateList.valueOf(color);
             background = ColorStateList.valueOf(bg);
 
-            if (Utils.isEmpty(mInactiveImageURI)) {
-                mButtonSwitchInactiveEmpty.setTextColor(foreground);
-                ViewCompat.setBackgroundTintList(mButtonSwitchInactiveEmpty, background);
+            if (Utils.isEmpty(mOffImageURI)) {
+                mButtonSwitchOffEmpty.setTextColor(foreground);
+                ViewCompat.setBackgroundTintList(mButtonSwitchOffEmpty, background);
             } else {
                 if (noTint) {
                     foreground = null;
                 }
-                ImageViewCompat.setImageTintList(mButtonSwitchInactive, foreground);
-                ViewCompat.setBackgroundTintList(mButtonSwitchInactive, background);
+                ImageViewCompat.setImageTintList(mButtonSwitchOff, foreground);
+                ViewCompat.setBackgroundTintList(mButtonSwitchOff, background);
             }
 
             if (mActiveColor == DColor.CLEAR) {
@@ -709,13 +709,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
             }
 
-            if (mInactiveColor == DColor.CLEAR) {
-                if (mInactiveClearImage.getVisibility() != View.VISIBLE) {
-                    mInactiveClearImage.setVisibility(View.VISIBLE);
+            if (mOffColor == DColor.CLEAR) {
+                if (mOffClearImage.getVisibility() != View.VISIBLE) {
+                    mOffClearImage.setVisibility(View.VISIBLE);
                 }
             } else {
-                if (mInactiveClearImage.getVisibility() != View.GONE) {
-                    mInactiveClearImage.setVisibility(View.GONE);
+                if (mOffClearImage.getVisibility() != View.GONE) {
+                    mOffClearImage.setVisibility(View.GONE);
                 }
             }
 
@@ -769,35 +769,35 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
             }
 
-            if (Utils.isEmpty(mInactiveImageURI)) {
-                if (mButtonSwitchInactiveEmpty.getVisibility() != View.VISIBLE) {
-                    mButtonSwitchInactiveEmpty.setVisibility(View.VISIBLE);
+            if (Utils.isEmpty(mOffImageURI)) {
+                if (mButtonSwitchOffEmpty.getVisibility() != View.VISIBLE) {
+                    mButtonSwitchOffEmpty.setVisibility(View.VISIBLE);
                 }
-                if (mButtonSwitchInactive.getVisibility() != View.GONE) {
-                    mButtonSwitchInactive.setVisibility(View.GONE);
+                if (mButtonSwitchOff.getVisibility() != View.GONE) {
+                    mButtonSwitchOff.setVisibility(View.GONE);
                 }
-                if (mInactiveNoteText.getVisibility() != View.GONE) {
-                    mInactiveNoteText.setVisibility(View.GONE);
+                if (mOffNoteText.getVisibility() != View.GONE) {
+                    mOffNoteText.setVisibility(View.GONE);
                 }
             } else {
-                if (mButtonSwitchInactiveEmpty.getVisibility() != View.GONE) {
-                    mButtonSwitchInactiveEmpty.setVisibility(View.GONE);
+                if (mButtonSwitchOffEmpty.getVisibility() != View.GONE) {
+                    mButtonSwitchOffEmpty.setVisibility(View.GONE);
                 }
-                if (mButtonSwitchInactive.getVisibility() != View.VISIBLE) {
-                    mButtonSwitchInactive.setVisibility(View.VISIBLE);
+                if (mButtonSwitchOff.getVisibility() != View.VISIBLE) {
+                    mButtonSwitchOff.setVisibility(View.VISIBLE);
                 }
-                if (mInactiveNoteText.getVisibility() != View.VISIBLE) {
-                    mInactiveNoteText.setVisibility(View.VISIBLE);
+                if (mOffNoteText.getVisibility() != View.VISIBLE) {
+                    mOffNoteText.setVisibility(View.VISIBLE);
                 }
                 //TODO: consider loading asnyc
                 boolean found = false;
-                if (ImageResource.isInternalResource(mInactiveImageURI)) {
-                    mButtonSwitchInactive.setImageResource(IconHelper.INTENRAL_ICONS.get(mInactiveImageURI));
+                if (ImageResource.isInternalResource(mOffImageURI)) {
+                    mButtonSwitchOff.setImageResource(IconHelper.INTENRAL_ICONS.get(mOffImageURI));
                     found = true;
-                } else if (ImageResource.isExternalResource(mInactiveImageURI)) {
+                } else if (ImageResource.isExternalResource(mOffImageURI)) {
                     try {
-                        BitmapDrawable bm = ImageResource.loadExternalImage(this, mInactiveImageURI);
-                        mButtonSwitchInactive.setImageDrawable(bm);
+                        BitmapDrawable bm = ImageResource.loadExternalImage(this, mOffImageURI);
+                        mButtonSwitchOff.setImageDrawable(bm);
                         if (bm != null) {
                             found = true;
                         }
@@ -805,9 +805,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         Log.d(TAG, "error loading image (ext): " , e);
                     }
                     if (!found) {
-                        mInactiveNoteText.setText(getString(R.string.error_image_not_found));
+                        mOffNoteText.setText(getString(R.string.error_image_not_found));
                     } else {
-                        mInactiveNoteText.setText("");
+                        mOffNoteText.setText("");
                     }
                 }
             }
@@ -822,10 +822,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         outState.putLong(KEY_PROGCOLOR, mProgColor);
         outState.putLong(KEY_ACT_COLOR, mActiveColor);
         outState.putLong(KEY_ACT_BACKGROUND, mActiveBackground);
-        outState.putLong(KEY_INACT_BACKGROUND, mInactiveBackground);
-        outState.putLong(KEY_INACT_COLOR, mInactiveColor);
+        outState.putLong(KEY_OFF_BACKGROUND, mOffBackground);
+        outState.putLong(KEY_OFF_COLOR, mOffColor);
         outState.putString(KEY_ACT_IMAGE_URI, mActiveImageURI);
-        outState.putString(KEY_INACT_IMAGE_URI, mInactiveImageURI);
+        outState.putString(KEY_OFF_IMAGE_URI, mOffImageURI);
 
         if (!Utils.isEmpty(mFilterScriptContent)) {
             outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
@@ -1040,12 +1040,12 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
                 tintSwitchButtons();
                 break;
-            case "inactive_bcolor" :
-                mBColorInactiveButton.setColor(color, mColorLabelBorderColor);
+            case "off_bcolor" :
+                mBColorOffButton.setColor(color, mColorLabelBorderColor);
                 if (idx == 0) {
-                    mInactiveBackground = DColor.OS_DEFAULT;
+                    mOffBackground = DColor.OS_DEFAULT;
                 } else {
-                    mInactiveBackground = color;
+                    mOffBackground = color;
                 }
                 tintSwitchButtons();
                 break;
@@ -1062,17 +1062,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 mColorActiveButton.setColor(color, mColorLabelBorderColor);
                 tintSwitchButtons();
                 break;
-            case "inactive_color" :
+            case "off_color" :
                 if (idx == 0) {
-                    mInactiveColor = DColor.OS_DEFAULT;;
+                    mOffColor = DColor.OS_DEFAULT;;
                 } else if (idx == 1) {
-                    mInactiveColor = DColor.CLEAR;
+                    mOffColor = DColor.CLEAR;
                     color = mDefaultClearColor;
                 } else {
-                    mInactiveColor = color;
+                    mOffColor = color;
                 }
-                mColorInactiveButton.setDisableTransparentImage(mInactiveColor == DColor.CLEAR);
-                mColorInactiveButton.setColor(color, mColorLabelBorderColor);
+                mColorOffButton.setDisableTransparentImage(mOffColor == DColor.CLEAR);
+                mColorOffButton.setColor(color, mColorLabelBorderColor);
                 tintSwitchButtons();
                 break;
         }
@@ -1294,7 +1294,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                 Intent intent = new Intent(this, ImageChooserActivity.class);
                 intent.putExtra(ImageChooserActivity.ARG_CTRL_IDX, ctrlIdx);
-                intent.putExtra(ImageChooserActivity.ARG_RESOURCE_URI,(ctrlIdx == 0 ? mActiveImageURI : mInactiveImageURI));
+                intent.putExtra(ImageChooserActivity.ARG_RESOURCE_URI,(ctrlIdx == 0 ? mActiveImageURI : mOffImageURI));
 
                 Bundle args = getIntent().getExtras();
                 String acc = args.getString(ARG_ACCOUNT);
@@ -1422,19 +1422,19 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     }
                     updateSwitchButtons();
                     tintSwitchButtons();
-                } else if (ctrlIdx == CTRL_INACTIVE_STATE) {
+                } else if (ctrlIdx == CTRL_OFF_STATE) {
                     if (Utils.isEmpty(uri)) {
-                        Log.i(TAG, "selected image (inactive): none");
-                        mInactiveImageURI = "";
+                        Log.i(TAG, "selected image (off): none");
+                        mOffImageURI = "";
                     } else {
-                        Log.i(TAG, "selected image (inactive): " + uri);
-                        mInactiveImageURI = uri;
+                        Log.i(TAG, "selected image (off): " + uri);
+                        mOffImageURI = uri;
                         // user image? then clear tint color
-                        if (ImageResource.isExternalResource(mInactiveImageURI)) {
-                            mInactiveColor = DColor.CLEAR;
+                        if (ImageResource.isExternalResource(mOffImageURI)) {
+                            mOffColor = DColor.CLEAR;
                             int color = mDefaultClearColor;
-                            mColorInactiveButton.setDisableTransparentImage(true);
-                            mColorInactiveButton.setColor(color, mColorLabelBorderColor);
+                            mColorOffButton.setDisableTransparentImage(true);
+                            mColorOffButton.setColor(color, mColorLabelBorderColor);
                         }
                     }
                     updateSwitchButtons();
@@ -1475,13 +1475,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (cItem instanceof Switch) {
                     Switch item = (Switch) cItem;
                     item.val = mEditTextSwitchActive.getText().toString();
-                    item.valOff = mEditTextSwitchInactive.getText().toString();
+                    item.valOff = mEditTextSwitchOff.getText().toString();
                     item.color = mActiveColor;
-                    item.colorOff = mInactiveColor;
+                    item.colorOff = mOffColor;
                     item.bgcolor = mActiveBackground;
-                    item.bgcolorOff = mInactiveBackground;
+                    item.bgcolorOff = mOffBackground;
                     item.uri = mActiveImageURI;
-                    item.uriOff = mInactiveImageURI;
+                    item.uriOff = mOffImageURI;
                 }
             }
             if (mEditTextLabel != null) {
@@ -1569,15 +1569,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
         if (mItem instanceof Switch) {
             setEnabled(mEditTextSwitchActive, enableFields);
-            setEnabled(mEditTextSwitchInactive, enableFields);
+            setEnabled(mEditTextSwitchOff, enableFields);
             setEnabled(mBColorActiveButton, enableFields);
-            setEnabled(mBColorInactiveButton, enableFields);
+            setEnabled(mBColorOffButton, enableFields);
             setEnabled(mColorActiveButton, enableFields);
-            setEnabled(mColorInactiveButton, enableFields);
+            setEnabled(mColorOffButton, enableFields);
             setEnabled(mButtonSwitchActiveEmpty, enableFields);
             setEnabled(mButtonSwitchActive, enableFields);
-            setEnabled(mButtonSwitchInactiveEmpty, enableFields);
-            setEnabled(mButtonSwitchInactive, enableFields);
+            setEnabled(mButtonSwitchOffEmpty, enableFields);
+            setEnabled(mButtonSwitchOff, enableFields);
         }
         invalidateOptionsMenu();
     }
@@ -1678,10 +1678,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             if (!changed && mItem instanceof Switch) {
                 Switch sw = (Switch) mItem;
                 changed = !mEditTextSwitchActive.getText().toString().equals(sw.val) ||
-                        !mEditTextSwitchInactive.getText().toString().equals(sw.valOff) ||
-                        sw.bgcolor != mActiveBackground || sw.bgcolorOff != mInactiveBackground ||
-                        sw.colorOff != mInactiveColor || sw.color != mActiveColor ||
-                        !Utils.equals(sw.uri, mActiveImageURI) || !Utils.equals(sw.uriOff, mInactiveImageURI);
+                        !mEditTextSwitchOff.getText().toString().equals(sw.valOff) ||
+                        sw.bgcolor != mActiveBackground || sw.bgcolorOff != mOffBackground ||
+                        sw.colorOff != mOffColor || sw.color != mActiveColor ||
+                        !Utils.equals(sw.uri, mActiveImageURI) || !Utils.equals(sw.uriOff, mOffImageURI);
             }
         }
 
@@ -1700,9 +1700,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected ColorLabel mColorButton;
     protected ColorLabel mBColorButton;
     protected ColorLabel mColorActiveButton;
-    protected ColorLabel mColorInactiveButton;
+    protected ColorLabel mColorOffButton;
     protected ColorLabel mBColorActiveButton;
-    protected ColorLabel mBColorInactiveButton;
+    protected ColorLabel mBColorOffButton;
     protected ColorLabel mProgressColor;
     protected Spinner mGroupSpinner;
     protected Spinner mPosSpinner;
@@ -1710,18 +1710,18 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected Button mOutputScriptButton;
 
     protected EditText mEditTextSwitchActive;
-    protected EditText mEditTextSwitchInactive;
+    protected EditText mEditTextSwitchOff;
     protected int mDefaultButtonTintColor;
     protected int mDefaultButtonBackground;
     protected int mDefaultClearColor;
     protected Button mButtonSwitchActiveEmpty;
     protected ImageButton mButtonSwitchActive;
-    protected Button mButtonSwitchInactiveEmpty;
-    protected ImageButton mButtonSwitchInactive;
-    protected TextView mActiveNoteText, mInactiveNoteText;
-    protected ImageView mInactiveClearImage, mActiveClearImage;
+    protected Button mButtonSwitchOffEmpty;
+    protected ImageButton mButtonSwitchOff;
+    protected TextView mActiveNoteText, mOffNoteText;
+    protected ImageView mOffClearImage, mActiveClearImage;
 
-    protected String mInactiveImageURI, mActiveImageURI;
+    protected String mOffImageURI, mActiveImageURI;
 
     protected EditText mEditTextRangeMin, mEditTextRangeMax, mEditTextDecimal;
     protected CheckBox mRangeDisplayPercent;
@@ -1737,8 +1737,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected long mBackground;
     protected long mProgColor;
     protected long mActiveBackground;
-    protected long mInactiveBackground;
-    protected long mInactiveColor;
+    protected long mOffBackground;
+    protected long mOffColor;
     protected long mActiveColor;
 
     protected final static String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
@@ -1746,10 +1746,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static String KEY_PROGCOLOR = "KEY_PROGCOLOR";
     protected final static String KEY_ACT_BACKGROUND = "KEY_ACT_BACKGROUND";
     protected final static String KEY_ACT_COLOR = "KEY_ACT_COLOR";
-    protected final static String KEY_INACT_BACKGROUND = "KEY_INACT_BACKGROUND";
-    protected final static String KEY_INACT_COLOR = "KEY_INACT_COLOR";
+    protected final static String KEY_OFF_BACKGROUND = "KEY_OFF_BACKGROUND";
+    protected final static String KEY_OFF_COLOR = "KEY_OFF_COLOR";
     protected final static String KEY_ACT_IMAGE_URI = "KEY_ACT_IMAGE_URI";
-    protected final static String KEY_INACT_IMAGE_URI = "KEY_INACT_IMAGE_URI";
+    protected final static String KEY_OFF_IMAGE_URI = "KEY_OFF_IMAGE_URI";
 
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
@@ -1789,5 +1789,5 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     public final static String ARG_DASHBOARD_VERSION = "ARG_DASHBOARD_VERSION";
 
     protected final static int CTRL_ACTIVE_STATE = 0;
-    protected final static int CTRL_INACTIVE_STATE = 1;
+    protected final static int CTRL_OFF_STATE = 1;
 }
