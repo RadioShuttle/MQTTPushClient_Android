@@ -11,9 +11,12 @@ import android.util.Log;
 
 import com.squareup.duktape.Duktape;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
+import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.utils.HeliosUTF8Decoder;
 import de.radioshuttle.utils.JavaScript;
 import de.radioshuttle.utils.Utils;
 
@@ -25,6 +28,7 @@ public class DashBoardJavaScript extends JavaScript {
         } catch (IOException e) {
             Log.d(TAG, "Error loading raw resource: javascript_color.js", e);
         }
+        this.app = app;
     }
 
     public static synchronized DashBoardJavaScript getInstance(Application app) {
@@ -35,7 +39,7 @@ public class DashBoardJavaScript extends JavaScript {
     }
 
     public void initViewProperties(Context context, HashMap<String, Object> viewProps) {
-        ViewPropertiesImpl viewProperties = new ViewPropertiesImpl(viewProps);
+        ViewPropertiesImpl viewProperties = new ViewPropertiesImpl(viewProps, app);
         ((Duktape) context.getInterpreter()).set("view", ViewProperties.class, viewProperties);
         if (!Utils.isEmpty(color_js)) {
             ((Duktape) context.getInterpreter()).evaluate(color_js);
@@ -81,6 +85,8 @@ public class DashBoardJavaScript extends JavaScript {
         void setTextColor(double color);
         void setTextSize(double size);
         void setTextFieldDefaultValue(String defaultInputValue);
+        void setCtrlImage(String resourceName);
+        void setCtrlImageOff(String resourceName);
 
         double getTextColor();
         double getBackgroundColor();
@@ -90,11 +96,16 @@ public class DashBoardJavaScript extends JavaScript {
         double getCtrlColorOff();
         String getTextFieldDefaultValue();
         double getTextSize();
+        String getCtrlImage();
+        String getCtrlImageOff();
     }
 
     private static class ViewPropertiesImpl implements ViewProperties {
-        public ViewPropertiesImpl(HashMap<String, Object> props) {
+        public ViewPropertiesImpl(HashMap<String, Object> props, Application app) {
             p = props;
+            this.app = app;
+            unknownImgtxt = app.getString(R.string.error_javascript_unknown_img_resource);
+            tempResoure = app.getString(R.string.error_javascript_tmp_img_resource);
         }
 
         public HashMap<String, Object> p;
@@ -109,36 +120,100 @@ public class DashBoardJavaScript extends JavaScript {
             p.put("ctrl_color_off", doubleToLong(color));
         }
 
-        /*
         @Override
-        public void _setCtrlImage(String resourceName) {
-            if (!_resourceExists(resourceName)) {
-                throw new RuntimeException("Invalid res");
+        public void setCtrlImage(String resourceName) {
+            /* resource names differ from internal representation */
+            String uri = null;
+            if (!Utils.isEmpty(resourceName)) {
+                if (resourceName.toLowerCase().startsWith("tmp/")) { // imported but not saved images are not allowed
+                    throw new RuntimeException(tempResoure + " " + resourceName);
+                }
+                uri = getResourceURI(resourceName);
+                if (Utils.isEmpty(uri)) {
+                    throw new RuntimeException(unknownImgtxt + " " + resourceName);
+                }
             }
-            Log.d(TAG, "_setCtrlImage" + resourceName); //TODO
-            p.put("ctrl_image", resourceName);
+            p.put("ctrl_image", uri);
         }
 
-        @Override
-        public String _getCtrlImage() {
-            return (String) p.get("ctrl_image");
-        }
 
         @Override
-        public void _setCtrlImage2(String resourceName) {
-            Log.d(TAG, "_setCtrlImage2" + resourceName); //TODO
+        public void setCtrlImageOff(String resourceName) {
+            /* resource names differ from internal representation */
+            String uri = null;
+            if (!Utils.isEmpty(resourceName)) {
+                if (resourceName.toLowerCase().startsWith("tmp/")) { // imported but not saved images are not allowed
+                    throw new RuntimeException(tempResoure + " " + resourceName);
+                }
+                uri = getResourceURI(resourceName);
+                if (Utils.isEmpty(uri)) {
+                    throw new RuntimeException(unknownImgtxt + " " + resourceName);
+                }
+            }
             p.put("ctrl_image_off", resourceName);
         }
 
-        @Override
-        public String _getCtrlImage2() {
-            return (String) p.get("ctrl_image_off");
+        private String getResourceURI(String resourceName) {
+            String uri = null;
+            try {
+                boolean checkUserRes;
+                if (resourceName.toLowerCase().startsWith("int/")) {
+                    resourceName = resourceName.substring(4);
+                    checkUserRes = false;
+                } else {
+                    if (resourceName.toLowerCase().startsWith("user/")) {
+                        resourceName = resourceName.substring(5);
+                    }
+                    checkUserRes = true;
+                }
+                if (checkUserRes) {
+                    File userImagesDir = ImportFiles.getUserFilesDir(app);
+                    String[] userFiles = userImagesDir.list();
+                    if (userFiles.length > 0) {
+                        HeliosUTF8Decoder dec = new HeliosUTF8Decoder();
+                        for(String u : userFiles) {
+                            u = ImageResource.removeExtension(u);
+                            u = dec.format(u);
+                            if (resourceName.equals(u)) {
+                                uri = ImageResource.buildUserResourceURI(u);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (Utils.isEmpty(uri)) { // not found, check if internal
+                    String key = "res://internal/" + resourceName;
+                    if (IconHelper.INTENRAL_ICONS.containsKey(key)) {
+                        uri = key;
+                    }
+                }
+            } catch(Exception e) {
+                Log.d(TAG, "Error checking resource name passed by script: " + resourceName);
+            }
+            return uri;
         }
 
-        public boolean _resourceExists(String resourceName) {
-            return false; //TODO
+        @Override
+        public String getCtrlImage() {
+            return convertToJSResourceName((String) p.get("ctrl_image"));
         }
-         */
+
+        @Override
+        public String getCtrlImageOff() {
+            return convertToJSResourceName((String) p.get("ctrl_image_off"));
+        }
+
+        private String convertToJSResourceName(String uri) {
+            String jsResource = "";
+            if (!Utils.isEmpty(uri)) {
+                if (uri.startsWith("res://internal/")) {
+                    jsResource = "int/" + uri.substring(15);
+                } else if (uri.startsWith("res://user/")) {
+                    jsResource = "user/" + uri.substring(11);
+                }
+            }
+            return jsResource;
+        }
 
         @Override
         public void setTextColor(double color) {
@@ -242,8 +317,13 @@ public class DashBoardJavaScript extends JavaScript {
         protected int doubleToInt(double d) {
             return (int) ((long) d & 0xFFFFFFFFL);
         }
+
+        String unknownImgtxt;
+        String tempResoure;
+        Application app;
     }
 
+    private Application app;
     private String color_js;
     private static DashBoardJavaScript js;
 
