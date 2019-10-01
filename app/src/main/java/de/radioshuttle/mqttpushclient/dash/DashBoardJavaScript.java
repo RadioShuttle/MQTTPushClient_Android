@@ -104,7 +104,7 @@ public class DashBoardJavaScript extends JavaScript {
         public ViewPropertiesImpl(HashMap<String, Object> props, Application app) {
             p = props;
             this.app = app;
-            unknownImgtxt = app.getString(R.string.error_javascript_unknown_img_resource);
+            unknownImgtxt = app.getString(R.string.error_javascript_img_resource_not_found);
             tempResoure = app.getString(R.string.error_javascript_tmp_img_resource);
         }
 

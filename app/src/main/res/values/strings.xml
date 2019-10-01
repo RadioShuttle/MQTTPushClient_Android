@@ -288,7 +288,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="error_image_not_found">Image file could not be loaded.</string>
     <string name="error_send_image_prefix">Saving image to server failed:  </string>
     <string name="error_send_image_invalid_args">Invalid file parameter</string>
-    <string name="error_javascript_unknown_img_resource">Unknown image resource:</string>
+    <string name="error_javascript_img_resource_not_found">Image resource not found:</string>
     <string name="error_javascript_tmp_img_resource">Using temp resources is not allowed: </string>
 
     <string name="select_single_dash">Only one dash may be selected for editing</string>
