@@ -312,11 +312,11 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             long fcolor;
             long bcolor;
             boolean noTint;
-            boolean isActiveState = sw.isActiveState();
+            boolean isOnState = sw.isOnState();
 
             Drawable icon;
 
-            if (isActiveState) {
+            if (isOnState) {
                 val = sw.val;
                 fcolor = sw.data.containsKey("ctrl_color") ? (Long) sw.data.get("ctrl_color") : sw.color;
                 bcolor = sw.data.containsKey("ctrl_background") ? (Long) sw.data.get("ctrl_background") : sw.bgcolor;

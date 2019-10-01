@@ -253,9 +253,9 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_label_progress_decimal">Decimal:</string>
     <string name="dash_label_progress_percent">Display in Percent</string>
     <string name="dash_label_progress_color">Prog. Color:</string>
-    <string name="dash_label_active_state">Active state</string>
+    <string name="dash_label_on_state">On state</string>
     <string name="dash_label_off_state">Off state</string>
-    <string name="dash_label_active_state_text">Value:</string>
+    <string name="dash_label_on_state_text">Value:</string>
     <string name="dash_label_off_state_text">Value: </string>
     <string name="dash_label_color">Color:</string>
     <string name="dash_label_system_default">Default</string>

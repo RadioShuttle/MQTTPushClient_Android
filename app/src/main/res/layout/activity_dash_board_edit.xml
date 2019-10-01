@@ -130,24 +130,24 @@
                     </LinearLayout>
                 </TableRow>
 
-                <TableRow android:id="@+id/rowSwitchActive" android:layout_marginTop="24dp">
+                <TableRow android:id="@+id/rowSwitchOn" android:layout_marginTop="24dp">
                     <TextView
                         android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:text="@string/dash_label_active_state"
+                        android:text="@string/dash_label_on_state"
                         android:layout_span="2"
                         />
                 </TableRow>
 
-                <TableRow android:id="@+id/rowSwitchActiveText">
+                <TableRow android:id="@+id/rowSwitchOnText">
                     <TextView
                         android:layout_gravity="right|center_vertical"
                         android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:labelFor="@+id/dash_acitve_state_text"
-                        android:text="@string/dash_label_active_state_text"
+                        android:labelFor="@+id/dash_on_state_text"
+                        android:text="@string/dash_label_on_state_text"
                         />
                     <LinearLayout>
                         <EditText
-                            android:id="@+id/dash_acitve_state_text"
+                            android:id="@+id/dash_on_state_text"
                             android:ems="5"
                             android:textAppearance="?android:attr/textAppearanceMedium"
                             android:layout_height="wrap_content"
@@ -158,17 +158,17 @@
                     </LinearLayout>
                 </TableRow>
 
-                <TableRow android:id="@+id/rowSwitchActiveColor">
+                <TableRow android:id="@+id/rowSwitchOnColor">
                     <TextView
                         android:layout_gravity="right|center_vertical"
                         android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:labelFor="@+id/dash_switch_active_color_button"
+                        android:labelFor="@+id/dash_switch_on_color_button"
                         android:text="@string/dash_label_color"
                         />
 
                     <androidx.constraintlayout.widget.ConstraintLayout>
                         <de.radioshuttle.mqttpushclient.dash.ColorLabel
-                            android:id="@+id/dash_switch_active_color_button"
+                            android:id="@+id/dash_switch_on_color_button"
                             app:layout_constraintLeft_toLeftOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
                             android:background="@drawable/color_label_selector"
@@ -176,7 +176,7 @@
                             android:layout_width="48dp"
                             android:layout_height="48dp" />
                         <ImageView
-                            android:id="@+id/dash_switch_active_color_clear"
+                            android:id="@+id/dash_switch_on_color_clear"
                             android:visibility="gone"
                             app:layout_constraintLeft_toLeftOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
@@ -190,17 +190,17 @@
 
                 </TableRow>
 
-                <TableRow android:id="@+id/rowSwitchActiveBackground">
+                <TableRow android:id="@+id/rowSwitchOnBackground">
                     <TextView
                         android:layout_gravity="right|center_vertical"
                         android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:labelFor="@+id/dash_switch_active_bcolor_button"
+                        android:labelFor="@+id/dash_switch_on_bcolor_button"
                         android:text="@string/dash_label_bcolor"
                         />
 
                     <LinearLayout>
                         <de.radioshuttle.mqttpushclient.dash.ColorLabel
-                            android:id="@+id/dash_switch_active_bcolor_button"
+                            android:id="@+id/dash_switch_on_bcolor_button"
                             android:background="@drawable/color_label_selector"
                             android:padding="8dp"
                             android:layout_width="48dp"
@@ -209,7 +209,7 @@
 
                 </TableRow>
 
-                <TableRow android:id="@+id/rowSwitchActiveImage">
+                <TableRow android:id="@+id/rowSwitchOnImage">
                     <TextView
                         android:layout_gravity="right|center_vertical"
                         android:textAppearance="?android:attr/textAppearanceMedium"
@@ -217,21 +217,21 @@
                         />
                     <LinearLayout android:orientation="horizontal">
                         <Button
-                            android:id="@+id/dash_active_text_button"
+                            android:id="@+id/dash_on_text_button"
                             android:text="@string/dash_label_empty_image_btn"
                             android:minHeight="48dp"
                             android:layout_width="wrap_content"
                             android:layout_height="48dp" />
 
                         <ImageButton
-                            android:id="@+id/dash_active_image_button"
+                            android:id="@+id/dash_on_image_button"
                             android:visibility="gone"
                             android:scaleType="fitCenter"
                             android:layout_width="48dp"
                             android:layout_height="48dp"/>
 
                         <TextView
-                            android:id="@+id/dash_active_button_note"
+                            android:id="@+id/dash_on_button_note"
                             android:textAppearance="?android:textAppearanceSmall"
                             android:layout_gravity="center_vertical"
                             android:layout_width="wrap_content"
@@ -255,7 +255,7 @@
                         />
                     <LinearLayout>
                         <EditText
-                            android:id="@+id/dash_inacitve_state_text"
+                            android:id="@+id/dash_off_state_text"
                             android:ems="5"
                             android:textAppearance="?android:attr/textAppearanceMedium"
                             android:layout_height="wrap_content"

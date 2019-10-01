@@ -46,7 +46,7 @@ public class Switch extends Item {
         return "switch";
     }
 
-    public boolean isActiveState() {
+    public boolean isOnState() {
         return Utils.isEmpty(valOff) || Utils.equals(val, data.get("content"));
     }
 
