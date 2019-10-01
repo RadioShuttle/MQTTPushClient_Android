@@ -451,9 +451,9 @@ public class DetailViewDialog extends DialogFragment {
             Switch sw = (Switch) mItem;
             /* is switch? then toggle state */
             String t;
-            if (!Utils.isEmpty(sw.val2)) {
+            if (!Utils.isEmpty(sw.valOff)) {
                 if (sw.isActiveState()) {
-                    t = sw.val2;
+                    t = sw.valOff;
                 } else {
                     t = sw.val;
                 }
@@ -536,7 +536,7 @@ public class DetailViewDialog extends DialogFragment {
 
             if (mItem instanceof TextItem) {
                 if (!mAutofillDisabled && mTextViewEditText != null) {
-                    mTextViewEditText.setText((String) mItem.data.get("text.value"));
+                    mTextViewEditText.setText((String) mItem.data.get("text.default"));
                     // mTextViewEditText.requestFocus();
                     // mTextViewEditText.selectAll();
                 }
@@ -630,10 +630,10 @@ public class DetailViewDialog extends DialogFragment {
                     icon = sw.imageDetail;
                     noTint = fcolor == DColor.CLEAR;
                 } else {
-                    val = sw.val2;
-                    fcolor = sw.data.containsKey("ctrl_color2") ? (Long) sw.data.get("ctrl_color2") : sw.color2;
-                    bcolor = sw.data.containsKey("ctrl_background2") ? (Long) sw.data.get("ctrl_background2") : sw.bgcolor2;
-                    icon = sw.imageDetail2;
+                    val = sw.valOff;
+                    fcolor = sw.data.containsKey("ctrl_color_off") ? (Long) sw.data.get("ctrl_color_off") : sw.colorOff;
+                    bcolor = sw.data.containsKey("ctrl_background_off") ? (Long) sw.data.get("ctrl_background_off") : sw.bgcolorOff;
+                    icon = sw.imageDetailOff;
                     noTint = fcolor == DColor.CLEAR;
                 }
                 ColorStateList csl;

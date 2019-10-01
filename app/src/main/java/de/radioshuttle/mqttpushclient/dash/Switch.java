@@ -21,24 +21,24 @@ public class Switch extends Item {
     public long color; // 0 = default system color, else color value (value will not be used for tinting, if noTint = true and uri contains an image)
     public long bgcolor;
 
-    public String val2; // inactive state (if switch), unused if button
-    public String uri2;
-    public long color2;// 0 and transparent2 false = default color, 0 and transparent2 true = noTint color, else color value
-    public long bgcolor2;
+    public String valOff; // off state (if switch), unused if button
+    public String uriOff;
+    public long colorOff;// 0 and transparent2 false = default color, 0 and transparent2 true = noTint color, else color value
+    public long bgcolorOff;
 
     //transient
     public Drawable image;
-    public Drawable image2;
+    public Drawable imageOff;
     public Drawable imageDetail;
-    public Drawable imageDetail2;
+    public Drawable imageDetailOff;
     public String imageUri;
-    public String imageUri2;
+    public String imageUriOff;
 
     public Switch () {
         color = DColor.OS_DEFAULT;
         bgcolor = DColor.OS_DEFAULT;
-        color2 = DColor.OS_DEFAULT;
-        bgcolor2 = DColor.OS_DEFAULT;
+        colorOff = DColor.OS_DEFAULT;
+        bgcolorOff = DColor.OS_DEFAULT;
     }
 
     @Override
@@ -47,17 +47,19 @@ public class Switch extends Item {
     }
 
     public boolean isActiveState() {
-        return Utils.isEmpty(val2) || Utils.equals(val, data.get("content"));
+        return Utils.isEmpty(valOff) || Utils.equals(val, data.get("content"));
     }
 
     /** add properties which may be get/set in JS to update view. Also extend DashboarJavascript.ViewProperties */
     public HashMap<String, Object> getJSViewProperties(HashMap<String, Object> viewProperties) {
         viewProperties = super.getJSViewProperties(viewProperties);
-        //TODO:consider adding props for images (resource ids), and implement DashboarJavascript.ViewProperties
         viewProperties.put("ctrl_color", data.containsKey("ctrl_color") ? (Long) data.get("ctrl_color") : color);
-        viewProperties.put("ctrl_background", data.containsKey("ctrl_background") ? (Long) data.get("ctrl_background") : color);
-        viewProperties.put("ctrl_color2", data.containsKey("ctrl_color2") ? (Long) data.get("ctrl_color2") : color);
-        viewProperties.put("ctrl_background2", data.containsKey("ctrl_background2") ? (Long) data.get("ctrl_background2") : color);
+        viewProperties.put("ctrl_color_off", data.containsKey("ctrl_color_off") ? (Long) data.get("ctrl_color_off") : colorOff);
+        viewProperties.put("ctrl_background", data.containsKey("ctrl_background") ? (Long) data.get("ctrl_background") : bgcolor);
+        viewProperties.put("ctrl_background_off", data.containsKey("ctrl_background_off") ? (Long) data.get("ctrl_background_off") : bgcolorOff);
+        viewProperties.put("ctrl_image", data.containsKey("ctrl_image") ? (String) data.get("ctrl_image") : uri);
+        viewProperties.put("ctrl_image_off", data.containsKey("ctrl_image_off") ? (String) data.get("ctrl_image_off") : uriOff);
+
         return viewProperties;
     }
 
@@ -68,10 +70,10 @@ public class Switch extends Item {
         o.put("uri", uri == null ? "" : uri);
         o.put("color", color);
         o.put("bgcolor", bgcolor);
-        o.put("val2",  val2 == null ? "" : val2);
-        o.put("uri2", uri2 == null ? "" : uri2);
-        o.put("bgcolor2", bgcolor2);
-        o.put("color2", color2);
+        o.put("val_off",  valOff == null ? "" : valOff);
+        o.put("uri_off", uriOff == null ? "" : uriOff);
+        o.put("bgcolor_off", bgcolorOff);
+        o.put("color_off", colorOff);
         return o;
     }
 
@@ -79,12 +81,12 @@ public class Switch extends Item {
         super.setJSONData(o);
         val = o.optString("val");
         uri = o.optString("uri");
-        val2 = o.optString("val2");
-        uri2 = o.optString("uri2");
+        valOff = o.optString("val_off");
+        uriOff = o.optString("uri_off");
         bgcolor = o.optLong("bgcolor");
-        bgcolor2 = o.optLong("bgcolor2");
+        bgcolorOff = o.optLong("bgcolor_off");
         color = o.optLong("color");
-        color2 = o.optLong("color2");
+        colorOff = o.optLong("color_off");
     }
 
 }

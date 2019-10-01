@@ -41,7 +41,6 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -394,13 +393,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                     if (savedInstanceState == null) {
                         mActiveBackground = sw.bgcolor;
-                        mInactiveBackground = sw.bgcolor2;
+                        mInactiveBackground = sw.bgcolorOff;
                         mActiveColor = sw.color;
-                        mInactiveColor = sw.color2;
+                        mInactiveColor = sw.colorOff;
                         mEditTextSwitchActive.setText(sw.val);
-                        mEditTextSwitchInactive.setText(sw.val2);
+                        mEditTextSwitchInactive.setText(sw.valOff);
                         mActiveImageURI = sw.uri;
-                        mInactiveImageURI = sw.uri2;
+                        mInactiveImageURI = sw.uriOff;
                     } else {
                         if (savedInstanceState.containsKey(KEY_ACT_BACKGROUND)) {
                             mActiveBackground = savedInstanceState.getLong(KEY_ACT_BACKGROUND);
@@ -1476,13 +1475,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (cItem instanceof Switch) {
                     Switch item = (Switch) cItem;
                     item.val = mEditTextSwitchActive.getText().toString();
-                    item.val2 = mEditTextSwitchInactive.getText().toString();
+                    item.valOff = mEditTextSwitchInactive.getText().toString();
                     item.color = mActiveColor;
-                    item.color2 = mInactiveColor;
+                    item.colorOff = mInactiveColor;
                     item.bgcolor = mActiveBackground;
-                    item.bgcolor2 = mInactiveBackground;
+                    item.bgcolorOff = mInactiveBackground;
                     item.uri = mActiveImageURI;
-                    item.uri2 = mInactiveImageURI;
+                    item.uriOff = mInactiveImageURI;
                 }
             }
             if (mEditTextLabel != null) {
@@ -1679,10 +1678,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             if (!changed && mItem instanceof Switch) {
                 Switch sw = (Switch) mItem;
                 changed = !mEditTextSwitchActive.getText().toString().equals(sw.val) ||
-                        !mEditTextSwitchInactive.getText().toString().equals(sw.val2) ||
-                        sw.bgcolor != mActiveBackground || sw.bgcolor2 != mInactiveBackground ||
-                        sw.color2 != mInactiveColor || sw.color != mActiveColor ||
-                        !Utils.equals(sw.uri, mActiveImageURI) || !Utils.equals(sw.uri2, mInactiveImageURI);
+                        !mEditTextSwitchInactive.getText().toString().equals(sw.valOff) ||
+                        sw.bgcolor != mActiveBackground || sw.bgcolorOff != mInactiveBackground ||
+                        sw.colorOff != mInactiveColor || sw.color != mActiveColor ||
+                        !Utils.equals(sw.uri, mActiveImageURI) || !Utils.equals(sw.uriOff, mInactiveImageURI);
             }
         }
 

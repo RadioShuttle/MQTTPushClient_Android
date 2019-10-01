@@ -323,10 +323,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 icon = sw.image;
                 noTint = fcolor == DColor.CLEAR;
             } else {
-                val = sw.val2;
-                fcolor = sw.data.containsKey("ctrl_color2") ? (Long) sw.data.get("ctrl_color2") : sw.color2;
-                bcolor = sw.data.containsKey("ctrl_background2") ? (Long) sw.data.get("ctrl_background2") : sw.bgcolor2;
-                icon = sw.image2;
+                val = sw.valOff;
+                fcolor = sw.data.containsKey("ctrl_color_off") ? (Long) sw.data.get("ctrl_color_off") : sw.colorOff;
+                bcolor = sw.data.containsKey("ctrl_background_off") ? (Long) sw.data.get("ctrl_background_off") : sw.bgcolorOff;
+                icon = sw.imageOff;
                 noTint = fcolor == DColor.CLEAR;
             }
             ColorStateList csl;

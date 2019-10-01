@@ -240,7 +240,7 @@ public final class ImageResource {
                                         internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
                                         referencedFiles.add(internalFileName);
                                     }
-                                    uri = itemJSON.optString("uri2");
+                                    uri = itemJSON.optString("uri_off");
                                     if (ImageResource.isUserResource(uri)) {
                                         resourceName = ImageResource.getURIPath(uri);
                                         internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;

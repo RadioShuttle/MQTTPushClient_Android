@@ -73,20 +73,22 @@ public class DashBoardJavaScript extends JavaScript {
 
     private interface ViewProperties {
         void setCtrlColor(double color);
-        void setCtrlColor2(double color);
+
+        void setCtrlColorOff(double color);
         void setBackgroundColor(double color);
         void setCtrlBackgroundColor(double color);
-        void setCtrlBackgroundColor2(double color);
+        void setCtrlBackgroundColorOff(double color);
         void setTextColor(double color);
         void setTextSize(double size);
-        void setTextFieldValue(String defaultInputValue);
+        void setTextFieldDefaultValue(String defaultInputValue);
+
         double getTextColor();
         double getBackgroundColor();
         double getCtrlBackgroundColor();
-        double getCtrlBackgroundColor2();
+        double getCtrlBackgroundColorOff();
         double getCtrlColor();
-        double getCtrlColor2();
-        String getTextFieldValue();
+        double getCtrlColorOff();
+        String getTextFieldDefaultValue();
         double getTextSize();
     }
 
@@ -103,9 +105,40 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
-        public void setCtrlColor2(double color) {
-            p.put("ctrl_color2", doubleToLong(color));
+        public void setCtrlColorOff(double color) {
+            p.put("ctrl_color_off", doubleToLong(color));
         }
+
+        /*
+        @Override
+        public void _setCtrlImage(String resourceName) {
+            if (!_resourceExists(resourceName)) {
+                throw new RuntimeException("Invalid res");
+            }
+            Log.d(TAG, "_setCtrlImage" + resourceName); //TODO
+            p.put("ctrl_image", resourceName);
+        }
+
+        @Override
+        public String _getCtrlImage() {
+            return (String) p.get("ctrl_image");
+        }
+
+        @Override
+        public void _setCtrlImage2(String resourceName) {
+            Log.d(TAG, "_setCtrlImage2" + resourceName); //TODO
+            p.put("ctrl_image_off", resourceName);
+        }
+
+        @Override
+        public String _getCtrlImage2() {
+            return (String) p.get("ctrl_image_off");
+        }
+
+        public boolean _resourceExists(String resourceName) {
+            return false; //TODO
+        }
+         */
 
         @Override
         public void setTextColor(double color) {
@@ -113,8 +146,8 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
-        public void setTextFieldValue(String defaultInputValue) {
-            p.put("text.value", defaultInputValue == null ? "" : defaultInputValue);
+        public void setTextFieldDefaultValue(String defaultInputValue) {
+            p.put("text.default", defaultInputValue == null ? "" : defaultInputValue);
         }
 
         @Override
@@ -129,8 +162,8 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
-        public void setCtrlBackgroundColor2(double color) {
-            p.put("ctrl_background2", doubleToLong(color));
+        public void setCtrlBackgroundColorOff(double color) {
+            p.put("ctrl_background_off", doubleToLong(color));
         }
 
         @Override
@@ -139,8 +172,8 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
-        public double getCtrlColor2() {
-            return longToDouble((long) (p.get("ctrl_color2") == null ? 0 : p.get("ctrl_color2")));
+        public double getCtrlColorOff() {
+            return longToDouble((long) (p.get("ctrl_color_off") == null ? 0 : p.get("ctrl_color_off")));
         }
 
         @Override
@@ -153,8 +186,8 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
-        public double getCtrlBackgroundColor2() {
-            return longToDouble((long) (p.get("ctrl_background2") == null ? 0 : p.get("ctrl_background2")));
+        public double getCtrlBackgroundColorOff() {
+            return longToDouble((long) (p.get("ctrl_background_off") == null ? 0 : p.get("ctrl_background_off")));
         }
 
         @Override
@@ -163,8 +196,8 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
-        public String getTextFieldValue() {
-            return p.get("text.value") instanceof String ? (String) p.get("text.value") : "";
+        public String getTextFieldDefaultValue() {
+            return p.get("text.default") instanceof String ? (String) p.get("text.default") : "";
         }
 
         @Override

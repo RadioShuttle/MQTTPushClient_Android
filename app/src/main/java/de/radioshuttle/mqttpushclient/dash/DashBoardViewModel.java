@@ -279,19 +279,19 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     Log.e(TAG, "error loading image: ", e);
                                 }
                             }
-                            if (!Utils.isEmpty(sw.uri2) && Utils.isEmpty(sw.imageUri2)) {
+                            if (!Utils.isEmpty(sw.uriOff) && Utils.isEmpty(sw.imageUriOff)) {
                                 try {
-                                    if (ImageResource.isInternalResource(sw.uri2)) {
-                                        sw.image2 = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri2));
-                                        if (sw.image2 != null) {
-                                            sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
-                                            sw.imageUri2 = sw.uri2;
+                                    if (ImageResource.isInternalResource(sw.uriOff)) {
+                                        sw.imageOff = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uriOff));
+                                        if (sw.imageOff != null) {
+                                            sw.imageDetailOff = sw.imageOff.getConstantState().newDrawable();
+                                            sw.imageUriOff = sw.uriOff;
                                         }
                                     } else {
-                                        sw.image2 = ImageResource.loadExternalImage(getApplication(), sw.uri2);
-                                        if (sw.image2 != null) {
-                                            sw.imageDetail2 = sw.image2.getConstantState().newDrawable();
-                                            sw.imageUri2 = sw.uri2;
+                                        sw.imageOff = ImageResource.loadExternalImage(getApplication(), sw.uriOff);
+                                        if (sw.imageOff != null) {
+                                            sw.imageDetailOff = sw.imageOff.getConstantState().newDrawable();
+                                            sw.imageUriOff = sw.uriOff;
                                         }
                                     }
                                     itemUpdated = true;
@@ -340,7 +340,7 @@ public class DashBoardViewModel extends AndroidViewModel {
             }
 
             /* an error occured while loading the image (probably server sync was not possible due to network no availabe) */
-            if (sw.image2 == null && !Utils.isEmpty(sw.uri2)) {
+            if (sw.imageOff == null && !Utils.isEmpty(sw.uriOff)) {
                 resourceMissing = true;
             }
 

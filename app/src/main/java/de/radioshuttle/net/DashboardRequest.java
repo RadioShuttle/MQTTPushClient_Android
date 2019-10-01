@@ -86,7 +86,7 @@ public class DashboardRequest extends Request {
                     itemJSON = itemArray.getJSONObject(j);
 
                     uri = itemJSON.optString("uri");
-                    uri2 = itemJSON.optString("uri2");
+                    uri2 = itemJSON.optString("uri_off");
                     if (ImageResource.isImportedResource(uri)) {
                         Log.d(TAG, "Save image on server: " + uri);
                         encodedFilename = ImageResource.getURIPath(uri);
@@ -120,7 +120,7 @@ public class DashboardRequest extends Request {
                         Log.d(TAG, "Saved image on server: " + finalResourceName);
                         itemJSON.putOpt("uri", ImageResource.buildUserResourceURI(finalResourceName));
                         if (uri.equals(uri2)) {
-                            itemJSON.putOpt("uri2", ImageResource.buildUserResourceURI(finalResourceName));
+                            itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
                             continue;
                         }
                     } else if (ImageResource.isUserResource(uri)) {
@@ -151,7 +151,7 @@ public class DashboardRequest extends Request {
                             Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
                             itemJSON.putOpt("uri", ImageResource.buildUserResourceURI(finalResourceName));
                             if (uri.equals(uri2)) {
-                                itemJSON.putOpt("uri2", ImageResource.buildUserResourceURI(finalResourceName));
+                                itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
                                 continue;
                             }
                         }
@@ -185,7 +185,7 @@ public class DashboardRequest extends Request {
                             throw e;
                         }
                         mDeleteFiles.add(importedFile); // delete later, save might fail
-                        itemJSON.putOpt("uri2", ImageResource.buildUserResourceURI(finalResourceName));
+                        itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
 
                         Log.d(TAG, "Saved image2 on server: " + finalResourceName);
                     } else if (ImageResource.isUserResource(uri2)) {
@@ -214,7 +214,7 @@ public class DashboardRequest extends Request {
                                 }
                             }
                             Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
-                            itemJSON.putOpt("uri2", ImageResource.buildUserResourceURI(finalResourceName));
+                            itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
                         }
                     }
 
@@ -373,7 +373,7 @@ public class DashboardRequest extends Request {
                             try {
                                 itemJSON = itemArray.getJSONObject(j);
                                 uri = itemJSON.optString("uri");
-                                uri2 = itemJSON.optString("uri2");
+                                uri2 = itemJSON.optString("uri_off");
                                 if (ImageResource.isUserResource(uri)) {
                                     resourceName = ImageResource.getURIPath(uri);
                                     internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
@@ -467,7 +467,7 @@ public class DashboardRequest extends Request {
                     for (int j = 0; j < itemArray.length(); j++) {
                         itemJSON = itemArray.getJSONObject(j);
                         uri = itemJSON.optString("uri");
-                        uri2 = itemJSON.optString("uri2");
+                        uri2 = itemJSON.optString("uri_off");
                         if (ImageResource.isUserResource(uri)) {
                             usedResoureces.add(ImageResource.getURIPath(uri));
                         }
