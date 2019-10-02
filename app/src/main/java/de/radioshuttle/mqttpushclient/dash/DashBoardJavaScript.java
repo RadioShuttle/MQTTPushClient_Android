@@ -7,7 +7,10 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.Application;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
+
+import androidx.appcompat.content.res.AppCompatResources;
 
 import com.squareup.duktape.Duktape;
 
@@ -122,23 +125,16 @@ public class DashBoardJavaScript extends JavaScript {
 
         @Override
         public void setCtrlImage(String resourceName) {
-            /* resource names differ from internal representation */
-            String uri = null;
-            if (!Utils.isEmpty(resourceName)) {
-                if (resourceName.toLowerCase().startsWith("tmp/")) { // imported but not saved images are not allowed
-                    throw new RuntimeException(tempResoure + " " + resourceName);
-                }
-                uri = getResourceURI(resourceName);
-                if (Utils.isEmpty(uri)) {
-                    throw new RuntimeException(unknownImgtxt + " " + resourceName);
-                }
-            }
-            p.put("ctrl_image", uri);
+            setCtrlImage("ctrl_image", resourceName);
         }
 
 
         @Override
         public void setCtrlImageOff(String resourceName) {
+            setCtrlImage("ctrl_image_off", resourceName);
+        }
+
+        private void setCtrlImage(String propKey, String resourceName) {
             /* resource names differ from internal representation */
             String uri = null;
             if (!Utils.isEmpty(resourceName)) {
@@ -150,7 +146,35 @@ public class DashBoardJavaScript extends JavaScript {
                     throw new RuntimeException(unknownImgtxt + " " + resourceName);
                 }
             }
-            p.put("ctrl_image_off", resourceName);
+            String propKeyBlob = propKey + "_blob";
+            String prevURI = (String) p.get(propKey);
+
+            if (Utils.isEmpty(uri)) {
+                p.remove(propKeyBlob); // remove prev blob, if any
+                p.put(propKey, uri);
+                // Log.d(TAG, "setCtrlImage: cleared");
+            } else {
+                /* load image (if not already exists) */
+                if (!uri.equals(prevURI)) {
+                    Drawable img = null;
+                    try {
+                        if (ImageResource.isInternalResource(uri)) {
+                            img = AppCompatResources.getDrawable(app, IconHelper.INTENRAL_ICONS.get(uri));
+                            // Log.d(TAG, "setCtrlImage: loaded internal " + uri);
+                        } else { // user
+                            img = ImageResource.loadExternalImage(app, uri);
+                            // Log.d(TAG, "setCtrlImseage: loaded user " + uri);
+                        }
+                        p.put(propKeyBlob, img);
+                        p.put(propKey, uri);
+                    } catch (Exception e) {
+                        Log.d(TAG, "Error loading image (javascript): " + e.getMessage());
+                    }
+                } else {
+                    // Log.d(TAG, "setCtrlImaage: image already exists. skipping load " + uri);
+                }
+            }
+
         }
 
         private String getResourceURI(String resourceName) {
