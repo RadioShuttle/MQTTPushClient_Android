@@ -627,13 +627,23 @@ public class DetailViewDialog extends DialogFragment {
                     val = sw.val;
                     fcolor = sw.data.containsKey("ctrl_color") ? (Long) sw.data.get("ctrl_color") : sw.color;
                     bcolor = sw.data.containsKey("ctrl_background") ? (Long) sw.data.get("ctrl_background") : sw.bgcolor;
-                    icon = sw.imageDetail;
+                    icon = (Drawable) sw.data.get("ctrl_image_blob");
+                    if (icon != null) {
+                        icon = icon.getConstantState().newDrawable(getResources()); //TODO: consider caching newDrawable
+                    } else {
+                        icon = sw.imageDetail;
+                    }
                     noTint = fcolor == DColor.CLEAR;
                 } else {
                     val = sw.valOff;
                     fcolor = sw.data.containsKey("ctrl_color_off") ? (Long) sw.data.get("ctrl_color_off") : sw.colorOff;
                     bcolor = sw.data.containsKey("ctrl_background_off") ? (Long) sw.data.get("ctrl_background_off") : sw.bgcolorOff;
-                    icon = sw.imageDetailOff;
+                    icon = (Drawable) sw.data.get("ctrl_image_off_blob");
+                    if (icon != null) {
+                        icon = icon.getConstantState().newDrawable(getResources()); //TODO: consider caching newDrawable
+                    } else {
+                        icon = sw.imageDetailOff;
+                    }
                     noTint = fcolor == DColor.CLEAR;
                 }
                 ColorStateList csl;
