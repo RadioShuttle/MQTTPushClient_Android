@@ -162,7 +162,7 @@ public class Connection {
     }
 
     public String addResource(String filename, String type, File resourceFile) throws IOException, ServerError {
-        Cmd.RawCmd response = mCmd.addResourceRequest(++mSeqNo, filename, type, resourceFile);
+        Cmd.RawCmd response = mCmd.saveResourceRequest(++mSeqNo, 0, filename, type, resourceFile);
 
         handleError(response);
         DataInputStream d = mCmd.getDataInputStream(response.data);
@@ -188,7 +188,7 @@ public class Connection {
         return dataInputStream;
     }
 
-    public List<String> enumResources(String type) throws IOException, ServerError {
+    public List<Cmd.FileInfo> enumResources(String type) throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.enumResourcesRequest(++mSeqNo, type);
         handleError(response);
         return mCmd.readEnumResourcesData(response.data);
