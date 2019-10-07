@@ -51,7 +51,7 @@ public class DashboardRequest extends Request {
         mItemIDPara = itemID;
     }
 
-    protected void saveImportedResources(List<String> serverResourceList) throws IOException, ServerError, JSONException {
+    protected void saveImportedResources(List<Cmd.FileInfo> serverResourceList) throws IOException, ServerError, JSONException {
 
         /*
          * Interate over all elemnts to find imported file uris and save/send to server
@@ -61,7 +61,9 @@ public class DashboardRequest extends Request {
             HashSet<String> serverResourceSet = null;
             if (serverResourceList != null) {
                 serverResourceSet = new HashSet<>();
-                serverResourceSet.addAll(serverResourceList);
+                for(Cmd.FileInfo e : serverResourceList) {
+                    serverResourceSet.add(e.name);
+                }
             }
 
             JSONArray groupArray = mDashboardPara.getJSONArray("groups");
@@ -229,7 +231,7 @@ public class DashboardRequest extends Request {
         if (mCmd == Cmd.CMD_SET_DASHBOARD) {
             try {
 
-                List<String> serverResourceList = null;
+                List<Cmd.FileInfo> serverResourceList = null;
                 try {
                     serverResourceList = mConnection.enumResources(Cmd.DASH512_PNG);
                     /*
@@ -452,10 +454,14 @@ public class DashboardRequest extends Request {
         }
     }
 
-    protected List<String> findUnusedResources(List<String> serverResourceList) throws JSONException {
-        ArrayList<String> unusedResources = new ArrayList<>();
+    protected List<String> findUnusedResources(List<Cmd.FileInfo> serverResourceList) throws JSONException {
+        HashSet<String> unusedResources = new HashSet<>();
         if (serverResourceList != null && serverResourceList.size() > 0 && !isEmptyDashboard()) {
-            unusedResources.addAll(serverResourceList);
+
+            for(Cmd.FileInfo e : serverResourceList) {
+                unusedResources.add(e.name);
+            }
+
             HashSet<String> usedResoureces = new HashSet<>();
             JSONArray groupArray = mDashboardPara.getJSONArray("groups");
             JSONObject groupJSON, itemJSON;
@@ -480,7 +486,7 @@ public class DashboardRequest extends Request {
             }
             unusedResources.removeAll(usedResoureces);
         }
-        return unusedResources;
+        return new ArrayList<>(unusedResources);
     }
 
     protected boolean isEmptyDashboard() {
