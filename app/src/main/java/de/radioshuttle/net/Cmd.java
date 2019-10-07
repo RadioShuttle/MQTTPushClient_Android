@@ -54,7 +54,7 @@ public class Cmd {
     public final static int CMD_GET_DASHBOARD = 23;
     public final static int CMD_GET_MESSAGES_DASH = 24;
     public final static int CMD_BACKUP_DASH = 25;
-    public final static int CMD_ADD_RESOURCE = 26;
+    public final static int CMD_SAVE_RESOURCE = 26;
     public final static int CMD_GET_RESOURCE = 27;
     public final static int CMD_DEL_RESOURCE = 28;
     public final static int CMD_ENUM_RESOURCES = 29;
@@ -72,9 +72,10 @@ public class Cmd {
         return readCommand();
     }
 
-    public RawCmd addResourceRequest(int seqNo, String name, String type, File resource) throws IOException {
+    public RawCmd saveResourceRequest(int seqNo, int mode, String name, String type, File resource) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
+        os.write(mode);
         writeString(name, os);
         writeString(type, os);
         os.writeLong(resource.lastModified() / 1000L);
@@ -84,7 +85,7 @@ public class Cmd {
         }
         os.writeInt((int) s); // blob size
         byte[] args = ba.toByteArray();
-        writeHeader(CMD_ADD_RESOURCE, seqNo, FLAG_REQUEST, 0, args.length + (int) s);
+        writeHeader(CMD_SAVE_RESOURCE, seqNo, FLAG_REQUEST, 0, args.length + (int) s);
         bos.write(args);
         bos.flush();
         /* attach file */
@@ -104,7 +105,7 @@ public class Cmd {
         return readCommand();
     }
 
-    public void addResourceResponse(RawCmd request, String resourceName, String type) throws IOException {
+    public void saveResourceResponse(RawCmd request, String resourceName, String type) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(resourceName, os);
@@ -113,8 +114,9 @@ public class Cmd {
     }
 
     /* reads and returns args of request until blob */
-    public Map<String, Object> readAddResourceArgs() throws IOException {
+    public Map<String, Object> readSaveResourceArgs() throws IOException {
         Map<String, Object> args = new HashMap<>();
+        args.put("mode", dis.read());
         args.put("name", readString(dis));
         args.put("type", readString(dis));
         args.put("mdate", dis.readLong() * 1000L);
@@ -142,6 +144,7 @@ public class Cmd {
     public void getResourceResponse(RawCmd request, File resource) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
+        os.writeLong(resource.lastModified() / 1000L);
 
         long s = resource.length();
         if (s <= 0 || s > MAX_PAYLOAD_RESOURCE) {
@@ -177,26 +180,31 @@ public class Cmd {
         return readCommand();
     }
 
-    public void enumResourcesResponse(RawCmd request, List<String> resources) throws IOException {
+    public void enumResourcesResponse(RawCmd request, List<FileInfo> resources) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         if (resources == null || resources.size() == 0) {
             os.writeShort(0);
         } else {
             os.writeShort(resources.size());
-            for (String r : resources) {
-                writeString(r, os);
+            for (FileInfo fi : resources) {
+                writeString(fi.name, os);
+                os.writeLong(fi.mdate / 1000L);
             }
         }
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
-    public List<String> readEnumResourcesData(byte[] data) throws IOException {
-        ArrayList<String> resources = new ArrayList<>();
+    public List<FileInfo> readEnumResourcesData(byte[] data) throws IOException {
+        ArrayList<FileInfo> resources = new ArrayList<>();
         DataInputStream is = getDataInputStream(data);
         int len = is.readUnsignedShort();
+        FileInfo fi;
         for(int i = 0; i < len; i++) {
-            resources.add(readString(is));
+            fi = new FileInfo();
+            fi.name = readString(is);
+            fi.mdate = is.readLong() * 1000L;
+            resources.add(fi);
         }
         return resources;
     }
@@ -773,7 +781,7 @@ public class Cmd {
         boolean loadDataPart = true;
 
         /* if blobs are attached, do not load data here */
-        if (cmd.command == CMD_ADD_RESOURCE && (cmd.flags & FLAG_RESPONSE) == 0) {
+        if (cmd.command == CMD_SAVE_RESOURCE && (cmd.flags & FLAG_RESPONSE) == 0) {
             loadDataPart = false;
         } else if ( cmd.command == CMD_GET_RESOURCE && (cmd.flags & FLAG_RESPONSE) > 0) {
             loadDataPart = false;
@@ -971,6 +979,11 @@ public class Cmd {
     public static class Topic {
         public int type;
         public String script;
+    }
+
+    public static class FileInfo {
+        public String name;
+        public long mdate;
     }
 
     public static class Ref<T> {
