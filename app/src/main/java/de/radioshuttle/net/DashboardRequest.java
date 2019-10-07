@@ -402,6 +402,7 @@ public class DashboardRequest extends Request {
                         /* resource errors are not handled as long as there are not caused by an IO error */
                         // Log.d(TAG, "missing local resources: " + resourceNames);
                         int len = 0;
+                        long mdate;
                         try {
                             is = mConnection.getResource(r, Cmd.DASH512_PNG);
                             if (mConnection.lastReturnCode == Cmd.RC_INVALID_ARGS) {
@@ -409,6 +410,7 @@ public class DashboardRequest extends Request {
                                 break;
                             }
                             if (is != null) {
+                                mdate = is.readLong() * 1000L;
                                 len = is.readInt();
                                 if (ImportFiles.lowInternalMemory(mAppContext, len)) {
                                     Log.d(TAG, "low mem, skipping get resource file " + r);
@@ -436,6 +438,9 @@ public class DashboardRequest extends Request {
                                             tempFile.delete();
                                         } else {
                                             mReceivedResources = true;
+                                            if (mdate > 0) {
+                                                destFile.setLastModified(mdate);
+                                            }
                                             Log.d(TAG, "Loaded resource from server: " + r + ", " + destFile.getName());
                                         }
                                     }
