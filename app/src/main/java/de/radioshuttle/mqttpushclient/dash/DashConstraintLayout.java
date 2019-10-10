@@ -26,8 +26,14 @@ public class DashConstraintLayout extends ConstraintLayout {
         super(context, attrs, defStyleAttr);
     }
 
+    public void setInterceptTouchEvent(boolean intercept) {
+        mInterceptTouchEvent = intercept;
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return true;
+        return mInterceptTouchEvent;
     }
+
+    private boolean mInterceptTouchEvent = true;
 }
