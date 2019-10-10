@@ -19,6 +19,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -225,7 +227,30 @@ public class DetailViewDialog extends DialogFragment {
                             }
                         });
                         // mContentContainer = view.findViewById()
+                    } else if (mItem instanceof CustomItem) {
+                        CustomItem citem = (CustomItem) mItem;
+                        view = inflater.inflate(R.layout.activity_dash_board_item_custom, null);
+                        mContentContainer = view.findViewById(R.id.webContent);
+                        // int padding = (int) (40d * getResources().getDisplayMetrics().density);
+                        // mItem.data.put("error", "html error test");
+
+                        mLabel = view.findViewById(R.id.name);
+                        mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
+
+                        WebView webView = (WebView) mContentContainer;
+                        webView.setWebViewClient(new WebViewClient());
+                        // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+                        webView.getSettings().setJavaScriptEnabled(true);
+
+                        if (savedInstanceState == null) {
+                            webView.loadData(citem.getHtml(), "text/html", "utf-8");
+                        } else {
+                            webView.restoreState(savedInstanceState);
+                        }
+                        ((DashConstraintLayout) view).setInterceptTouchEvent(false);
+
                     } else { // unknown or deprecated type
+
                     }
 
                     ViewGroup.LayoutParams lp = mContentContainer.getLayoutParams();
@@ -697,7 +722,15 @@ public class DetailViewDialog extends DialogFragment {
                         ImageViewCompat.setImageTintList(mSwitchImageButton, tcsl);
                     }
                 }
-
+            } else if (mItem instanceof CustomItem) {
+                if (mContentContainer instanceof WebView) {
+                    WebView webView = (WebView) mContentContainer;
+                    String msg = (String) mItem.data.get("msg.content"); //TODO: all paras
+                    if (msg == null) {
+                        msg = " ";
+                    }
+                    webView.loadUrl("javascript:onMessageReceived(\"" + msg + "\");"); //TODO
+                }
             } else {
                 //TODO: continue here to set other dash item related data
             }
@@ -765,7 +798,9 @@ public class DetailViewDialog extends DialogFragment {
         outState.putInt(KEY_VIEW_MODE, mViewMode);
         outState.putLong(KEY_PUBLISH_ID, mCurrentPublishID);
         outState.putBoolean(KEY_AUTOFILL_DISABLED, mAutofillDisabled);
-
+        if (mContentContainer instanceof WebView) {
+            ((WebView) mContentContainer).saveState(outState);
+        }
     }
 
     protected static class PublishViewModel extends ViewModel {
