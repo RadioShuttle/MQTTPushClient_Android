@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -108,7 +110,23 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
             selectedImageView = view.findViewById(R.id.check);
+        } else if (viewType == TYPE_CUSTOM) {
+            view = mInflater.inflate(R.layout.activity_dash_board_item_custom, parent, false);
+            label = view.findViewById(R.id.name);
+            defaultColor = label.getTextColors().getDefaultColor();
+            contentContainer = view.findViewById(R.id.webContent);
+            WebView webView = (WebView) contentContainer;
+            webView.getSettings().setJavaScriptEnabled(true);
+            webView.setWebViewClient(new WebViewClient());
+            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            // ((DashConstraintLayout) view).setInterceptTouchEvent(false); //TODO: raus
+
+            selectedImageView = view.findViewById(R.id.check);
+            errorImageView = view.findViewById(R.id.errorImage);
+            errorImage2View = view.findViewById(R.id.errorImage2);
         } // TODO: handle unknown view type
+
+        Log.d(TAG, "new custom component: " + viewType);
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
@@ -177,13 +195,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
 
         if (h.viewType != TYPE_GROUP) {
-
             lp = h.contentContainer.getLayoutParams();
+
             if (lp.width != mWidth || lp.height != mWidth) {
                 lp.width = mWidth;
                 lp.height = mWidth;
                 h.contentContainer.setLayoutParams(lp);
-
             }
             item.setViewBackground(h.contentContainer, mDefaultBackground);
         } else { // if (h.viewType == TYPE_GROUP) {
@@ -386,8 +403,23 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                     ImageViewCompat.setImageTintList(h.imageButton, tcsl);
                 }
             }
-
         }
+
+        if (item instanceof CustomItem) {
+            WebView webView = (WebView) h.contentContainer;
+            CustomItem citem = (CustomItem) item;
+
+            if (!Utils.equals(h.html, citem.getHtml())) {
+                h.html = citem.getHtml();
+                webView.loadData(h.html, "text/html", "utf-8");
+            }
+            String msg = (String) citem.data.get("msg.content");
+            if (msg == null) {
+                msg = " ";
+            }
+            webView.loadUrl("javascript:onMessageReceived(\"" + msg + "\");"); //TODO
+        }
+
         // Log.d(TAG, "width: " + lp.width);
         // Log.d(TAG, "height: " + lp.height);
     }
@@ -447,6 +479,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         ImageButton imageButton;
         int defaultColor;
         int viewType;
+        String html;
     }
 
     @Override
@@ -462,6 +495,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 type = TYPE_PROGRESS;
             } else if (item instanceof Switch) {
                 type = TYPE_SWITCH;
+            } else if (item instanceof CustomItem) {
+                type = TYPE_CUSTOM;
             }
         }
         return type;
@@ -493,7 +528,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             mSelectedItems.add(e);
             noOfSelectedItems++;
         }
-        notifyItemChanged(pos);
+        notifyItemChanged(pos, mData.get(pos));
         if (mListener != null) {
             mListener.onSelectionChange(noOfSelectedItemsBefore, noOfSelectedItems);
         }
@@ -543,6 +578,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     public final static int TYPE_TEXT = 1;
     public final static int TYPE_PROGRESS = 2;
     public final static int TYPE_SWITCH = 3;
+    public final static int TYPE_CUSTOM = 4;
 
     private final static String TAG = DashBoardAdapter.class.getSimpleName();
 }
