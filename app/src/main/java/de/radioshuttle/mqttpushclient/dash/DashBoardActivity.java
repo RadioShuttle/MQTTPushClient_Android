@@ -42,6 +42,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,6 +80,7 @@ public class DashBoardActivity extends AppCompatActivity implements
             ZOOM_LEVEL_2 = getResources().getDimensionPixelSize(R.dimen.dashboard_zoom_2);
             ZOOM_LEVEL_3 = getResources().getDimensionPixelSize(R.dimen.dashboard_zoom_3);
         }
+
 
         PushAccount b = null;
         boolean init = false;
@@ -242,6 +245,9 @@ public class DashBoardActivity extends AppCompatActivity implements
             case R.id.action_add_progress :
                 openEditor(ProgressItem.class);
                 break;
+            case R.id.action_add_custom :
+                openEditor(CustomItem.class);
+                break;
             case R.id.action_zoom :
                 zoom();
                 break;
@@ -396,6 +402,7 @@ public class DashBoardActivity extends AppCompatActivity implements
         if (fm.findFragmentByTag(DLG_TAG) == null) {
 
         }
+
         DetailViewDialog dlg = DetailViewDialog.newInstance(item);
         dlg.show(fm, DLG_TAG);
 
