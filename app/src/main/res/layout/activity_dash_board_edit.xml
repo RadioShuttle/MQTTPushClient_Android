@@ -561,6 +561,27 @@
                         android:layout_height="wrap_content" />
                 </TableRow>
 
+                <TableRow android:id="@+id/rowHTMLHeader" android:layout_marginTop="8dp">
+                    <TextView
+                        android:id="@+id/rowHTMLLabel"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/dash_html_label"
+                        android:labelFor="@+id/outputScriptButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </TableRow>
+
+                <TableRow android:id="@+id/rowHTML">
+                    <EditText
+                        android:id="@+id/editHTML"
+                        android:layout_span="2"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:minEms="3"
+                        android:inputType="text|textMultiLine|textNoSuggestions"
+                        android:typeface="monospace"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </TableRow>
 
             </TableLayout>
 
