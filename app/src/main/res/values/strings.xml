@@ -231,16 +231,19 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="action_add_switch">Button/Switch</string>
     <string name="action_add_group">Group View</string>
     <string name="action_add_progress">Progress Bar/Slider</string>
+    <string name="action_add_custom">Custom View</string>
 
     <string name="title_add_group">Add Group View</string>
     <string name="title_add_text">Add Text View</string>
     <string name="title_add_progress">Add Progress Bar/Slider</string>
     <string name="title_add_switch">Add Button/Switch</string>
+    <string name="title_add_custom">Add Custom View</string>
 
     <string name="title_edit_group">Edit Group View</string>
     <string name="title_edit_text">Edit Text View</string>
     <string name="title_edit_progress">Edit Progress Bar/Slider</string>
     <string name="title_edit_switch">Edit Button/Switch</string>
+    <string name="title_edit_custom">Edit Custom View</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
@@ -274,6 +277,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_section_publish">Publish</string>
     <string name="dash_label_input_type">Input Type:</string>
     <string name="dash_outputscript_label">Script:</string>
+    <string name="dash_html_label">HTML:</string>
     <string name="dash_label_message">Message:</string>
     <string-array name="dash_label_input_type_array">
         <item name="dash_label_input_text">Text</item>
