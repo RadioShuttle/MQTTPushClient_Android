@@ -509,7 +509,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 TableRow rowFilterScript = findViewById(R.id.rowFilterScript);
                 if (rowFilterScript != null) {
                     mFiterScriptButton = findViewById(R.id.filterButton);
-                    if (mItem instanceof GroupItem) {
+                    if (mItem instanceof GroupItem || mItem instanceof CustomItem) {
                         rowFilterScript.setVisibility(View.GONE);
                     } else {
                         mFiterScriptButton.setOnClickListener(new View.OnClickListener() {
@@ -529,7 +529,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                 /* publish header */
                 TableRow rowPublish = findViewById(R.id.rowPublish);
-                if (rowPublish != null && mItem instanceof GroupItem) {
+                if (rowPublish != null && (mItem instanceof GroupItem || mItem instanceof CustomItem)) {
                     rowPublish.setVisibility(View.GONE);
                 }
 
@@ -537,7 +537,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 TableRow topicPubRow = findViewById(R.id.rowTopicPub);
                 if (topicPubRow != null) {
                     mEditTextTopicPub = findViewById(R.id.dash_publish);
-                    if (mItem instanceof GroupItem) {
+                    if (mItem instanceof GroupItem || mItem instanceof CustomItem) {
                         topicPubRow.setVisibility(View.GONE);
                     } else if (savedInstanceState == null) {
                         mEditTextTopicPub.setText(mItem.topic_p);
@@ -548,7 +548,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 TableRow retainRow = findViewById(R.id.rowRetain);
                 if (retainRow != null) {
                     mRetainCheckbox = findViewById(R.id.retain);
-                    if (mItem instanceof GroupItem) {
+                    if (mItem instanceof GroupItem || mItem instanceof CustomItem) {
                         retainRow.setVisibility(View.GONE);
                     } else if (savedInstanceState == null) {
                         mRetainCheckbox.setChecked(mItem.retain);
@@ -577,7 +577,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 TableRow rowOutputScript = findViewById(R.id.rowOutputScript);
                 if (rowOutputScript != null) {
                     mOutputScriptButton = findViewById(R.id.outputScriptButton);
-                    if (mItem instanceof GroupItem) {
+                    if (mItem instanceof GroupItem || mItem instanceof CustomItem) {
                         rowOutputScript.setVisibility(View.GONE);
                     } else {
                         mOutputScriptButton.setOnClickListener(new View.OnClickListener() {
@@ -595,6 +595,24 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     }
                 }
 
+                /* custom view */
+                TableRow htmlRow = findViewById(R.id.rowHTMLHeader);
+                if (htmlRow != null && !(mItem instanceof CustomItem)) {
+                    htmlRow.setVisibility(View.GONE);
+                }
+
+                htmlRow = findViewById(R.id.rowHTML);
+                if (htmlRow != null) {
+                    mEditTextHTML = findViewById(R.id.editHTML);
+                     if(!(mItem instanceof CustomItem)) {
+                         htmlRow.setVisibility(View.GONE);
+                     } else {
+                         if (savedInstanceState == null) {
+                             mEditTextHTML.setText(((CustomItem) mItem).getHtml());
+                         }
+                     }
+                }
+
                 String title = "";
                 if (mMode == MODE_ADD) {
                     if (mItem instanceof GroupItem) {
@@ -605,6 +623,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         title = getString(R.string.title_add_progress);
                     } else if (mItem instanceof Switch) {
                         title = getString(R.string.title_add_switch);
+                    } else if (mItem instanceof CustomItem) {
+                        title = getString(R.string.title_add_custom);
                     }
                 } else { // mMode == MODE_EDIT
                     if (mItem instanceof GroupItem) {
@@ -615,6 +635,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         title = getString(R.string.title_edit_progress);
                     } else if (mItem instanceof Switch) {
                         title = getString(R.string.title_edit_switch);
+                    } else if (mItem instanceof CustomItem) {
+                        title = getString(R.string.title_edit_custom);
                     }
                 }
                 setTitle(title);
@@ -1456,14 +1478,19 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (cItem != null) {
             if (!(cItem instanceof GroupItem) && mGroupSpinner != null) {
                 cItem.topic_s = mEditTextTopicSub.getText().toString();
-                cItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
-
-                cItem.topic_p = mEditTextTopicPub.getText().toString();
-                cItem.retain = mRetainCheckbox.isChecked();
+                if (cItem instanceof CustomItem) {
+                    CustomItem customItem = (CustomItem) cItem;
+                    customItem.setHtml(mEditTextHTML.getText().toString());
+                } else {
+                    // all items but customItem
+                    cItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
+                    cItem.topic_p = mEditTextTopicPub.getText().toString();
+                    cItem.retain = mRetainCheckbox.isChecked();
+                    cItem.script_p = mOutputScriptContent == null ? "" : mOutputScriptContent;
+                }
                 if (cItem instanceof TextItem) {
                     ((TextItem) cItem).inputtype = mInputTypeSpinner.getSelectedItemPosition();
                 }
-                cItem.script_p = mOutputScriptContent == null ? "" : mOutputScriptContent;
                 if (cItem instanceof ProgressItem) {
                     ProgressItem item = (ProgressItem) cItem;
                     try {item.range_min = Double.valueOf(mEditTextRangeMin.getText().toString());} catch(Exception e) {}
@@ -1579,6 +1606,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             setEnabled(mButtonSwitchOffEmpty, enableFields);
             setEnabled(mButtonSwitchOff, enableFields);
         }
+        if (mItem instanceof CustomItem) {
+            setEnabled(mEditTextHTML, enableFields);
+        }
+
         invalidateOptionsMenu();
     }
 
@@ -1683,6 +1714,12 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         sw.colorOff != mOffColor || sw.color != mOnColor ||
                         !Utils.equals(sw.uri, mOnImageURI) || !Utils.equals(sw.uriOff, mOffImageURI);
             }
+
+            // cutom view html changed?
+            if (!changed && mItem instanceof CustomItem) {
+                CustomItem customItem = (CustomItem) mItem;
+                changed = !mEditTextHTML.getText().toString().equals(customItem.getHtml());
+            }
         }
 
         return changed;
@@ -1711,6 +1748,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     protected EditText mEditTextSwitchOn;
     protected EditText mEditTextSwitchOff;
+    protected EditText mEditTextHTML;
     protected int mDefaultButtonTintColor;
     protected int mDefaultButtonBackground;
     protected int mDefaultClearColor;
