@@ -14,11 +14,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.format.DateUtils;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -38,6 +41,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProviders;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -228,7 +232,7 @@ public class DetailViewDialog extends DialogFragment {
                         });
                         // mContentContainer = view.findViewById()
                     } else if (mItem instanceof CustomItem) {
-                        CustomItem citem = (CustomItem) mItem;
+                        final CustomItem citem = (CustomItem) mItem;
                         view = inflater.inflate(R.layout.activity_dash_board_item_custom, null);
                         mContentContainer = view.findViewById(R.id.webContent);
                         // int padding = (int) (40d * getResources().getDisplayMetrics().density);
@@ -237,15 +241,55 @@ public class DetailViewDialog extends DialogFragment {
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
 
-                        WebView webView = (WebView) mContentContainer;
+                        final WebView webView = (WebView) mContentContainer;
                         webView.setWebViewClient(new WebViewClient());
-                        // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+                        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                         webView.getSettings().setJavaScriptEnabled(true);
+                        // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
+                        webView.addJavascriptInterface(new CustomItem.JSObject(), "PushApp");
+                        webView.setWebViewClient(new WebViewClient() {
+                            @Override
+                            public void onPageFinished(WebView view, String url) {
+                                super.onPageFinished(view, url);
+                                mWebViewIsLoading = false;
+                                Log.d(TAG, "on page finished.");
+                                StringBuilder js = new StringBuilder();
+                                if (Build.VERSION.SDK_INT < 19) {
+                                    js.append("javascript:");
+                                }
+                                js.append(m_custom_view_js);
+                                js.append(' ');
+                                js.append(CustomItem.build_onUpdateCall(citem));
+
+                                if (Build.VERSION.SDK_INT >= 19) {
+                                    Log.d(TAG, js.toString());
+                                    webView.evaluateJavascript(js.toString(), null);
+                                } else {
+                                    webView.loadUrl("javascript:" + js.toString());
+                                }
+
+                            }
+                            @Override
+                            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                                super.onReceivedError(view, request, error);
+                                //TODO: implement. this is only vorking for initial load errors
+                            }
+                        });
+
 
                         if (savedInstanceState == null) {
-                            webView.loadData(citem.getHtml(), "text/html", "utf-8");
+                            // loading is done in updateView
+                            mWebViewIsLoading = false;
                         } else {
+                            mWebViewIsLoading = savedInstanceState.getBoolean(KEY_WEBVIEW_ISLOADING);
+                            mWebViewHTML = savedInstanceState.getString(KEY_WEBVIEW_HTML);
                             webView.restoreState(savedInstanceState);
+                        }
+                        try {
+                            m_custom_view_js = Utils.getRawStringResource(getContext(), "cv_interface", true);
+                        } catch (IOException e) {
+                            Log.d(TAG, "Error loading raw resource: custom_view_js", e);
                         }
                         ((DashConstraintLayout) view).setInterceptTouchEvent(false);
 
@@ -724,12 +768,24 @@ public class DetailViewDialog extends DialogFragment {
                 }
             } else if (mItem instanceof CustomItem) {
                 if (mContentContainer instanceof WebView) {
-                    WebView webView = (WebView) mContentContainer;
-                    String msg = (String) mItem.data.get("msg.content"); //TODO: all paras
-                    if (msg == null) {
-                        msg = " ";
+                    final WebView webView = (WebView) mContentContainer;
+                    final CustomItem citem = (CustomItem) mItem;
+
+                    if (!Utils.equals(mWebViewHTML, citem.getHtml())) { // load html, if not already done or changed
+                        mWebViewHTML = citem.getHtml();
+                        mWebViewIsLoading = true;
+                        String encodedHtml = Base64.encodeToString(mWebViewHTML.getBytes(), Base64.NO_PADDING);
+                        webView.loadData(encodedHtml, "text/html", "base64");
+                    } else {
+                        if (!mWebViewIsLoading) {
+                            String jsOnUpdateCall = CustomItem.build_onUpdateCall(citem);
+                            if (Build.VERSION.SDK_INT >= 19) {
+                                webView.evaluateJavascript(jsOnUpdateCall, null);
+                            } else {
+                                webView.loadUrl(jsOnUpdateCall);
+                            }
+                        }
                     }
-                    webView.loadUrl("javascript:onMessageReceived(\"" + msg + "\");"); //TODO
                 }
             } else {
                 //TODO: continue here to set other dash item related data
@@ -800,6 +856,8 @@ public class DetailViewDialog extends DialogFragment {
         outState.putBoolean(KEY_AUTOFILL_DISABLED, mAutofillDisabled);
         if (mContentContainer instanceof WebView) {
             ((WebView) mContentContainer).saveState(outState);
+            outState.putBoolean(KEY_WEBVIEW_ISLOADING, mWebViewIsLoading);
+            outState.putString(KEY_WEBVIEW_HTML, mWebViewHTML);
         }
     }
 
@@ -841,6 +899,10 @@ public class DetailViewDialog extends DialogFragment {
     protected String mSeekBarFormattedValue;
     protected boolean mSeekbarPressed;
     protected PublishViewModel mViewModelPublish;
+    protected boolean mWebViewIsLoading;
+    protected String mWebViewHTML;
+    protected String m_custom_view_js;
+
 
     /* input controls */
     protected boolean mAutofillDisabled; // when user touches control, autofill (setting default value) is disabled until published
@@ -855,6 +917,8 @@ public class DetailViewDialog extends DialogFragment {
     protected final static String KEY_VIEW_MODE = "KEY_VIEW_MODE";
     protected final static String KEY_PUBLISH_ID = "KEY_PUBLISH_ID";
     protected final static String KEY_AUTOFILL_DISABLED = "KEY_AUTOFILL_DISABLED";
+    protected final static String KEY_WEBVIEW_ISLOADING = "KEY_WEBVIEW_ISLOADING";
+    protected final static String KEY_WEBVIEW_HTML = "KEY_WEBVIEW_HTML";
 
     private final static String TAG = DetailViewDialog.class.getSimpleName();
 }
