@@ -253,7 +253,6 @@ public class DetailViewDialog extends DialogFragment {
                             public void onPageFinished(WebView view, String url) {
                                 super.onPageFinished(view, url);
                                 mWebViewIsLoading = false;
-                                Log.d(TAG, "on page finished.");
                                 StringBuilder js = new StringBuilder();
                                 if (Build.VERSION.SDK_INT < 19) {
                                     js.append("javascript:");

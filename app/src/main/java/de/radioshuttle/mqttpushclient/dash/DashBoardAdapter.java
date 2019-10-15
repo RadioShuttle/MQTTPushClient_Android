@@ -437,7 +437,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                         js.append(CustomItem.build_onUpdateCall(citem));
 
                         if (Build.VERSION.SDK_INT >= 19) {
-                            Log.d(TAG, js.toString());
                             webView.evaluateJavascript(js.toString(), null);
                         } else {
                             webView.loadUrl("javascript:" + js.toString());
