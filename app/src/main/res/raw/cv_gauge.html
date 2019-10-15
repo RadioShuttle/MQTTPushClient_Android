@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+  <style>
+    body {margin: 0; padding: 0;}
+      #chart_div {
+        margin: 10px;
+    }
+  </style>
+
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['gauge']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+      data = google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['Test', 0]
+      ]);
+
+      options = {
+        width: window.innerWidth - 20, height: window.innerHeight - 20,
+        redFrom: 90, redTo: 100,
+        yellowFrom:75, yellowTo: 90,
+        minorTicks: 5
+      };
+
+      chart = new google.visualization.Gauge(document.getElementById('chart_div'));
+      chart.draw(data, options);
+    }
+
+    currentMsg = '';
+
+    function redrawChart() {
+      if (data) {
+        /* PushApp.log("redrawChart: " + window.innerWidth + ", " + window.innerHeight); */
+        document.getElementById('chart_div').style.width = (window.innerWidth - 20) + "px";
+        document.getElementById('chart_div').style.height = (window.innerHeight - 20) + "px";
+        options.width = window.innerWidth - 20;
+        options.height = window.innerHeight -20;
+        data.setValue(0, 1, Number(currentMsg));
+        chart.draw(data, options);
+      }
+    }
+
+    function onUpdate(msg) {
+      currentMsg = msg.text;
+      redrawChart();
+    }
+
+    function onResize() {
+      document.getElementById('visible_area').style.width = window.innerWidth + "px";
+      document.getElementById('visible_area').style.height = window.innerHeight + "px";
+      redrawChart();
+    }
+
+   window.addEventListener('resize', onResize);
+
+  </script>
+</head>
+<body>
+  <div id="visible_area">
+    <div id="chart_div"></div>
+  </div>
+</body>
+</html>

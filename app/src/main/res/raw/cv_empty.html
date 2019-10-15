@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+
+  <!-- android specific meta -->
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+
+  <script>
+
+    function onUpdate(msg) {
+      /* impelment */
+    }
+
+    function onResize() {
+      document.getElementById('visible_area').style.width = window.innerWidth + "px";
+      document.getElementById('visible_area').style.height = window.innerHeight + "px";
+    }
+
+   window.addEventListener('resize', onResize);
+
+  </script>
+</head>
+
+<body>
+  <div id="visible_area">
+    /* add your HTML code here */
+  </div>
+</body>
+<html>
