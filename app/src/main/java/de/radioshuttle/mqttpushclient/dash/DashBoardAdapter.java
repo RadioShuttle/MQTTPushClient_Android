@@ -10,10 +10,13 @@ import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -22,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -53,6 +57,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
+
+        try {
+            m_custom_view_js = Utils.getRawStringResource(activity, "cv_interface", true);
+        } catch (IOException e) {
+            Log.d(TAG, "Error loading raw resource: custom_view_js", e);
+        }
     }
 
     public void addListener(DashBoardActionListener listener) {
@@ -117,9 +127,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             contentContainer = view.findViewById(R.id.webContent);
             WebView webView = (WebView) contentContainer;
             webView.getSettings().setJavaScriptEnabled(true);
-            webView.setWebViewClient(new WebViewClient());
+            // webView.getSettings().setUseWideViewPort(true); // viewport
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-            // ((DashConstraintLayout) view).setInterceptTouchEvent(false); //TODO: raus
 
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
@@ -406,20 +415,55 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
 
         if (item instanceof CustomItem) {
-            WebView webView = (WebView) h.contentContainer;
-            CustomItem citem = (CustomItem) item;
+            final WebView webView = (WebView) h.contentContainer;
+            final CustomItem citem = (CustomItem) item;
 
-            if (!Utils.equals(h.html, citem.getHtml())) {
+            if (!Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
                 h.html = citem.getHtml();
-                webView.loadData(h.html, "text/html", "utf-8");
-            }
-            String msg = (String) citem.data.get("msg.content");
-            if (msg == null) {
-                msg = " ";
-            }
-            webView.loadUrl("javascript:onMessageReceived(\"" + msg + "\");"); //TODO
-        }
+                citem.isLoading = true;
+                webView.addJavascriptInterface(new CustomItem.JSObject(), "PushApp");
+                webView.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public void onPageFinished(WebView view, String url) {
+                        super.onPageFinished(view, url);
+                        citem.isLoading = false;
+                        Log.d(TAG, "on page finished.");
+                        StringBuilder js = new StringBuilder();
+                        if (Build.VERSION.SDK_INT < 19) {
+                            js.append("javascript:");
+                        }
+                        js.append(m_custom_view_js);
+                        js.append(' ');
+                        js.append(CustomItem.build_onUpdateCall(citem));
 
+                        if (Build.VERSION.SDK_INT >= 19) {
+                            Log.d(TAG, js.toString());
+                            webView.evaluateJavascript(js.toString(), null);
+                        } else {
+                            webView.loadUrl("javascript:" + js.toString());
+                        }
+
+                    }
+                    @Override
+                    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                        super.onReceivedError(view, request, error);
+                        //TODO: implement. this is only vorking for initial load errors
+                    }
+                });
+                String encodedHtml = Base64.encodeToString(h.html.getBytes(), Base64.NO_PADDING);
+                webView.loadData(encodedHtml, "text/html", "base64");
+            } else {
+                if (!citem.isLoading) {
+                    String jsOnUpdateCall = CustomItem.build_onUpdateCall(citem);
+
+                    if (Build.VERSION.SDK_INT >= 19) {
+                        webView.evaluateJavascript(jsOnUpdateCall, null);
+                    } else {
+                        webView.loadUrl(jsOnUpdateCall);
+                    }
+                }
+            }
+        }
         // Log.d(TAG, "width: " + lp.width);
         // Log.d(TAG, "height: " + lp.height);
     }
@@ -560,6 +604,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
         return lastSel;
     }
+
+    private String m_custom_view_js;
 
     private LinkedHashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
