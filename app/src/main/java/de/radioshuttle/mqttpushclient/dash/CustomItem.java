@@ -78,7 +78,7 @@ public class CustomItem extends Item {
             }
             */
             String paraMsg = item.data.get("msg.content") == null ? "" : (String) item.data.get("msg.content");
-            js.append("_onUpdate(");
+            js.append("if (typeof window['onUpdate'] === 'function') _onUpdate(");
             js.append(paraWhen);
             js.append(",'");
             js.append(paraTopic);
