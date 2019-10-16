@@ -46,6 +46,8 @@ public class CustomItem extends Item {
         return h;
     }
 
+    /* see also cv_interface.js */
+
     public static class JSObject {
 
         @JavascriptInterface
@@ -61,8 +63,8 @@ public class CustomItem extends Item {
         }
     }
 
-    /** build message call of _onUpdate as defined in custom_view.js */
-    public static String build_onUpdateCall(CustomItem item) {
+    /** build message call of _onMqttMessage as defined in custom_view.js */
+    public static String build_onMqttMessageCall(CustomItem item) {
         StringBuilder js = new StringBuilder();
         if (item != null && item.data != null) {
             long paraWhen = item.data.get("msg.received") == null ? 0 : (Long) item.data.get("msg.received");
@@ -78,7 +80,7 @@ public class CustomItem extends Item {
             }
             */
             String paraMsg = item.data.get("msg.content") == null ? "" : (String) item.data.get("msg.content");
-            js.append("if (typeof window['onUpdate'] === 'function') _onUpdate(");
+            js.append("if (typeof window['onMqttMessage'] === 'function') _onMqttMessage(");
             js.append(paraWhen);
             js.append(",'");
             js.append(paraTopic);

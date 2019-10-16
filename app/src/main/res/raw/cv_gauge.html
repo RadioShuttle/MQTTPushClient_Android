@@ -45,7 +45,7 @@
       }
     }
 
-    function onUpdate(msg) {
+    function onMqttMessage(msg) {
       currentMsg = msg.text;
       redrawChart();
     }

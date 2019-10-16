@@ -434,7 +434,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                         }
                         js.append(m_custom_view_js);
                         js.append(' ');
-                        js.append(CustomItem.build_onUpdateCall(citem));
+                        js.append(CustomItem.build_onMqttMessageCall(citem));
 
                         if (Build.VERSION.SDK_INT >= 19) {
                             webView.evaluateJavascript(js.toString(), null);
@@ -453,12 +453,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 webView.loadData(encodedHtml, "text/html", "base64");
             } else {
                 if (!citem.isLoading) {
-                    String jsOnUpdateCall = CustomItem.build_onUpdateCall(citem);
+                    String jsOnMqttMessageCall = CustomItem.build_onMqttMessageCall(citem);
 
                     if (Build.VERSION.SDK_INT >= 19) {
-                        webView.evaluateJavascript(jsOnUpdateCall, null);
+                        webView.evaluateJavascript(jsOnMqttMessageCall, null);
                     } else {
-                        webView.loadUrl(jsOnUpdateCall);
+                        webView.loadUrl(jsOnMqttMessageCall);
                     }
                 }
             }

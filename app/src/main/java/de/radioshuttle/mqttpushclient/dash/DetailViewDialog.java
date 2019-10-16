@@ -259,7 +259,7 @@ public class DetailViewDialog extends DialogFragment {
                                 }
                                 js.append(m_custom_view_js);
                                 js.append(' ');
-                                js.append(CustomItem.build_onUpdateCall(citem));
+                                js.append(CustomItem.build_onMqttMessageCall(citem));
 
                                 if (Build.VERSION.SDK_INT >= 19) {
                                     Log.d(TAG, js.toString());
@@ -777,11 +777,11 @@ public class DetailViewDialog extends DialogFragment {
                         webView.loadData(encodedHtml, "text/html", "base64");
                     } else {
                         if (!mWebViewIsLoading) {
-                            String jsOnUpdateCall = CustomItem.build_onUpdateCall(citem);
+                            String jsOnMqttMessageCall = CustomItem.build_onMqttMessageCall(citem);
                             if (Build.VERSION.SDK_INT >= 19) {
-                                webView.evaluateJavascript(jsOnUpdateCall, null);
+                                webView.evaluateJavascript(jsOnMqttMessageCall, null);
                             } else {
-                                webView.loadUrl(jsOnUpdateCall);
+                                webView.loadUrl(jsOnMqttMessageCall);
                             }
                         }
                     }

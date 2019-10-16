@@ -12,7 +12,7 @@ function publish(topic, msg, retain) {
     }
 }
 
-function _onUpdate(receivedDateMillis, topic, payloadStr, payloadBase64) {
+function _onMqttMessage(receivedDateMillis, topic, payloadStr, payloadBase64) {
     var msg = new Object();
     if (!payloadBase64) payloadBase64 = '';
     if (!payloadStr) payloadStr = '';
@@ -20,10 +20,10 @@ function _onUpdate(receivedDateMillis, topic, payloadStr, payloadBase64) {
     msg.topic = topic;
     msg.text = payloadStr;
     /* msg.raw = _base64DecToArr(payloadBase64); */ /* TODO */
-    onUpdate(msg);
+    onMqttMessage(msg);
 }
 
-function _onErrorDashboardScript(e) {
+function _onDashboardScriptError(e) {
   var string = e.message.toLowerCase();
   var substring = "script error";
   if (string.indexOf(substring) > -1){
@@ -41,6 +41,6 @@ function _onErrorDashboardScript(e) {
   }
   return false;
 };
-window.addEventListener('error', _onErrorDashboardScript);
+window.addEventListener('error', _onDashboardScriptError);
 
 /* TODO: https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding */
