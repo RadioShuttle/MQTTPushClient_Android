@@ -12,7 +12,6 @@
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script type="text/javascript">
     google.charts.load('current', {'packages':['gauge']});
-    google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
       data = google.visualization.arrayToDataTable([
@@ -35,7 +34,6 @@
 
     function redrawChart() {
       if (data) {
-        /* PushApp.log("redrawChart: " + window.innerWidth + ", " + window.innerHeight); */
         document.getElementById('chart_div').style.width = (window.innerWidth - 20) + "px";
         document.getElementById('chart_div').style.height = (window.innerHeight - 20) + "px";
         options.width = window.innerWidth - 20;
@@ -43,6 +41,10 @@
         data.setValue(0, 1, Number(currentMsg));
         chart.draw(data, options);
       }
+    }
+
+    function onMqttPushClientInit(account, view) {
+      drawChart();
     }
 
     function onMqttMessage(msg) {
