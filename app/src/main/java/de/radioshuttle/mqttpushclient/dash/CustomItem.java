@@ -13,6 +13,10 @@ import android.webkit.JavascriptInterface;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URI;
+
+import de.radioshuttle.mqttpushclient.PushAccount;
+
 public class CustomItem extends Item {
 
     @Override
@@ -46,9 +50,22 @@ public class CustomItem extends Item {
         return h;
     }
 
+    public JSObject getWebInterface() {
+        if (mWebviewInterface == null) {
+            mWebviewInterface = new JSObject();
+        }
+        return mWebviewInterface;
+    }
+
     /* see also cv_interface.js */
 
-    public static class JSObject {
+    public class JSObject {
+
+        //TODO: impplement
+        @JavascriptInterface
+        public Object getView() {
+            return new Object();
+        }
 
         @JavascriptInterface
         public void publish(String topic, String payload, boolean retain) {
@@ -93,6 +110,38 @@ public class CustomItem extends Item {
         return js.toString();
     }
 
+    public static String build_onMqttPushClientInitCall(PushAccount accountData, CustomItem item) {
+        StringBuilder js = new StringBuilder();
+
+        if (accountData != null && item != null) {
+            js.append("MqttPushClient.acc = new Object();");
+            js.append("MqttPushClient.acc.user = '");
+            js.append(accountData.user == null ? "" : accountData.user);
+            js.append("'; ");
+            js.append("MqttPushClient.acc.mqttServer = '");
+            try {
+                URI u = new URI(accountData.uri);
+                js.append(u.getAuthority());
+            } catch (Exception e) {
+                Log.d(TAG, "URI parse error: ", e);
+            }
+            js.append("'; ");
+            js.append("MqttPushClient.acc.pushServer = '");
+            js.append(accountData.pushserver == null ? "" : accountData.pushserver);
+            js.append("'; ");
+
+            js.append("if (typeof window['onMqttPushClientInit'] === 'function') onMqttPushClientInit(");
+            js.append("MqttPushClient.acc");
+            js.append(',');
+            js.append("MqttPushClient.getView()");
+            js.append("); ");
+        }
+
+
+        return js.toString();
+    }
+
+    private JSObject mWebviewInterface;
     private String html = "";
 
     //UI state
