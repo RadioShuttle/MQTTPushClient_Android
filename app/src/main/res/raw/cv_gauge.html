@@ -11,12 +11,16 @@
 
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script type="text/javascript">
+    var currentMsg = '0';
+    var gaugeLabel = '';
+
     google.charts.load('current', {'packages':['gauge']});
+    google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
       data = google.visualization.arrayToDataTable([
         ['Label', 'Value'],
-        ['Test', 0]
+        [gaugeLabel, Number(currentMsg)]
       ]);
 
       options = {
@@ -30,21 +34,20 @@
       chart.draw(data, options);
     }
 
-    currentMsg = '';
-
     function redrawChart() {
-      if (data) {
+      if (typeof window['data'] != 'undefined') {
         document.getElementById('chart_div').style.width = (window.innerWidth - 20) + "px";
         document.getElementById('chart_div').style.height = (window.innerHeight - 20) + "px";
         options.width = window.innerWidth - 20;
-        options.height = window.innerHeight -20;
+        options.height = window.innerHeight - 20;
         data.setValue(0, 1, Number(currentMsg));
+        data.setValue(0, 0, gaugeLabel);
         chart.draw(data, options);
       }
     }
 
     function onMqttPushClientInit(account, view) {
-      drawChart();
+      gaugeLabel = 'Test';
     }
 
     function onMqttMessage(msg) {
