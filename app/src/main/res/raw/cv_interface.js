@@ -2,7 +2,7 @@ function publish(topic, msg, retain) {
     var buf = null;
 
     if (typeof msg === 'string') {
-        PushApp.publish(topic, msg, retain);
+        MqttPushClient.publish(topic, msg, retain);
     } else if (msg instanceof ArrayBuffer) {
         /* TODO */
         /* _publishBase64(); */
@@ -28,7 +28,7 @@ function _onDashboardScriptError(e) {
   var substring = "script error";
   if (string.indexOf(substring) > -1){
     /* for security reasons there are no detail infos available for external scripts */
-    PushApp.log('Script Error (extenal script). No details available.'); /* TODO: call view.setError() if implemented */
+    MqttPushClient.log('Script Error (extenal script). No details available.'); /* TODO: call view.setError() if implemented */
   } else {
     var message = [
       'Message: ' + e.message,
@@ -37,7 +37,7 @@ function _onDashboardScriptError(e) {
       'Column: ' + e.colno,
       'Error object: ' + JSON.stringify(e.error)
     ].join(' - ');
-    PushApp.log("Script Error: " + message); /* TODO: call view.setError() if implemented */
+    MqttPushClient.log("Script Error: " + message); /* TODO: call view.setError() if implemented */
   }
   return false;
 };
