@@ -159,7 +159,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                 }
             }
 
-            mAdapter = new DashBoardAdapter(this, getWidthPixel(), layoutManager.getSpanCount(), selectedItems);
+            mAdapter = new DashBoardAdapter(b,this, getWidthPixel(), layoutManager.getSpanCount(), selectedItems);
             mAdapter.addListener(this);
             mControllerList.setAdapter(mAdapter);
 
