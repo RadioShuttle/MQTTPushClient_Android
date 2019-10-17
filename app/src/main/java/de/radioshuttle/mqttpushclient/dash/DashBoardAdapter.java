@@ -37,12 +37,14 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 
 public class DashBoardAdapter extends RecyclerView.Adapter {
 
-    public DashBoardAdapter(AppCompatActivity activity, int width, int spanCount, LinkedHashSet<Integer> selectedItems) {
+    public DashBoardAdapter(PushAccount account, AppCompatActivity activity, int width, int spanCount, LinkedHashSet<Integer> selectedItems) {
         mInflater = activity.getLayoutInflater();
         mData = new ArrayList<>();
         mWidth = width;
@@ -57,6 +59,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
+        mAccount = account;
 
         try {
             m_custom_view_js = Utils.getRawStringResource(activity, "cv_interface", true);
@@ -421,19 +424,21 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             if (!Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
                 h.html = citem.getHtml();
                 citem.isLoading = true;
-                webView.addJavascriptInterface(new CustomItem.JSObject(), "PushApp");
+                webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
                 webView.setWebViewClient(new WebViewClient() {
                     @Override
                     public void onPageFinished(WebView view, String url) {
                         super.onPageFinished(view, url);
                         citem.isLoading = false;
-                        Log.d(TAG, "on page finished.");
+                        Log.d(TAG, "on page finished."); // remove after test
                         StringBuilder js = new StringBuilder();
                         if (Build.VERSION.SDK_INT < 19) {
                             js.append("javascript:");
                         }
                         js.append(m_custom_view_js);
                         js.append(' ');
+                        js.append(CustomItem.build_onMqttPushClientInitCall(mAccount, citem));
+
                         js.append(CustomItem.build_onMqttMessageCall(citem));
 
                         if (Build.VERSION.SDK_INT >= 19) {
@@ -618,6 +623,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     private int spacing;
     private LayoutInflater mInflater;
     private List<Item> mData;
+    private PushAccount mAccount;
 
     public final static int TYPE_GROUP = 0;
     public final static int TYPE_TEXT = 1;

@@ -247,7 +247,7 @@ public class DetailViewDialog extends DialogFragment {
                         webView.getSettings().setJavaScriptEnabled(true);
                         // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
-                        webView.addJavascriptInterface(new CustomItem.JSObject(), "PushApp");
+                        webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
                         webView.setWebViewClient(new WebViewClient() {
                             @Override
                             public void onPageFinished(WebView view, String url) {
@@ -259,7 +259,9 @@ public class DetailViewDialog extends DialogFragment {
                                 }
                                 js.append(m_custom_view_js);
                                 js.append(' ');
+                                js.append(CustomItem.build_onMqttPushClientInitCall(mViewModel.getPushAccount(), citem));
                                 js.append(CustomItem.build_onMqttMessageCall(citem));
+                                Log.d(TAG, "detail view on page finished"); //TODO: remove
 
                                 if (Build.VERSION.SDK_INT >= 19) {
                                     Log.d(TAG, js.toString());
