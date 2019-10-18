@@ -15,8 +15,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -130,9 +132,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             contentContainer = view.findViewById(R.id.webContent);
             WebView webView = (WebView) contentContainer;
             webView.getSettings().setJavaScriptEnabled(true);
-            // webView.getSettings().setUseWideViewPort(true); // viewport
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-
+            progressBar = view.findViewById(R.id.webProgressBar);
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
             errorImage2View = view.findViewById(R.id.errorImage2);
@@ -188,7 +189,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         // Log.d(TAG, "onBindViewHolder: " );
-        ViewHolder h = (ViewHolder) holder;
+        final ViewHolder h = (ViewHolder) holder;
         Item item = mData.get(position);
         h.label.setText(item.label);
 
@@ -249,7 +250,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
         Object javaScriptError = item.data.get("error");
 
-        if (h.progressBar != null) { // (h.viewType == TYPE_PROGRESS) {
+        if (h.viewType == TYPE_PROGRESS && h.progressBar != null) {
             ProgressItem p = (ProgressItem) item;
             long pcolor = (p.data.get("ctrl_color") != null ? (Long) p.data.get("ctrl_color") : p.progresscolor);
 
@@ -260,24 +261,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                 color = (int) pcolor;
             }
 
-            if (Build.VERSION.SDK_INT >= 21) {
-                /*
-                Drawable d = h.progressBar.getProgressDrawable();
-                if (d != null) {
-                    DrawableCompat.setTint(d, p.progresscolor == 0 ? mDefaultProgressColor : p.progresscolor);
-                }
-                */
-                ColorStateList pt = h.progressBar.getProgressTintList();
-                if (pt == null || pt.getDefaultColor() != pcolor) {
-                    h.progressBar.setProgressTintList(ColorStateList.valueOf(color));
-                    h.progressBar.setProgressBackgroundTintList(ColorStateList.valueOf(color));
-                }
-            } else {
-                Drawable d = h.progressBar.getProgressDrawable();
-                if (d != null) {
-                    d.setColorFilter(color, PorterDuff.Mode.SRC_IN);
-                }
-            }
+            tintProgressBar(color, h.progressBar);
 
             int value = 0;
             /* if java script error, there is no valid data, set progress bar to 0 */
@@ -421,10 +405,30 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             final WebView webView = (WebView) h.contentContainer;
             final CustomItem citem = (CustomItem) item;
 
+            long xcolor = citem.getTextcolor();
+            int color;
+            if (xcolor == DColor.OS_DEFAULT || xcolor == DColor.CLEAR) { // clear is inavalid, treat as DEFAULT
+                color = h.defaultColor;
+            } else {
+                color = (int) xcolor;
+            }
+            tintProgressBar(color, h.progressBar);
+
             if (!Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
                 h.html = citem.getHtml();
                 citem.isLoading = true;
                 webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
+                webView.setWebChromeClient(new WebChromeClient() {
+                    @Override
+                    public void onProgressChanged(WebView view, int newProgress) {
+                        super.onProgressChanged(view, newProgress);
+                        if (newProgress < 100 && h.progressBar.getVisibility() != View.VISIBLE) {
+                            h.progressBar.setVisibility(View.VISIBLE);
+                        } else if (newProgress == 100 && h.progressBar.getVisibility() != View.GONE) {
+                            h.progressBar.setVisibility(View.GONE);
+                        }
+                    }
+                });
                 webView.setWebViewClient(new WebViewClient() {
                     @Override
                     public void onPageFinished(WebView view, String url) {
@@ -437,8 +441,15 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                         }
                         js.append(m_custom_view_js);
                         js.append(' ');
-                        js.append(CustomItem.build_onMqttPushClientInitCall(mAccount, citem));
 
+                        // buildJS_readyState
+                        StringBuilder tmp = new StringBuilder();
+                        tmp.append(CustomItem.build_onMqttPushClientInitCall(mAccount, citem));
+                        tmp.append(CustomItem.build_onMqttMessageCall(citem));
+
+                        // js.append(CustomItem.buildJS_readyState(tmp.toString()));
+
+                        js.append(CustomItem.build_onMqttPushClientInitCall(mAccount, citem));
                         js.append(CustomItem.build_onMqttMessageCall(citem));
 
                         if (Build.VERSION.SDK_INT >= 19) {
@@ -470,6 +481,31 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
         // Log.d(TAG, "width: " + lp.width);
         // Log.d(TAG, "height: " + lp.height);
+    }
+
+    protected void tintProgressBar(int color,ProgressBar progressBar) {
+        if (Build.VERSION.SDK_INT >= 21) {
+            ColorStateList pt = progressBar.getProgressTintList();
+
+            if (pt == null || pt.getDefaultColor() != color) {
+                if (progressBar.isIndeterminate()) {
+                    progressBar.setIndeterminateTintList(ColorStateList.valueOf(color));
+                } else {
+                    progressBar.setProgressTintList(ColorStateList.valueOf(color));
+                    progressBar.setProgressBackgroundTintList(ColorStateList.valueOf(color));
+                }
+            }
+        } else {
+            Drawable d;
+            if (progressBar.isIndeterminate()) {
+                d = progressBar.getIndeterminateDrawable();
+            } else {
+                d = progressBar.getProgressDrawable();
+            }
+            if (d != null) {
+                d.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            }
+        }
     }
 
     @Override
