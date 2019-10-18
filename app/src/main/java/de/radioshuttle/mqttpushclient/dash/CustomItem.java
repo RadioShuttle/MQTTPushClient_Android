@@ -141,6 +141,26 @@ public class CustomItem extends Item {
         return js.toString();
     }
 
+    /** the passed java script code will be executed when document in state complete */
+    public static String buildJS_readyState(String src) {
+        StringBuilder js = new StringBuilder();
+        js.append("function _initMqttPushClient() {");
+        js.append(src);
+        js.append("}");
+
+        js.append("if (document.readyState != 'loading') {");
+        js.append("_initMqttPushClient()");
+        js.append("} else {");
+        js.append("document.addEventListener('readystatechange', function(e) {");
+        js.append("if (e.target.readyState === 'complete') {");
+        js.append("_initMqttPushClient()");
+        js.append("}});");
+        js.append("}");
+
+        return js.toString();
+    }
+
+
     private JSObject mWebviewInterface;
     private String html = "";
 
