@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -235,11 +236,30 @@ public class DetailViewDialog extends DialogFragment {
                         final CustomItem citem = (CustomItem) mItem;
                         view = inflater.inflate(R.layout.activity_dash_board_item_custom, null);
                         mContentContainer = view.findViewById(R.id.webContent);
-                        // int padding = (int) (40d * getResources().getDisplayMetrics().density);
-                        // mItem.data.put("error", "html error test");
-
+                        mItemProgressBar = view.findViewById(R.id.webProgressBar);
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
+
+                        long xcolor = citem.getTextcolor();
+                        int color;
+                        if (xcolor == DColor.OS_DEFAULT || xcolor == DColor.CLEAR) { // clear is inavalid, treat as DEFAULT
+                            color = mDefaultTextColor;
+                        } else {
+                            color = (int) xcolor;
+                        }
+
+                        if (Build.VERSION.SDK_INT >= 21) {
+                            ColorStateList pt = mItemProgressBar.getProgressTintList();
+                            if (pt == null || pt.getDefaultColor() != color) {
+                                mItemProgressBar.setIndeterminateTintList(ColorStateList.valueOf(color));
+                            }
+                        } else {
+                            Drawable d = mItemProgressBar.getIndeterminateDrawable();
+                            if (d != null) {
+                                d.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+                            }
+                        }
+
 
                         final WebView webView = (WebView) mContentContainer;
                         webView.setWebViewClient(new WebViewClient());
@@ -248,6 +268,17 @@ public class DetailViewDialog extends DialogFragment {
                         // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
                         webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
+                        webView.setWebChromeClient(new WebChromeClient() {
+                            @Override
+                            public void onProgressChanged(WebView view, int newProgress) {
+                                super.onProgressChanged(view, newProgress);
+                                if (newProgress < 100 && mItemProgressBar.getVisibility() != View.VISIBLE) {
+                                    mItemProgressBar.setVisibility(View.VISIBLE);
+                                } else if (newProgress == 100 && mItemProgressBar.getVisibility() != View.GONE) {
+                                    mItemProgressBar.setVisibility(View.GONE);
+                                }
+                            }
+                        });
                         webView.setWebViewClient(new WebViewClient() {
                             @Override
                             public void onPageFinished(WebView view, String url) {
@@ -651,15 +682,6 @@ public class DetailViewDialog extends DialogFragment {
                     }
 
                     if (Build.VERSION.SDK_INT >= 21) {
-                        /*
-                        Drawable d = pb.getProgressDrawable();
-                        if (d != null) {
-                            d.setColorFilter(p.progresscolor == 0 ? defaultProgressColor : p.progresscolor, PorterDuff.Mode.SRC_IN);
-                            if (pb instanceof SeekBar) {
-                                ((SeekBar) pb).setThumbTintList(ColorStateList.valueOf(pcolor));
-                            }
-                        }
-                        */
                         ColorStateList pt = pb.getProgressTintList();
                         if (pt == null || pt.getDefaultColor() != color) {
                             pb.setProgressTintList(ColorStateList.valueOf(color));
