@@ -6,6 +6,8 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.annotation.TargetApi;
+import android.app.Application;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -15,6 +17,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -62,6 +65,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
         mAccount = account;
+        mApp = activity.getApplication();
 
         try {
             m_custom_view_js = Utils.getRawStringResource(activity, "cv_interface", true);
@@ -139,7 +143,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             errorImage2View = view.findViewById(R.id.errorImage2);
         } // TODO: handle unknown view type
 
-        Log.d(TAG, "new custom component: " + viewType);
+        Log.d(TAG, "onCreateViewHolder: " + viewType);
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
@@ -187,7 +191,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
         // Log.d(TAG, "onBindViewHolder: " );
         final ViewHolder h = (ViewHolder) holder;
         Item item = mData.get(position);
@@ -417,7 +421,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             if (!Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
                 h.html = citem.getHtml();
                 citem.isLoading = true;
-                webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
+                citem.data.remove("error"); // clear erros
+                citem.data.remove("error2");
+                webView.addJavascriptInterface(citem.getWebInterface(mApp), "MqttPushClient");
                 webView.setWebChromeClient(new WebChromeClient() {
                     @Override
                     public void onProgressChanged(WebView view, int newProgress) {
@@ -427,6 +433,15 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                         } else if (newProgress == 100 && h.progressBar.getVisibility() != View.GONE) {
                             h.progressBar.setVisibility(View.GONE);
                         }
+                    }
+
+                    @Override
+                    public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                        String msg = consoleMessage.message() + ", line: " + consoleMessage.lineNumber();
+                        citem.data.put("error", msg);
+                        //TODO: notify about change
+                        //TODO: do not report errors or other updates when detail view open !?
+                        return true;
                     }
                 });
                 webView.setWebViewClient(new WebViewClient() {
@@ -459,10 +474,20 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                         }
 
                     }
+                    @TargetApi(23)
                     @Override
                     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                         super.onReceivedError(view, request, error);
-                        //TODO: implement. this is only vorking for initial load errors
+                        //TODO: consider handling errors
+                    }
+
+                    @Override
+                    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                        super.onReceivedError(view, errorCode, description, failingUrl);
+                        if (Build.VERSION.SDK_INT < 23) {
+                            //TODO: consider handling errors
+                        }
+
                     }
                 });
                 String encodedHtml = Base64.encodeToString(h.html.getBytes(), Base64.NO_PADDING);
@@ -660,6 +685,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     private LayoutInflater mInflater;
     private List<Item> mData;
     private PushAccount mAccount;
+    private Application mApp;
 
     public final static int TYPE_GROUP = 0;
     public final static int TYPE_TEXT = 1;
