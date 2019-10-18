@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
@@ -20,6 +21,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -267,7 +269,7 @@ public class DetailViewDialog extends DialogFragment {
                         webView.getSettings().setJavaScriptEnabled(true);
                         // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
-                        webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
+                        webView.addJavascriptInterface(citem.getWebInterface(getActivity().getApplication()), "MqttPushClient");
                         webView.setWebChromeClient(new WebChromeClient() {
                             @Override
                             public void onProgressChanged(WebView view, int newProgress) {
@@ -277,6 +279,14 @@ public class DetailViewDialog extends DialogFragment {
                                 } else if (newProgress == 100 && mItemProgressBar.getVisibility() != View.GONE) {
                                     mItemProgressBar.setVisibility(View.GONE);
                                 }
+                            }
+                            @Override
+                            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                                String msg = consoleMessage.message() + ", line: " + consoleMessage.lineNumber();
+                                citem.data.put("error", msg);
+                                //TODO: notify about change
+                                //TODO: check reporting mechanism !
+                                return true;
                             }
                         });
                         webView.setWebViewClient(new WebViewClient() {
@@ -302,10 +312,20 @@ public class DetailViewDialog extends DialogFragment {
                                 }
 
                             }
+                            @TargetApi(23)
                             @Override
                             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                                 super.onReceivedError(view, request, error);
-                                //TODO: implement. this is only vorking for initial load errors
+                                //TODO: consider handling errors
+                            }
+
+                            @Override
+                            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                                super.onReceivedError(view, errorCode, description, failingUrl);
+                                if (Build.VERSION.SDK_INT < 23) {
+                                    //TODO: consider handling errors
+                                }
+
                             }
                         });
 
