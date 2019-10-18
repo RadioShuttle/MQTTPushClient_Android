@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.app.Application;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
@@ -14,10 +15,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URI;
+import java.util.Collections;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.utils.Utils;
 
 public class CustomItem extends Item {
+
+    public CustomItem() {
+        super();
+        data = Collections.synchronizedMap(data);
+    }
 
     @Override
     public String getType() {
@@ -50,9 +58,9 @@ public class CustomItem extends Item {
         return h;
     }
 
-    public JSObject getWebInterface() {
+    public JSObject getWebInterface(Application app) {
         if (mWebviewInterface == null) {
-            mWebviewInterface = new JSObject();
+            mWebviewInterface = new JSObject(app);
         }
         return mWebviewInterface;
     }
@@ -61,10 +69,14 @@ public class CustomItem extends Item {
 
     public class JSObject {
 
-        //TODO: impplement
+        public JSObject(Application app) {
+            this.app = app;
+            view = new JSView();
+        }
+
         @JavascriptInterface
-        public Object getView() {
-            return new Object();
+        public JSView getView() {
+            return view;
         }
 
         @JavascriptInterface
@@ -78,7 +90,46 @@ public class CustomItem extends Item {
             s = "";
             Log.d(TAG, "webview: " + s);
         }
+
+        Application app;
+        JSView view;
     }
+
+    public class JSView {
+
+        @JavascriptInterface
+        public void setError(String error) {
+            String lastError = (String) data.get("error");
+            if (!Utils.equals(error, lastError)) {
+                if (error == null) {
+                    data.put("error", "");
+                } else {
+                    data.put("error", (error == null ? "" : error));
+                }
+            }
+        }
+
+        @JavascriptInterface
+        public void setTextColor(double color) {
+            //TODO
+        }
+
+        @JavascriptInterface
+        public void setBackgroundColor(double color) {
+            //TODO
+        }
+
+        @JavascriptInterface
+        public double getTextColor() {
+            return 0d; //TODO
+        }
+
+        @JavascriptInterface
+        public double getBackgroundColor() {
+            return 0d; //TODO
+        }
+    }
+
 
     /** build message call of _onMqttMessage as defined in custom_view.js */
     public static String build_onMqttMessageCall(CustomItem item) {
@@ -159,7 +210,6 @@ public class CustomItem extends Item {
 
         return js.toString();
     }
-
 
     private JSObject mWebviewInterface;
     private String html = "";
