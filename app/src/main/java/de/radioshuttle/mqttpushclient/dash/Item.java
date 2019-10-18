@@ -18,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
@@ -152,7 +153,7 @@ public abstract class Item {
 
     final static int[] TEXTAPP = new int[] {android.R.style.TextAppearance_Small, android.R.style.TextAppearance_Medium, android.R.style.TextAppearance_Large};
 
-    public HashMap<String, Object> data;
+    public Map<String, Object> data;
 
     public abstract String getType();
 
