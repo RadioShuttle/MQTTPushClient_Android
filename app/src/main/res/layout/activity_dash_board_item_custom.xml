@@ -5,7 +5,6 @@
     android:id="@+id/itemCustomConstraintLayout"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-
     <WebView
         android:id="@+id/webContent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -14,6 +13,18 @@
         android:scrollbars="none"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <ProgressBar
+        android:id="@+id/webProgressBar"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="@id/webContent"
+        app:layout_constraintRight_toRightOf="@id/webContent"
+        app:layout_constraintTop_toTopOf="@id/webContent"
+        app:layout_constraintBottom_toBottomOf="@id/webContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+    </ProgressBar>
 
     <TextView
         android:id="@+id/name"
