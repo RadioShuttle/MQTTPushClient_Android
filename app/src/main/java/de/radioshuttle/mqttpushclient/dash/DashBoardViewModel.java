@@ -140,7 +140,11 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     item.data.put("msg.raw", payload);
                                     item.data.put("msg.content", msg);
                                     item.data.put("content", msg);
-                                    item.data.remove("error"); // remove previous set error
+                                    if (item instanceof CustomItem) {
+                                      /* do not reset error of web component */ ;
+                                    } else {
+                                        item.data.remove("error"); // remove previous set error
+                                    }
                                     checkForResourceNotFoundError(item);
                                     item.updateUIContent(getApplication());
                                     updated = true;
