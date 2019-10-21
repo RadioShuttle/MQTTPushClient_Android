@@ -298,6 +298,7 @@ public class DetailViewDialog extends DialogFragment {
                                 if (Build.VERSION.SDK_INT < 19) {
                                     js.append("javascript:");
                                 }
+                                Log.d(TAG, "onPageFinished");
                                 js.append(m_custom_view_js);
                                 js.append(' ');
                                 js.append(CustomItem.build_onMqttPushClientInitCall(mViewModel.getPushAccount(), citem));
@@ -337,6 +338,7 @@ public class DetailViewDialog extends DialogFragment {
                             mWebViewIsLoading = savedInstanceState.getBoolean(KEY_WEBVIEW_ISLOADING);
                             mWebViewHTML = savedInstanceState.getString(KEY_WEBVIEW_HTML);
                             webView.restoreState(savedInstanceState);
+                            webView.reload();
                         }
                         try {
                             m_custom_view_js = Utils.getRawStringResource(getContext(), "cv_interface", true);
