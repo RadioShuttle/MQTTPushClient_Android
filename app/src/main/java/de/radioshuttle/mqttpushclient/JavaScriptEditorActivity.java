@@ -308,7 +308,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     protected void runJS() {
         if (mEditor != null) {
             if (mTestDataMsgContent != null) {
-                mViewModel.mContentFilterCache.put("msg.content", mTestDataMsgContent.getText().toString());
+                mViewModel.mContentFilterCache.put("msg.text", mTestDataMsgContent.getText().toString());
             }
             mViewModel.runJavaScript(mEditor.getText().toString());
         }

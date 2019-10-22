@@ -146,7 +146,7 @@ public class CustomItem extends Item {
                 e.printStackTrace();
             }
             */
-            String paraMsg = item.data.get("msg.content") == null ? "" : (String) item.data.get("msg.content");
+            String paraMsg = item.data.get("msg.text") == null ? "" : (String) item.data.get("msg.text");
             js.append("if (typeof window['onMqttMessage'] === 'function') _onMqttMessage(");
             js.append(paraWhen);
             js.append(",'");

@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -138,7 +139,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     // Log.d(TAG, "content: " + msg);
                                     item.data.put("msg.received", message.getWhen());
                                     item.data.put("msg.raw", payload);
-                                    item.data.put("msg.content", msg);
+                                    item.data.put("msg.text", msg);
                                     item.data.put("content", msg);
                                     if (item instanceof CustomItem) {
                                       /* do not reset error of web component */ ;
@@ -148,6 +149,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     checkForResourceNotFoundError(item);
                                     item.updateUIContent(getApplication());
                                     updated = true;
+                                    Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
                                 } else {
                                     // Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
                                     mJavaScriptExecutor.executeFilterScript(item, message, new JavaScriptExcecutor.Callback() {
