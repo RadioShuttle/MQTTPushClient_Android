@@ -6,10 +6,12 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
-import android.app.Application;
 import android.util.Base64;
 import android.util.Log;
+
 import android.webkit.JavascriptInterface;
+
+import androidx.lifecycle.MutableLiveData;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,6 +27,8 @@ public class CustomItem extends Item {
     public CustomItem() {
         super();
         data = Collections.synchronizedMap(data);
+        webViewLifeData = new MutableLiveData<>();
+        webViewLifeData.setValue(0);
     }
 
     @Override
@@ -58,9 +62,9 @@ public class CustomItem extends Item {
         return h;
     }
 
-    public JSObject getWebInterface(Application app) {
+    public JSObject getWebInterface() {
         if (mWebviewInterface == null) {
-            mWebviewInterface = new JSObject(app);
+            mWebviewInterface = new JSObject();
         }
         return mWebviewInterface;
     }
@@ -69,8 +73,7 @@ public class CustomItem extends Item {
 
     public class JSObject {
 
-        public JSObject(Application app) {
-            this.app = app;
+        public JSObject() {
             view = new JSView();
         }
 
@@ -91,7 +94,6 @@ public class CustomItem extends Item {
             Log.d(TAG, "webview: " + s);
         }
 
-        Application app;
         JSView view;
     }
 
@@ -101,11 +103,8 @@ public class CustomItem extends Item {
         public void setError(String error) {
             String lastError = (String) data.get("error");
             if (!Utils.equals(error, lastError)) {
-                if (error == null) {
-                    data.put("error", "");
-                } else {
-                    data.put("error", (error == null ? "" : error));
-                }
+                data.put("error", (error == null ? "" : error));
+                webViewLifeData.postValue(id);
             }
         }
 
@@ -127,7 +126,7 @@ public class CustomItem extends Item {
         @JavascriptInterface
         public double getBackgroundColor() {
             return 0d; //TODO
-        }
+        };
     }
 
 
@@ -216,4 +215,5 @@ public class CustomItem extends Item {
 
     //UI state
     public boolean isLoading;
+    public MutableLiveData<Integer> webViewLifeData;
 }
