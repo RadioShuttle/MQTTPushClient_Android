@@ -7,7 +7,6 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.annotation.TargetApi;
-import android.app.Application;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -21,7 +20,6 @@ import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -41,13 +39,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.RecyclerView;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 
-public class DashBoardAdapter extends RecyclerView.Adapter {
+public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<Integer> {
 
     public DashBoardAdapter(PushAccount account, AppCompatActivity activity, int width, int spanCount, LinkedHashSet<Integer> selectedItems) {
         mInflater = activity.getLayoutInflater();
@@ -65,7 +64,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
         mAccount = account;
-        mApp = activity.getApplication();
+        mActivity = activity;
 
         try {
             m_custom_view_js = Utils.getRawStringResource(activity, "cv_interface", true);
@@ -141,9 +140,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
             errorImage2View = view.findViewById(R.id.errorImage2);
+            // Log.d(TAG, "custom item onCreateViewHolder: " + viewType);
         } // TODO: handle unknown view type
 
-        Log.d(TAG, "onCreateViewHolder: " + viewType);
+        // Log.d(TAG, "onCreateViewHolder: " + viewType);
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
@@ -192,9 +192,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
-        // Log.d(TAG, "onBindViewHolder: " );
         final ViewHolder h = (ViewHolder) holder;
         Item item = mData.get(position);
+        // Log.d(TAG, "onBindViewHolder: " + item.label );
+
         h.label.setText(item.label);
 
         if (mSelectedItems.contains(item.id)) {
@@ -418,12 +419,15 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
             }
             tintProgressBar(color, h.progressBar);
 
-            if (!Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
+            if (citem.id != h.customViewID || !Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
+                // Log.d(TAG, "custom item loading: " + citem.label);
+                h.customViewID = citem.id;
                 h.html = citem.getHtml();
+
                 citem.isLoading = true;
                 citem.data.remove("error"); // clear erros
                 citem.data.remove("error2");
-                webView.addJavascriptInterface(citem.getWebInterface(mApp), "MqttPushClient");
+                webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
                 webView.setWebChromeClient(new WebChromeClient() {
                     @Override
                     public void onProgressChanged(WebView view, int newProgress) {
@@ -437,10 +441,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
                     @Override
                     public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                        String msg = consoleMessage.message() + ", line: " + consoleMessage.lineNumber();
-                        citem.data.put("error", msg);
-                        //TODO: notify about change
                         //TODO: do not report errors or other updates when detail view open !?
+                        String err = "" + consoleMessage.message() + ", line: " + consoleMessage.lineNumber();
+                        handleWebViewError(err, citem);
                         return true;
                     }
                 });
@@ -478,16 +481,17 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
                     @Override
                     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                         super.onReceivedError(view, request, error);
-                        //TODO: consider handling errors
+                        /* check if error already reported */
+                        String err = error.getDescription().toString();
+                        handleWebViewError(err, citem);
                     }
 
                     @Override
                     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                         super.onReceivedError(view, errorCode, description, failingUrl);
                         if (Build.VERSION.SDK_INT < 23) {
-                            //TODO: consider handling errors
+                            handleWebViewError(description, citem);
                         }
-
                     }
                 });
                 String encodedHtml = Base64.encodeToString(h.html.getBytes(), Base64.NO_PADDING);
@@ -506,6 +510,16 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         }
         // Log.d(TAG, "width: " + lp.width);
         // Log.d(TAG, "height: " + lp.height);
+    }
+
+    protected void handleWebViewError(String err, CustomItem item) {
+        if (err == null) {
+            err = "";
+        }
+        if (item != null && !Utils.equals(err, item.data.get("error"))) {
+            item.data.put("error", err);
+            item.webViewLifeData.setValue(item.id);
+        }
     }
 
     protected void tintProgressBar(int color,ProgressBar progressBar) {
@@ -540,16 +554,24 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
 
     public void setData(List<Item> data) {
         //TODO: consider using DiffUtil to improve performance
+
         mData = data;
         if (mData == null) {
             mData = new ArrayList<>();
+        }
+
+        /* add observer to listen to updates from webview */
+        for(Item item : mData) {
+            if (item instanceof CustomItem) {
+                ((CustomItem) item).webViewLifeData.observe(mActivity, this);
+            }
         }
 
         /* if items have been deleted the selected items hashmap must be updated */
         if (mSelectedItems != null && mSelectedItems.size() > 0) {
             int o = mSelectedItems.size();
             HashSet<Integer> dataKeys = new HashSet<>();
-            for (Item a : data) {
+            for (Item a : data) { //TODO: optimize with loop above
                 dataKeys.add(a.id);
             }
             mSelectedItems.retainAll(dataKeys);
@@ -573,6 +595,20 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         notifyDataSetChanged();
     }
 
+    @Override
+    public void onChanged(Integer o) {
+        if (o != null) {
+            int idx = -1;
+            for(int i = 0; i < mData.size(); i++) {
+                if (mData.get(i).id == o) {
+                    // Log.d(TAG, "webview onChanged(): " + mData.get(i).label);
+                    notifyItemChanged(i, mData.get(i));
+                    break;
+                }
+            }
+        }
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         public ViewHolder(View v) {
             super(v);
@@ -589,6 +625,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
         int defaultColor;
         int viewType;
         String html;
+        int customViewID;
     }
 
     @Override
@@ -685,7 +722,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter {
     private LayoutInflater mInflater;
     private List<Item> mData;
     private PushAccount mAccount;
-    private Application mApp;
+    private AppCompatActivity mActivity;
 
     public final static int TYPE_GROUP = 0;
     public final static int TYPE_TEXT = 1;
