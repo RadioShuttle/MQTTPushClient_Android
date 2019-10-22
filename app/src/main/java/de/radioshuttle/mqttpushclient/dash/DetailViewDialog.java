@@ -242,6 +242,13 @@ public class DetailViewDialog extends DialogFragment {
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
 
+                        citem.webViewLifeData.observe(this, new Observer<Integer>() {
+                            @Override
+                            public void onChanged(Integer integer) {
+                                updateView();
+                            }
+                        });
+
                         long xcolor = citem.getTextcolor();
                         int color;
                         if (xcolor == DColor.OS_DEFAULT || xcolor == DColor.CLEAR) { // clear is inavalid, treat as DEFAULT
@@ -269,7 +276,7 @@ public class DetailViewDialog extends DialogFragment {
                         webView.getSettings().setJavaScriptEnabled(true);
                         // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
-                        webView.addJavascriptInterface(citem.getWebInterface(getActivity().getApplication()), "MqttPushClient");
+                        webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
                         webView.setWebChromeClient(new WebChromeClient() {
                             @Override
                             public void onProgressChanged(WebView view, int newProgress) {
@@ -282,10 +289,8 @@ public class DetailViewDialog extends DialogFragment {
                             }
                             @Override
                             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                                String msg = consoleMessage.message() + ", line: " + consoleMessage.lineNumber();
-                                citem.data.put("error", msg);
-                                //TODO: notify about change
-                                //TODO: check reporting mechanism !
+                                String err = "" + consoleMessage.message() + ", line: " + consoleMessage.lineNumber();
+                                handleWebViewError(err, citem);
                                 return true;
                             }
                         });
@@ -317,16 +322,17 @@ public class DetailViewDialog extends DialogFragment {
                             @Override
                             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                                 super.onReceivedError(view, request, error);
-                                //TODO: consider handling errors
+                                /* check if error already reported */
+                                String err = error.getDescription().toString();
+                                handleWebViewError(err, citem);
                             }
 
                             @Override
                             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                                 super.onReceivedError(view, errorCode, description, failingUrl);
                                 if (Build.VERSION.SDK_INT < 23) {
-                                    //TODO: consider handling errors
+                                    handleWebViewError(description, citem);
                                 }
-
                             }
                         });
 
@@ -461,6 +467,16 @@ public class DetailViewDialog extends DialogFragment {
         }
 
         return root;
+    }
+
+    protected void handleWebViewError(String err, CustomItem item) {
+        if (err == null) {
+            err = "";
+        }
+        if (item != null && !Utils.equals(err, item.data.get("error"))) {
+            item.data.put("error", err);
+            item.webViewLifeData.setValue(item.id);
+        }
     }
 
     protected void performSend(byte[] value, boolean queueRequest) {
@@ -854,7 +870,7 @@ public class DetailViewDialog extends DialogFragment {
             if (mViewMode == VIEW_ERROR_1) {
                 Object javaScriptError = mItem.data.get("error");
                 if (javaScriptError instanceof String) {
-                    if (mItem.data.containsKey("error.item") || ((String) javaScriptError).equals(getString(R.string.error_image_not_found))) {
+                    if (mItem instanceof CustomItem || mItem.data.containsKey("error.item") || ((String) javaScriptError).equals(getString(R.string.error_image_not_found))) {
                         displayError = getString(R.string.dash_item_err) + " " + javaScriptError;
                     } else {
                         displayError = getString(R.string.javascript_err) + " " + javaScriptError;
