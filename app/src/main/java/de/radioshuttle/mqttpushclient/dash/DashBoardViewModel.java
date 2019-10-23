@@ -121,7 +121,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     @MainThread
     public void onMessageReceived(Message message) {
         if (message != null) {
-            boolean updated = false;
+            Log.d(TAG, "--> onMessageReceived: " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
             /* iterate over all items and check for subscribed topics */
             for(GroupItem gr : mGroups) {
                 LinkedList<Item> items = mItemsPerGroup.get(gr.id);
@@ -129,6 +129,8 @@ public class DashBoardViewModel extends AndroidViewModel {
                     for(Item item : items) {
                         try {
                             if (!Utils.isEmpty(item.topic_s) && message.filter.equals(item.topic_s)) {
+                                //TODO:
+                                Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
                                 item.data.put("sub_topic_stat", message.status);
                                 if (Utils.isEmpty(item.script_f)) { // no javascript -> update UI
                                     String msg = "";
@@ -148,8 +150,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     }
                                     checkForResourceNotFoundError(item);
                                     item.updateUIContent(getApplication());
-                                    updated = true;
-                                    Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
+                                    item.notifyDataChanged();
                                 } else {
                                     // Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
                                     mJavaScriptExecutor.executeFilterScript(item, message, new JavaScriptExcecutor.Callback() {
@@ -166,7 +167,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                                     }
                                                     item.data.putAll(result);
                                                     item.updateUIContent(getApplication());
-                                                    mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers
+                                                    item.notifyDataChanged();
                                                 }
                                             }
                                         }
@@ -178,10 +179,6 @@ public class DashBoardViewModel extends AndroidViewModel {
                             // invalid arguments
                         }
                     }
-                }
-                if (updated) {
-                    // List<Item> livedata = mDashBoardItemsLiveData.getValue();
-                    mDashBoardItemsLiveData.setValue(buildDisplayList()); // notifay observers
                 }
             }
         }

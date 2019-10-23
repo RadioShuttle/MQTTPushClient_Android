@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.TextViewCompat;
+import androidx.lifecycle.MutableLiveData;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +29,8 @@ public abstract class Item {
         data = new HashMap<>();
         textcolor = DColor.OS_DEFAULT;
         background = DColor.OS_DEFAULT;
+        liveData = new MutableLiveData<>();
+        liveData.setValue(0);
     }
 
     public int id;
@@ -144,6 +147,10 @@ public abstract class Item {
         return viewProperties;
     }
 
+    public void notifyDataChanged() {
+        liveData.setValue(id);
+    }
+
     protected void updateUIContent(Context context) {
     }
 
@@ -156,6 +163,8 @@ public abstract class Item {
     public Map<String, Object> data;
 
     public abstract String getType();
+
+    public MutableLiveData<Integer> liveData;
 
     public final static int DEFAULT_TEXTSIZE = 1;
 

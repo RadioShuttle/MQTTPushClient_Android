@@ -517,7 +517,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         }
         if (item != null && !Utils.equals(err, item.data.get("error"))) {
             item.data.put("error", err);
-            item.webViewLifeData.setValue(item.id);
+            item.liveData.setValue(item.id);
         }
     }
 
@@ -559,11 +559,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             mData = new ArrayList<>();
         }
 
-        /* add observer to listen to updates from webview */
+        /* add observer to listen to updates (new messages, javascript interface for webviews) */
         for(Item item : mData) {
-            if (item instanceof CustomItem) {
-                ((CustomItem) item).webViewLifeData.observe(mActivity, this);
-            }
+            item.liveData.observe(mActivity, this);
         }
 
         /* if items have been deleted the selected items hashmap must be updated */

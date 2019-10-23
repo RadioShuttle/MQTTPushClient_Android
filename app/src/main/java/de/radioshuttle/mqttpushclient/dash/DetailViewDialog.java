@@ -242,13 +242,6 @@ public class DetailViewDialog extends DialogFragment {
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
 
-                        citem.webViewLifeData.observe(this, new Observer<Integer>() {
-                            @Override
-                            public void onChanged(Integer integer) {
-                                updateView();
-                            }
-                        });
-
                         long xcolor = citem.getTextcolor();
                         int color;
                         if (xcolor == DColor.OS_DEFAULT || xcolor == DColor.CLEAR) { // clear is inavalid, treat as DEFAULT
@@ -372,6 +365,13 @@ public class DetailViewDialog extends DialogFragment {
                             }
                         });
 
+                        mItem.liveData.observe(this, new Observer<Integer>() {
+                            @Override
+                            public void onChanged(Integer integer) {
+                                updateView();
+                            }
+                        });
+
                         int color;
                         if (mItem.textcolor == DColor.OS_DEFAULT || mItem.textcolor == DColor.CLEAR) {
                             color = mDefaultTextColor;
@@ -475,7 +475,7 @@ public class DetailViewDialog extends DialogFragment {
         }
         if (item != null && !Utils.equals(err, item.data.get("error"))) {
             item.data.put("error", err);
-            item.webViewLifeData.setValue(item.id);
+            item.liveData.setValue(item.id);
         }
     }
 

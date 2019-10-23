@@ -11,8 +11,6 @@ import android.util.Log;
 
 import android.webkit.JavascriptInterface;
 
-import androidx.lifecycle.MutableLiveData;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,8 +25,6 @@ public class CustomItem extends Item {
     public CustomItem() {
         super();
         data = Collections.synchronizedMap(data);
-        webViewLifeData = new MutableLiveData<>();
-        webViewLifeData.setValue(0);
     }
 
     @Override
@@ -104,7 +100,7 @@ public class CustomItem extends Item {
             String lastError = (String) data.get("error");
             if (!Utils.equals(error, lastError)) {
                 data.put("error", (error == null ? "" : error));
-                webViewLifeData.postValue(id);
+                liveData.postValue(id);
             }
         }
 
@@ -215,5 +211,4 @@ public class CustomItem extends Item {
 
     //UI state
     public boolean isLoading;
-    public MutableLiveData<Integer> webViewLifeData;
 }
