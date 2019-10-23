@@ -417,11 +417,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 color = (int) xcolor;
             }
             tintProgressBar(color, h.progressBar);
-            Log.d(TAG, "tint progress bar color: " + citem.label + ", "  + color + ", " + citem.id + ", " + h.customViewID);
+            Log.d(TAG, "tint progress bar color: " + citem.label + ", "  + color);
 
-            if (citem.id != h.customViewID || !Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
+            if (!Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
                 // Log.d(TAG, "custom item loading: " + citem.label);
-                h.customViewID = citem.id;
                 h.html = citem.getHtml();
 
                 citem.isLoading = true;
@@ -624,7 +623,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         ImageButton imageButton;
         int defaultColor;
         String html;
-        int customViewID;
     }
 
     @Override
