@@ -33,7 +33,8 @@ import de.radioshuttle.utils.Utils;
 
 public class DashboardRequest extends Request {
 
-    public DashboardRequest(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData, long localVersion) {
+    public DashboardRequest(Context context, PushAccount pushAccount, MutableLiveData<Request> accountLiveData, long localVersion,
+                            long lastReceivedMsgDate, int lastReceivedMsgSeqNo) {
         super(context, pushAccount, accountLiveData);
         mGetTopicFilterScripts = false; // disable getTopics in super class
         mLocalVersion = localVersion;
@@ -43,6 +44,8 @@ public class DashboardRequest extends Request {
         mCurrentDashboard =ViewState.getInstance(context).getDashBoardContent(pushAccount.getKey());
         mDeleteFiles = new ArrayList<>();
         mReceivedResources = false;
+        mLastReceivedMsgDate = lastReceivedMsgDate;
+        mLastReceivedMsgSeqNo = lastReceivedMsgSeqNo;
     }
 
     public void saveDashboard(JSONObject dashboard, int itemID) {
@@ -297,8 +300,7 @@ public class DashboardRequest extends Request {
             /* get last messages of subcribed topics and dashboard version timestamp */
             List<Object[]> result = new ArrayList<>();
             try {
-                //TODO: set since
-                mServerVersion = mConnection.getCachedMessagesDash(0, 0, result);
+                mServerVersion = mConnection.getCachedMessagesDash(mLastReceivedMsgDate / 1000L, mLastReceivedMsgSeqNo, result);
                 mReceivedMessages = new ArrayList<>();
 
                 Message mqttMessage;
@@ -311,8 +313,12 @@ public class DashboardRequest extends Request {
                     mqttMessage.status = (Short) result.get(i)[4];
                     mqttMessage.filter = (String) result.get(i)[5];
                     mReceivedMessages.add(mqttMessage);
+                    if (mLastReceivedMsgDate < mqttMessage.getWhen() || (mLastReceivedMsgDate == mqttMessage.getWhen()
+                            && mLastReceivedMsgSeqNo < mqttMessage.getSeqno())) {
+                        mLastReceivedMsgDate = mqttMessage.getWhen();
+                        mLastReceivedMsgSeqNo = mqttMessage.getSeqno();
+                    }
                 }
-                //TODO save cached messages locally
 
             } catch (ServerError e) {
                 requestErrorCode = e.errorCode;
@@ -543,6 +549,14 @@ public class DashboardRequest extends Request {
         return mReceivedMessages == null ? new ArrayList<Message>() : mReceivedMessages;
     }
 
+    public long getLastReceivedMsgDate() {
+        return mLastReceivedMsgDate;
+    }
+
+    public int getLastReceivedMsgSeqNo() {
+        return mLastReceivedMsgSeqNo;
+    }
+
     public int requestStatus;
     public int requestErrorCode;
     public String requestErrorTxt;
@@ -559,6 +573,9 @@ public class DashboardRequest extends Request {
     long mLocalVersion;
     long mServerVersion;
     boolean mReceivedResources;
+
+    private long mLastReceivedMsgDate;
+    private int mLastReceivedMsgSeqNo;
 
     public int mCmd;
 
