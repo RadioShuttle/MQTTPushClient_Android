@@ -82,6 +82,8 @@ public class DashBoardViewModel extends AndroidViewModel {
         mMaxID = 0;
         mVersion = -1;
         mImageLoaderActive = false;
+        mLastReceivedMsgDate = 0L;
+        mLastReceivedMsgSeqNo = 0;
         mTimer = Executors.newScheduledThreadPool(1);
         mRequestExecutor = Utils.newSingleThreadPool();
     }
@@ -130,7 +132,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                         try {
                             if (!Utils.isEmpty(item.topic_s) && message.filter.equals(item.topic_s)) {
                                 //TODO:
-                                Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
+                                // Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
                                 item.data.put("sub_topic_stat", message.status);
                                 if (Utils.isEmpty(item.script_f)) { // no javascript -> update UI
                                     String msg = "";
@@ -654,7 +656,8 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public void saveDashboard(JSONObject data, int itemID) {
         saveRequestCnt++;
-        DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSaveRequest, mModificationDate);
+        DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSaveRequest,
+                mModificationDate, mLastReceivedMsgDate, mLastReceivedMsgSeqNo);
         request.saveDashboard(data, itemID);
         currentSaveRequest = request;
         request.executeOnExecutor(mRequestExecutor);
@@ -663,7 +666,8 @@ public class DashBoardViewModel extends AndroidViewModel {
     public void loadMessages() {
         syncRequestCnt++;
         // Log.d(TAG, "loadMessages: " + mModificationDate);
-        DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSyncRequest, mModificationDate);
+        DashboardRequest request = new DashboardRequest(mApplication, mPushAccount, mSyncRequest,
+                mModificationDate, mLastReceivedMsgDate, mLastReceivedMsgSeqNo);
         currentSyncRequest = request;
 
         request.executeOnExecutor(mRequestExecutor);
@@ -930,8 +934,10 @@ public class DashBoardViewModel extends AndroidViewModel {
         syncRequestCnt = 0;
     }
 
-    public void setLastReceivedMessages(List<Message> messages) {
+    public void setLastReceivedMessages(List<Message> messages, long lastReceivedMsgDate, int lastReceivedMsgSeqNo) {
         mLastReceivedMessages = messages;
+        mLastReceivedMsgDate = lastReceivedMsgDate;
+        mLastReceivedMsgSeqNo = lastReceivedMsgSeqNo;
     }
 
     public List<Message> getLastReceivedMessages() {
@@ -997,6 +1003,9 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     private Request currentSaveRequest;
     private Request currentSyncRequest;
+
+    private long mLastReceivedMsgDate;
+    private int mLastReceivedMsgSeqNo;
 
     public final static String TAG = DashBoardViewModel.class.getSimpleName();
 }
