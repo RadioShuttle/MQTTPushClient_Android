@@ -560,7 +560,8 @@ public class DashBoardActivity extends AppCompatActivity implements
                                 Log.d(TAG, "new resource onLoadMessagesFinished, calling refresh ");
                                 mViewModel.refresh(LOAD_IMAGES);
                             }
-                            mViewModel.setLastReceivedMessages(request.getReceivedMessages()); // to be cached later
+                            mViewModel.setLastReceivedMessages(request.getReceivedMessages(),
+                                    request.getLastReceivedMsgDate(), request.getLastReceivedMsgSeqNo()); // to be cached later
                             mLastErrorStr = null;
                             if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
                                 mSnackbar.dismiss(); //TODO: make sure, error message is shown at least a few seconds (there may be a publish, deletion error currntyl showing)
