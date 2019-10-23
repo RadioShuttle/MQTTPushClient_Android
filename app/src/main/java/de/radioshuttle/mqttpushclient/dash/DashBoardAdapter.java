@@ -128,7 +128,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
             selectedImageView = view.findViewById(R.id.check);
-        } else if (viewType == TYPE_CUSTOM) {
+        } else if (viewType < TYPE_CUSTOM) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_custom, parent, false);
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
@@ -140,14 +140,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
             errorImage2View = view.findViewById(R.id.errorImage2);
-            // Log.d(TAG, "custom item onCreateViewHolder: " + viewType);
+            Log.d(TAG, "custom item onCreateViewHolder: " + viewType);
         } // TODO: handle unknown view type
 
         // Log.d(TAG, "onCreateViewHolder: " + viewType);
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
-        holder.viewType = viewType;
         holder.contentContainer = contentContainer; // content for text items
         holder.progressBar = progressBar;
         holder.value = value;
@@ -212,7 +211,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
 
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
 
-        if (h.viewType != TYPE_GROUP) {
+        if (h.getItemViewType() != TYPE_GROUP) {
             lp = h.contentContainer.getLayoutParams();
 
             if (lp.width != mWidth || lp.height != mWidth) {
@@ -255,7 +254,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
 
         Object javaScriptError = item.data.get("error");
 
-        if (h.viewType == TYPE_PROGRESS && h.progressBar != null) {
+        if (h.getItemViewType() == TYPE_PROGRESS && h.progressBar != null) {
             ProgressItem p = (ProgressItem) item;
             long pcolor = (p.data.get("ctrl_color") != null ? (Long) p.data.get("ctrl_color") : p.progresscolor);
 
@@ -311,7 +310,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         // Log.d(TAG, "ui: " + item.label);
         if (h.value != null) { //TEXT
             String content = (String) item.data.get("content");
-            if (h.viewType == TYPE_PROGRESS) {
+            if (h.getItemViewType() == TYPE_PROGRESS) {
                 if (item.data.get("content.progress") instanceof String) {
                     content = (String) item.data.get("content.progress");
                 }
@@ -418,6 +417,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 color = (int) xcolor;
             }
             tintProgressBar(color, h.progressBar);
+            Log.d(TAG, "tint progress bar color: " + citem.label + ", "  + color + ", " + citem.id + ", " + h.customViewID);
 
             if (citem.id != h.customViewID || !Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
                 // Log.d(TAG, "custom item loading: " + citem.label);
@@ -623,7 +623,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         Button button;
         ImageButton imageButton;
         int defaultColor;
-        int viewType;
         String html;
         int customViewID;
     }
@@ -642,7 +641,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             } else if (item instanceof Switch) {
                 type = TYPE_SWITCH;
             } else if (item instanceof CustomItem) {
-                type = TYPE_CUSTOM;
+                type = - mData.get(position).id;
             }
         }
         return type;
@@ -728,7 +727,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     public final static int TYPE_TEXT = 1;
     public final static int TYPE_PROGRESS = 2;
     public final static int TYPE_SWITCH = 3;
-    public final static int TYPE_CUSTOM = 4;
+    public final static int TYPE_CUSTOM = 0;
 
     private final static String TAG = DashBoardAdapter.class.getSimpleName();
 }
