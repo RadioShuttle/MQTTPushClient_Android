@@ -30,6 +30,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,6 +52,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     public DashBoardAdapter(PushAccount account, AppCompatActivity activity, int width, int spanCount, LinkedHashSet<Integer> selectedItems) {
         mInflater = activity.getLayoutInflater();
         mData = new ArrayList<>();
+        mDataIdPositionMap = new HashMap<>();
         mWidth = width;
         // setHasStableIds(true);
 
@@ -557,20 +559,29 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             mData = new ArrayList<>();
         }
 
-        /* because all data is beeing repainted, we are not*/
+        boolean hasSelectedItems = (mSelectedItems != null && mSelectedItems.size() > 0);
+        HashSet<Integer> dataKeys = null;
+        if (hasSelectedItems) {
+            dataKeys = new HashSet<>();
+        }
+
         mLiveDataSince = System.currentTimeMillis();
-        /* add observer to listen to updates (new messages, javascript interface for webviews) */
-        for(Item item : mData) {
+        mDataIdPositionMap.clear();
+        Item item;
+        for(int i = 0; i < mData.size(); i++) {
+            item = mData.get(i);
+            /* add observer to listen to updates (new messages, javascript interface for webviews) */
             item.liveData.observe(mActivity, this);
+            if (hasSelectedItems) {
+                dataKeys.add(item.id);
+            }
+            mDataIdPositionMap.put(item.id, i);
         }
 
         /* if items have been deleted the selected items hashmap must be updated */
-        if (mSelectedItems != null && mSelectedItems.size() > 0) {
+        if (hasSelectedItems) {
             int o = mSelectedItems.size();
-            HashSet<Integer> dataKeys = new HashSet<>();
-            for (Item a : data) { //TODO: optimize with loop above
-                dataKeys.add(a.id);
-            }
+
             mSelectedItems.retainAll(dataKeys);
             int n = mSelectedItems.size();
             if (o != n && mListener != null) {
@@ -595,16 +606,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     @Override
     public void onChanged(Integer o) {
         if (o != null) {
-            int idx = -1;
-            for(int i = 0; i < mData.size(); i++) {
-                if (mData.get(i).id == o) {
-                    if (mData.get(i).liveDataTimestamp >= mLiveDataSince) {
-                        Log.d(TAG, "livedata onChanged(): " + o + ", " + mData.get(i).label);
-                        notifyItemChanged(i, mData.get(i));
-                    } else {
-                        Log.d(TAG, "livedata onChanged(), skipping old val: " + o + ", " + mData.get(i).label);
-                    }
-                    break;
+            Integer itemPos = mDataIdPositionMap.get(o);
+            if (itemPos != null && itemPos >= 0 && itemPos < mData.size()) {
+                Item changedItem = mData.get(itemPos);
+                if (changedItem != null && changedItem.liveDataTimestamp >= mLiveDataSince) {
+                    Log.d(TAG, "livedata onChanged(): " + o + ", " + changedItem.label);
+                    notifyItemChanged(itemPos, changedItem);
                 }
             }
         }
@@ -651,7 +658,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     public long getItemId(int position) {
         return mData.get(position).id;
     }
-
 
     public Item getItem(int position) {
         Item item = null;
@@ -720,6 +726,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     private int spacing;
     private LayoutInflater mInflater;
     private List<Item> mData;
+    private HashMap<Integer, Integer> mDataIdPositionMap;
     private PushAccount mAccount;
     private AppCompatActivity mActivity;
     private long mLiveDataSince;
