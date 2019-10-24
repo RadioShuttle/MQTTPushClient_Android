@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mImageLoaderActive = false;
         mLastReceivedMsgDate = 0L;
         mLastReceivedMsgSeqNo = 0;
+        mLastReceivedMessages = null;
         mTimer = Executors.newScheduledThreadPool(1);
         mRequestExecutor = Utils.newSingleThreadPool();
     }
@@ -123,7 +125,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     @MainThread
     public void onMessageReceived(Message message) {
         if (message != null) {
-            Log.d(TAG, "--> onMessageReceived: " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
+            // Log.d(TAG, "--> onMessageReceived: " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
             /* iterate over all items and check for subscribed topics */
             for(GroupItem gr : mGroups) {
                 LinkedList<Item> items = mItemsPerGroup.get(gr.id);
@@ -811,7 +813,7 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public void saveLastReceivedMessages() {
         if (mLastReceivedMessages != null && mLastReceivedMessages.size() > 0) {
-            final ArrayList<Message> msgArr = new ArrayList<>(mLastReceivedMessages);
+            final ArrayList<Message> msgArr = new ArrayList<>(mLastReceivedMessages.values());
             final String pushServerID = mPushAccount.pushserverID;
             final String mqttAccount = mPushAccount.getMqttAccountName();
             final Application app = getApplication();
@@ -935,12 +937,19 @@ public class DashBoardViewModel extends AndroidViewModel {
     }
 
     public void setLastReceivedMessages(List<Message> messages, long lastReceivedMsgDate, int lastReceivedMsgSeqNo) {
-        mLastReceivedMessages = messages;
+        if (messages != null) {
+            if (mLastReceivedMessages == null) {
+                mLastReceivedMessages = new LinkedHashMap<>();
+            }
+            for(Message m : messages) {
+                mLastReceivedMessages.put(m.filter, m);
+            }
+        }
         mLastReceivedMsgDate = lastReceivedMsgDate;
         mLastReceivedMsgSeqNo = lastReceivedMsgSeqNo;
     }
 
-    public List<Message> getLastReceivedMessages() {
+    public LinkedHashMap<String, Message> getLastReceivedMessages() {
         return mLastReceivedMessages;
     }
 
@@ -990,9 +999,9 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     private LinkedList<GroupItem> mGroups;
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
-    private List<Message> mLastReceivedMessages;
+    private LinkedHashMap<String, Message> mLastReceivedMessages;
 
-    /* observers */
+    /* observables */
     public MutableLiveData<Request> mSaveRequest;
     public MutableLiveData<Request> mSyncRequest;
     public MutableLiveData<Request> mPublishRequest;
