@@ -11,6 +11,7 @@ import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.MainThread;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.TextViewCompat;
 import androidx.lifecycle.MutableLiveData;
@@ -147,8 +148,15 @@ public abstract class Item {
         return viewProperties;
     }
 
+    @MainThread
     public void notifyDataChanged() {
+        liveDataTimestamp = System.currentTimeMillis();
         liveData.setValue(id);
+    }
+
+    public void notifyDataChangedThreadSafe() {
+        liveDataTimestamp = System.currentTimeMillis();
+        liveData.postValue(id);
     }
 
     protected void updateUIContent(Context context) {
@@ -165,6 +173,7 @@ public abstract class Item {
     public abstract String getType();
 
     public MutableLiveData<Integer> liveData;
+    public volatile long liveDataTimestamp;
 
     public final static int DEFAULT_TEXTSIZE = 1;
 
