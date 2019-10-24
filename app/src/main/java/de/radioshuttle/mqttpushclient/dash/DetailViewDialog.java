@@ -365,10 +365,13 @@ public class DetailViewDialog extends DialogFragment {
                             }
                         });
 
+                        final long liveDataSince = System.currentTimeMillis();
                         mItem.liveData.observe(this, new Observer<Integer>() {
                             @Override
                             public void onChanged(Integer integer) {
-                                updateView();
+                                if (mItem.liveDataTimestamp >= liveDataSince) {
+                                    updateView();
+                                }
                             }
                         });
 
@@ -475,7 +478,7 @@ public class DetailViewDialog extends DialogFragment {
         }
         if (item != null && !Utils.equals(err, item.data.get("error"))) {
             item.data.put("error", err);
-            item.liveData.setValue(item.id);
+            item.notifyDataChanged();
         }
     }
 
