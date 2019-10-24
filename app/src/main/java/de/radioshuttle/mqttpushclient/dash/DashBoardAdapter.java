@@ -517,7 +517,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         }
         if (item != null && !Utils.equals(err, item.data.get("error"))) {
             item.data.put("error", err);
-            item.liveData.setValue(item.id);
+            item.notifyDataChanged();
         }
     }
 
@@ -552,13 +552,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     }
 
     public void setData(List<Item> data) {
-        //TODO: consider using DiffUtil to improve performance
-
         mData = data;
         if (mData == null) {
             mData = new ArrayList<>();
         }
 
+        /* because all data is beeing repainted, we are not*/
+        mLiveDataSince = System.currentTimeMillis();
         /* add observer to listen to updates (new messages, javascript interface for webviews) */
         for(Item item : mData) {
             item.liveData.observe(mActivity, this);
@@ -598,8 +598,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             int idx = -1;
             for(int i = 0; i < mData.size(); i++) {
                 if (mData.get(i).id == o) {
-                    // Log.d(TAG, "webview onChanged(): " + mData.get(i).label);
-                    notifyItemChanged(i, mData.get(i));
+                    if (mData.get(i).liveDataTimestamp >= mLiveDataSince) {
+                        Log.d(TAG, "livedata onChanged(): " + o + ", " + mData.get(i).label);
+                        notifyItemChanged(i, mData.get(i));
+                    } else {
+                        Log.d(TAG, "livedata onChanged(), skipping old val: " + o + ", " + mData.get(i).label);
+                    }
                     break;
                 }
             }
@@ -718,6 +722,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     private List<Item> mData;
     private PushAccount mAccount;
     private AppCompatActivity mActivity;
+    private long mLiveDataSince;
 
     public final static int TYPE_GROUP = 0;
     public final static int TYPE_TEXT = 1;
