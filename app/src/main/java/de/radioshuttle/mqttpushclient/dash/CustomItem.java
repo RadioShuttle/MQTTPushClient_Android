@@ -100,7 +100,7 @@ public class CustomItem extends Item {
             String lastError = (String) data.get("error");
             if (!Utils.equals(error, lastError)) {
                 data.put("error", (error == null ? "" : error));
-                liveData.postValue(id);
+                notifyDataChangedThreadSafe();
             }
         }
 
