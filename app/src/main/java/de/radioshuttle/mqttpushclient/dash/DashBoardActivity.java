@@ -53,8 +53,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -104,6 +106,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                         if (messages != null) {
                             /* only set cahced messages if we do not have received any messages so far */
                             if (mViewModel.getLastReceivedMessages() == null) {
+                                Log.d(TAG, "oncreate -  onMessageReceived");//TODO: raus
                                 for(Message m : messages) {
                                     mViewModel.onMessageReceived(m);
                                 }
@@ -533,6 +536,7 @@ public class DashBoardActivity extends AppCompatActivity implements
             PushAccount b = request.getAccount();
             if (request.hasCompleted()) {
                 boolean isNew = false;
+                boolean isInitialRequest = (mViewModel.getLastReceivedMessages() == null); // first time messages received
                 if (mViewModel.isCurrentSyncRequest(request)) {
                     isNew = mViewModel.isSyncRequestActive(); // result already processed/displayed?
                     mViewModel.confirmResultDeliveredSyncRequest();
@@ -553,8 +557,10 @@ public class DashBoardActivity extends AppCompatActivity implements
                             mViewModel.setItems(
                                     request.getReceivedDashboard(),
                                     request.getServerVersion());
+                            setCachedMessages();
                             String t = getString(R.string.dash_err_version_err_replaced);
                             showErrorMsg(t);
+                            return;
                         } else { // no errors. hide previous shown error message
                             if (request.hasNewResourcesReceived()) {
                                 Log.d(TAG, "new resource onLoadMessagesFinished, calling refresh ");
@@ -569,10 +575,36 @@ public class DashBoardActivity extends AppCompatActivity implements
                         }
                     }
                 }
-            }
 
-            for(Message m : request.getReceivedMessages()) {
-                mViewModel.onMessageReceived(m);
+                /*
+                if (request.getReceivedMessages().size() > 0) {
+                    Log.d(TAG, "onLoadMessagesFinished - onMessageReceived ");
+                }
+                 */
+
+                HashMap<String, Message> cachedMsgs = null;
+                if (isInitialRequest) {
+                    List<Message> msgs =  mViewModel.mCachedMessages.getValue();
+                    if (msgs != null && msgs.size() > 0) {
+                        cachedMsgs = new HashMap<>();
+                        for(Message m : msgs) {
+                            if (m.filter != null)
+                                cachedMsgs.put(m.filter, m);
+                        }
+                    }
+                }
+
+                for(Message m : request.getReceivedMessages()) {
+                    /* filter received messages which have already been set (local cache) */
+                    if (cachedMsgs != null && m.filter != null) {
+                        Message c = cachedMsgs.get(m.filter);
+                        if (c != null && c.getWhen() == m.getWhen() && c.getSeqno() == m.getSeqno()) {
+                            // Log.d(TAG, "onLoadMessagesFinished - onMessageReceived - filtered: ");
+                            continue;
+                        }
+                    }
+                    mViewModel.onMessageReceived(m);
+                }
             }
         }
     }
@@ -721,6 +753,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                         mViewModel.setItems(
                                 dashboardRequest.getReceivedDashboard(),
                                 dashboardRequest.getServerVersion());
+                        setCachedMessages();
                         if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
                             mSnackbar.dismiss();
                         }
@@ -734,6 +767,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                         mViewModel.setItems(
                                 dashboardRequest.getReceivedDashboard(),
                                 dashboardRequest.getServerVersion());
+                        setCachedMessages();
                         String t = getString(R.string.dash_err_version_err_replaced);
                         showErrorMsg(t);
                     }
@@ -764,6 +798,24 @@ public class DashBoardActivity extends AppCompatActivity implements
                 mViewModel.setItems(
                         data.getStringExtra(DashBoardEditActivity.ARG_DASHBOARD),
                         data.getLongExtra(DashBoardEditActivity.ARG_DASHBOARD_VERSION, - 1));
+                setCachedMessages();
+            }
+        }
+    }
+
+    // call after dashboard has been reloaded/updated
+    protected void setCachedMessages() {
+        LinkedHashMap<String, Message> msgs = mViewModel.getLastReceivedMessages();
+        if (msgs != null && msgs.size() > 0) {
+            for(Message m : msgs.values()) {
+                mViewModel.onMessageReceived(m);
+            }
+        } else {
+            List<Message> cachedMsgs = mViewModel.mCachedMessages.getValue();
+            if (cachedMsgs != null && cachedMsgs.size() > 0) {
+                for(Message m : cachedMsgs) {
+                    mViewModel.onMessageReceived(m);
+                }
             }
         }
     }
