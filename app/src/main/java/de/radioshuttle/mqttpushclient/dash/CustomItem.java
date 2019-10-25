@@ -125,6 +125,11 @@ public class CustomItem extends Item {
         };
     }
 
+    public boolean hasMessageData() {
+        return  !Utils.isEmpty(topic_s) && data != null &&
+                !Utils.isEmpty((String) data.get("msg.topic"));
+    }
+
 
     /** build message call of _onMqttMessage as defined in custom_view.js */
     public static String build_onMqttMessageCall(CustomItem item) {
