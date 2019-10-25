@@ -4,7 +4,11 @@
  *	30827 Garbsen, Germany.
  */
 
-const Color = {
+if (typeof MQTT === 'undefined') {
+  MQTT = new Object();
+}
+
+MQTT.Color = {
 	rgba : function(r, g, b, a) {
 		return ((a & 0x7F) << 24 | (r & 0xff) << 16 | (g & 0xff) << 8 | (b & 0xff)) + (a & 80 ? 0x80000000 : 0);
 	},
