@@ -34,9 +34,10 @@ public abstract class Item {
         liveData.setValue(0);
     }
 
+    // IMPORTANT: all members changeable via CutsomItem webview must be volatile or synchronized
     public int id;
-    public long textcolor; // flag, alpha, r, g, b
-    public long background; // flag, alpha, r, g, b
+    public volatile long textcolor; // flag, alpha, r, g, b
+    public volatile long background; // flag, alpha, r, g, b
     public int textsize; // 0 - default, 1 - small, 2 - medium, 3 - large
     public String topic_s;
     public String script_f;
@@ -154,7 +155,7 @@ public abstract class Item {
         liveData.setValue(id);
     }
 
-    public void notifyDataChangedThreadSafe() {
+    public void notifyDataChangedNonUIThread() {
         liveDataTimestamp = System.currentTimeMillis();
         liveData.postValue(id);
     }
@@ -165,6 +166,11 @@ public abstract class Item {
     protected long getTextcolor() {
         return data.containsKey("textcolor") ? (Long) data.get("textcolor") : textcolor;
     }
+
+    protected long getBackgroundColor() {
+        return data.containsKey("background") ? (Long) data.get("background") : background;
+    }
+
 
     final static int[] TEXTAPP = new int[] {android.R.style.TextAppearance_Small, android.R.style.TextAppearance_Medium, android.R.style.TextAppearance_Large};
 
