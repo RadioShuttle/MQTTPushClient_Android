@@ -263,6 +263,7 @@ public class JavaScriptExcecutor {
                             public void run() {
                                 result.put("msg.received", pTask.message.getWhen());
                                 result.put("msg.raw", pTask.message.getPayload());
+                                result.put("msg.topic", pTask.message.getTopic() == null ? "" :  pTask.message.getTopic());
                                 result.put("msg.text", new String(pTask.message.getPayload()));
                                 if (result.containsKey("error")) {
                                     result.put("content", new String(pTask.message.getPayload()));
