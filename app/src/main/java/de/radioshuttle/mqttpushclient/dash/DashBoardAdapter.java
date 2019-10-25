@@ -419,7 +419,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 color = (int) xcolor;
             }
             tintProgressBar(color, h.progressBar);
-            Log.d(TAG, "tint progress bar color: " + citem.label + ", "  + color);
+            // Log.d(TAG, "tint progress bar color: " + citem.label + ", "  + color);
 
             if (!Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
                 // Log.d(TAG, "custom item loading: " + citem.label);
@@ -462,14 +462,17 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         js.append(' ');
 
                         // buildJS_readyState
+                        /*
                         StringBuilder tmp = new StringBuilder();
                         tmp.append(CustomItem.build_onMqttPushClientInitCall(mAccount, citem));
                         tmp.append(CustomItem.build_onMqttMessageCall(citem));
-
-                        // js.append(CustomItem.buildJS_readyState(tmp.toString()));
+                        js.append(CustomItem.buildJS_readyState(tmp.toString()));
+                         */
 
                         js.append(CustomItem.build_onMqttPushClientInitCall(mAccount, citem));
-                        js.append(CustomItem.build_onMqttMessageCall(citem));
+                        if (citem.hasMessageData()) {
+                            js.append(CustomItem.build_onMqttMessageCall(citem));
+                        }
 
                         if (Build.VERSION.SDK_INT >= 19) {
                             webView.evaluateJavascript(js.toString(), null);
@@ -498,7 +501,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 String encodedHtml = Base64.encodeToString(h.html.getBytes(), Base64.NO_PADDING);
                 webView.loadData(encodedHtml, "text/html", "base64");
             } else {
-                if (!citem.isLoading) {
+                if (!citem.isLoading && citem.hasMessageData()) {
                     String jsOnMqttMessageCall = CustomItem.build_onMqttMessageCall(citem);
 
                     if (Build.VERSION.SDK_INT >= 19) {
@@ -610,7 +613,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             if (itemPos != null && itemPos >= 0 && itemPos < mData.size()) {
                 Item changedItem = mData.get(itemPos);
                 if (changedItem != null && changedItem.liveDataTimestamp >= mLiveDataSince) {
-                    Log.d(TAG, "livedata onChanged(): " + o + ", " + changedItem.label);
+                    // Log.d(TAG, "livedata onChanged(): " + o + ", " + changedItem.label);
                     notifyItemChanged(itemPos, changedItem);
                 }
             }
