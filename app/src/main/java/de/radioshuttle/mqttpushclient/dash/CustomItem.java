@@ -78,9 +78,15 @@ public class CustomItem extends Item {
             return view;
         }
 
+        /* the "public" publish is added via cv_interface.js (to handle ArrayBuffer data type) */
         @JavascriptInterface
-        public void publish(String topic, String payload, boolean retain) {
-            Log.d(TAG, "_publish: " + payload);
+        public void _publishHex(String topic, String payloadHex, boolean retain) {
+            Log.d(TAG, "_publish: " + payloadHex + " " + retain);
+        }
+
+        @JavascriptInterface
+        public void _publishStr(String topic, String payload, boolean retain) {
+            Log.d(TAG, "_publish: " + payload + " " + retain);
         }
 
         @JavascriptInterface
@@ -198,11 +204,11 @@ public class CustomItem extends Item {
         StringBuilder js = new StringBuilder();
 
         if (accountData != null && item != null) {
-            js.append("MqttPushClient.acc = new Object();");
-            js.append("MqttPushClient.acc.user = '");
+            js.append("MQTT.acc = new Object();");
+            js.append("MQTT.acc.user = '");
             js.append(accountData.user == null ? "" : accountData.user);
             js.append("'; ");
-            js.append("MqttPushClient.acc.mqttServer = '");
+            js.append("MQTT.acc.mqttServer = '");
             try {
                 URI u = new URI(accountData.uri);
                 js.append(u.getAuthority());
@@ -210,14 +216,14 @@ public class CustomItem extends Item {
                 Log.d(TAG, "URI parse error: ", e);
             }
             js.append("'; ");
-            js.append("MqttPushClient.acc.pushServer = '");
+            js.append("MQTT.acc.pushServer = '");
             js.append(accountData.pushserver == null ? "" : accountData.pushserver);
             js.append("'; ");
 
             js.append("if (typeof window['onMqttPushClientInit'] === 'function') onMqttPushClientInit(");
-            js.append("MqttPushClient.acc");
+            js.append("MQTT.acc");
             js.append(',');
-            js.append("MqttPushClient.getView()");
+            js.append("MQTT.getView()");
             js.append("); ");
         }
 
