@@ -300,7 +300,9 @@ public class DetailViewDialog extends DialogFragment {
                                 js.append(m_custom_view_js);
                                 js.append(' ');
                                 js.append(CustomItem.build_onMqttPushClientInitCall(mViewModel.getPushAccount(), citem));
-                                js.append(CustomItem.build_onMqttMessageCall(citem));
+                                if (citem.hasMessageData()) {
+                                    js.append(CustomItem.build_onMqttMessageCall(citem));
+                                }
                                 Log.d(TAG, "detail view on page finished"); //TODO: remove
 
                                 if (Build.VERSION.SDK_INT >= 19) {
@@ -841,7 +843,7 @@ public class DetailViewDialog extends DialogFragment {
                         String encodedHtml = Base64.encodeToString(mWebViewHTML.getBytes(), Base64.NO_PADDING);
                         webView.loadData(encodedHtml, "text/html", "base64");
                     } else {
-                        if (!mWebViewIsLoading) {
+                        if (!mWebViewIsLoading && citem.hasMessageData()) {
                             String jsOnMqttMessageCall = CustomItem.build_onMqttMessageCall(citem);
                             if (Build.VERSION.SDK_INT >= 19) {
                                 webView.evaluateJavascript(jsOnMqttMessageCall, null);

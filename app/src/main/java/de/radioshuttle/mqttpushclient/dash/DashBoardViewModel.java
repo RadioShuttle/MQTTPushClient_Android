@@ -146,6 +146,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     item.data.put("msg.received", message.getWhen());
                                     item.data.put("msg.raw", payload);
                                     item.data.put("msg.text", msg);
+                                    item.data.put("msg.topic",message.getTopic() == null ? "" : message.getTopic());
                                     item.data.put("content", msg);
                                     if (item instanceof CustomItem) {
                                       /* do not reset error of web component */ ;
