@@ -269,7 +269,7 @@ public class DetailViewDialog extends DialogFragment {
                         webView.getSettings().setJavaScriptEnabled(true);
                         // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
-                        webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
+                        webView.addJavascriptInterface(citem.getWebInterface(), "MQTT");
                         webView.setWebChromeClient(new WebChromeClient() {
                             @Override
                             public void onProgressChanged(WebView view, int newProgress) {
@@ -299,6 +299,8 @@ public class DetailViewDialog extends DialogFragment {
                                 Log.d(TAG, "onPageFinished");
                                 js.append(m_custom_view_js);
                                 js.append(' ');
+                                js.append(javascript_color_js);
+
                                 js.append(CustomItem.build_onMqttPushClientInitCall(mViewModel.getPushAccount(), citem));
                                 if (citem.hasMessageData()) {
                                     js.append(CustomItem.build_onMqttMessageCall(citem));
@@ -343,6 +345,8 @@ public class DetailViewDialog extends DialogFragment {
                         }
                         try {
                             m_custom_view_js = Utils.getRawStringResource(getContext(), "cv_interface", true);
+                            javascript_color_js = Utils.getRawStringResource(getContext(), "javascript_color", true);
+
                         } catch (IOException e) {
                             Log.d(TAG, "Error loading raw resource: custom_view_js", e);
                         }
@@ -968,6 +972,7 @@ public class DetailViewDialog extends DialogFragment {
     protected boolean mWebViewIsLoading;
     protected String mWebViewHTML;
     protected String m_custom_view_js;
+    protected String javascript_color_js;
 
 
     /* input controls */

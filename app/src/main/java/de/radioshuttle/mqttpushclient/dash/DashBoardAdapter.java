@@ -70,6 +70,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
 
         try {
             m_custom_view_js = Utils.getRawStringResource(activity, "cv_interface", true);
+            javascript_color_js = Utils.getRawStringResource(activity, "javascript_color", true);
         } catch (IOException e) {
             Log.d(TAG, "Error loading raw resource: custom_view_js", e);
         }
@@ -428,7 +429,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 citem.isLoading = true;
                 citem.data.remove("error"); // clear erros
                 citem.data.remove("error2");
-                webView.addJavascriptInterface(citem.getWebInterface(), "MqttPushClient");
+                webView.addJavascriptInterface(citem.getWebInterface(), "MQTT");
                 webView.setWebChromeClient(new WebChromeClient() {
                     @Override
                     public void onProgressChanged(WebView view, int newProgress) {
@@ -459,7 +460,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                             js.append("javascript:");
                         }
                         js.append(m_custom_view_js);
-                        js.append(' ');
+                        js.append(javascript_color_js);
+
 
                         // buildJS_readyState
                         /*
@@ -520,7 +522,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         if (err == null) {
             err = "";
         }
-        if (item != null && !Utils.equals(err, item.data.get("error"))) {
+        if (item != null && !Utils.equals(err, item.data.get("error"))) { //TODO: possibly conflict when detail view open
             item.data.put("error", err);
             item.notifyDataChanged();
         }
@@ -716,6 +718,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     }
 
     private String m_custom_view_js;
+    private String javascript_color_js;
 
     private LinkedHashSet<Integer> mSelectedItems;
     private DashBoardActionListener mListener;
