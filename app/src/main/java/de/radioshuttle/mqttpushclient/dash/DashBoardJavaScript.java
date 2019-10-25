@@ -267,31 +267,31 @@ public class DashBoardJavaScript extends JavaScript {
 
         @Override
         public double getCtrlColor() {
-            return longToDouble((long) (p.get("ctrl_color") == null ? 0 : p.get("ctrl_color")));
+            return longToDouble((long) (p.get("ctrl_color") == null ? 0L : p.get("ctrl_color")));
         }
 
         @Override
         public double getCtrlColorOff() {
-            return longToDouble((long) (p.get("ctrl_color_off") == null ? 0 : p.get("ctrl_color_off")));
+            return longToDouble((long) (p.get("ctrl_color_off") == null ? 0L : p.get("ctrl_color_off")));
         }
 
         @Override
         public double getBackgroundColor() {
-            return longToDouble((long) (p.get("background") == null ? 0 : p.get("background")));
+            return longToDouble((long) (p.get("background") == null ? 0L : p.get("background")));
         }
         @Override
         public double getCtrlBackgroundColor() {
-            return longToDouble((long) (p.get("ctrl_background") == null ? 0 : p.get("ctrl_background")));
+            return longToDouble((long) (p.get("ctrl_background") == null ? 0L : p.get("ctrl_background")));
         }
 
         @Override
         public double getCtrlBackgroundColorOff() {
-            return longToDouble((long) (p.get("ctrl_background_off") == null ? 0 : p.get("ctrl_background_off")));
+            return longToDouble((long) (p.get("ctrl_background_off") == null ? 0L : p.get("ctrl_background_off")));
         }
 
         @Override
         public double getTextColor() {
-            return longToDouble((long) (p.get("textcolor") == null ? 0 : p.get("textcolor")));
+            return longToDouble((long) (p.get("textcolor") == null ? 0L : p.get("textcolor")));
         }
 
         @Override
