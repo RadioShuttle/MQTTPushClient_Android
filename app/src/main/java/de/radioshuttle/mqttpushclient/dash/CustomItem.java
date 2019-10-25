@@ -100,29 +100,62 @@ public class CustomItem extends Item {
             String lastError = (String) data.get("error");
             if (!Utils.equals(error, lastError)) {
                 data.put("error", (error == null ? "" : error));
-                notifyDataChangedThreadSafe();
+                notifyDataChangedNonUIThread();
             }
         }
 
         @JavascriptInterface
         public void setTextColor(double color) {
-            //TODO
-        }
-
-        @JavascriptInterface
-        public void setBackgroundColor(double color) {
-            //TODO
+            Double currVal = getTextColor();
+            if (currVal != color) {
+                data.put("textcolor", doubleToLong(color));
+                notifyDataChangedNonUIThread();
+            }
         }
 
         @JavascriptInterface
         public double getTextColor() {
-            return 0d; //TODO
+            return longToDouble(CustomItem.this.getTextcolor());
+        }
+
+        @JavascriptInterface
+        public void setBackgroundColor(double color) {
+            Double currVal = getBackgroundColor();
+            if (currVal != color) {
+                data.put("background", doubleToLong(color));
+                notifyDataChangedNonUIThread();
+            }
         }
 
         @JavascriptInterface
         public double getBackgroundColor() {
-            return 0d; //TODO
-        };
+            return longToDouble(CustomItem.this.getBackgroundColor());
+        }
+
+        protected double longToDouble(long i) {
+            double v;
+            if (i == DColor.CLEAR) {
+                v = DColor.CLEAR;
+            } else if (i == DColor.OS_DEFAULT) {
+                v = DColor.OS_DEFAULT;
+            } else {
+                v = i & 0xFFFFFFFFL;
+            }
+            return v;
+        }
+
+        protected long doubleToLong(double d) {
+            long v;
+            if (d == (double) DColor.CLEAR) {
+                v = DColor.CLEAR;
+            } else if (d == (double) DColor.OS_DEFAULT) {
+                v = DColor.OS_DEFAULT;
+            } else {
+                v = (long) d & 0xFFFFFFFFL;
+            }
+            return v;
+        }
+
     }
 
     public boolean hasMessageData() {
