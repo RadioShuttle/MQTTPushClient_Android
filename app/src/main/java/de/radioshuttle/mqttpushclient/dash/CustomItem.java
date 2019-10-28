@@ -177,15 +177,7 @@ public class CustomItem extends Item {
             long paraWhen = item.data.get("msg.received") == null ? 0 : (Long) item.data.get("msg.received");
             String paraTopic = item.data.get("msg.topic") == null ? "" : (String) item.data.get("msg.topic");
             byte[] msgRaw = item.data.get("msg.raw") == null ? new byte[0] : (byte[]) item.data.get("msg.raw");
-            String paraMsgRaw = Base64.encodeToString(msgRaw, Base64.NO_WRAP); //TODO: check there was a problem with Base64.Default
-            String org;
-            /*
-            try {
-                org = new String(Base64.decode(paraMsgRaw, Base64.DEFAULT), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            */
+            String paraMsgRaw = Utils.byteArrayToHex(msgRaw);
             String paraMsg = item.data.get("msg.text") == null ? "" : (String) item.data.get("msg.text");
             js.append("if (typeof window['onMqttMessage'] === 'function') _onMqttMessage(");
             js.append(paraWhen);
