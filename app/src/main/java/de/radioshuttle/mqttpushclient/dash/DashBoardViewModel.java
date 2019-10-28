@@ -239,18 +239,13 @@ public class DashBoardViewModel extends AndroidViewModel {
                 Log.e(TAG, "Load items: Parsing json failed: " + e.getMessage());
             }
         }
-        refresh(true);
+        refresh();
     }
 
-    /** refreshes UI (does not perform a reload). For fast updates (without reloading images) set reloadImages to false */
-    public void refresh(boolean reloadImages) {
+    /** refreshes UI (does not perform a reload). for single item updates use item.notifyDataChanged() */
+    public void refresh() {
         List<Item> list = buildDisplayList();
-        if (!reloadImages) {
-            mDashBoardItemsLiveData.setValue(list);
-        } else {
-            // like above, but also loads images for each item async
-            loadImages(list);
-        }
+        loadImages(list);
     }
 
     protected void loadImages(final List<Item> list) {
