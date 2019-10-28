@@ -1,7 +1,7 @@
 MQTT.buf2hex = function (buffer) {
   var byteArray = new Uint8Array(buffer);
   var hexStr = '';
-  for(let i = 0; i < byteArray.length; i++) {
+  for(var i = 0; i < byteArray.length; i++) {
     var hex = byteArray[i].toString(16);
     var paddedHex = ('00' + hex).slice(-2);
     hexStr += paddedHex;
