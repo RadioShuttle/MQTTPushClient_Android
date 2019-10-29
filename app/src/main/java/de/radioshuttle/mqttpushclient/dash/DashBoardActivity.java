@@ -42,8 +42,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,7 +51,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -616,9 +613,12 @@ public class DashBoardActivity extends AppCompatActivity implements
                 //TODO: set progress bar, if not already done when publish was triggered
             } else {
                 if (!publishRequest.isDelivered()) {
-                    publishRequest.setResultDelivered(true);
                     //TODO: hide progress bar
                     DashBoardViewModel.ItemContext ic = mViewModel.getItem(publishRequest.getItemID());
+                    publishRequest.setResultDelivered(true);
+                    if (ic.item instanceof CustomItem) {
+                        ((CustomItem) ic.item).getWebInterface().confirmResultDeliverd(publishRequest);
+                    }
 
                     /*
                      * If current publish request was triggered by a slider event (ProgressItem type):
