@@ -268,8 +268,9 @@ public class DetailViewDialog extends DialogFragment {
                         webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                         webView.getSettings().setJavaScriptEnabled(true);
                         // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-
-                        webView.addJavascriptInterface(citem.getWebInterface(), "MQTT");
+                        CustomItem.JSObject webInterface = citem.getWebInterface();
+                        webInterface.setViewModel(mViewModel);
+                        webView.addJavascriptInterface(webInterface, "MQTT");
                         webView.setWebChromeClient(new WebChromeClient() {
                             @Override
                             public void onProgressChanged(WebView view, int newProgress) {
@@ -277,7 +278,10 @@ public class DetailViewDialog extends DialogFragment {
                                 if (newProgress < 100 && mItemProgressBar.getVisibility() != View.VISIBLE) {
                                     mItemProgressBar.setVisibility(View.VISIBLE);
                                 } else if (newProgress == 100 && mItemProgressBar.getVisibility() != View.GONE) {
-                                    mItemProgressBar.setVisibility(View.GONE);
+                                    // do not hide progress bar if publish request is running
+                                    if (citem.getWebInterface().currentPublishRequest.get() == 0) {
+                                        mItemProgressBar.setVisibility(View.GONE);
+                                    }
                                 }
                             }
                             @Override
@@ -557,6 +561,19 @@ public class DetailViewDialog extends DialogFragment {
                             // t.show();
                         }
                         mCurrentPublishID = -1;
+                    }
+                } else if (mItem instanceof CustomItem) {
+                    CustomItem cItem = (CustomItem) mItem;
+                    if (!request.hasCompleted()) {
+                        //TODO: show progress
+                        if (mItemProgressBar.getVisibility() != View.VISIBLE) {
+                            mItemProgressBar.setVisibility(View.VISIBLE);
+
+                        }
+                    } else { // request completed
+                        if (mItemProgressBar.getVisibility() != View.GONE && !mWebViewIsLoading) {
+                            mItemProgressBar.setVisibility(View.GONE);
+                        }
                     }
                 }
 
