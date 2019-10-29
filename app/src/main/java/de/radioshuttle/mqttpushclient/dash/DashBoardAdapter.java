@@ -49,7 +49,7 @@ import de.radioshuttle.utils.Utils;
 
 public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<Integer> {
 
-    public DashBoardAdapter(PushAccount account, AppCompatActivity activity, int width, int spanCount, LinkedHashSet<Integer> selectedItems) {
+    public DashBoardAdapter(PushAccount account, DashBoardActivity activity, int width, int spanCount, LinkedHashSet<Integer> selectedItems) {
         mInflater = activity.getLayoutInflater();
         mData = new ArrayList<>();
         mDataIdPositionMap = new HashMap<>();
@@ -429,6 +429,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 citem.isLoading = true;
                 citem.data.remove("error"); // clear erros
                 citem.data.remove("error2");
+                CustomItem.JSObject webInterface = citem.getWebInterface();
+                webInterface.setViewModel(mActivity.mViewModel);
                 webView.addJavascriptInterface(citem.getWebInterface(), "MQTT");
                 webView.setWebChromeClient(new WebChromeClient() {
                     @Override
@@ -734,7 +736,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     private List<Item> mData;
     private HashMap<Integer, Integer> mDataIdPositionMap;
     private PushAccount mAccount;
-    private AppCompatActivity mActivity;
+    private DashBoardActivity mActivity;
     private long mLiveDataSince;
 
     public final static int TYPE_GROUP = 0;
