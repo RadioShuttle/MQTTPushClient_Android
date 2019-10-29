@@ -12,7 +12,8 @@
 
   <script>
 
-    function onMqttPushClientInit(account, view) {
+    function onMqttInit(account, view) {
+      onMqttResize();
       /* implement */
     }
 
@@ -20,12 +21,12 @@
       /* implement */
     }
 
-    function dash_onResize() {
+    function onMqttResize() {
       document.getElementById('visible_area').style.width = window.innerWidth + "px";
       document.getElementById('visible_area').style.height = window.innerHeight + "px";
     }
 
-   window.addEventListener('resize', dash_onResize);
+   window.addEventListener('resize', onMqttResize);
 
   </script>
 </head>

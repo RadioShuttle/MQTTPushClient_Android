@@ -212,7 +212,7 @@ public class CustomItem extends Item {
             js.append(accountData.pushserver == null ? "" : accountData.pushserver);
             js.append("'; ");
 
-            js.append("if (typeof window['onMqttPushClientInit'] === 'function') onMqttPushClientInit(");
+            js.append("if (typeof window['onMqttInit'] === 'function') onMqttInit(");
             js.append("MQTT.acc");
             js.append(',');
             js.append("MQTT.getView()");
