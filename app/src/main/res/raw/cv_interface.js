@@ -27,13 +27,15 @@ MQTT.hex2buf = function (hex) {
 };
 
 MQTT.publish = function (topic, msg, retain) {
+    var requestStarted = false;
     if (typeof msg === 'string') {
-        MQTT._publishStr(topic, msg, retain === true);
+        requestStarted = MQTT._publishStr(topic, msg, retain === true);
     } else if (msg instanceof ArrayBuffer) {
-        MQTT._publishHex(topic, MQTT.buf2hex(msg), retain === true);
+        requestStarted = MQTT._publishHex(topic, MQTT.buf2hex(msg), retain === true);
     } else {
         throw "MQTT.publish(): arg msg must be of type String or ArrayBuffer";
     }
+    return requestStarted;
 };
 
 function _onMqttMessage(receivedDateMillis, topic, payloadStr, payloadHEX) {
