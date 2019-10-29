@@ -6,18 +6,25 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
-import android.util.Base64;
 import android.util.Log;
 
 import android.webkit.JavascriptInterface;
 
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.net.PublishRequest;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.Utils;
 
 public class CustomItem extends Item {
@@ -73,6 +80,16 @@ public class CustomItem extends Item {
             view = new JSView();
         }
 
+        public void setViewModel(DashBoardViewModel viewModel) {
+            if (this.viewModel != viewModel) {
+                this.viewModel = viewModel;
+            }
+        }
+
+        public boolean confirmResultDeliverd(PublishRequest request) {
+            return request != null && currentPublishRequest.compareAndSet(request.getmPublishID(), 0L);
+        }
+
         @JavascriptInterface
         public JSView getView() {
             return view;
@@ -80,13 +97,38 @@ public class CustomItem extends Item {
 
         /* the "public" publish is added via cv_interface.js (to handle ArrayBuffer data type) */
         @JavascriptInterface
-        public void _publishHex(String topic, String payloadHex, boolean retain) {
+        public boolean _publishHex(String topic, String payloadHex, boolean retain) {
             Log.d(TAG, "_publish: " + payloadHex + " " + retain);
+            if (payloadHex == null) {
+                payloadHex = "";
+            }
+            boolean publishStarted = false;
+            /* only allow publish if no publish request is already running */
+            if (viewModel != null && currentPublishRequest.compareAndSet(0L, -1L)) {
+                long publishID = viewModel.publish(topic, Utils.hexToByteArray(payloadHex), retain, CustomItem.this);
+                currentPublishRequest.set(publishID);
+                publishStarted = true;
+            }
+            return publishStarted;
         }
 
         @JavascriptInterface
-        public void _publishStr(String topic, String payload, boolean retain) {
+        public boolean _publishStr(String topic, String payload, boolean retain) {
             Log.d(TAG, "_publish: " + payload + " " + retain);
+            if (payload == null) {
+                payload = "";
+            }
+            boolean publishStarted = false;
+            /* only allow publish if no publish request is already running */
+            if (viewModel != null && currentPublishRequest.compareAndSet(0L, -1L)) {
+                try {
+                    long publishID = viewModel.publish(topic, payload.getBytes("UTF-8"), retain, CustomItem.this);
+                    currentPublishRequest.set(publishID);
+                    publishStarted = true;
+                } catch (UnsupportedEncodingException e) {
+                }
+            }
+            return publishStarted;
         }
 
         @JavascriptInterface
@@ -97,6 +139,8 @@ public class CustomItem extends Item {
         }
 
         JSView view;
+        DashBoardViewModel viewModel;
+        AtomicLong currentPublishRequest = new AtomicLong(0L);
     }
 
     public class JSView {
