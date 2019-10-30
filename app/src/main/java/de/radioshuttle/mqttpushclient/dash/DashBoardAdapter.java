@@ -36,7 +36,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
@@ -84,6 +83,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, final int viewType) {
         // Log.d(TAG, "onCreateViewHolder: " );
+        long start = System.currentTimeMillis();
         View view = null;
         TextView label = null;
         View contentContainer = null;
@@ -143,7 +143,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
             errorImage2View = view.findViewById(R.id.errorImage2);
-            Log.d(TAG, "custom item onCreateViewHolder: " + viewType);
+            // Log.d(TAG, "custom item onCreateViewHolder: " + viewType + " " + (System.currentTimeMillis() - start));
         } // TODO: handle unknown view type
 
         // Log.d(TAG, "onCreateViewHolder: " + viewType);
@@ -189,6 +189,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 }
             }
         });
+        // Log.d(TAG, "onCreateViewHolder: " + viewType + " " + (System.currentTimeMillis() - start));
         return holder;
     }
 
