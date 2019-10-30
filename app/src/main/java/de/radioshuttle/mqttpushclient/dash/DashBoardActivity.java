@@ -146,7 +146,16 @@ public class DashBoardActivity extends AppCompatActivity implements
             // layoutManager.setMeasurementCacheEnabled(true);
             layoutManager.setSpanSizeLookup(new DBUtils.SpanSizeLookup(mControllerList));
 
+            DisplayMetrics dm = getResources().getDisplayMetrics();
             final int spacing = getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
+            int listWidth = getWidthPixel() * spanCount + (spanCount - 1) * spacing;
+            int paddinglR = (dm.widthPixels - listWidth) / 2;
+            if (paddinglR < 0) {
+                paddinglR = 0;
+            }
+            int paddingTB = (int) (4f * dm.density);
+            mControllerList.setPadding(paddinglR, paddingTB, paddinglR, paddingTB);
+
             Log.d(TAG, "spacing: " + spacing + " dpi " + (int) ((float) spacing * (160f / (float) getResources().getDisplayMetrics().densityDpi)));
 
             mControllerList.setLayoutManager(layoutManager);
@@ -333,12 +342,23 @@ public class DashBoardActivity extends AppCompatActivity implements
 
         int spanCount = calcSpanCount();
         Log.d(TAG, "new zoomlevel: " + mZoomLevel + " span count: " + spanCount + " width pixel: " + getWidthPixel() + " width dpi: " + getWidthDPI());
+
         RecyclerView.LayoutManager lm = mControllerList.getLayoutManager();
         if (lm instanceof GridLayoutManager) {
             RecyclerView.Adapter adapter = mControllerList.getAdapter();
             if (adapter instanceof DashBoardAdapter) {
                 ((GridLayoutManager) lm).setSpanCount(spanCount);
                 ((DashBoardAdapter) adapter).setItemWidth(getWidthPixel(), spanCount);
+
+                DisplayMetrics dm = getResources().getDisplayMetrics();
+                final int spacing = getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
+                int listWidth = getWidthPixel() * spanCount + (spanCount - 1) * spacing;
+                int paddinglR = (dm.widthPixels - listWidth) / 2;
+                if (paddinglR < 0) {
+                    paddinglR = 0;
+                }
+                int paddingTB = (int) (4f * dm.density);
+                mControllerList.setPadding(paddinglR, paddingTB, paddinglR, paddingTB);
             }
         }
     }
