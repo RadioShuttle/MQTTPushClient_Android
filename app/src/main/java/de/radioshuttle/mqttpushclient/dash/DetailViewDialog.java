@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -36,6 +37,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
@@ -97,6 +100,7 @@ public class DetailViewDialog extends DialogFragment {
                     inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     root = (ViewGroup) inflater.inflate(R.layout.dialog_detail_view, null);
                     View view = null;
+                    ViewStub viewStub = root.findViewById(R.id.viewStub);
 
                     mDefaultBackground = ContextCompat.getColor(getActivity(), R.color.dashboad_item_background);
 
@@ -110,7 +114,8 @@ public class DetailViewDialog extends DialogFragment {
                     boolean publishEnabled = !Utils.isEmpty(mItem.topic_p) || !Utils.isEmpty(mItem.script_p);
 
                     if (mItem instanceof TextItem){
-                        view =  inflater.inflate(R.layout.activity_dash_board_item_text, null);
+                        viewStub.setLayoutResource(R.layout.activity_dash_board_item_text);
+                        view = viewStub.inflate();
 
                         mTextContent = view.findViewById(R.id.textContent);
                         mContentContainer = mTextContent;
@@ -162,7 +167,8 @@ public class DetailViewDialog extends DialogFragment {
                             });
                         }
                     } else if (mItem instanceof ProgressItem) {
-                        view =  inflater.inflate(R.layout.activity_dash_board_item_progress, null);
+                        viewStub.setLayoutResource(R.layout.activity_dash_board_item_progress);
+                        view = viewStub.inflate();
 
                         mContentContainer = view.findViewById(R.id.progressBarContent);
                         mItemProgressBar = view.findViewById(R.id.itemProgressBar);
@@ -210,7 +216,9 @@ public class DetailViewDialog extends DialogFragment {
                         }
 
                     } else if (mItem instanceof Switch) {
-                        view = inflater.inflate(R.layout.activity_dash_board_item_switch, null);
+                        viewStub.setLayoutResource(R.layout.activity_dash_board_item_switch);
+                        view = viewStub.inflate();
+
                         mContentContainer = view.findViewById(R.id.switchContainer);
                         int padding = (int) (40d * getResources().getDisplayMetrics().density);
                         mContentContainer.setPadding(padding, padding, padding, padding);
@@ -241,7 +249,9 @@ public class DetailViewDialog extends DialogFragment {
                         // mContentContainer = view.findViewById()
                     } else if (mItem instanceof CustomItem) {
                         final CustomItem citem = (CustomItem) mItem;
-                        view = inflater.inflate(R.layout.activity_dash_board_item_custom, null);
+                        viewStub.setLayoutResource(R.layout.activity_dash_board_item_custom);
+                        view = viewStub.inflate();
+
                         mContentContainer = view.findViewById(R.id.webContent);
                         mItemProgressBar = view.findViewById(R.id.webProgressBar);
                         mLabel = view.findViewById(R.id.name);
@@ -455,13 +465,6 @@ public class DetailViewDialog extends DialogFragment {
 
                         mCurrentView = view;
                         updateView();
-                        root.addView(view, 0);
-                        /*
-                        ConstraintSet cs = new ConstraintSet();
-                        cs.clone((ConstraintLayout) root);
-                        cs.connect(bottom.getId(), ConstraintSet.TOP, view.getId(), ConstraintSet.BOTTOM);
-                        cs.applyTo((ConstraintLayout) root);
-                        */
 
                         if (savedInstanceState != null) {
                             mCurrentPublishID = savedInstanceState.getLong(KEY_PUBLISH_ID, -1L);
@@ -533,7 +536,6 @@ public class DetailViewDialog extends DialogFragment {
                             mViewModelPublish.lastCompletedRequest = null;
                             PushAccount b = request.getAccount();
                             if (b.requestStatus == Cmd.RC_OK && request.requestStatus == Cmd.RC_OK) {
-                                Log.d(TAG, "progress bar: onPublish" );
                                 mViewModel.onMessagePublished(request.getMessage());
                             }
                         } else {
