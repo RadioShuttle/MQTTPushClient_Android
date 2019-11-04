@@ -52,7 +52,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.net.Cmd;
 import de.radioshuttle.net.PublishRequest;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.Utils;
@@ -196,7 +198,10 @@ public class DetailViewDialog extends DialogFragment {
                                 public void onStopTrackingTouch(SeekBar seekBar) {
                                     mSeekbarPressed = false;
                                     if (mCurrentPublishID == -1 && mViewModelPublish.lastCompletedRequest != null) {
-                                        mViewModel.onMessagePublished(mViewModelPublish.lastCompletedRequest.getMessage());
+                                        PushAccount b = mViewModelPublish.lastCompletedRequest.getAccount();
+                                        if (b.requestStatus == Cmd.RC_OK && mViewModelPublish.lastCompletedRequest.requestStatus == Cmd.RC_OK) {
+                                            mViewModel.onMessagePublished(mViewModelPublish.lastCompletedRequest.getMessage());
+                                        }
                                     }
                                 }
                             });
@@ -526,7 +531,11 @@ public class DetailViewDialog extends DialogFragment {
                     if (request.hasCompleted()) {
                         if (!mSeekbarPressed) {
                             mViewModelPublish.lastCompletedRequest = null;
-                            mViewModel.onMessagePublished(request.getMessage());
+                            PushAccount b = request.getAccount();
+                            if (b.requestStatus == Cmd.RC_OK && request.requestStatus == Cmd.RC_OK) {
+                                Log.d(TAG, "progress bar: onPublish" );
+                                mViewModel.onMessagePublished(request.getMessage());
+                            }
                         } else {
                             mViewModelPublish.lastCompletedRequest = request; // will be used if seek bar released to update view
                         }
