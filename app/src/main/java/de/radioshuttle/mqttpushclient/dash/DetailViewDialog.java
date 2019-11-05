@@ -135,7 +135,7 @@ public class DetailViewDialog extends DialogFragment {
                             } else {
                                 color = (int) mItem.textcolor;
                             }
-                            ColorStateList csl = ColorStateList.valueOf(mDefaultTextColor);
+                            ColorStateList csl = ColorStateList.valueOf(color);
                             ImageViewCompat.setImageTintList(sendButton, csl);
 
                             mTextViewEditText = view.findViewById(R.id.editValue);
