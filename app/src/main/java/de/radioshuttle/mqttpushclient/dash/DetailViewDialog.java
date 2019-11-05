@@ -9,6 +9,7 @@ package de.radioshuttle.mqttpushclient.dash;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -37,8 +38,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
@@ -107,6 +106,8 @@ public class DetailViewDialog extends DialogFragment {
                     /* calc size of dash item*/
                     float defSizeDPI = 250f; //TODO: default size?
                     DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+                    Log.d(TAG, "metrics " + displayMetrics.widthPixels / displayMetrics.density);
+
                     int a = Math.min(displayMetrics.heightPixels, displayMetrics.widthPixels);
                     int w = (int) (defSizeDPI * getResources().getDisplayMetrics().density);
                     int w2 = (int) ((float) a * .9f - 64f * getResources().getDisplayMetrics().density);
@@ -127,13 +128,14 @@ public class DetailViewDialog extends DialogFragment {
                             /* tint send button and value editor */
                             ImageButton sendButton = view.findViewById(R.id.sendButton);
                             sendButton.setVisibility(View.VISIBLE);
+
                             int color;
                             if (mItem.textcolor == DColor.OS_DEFAULT || mItem.textcolor == DColor.CLEAR) {
                                 color = mDefaultTextColor;
                             } else {
                                 color = (int) mItem.textcolor;
                             }
-                            ColorStateList csl = ColorStateList.valueOf(color);
+                            ColorStateList csl = ColorStateList.valueOf(mDefaultTextColor);
                             ImageViewCompat.setImageTintList(sendButton, csl);
 
                             mTextViewEditText = view.findViewById(R.id.editValue);
@@ -400,16 +402,9 @@ public class DetailViewDialog extends DialogFragment {
                             }
                         });
 
-                        int color;
-                        if (mItem.textcolor == DColor.OS_DEFAULT || mItem.textcolor == DColor.CLEAR) {
-                            color = mDefaultTextColor;
-                        } else {
-                            color = (int) mItem.textcolor;
-                        }
-
                         /* tint buttons */
                         ImageButton closeButton = root.findViewById(R.id.closeButton);
-                        ColorStateList csl = ColorStateList.valueOf(color);
+                        ColorStateList csl = ColorStateList.valueOf(mDefaultTextColor);
                         ImageViewCompat.setImageTintList(closeButton, csl);
                         closeButton.setOnClickListener(new View.OnClickListener() {
                             @Override
