@@ -9,15 +9,25 @@ package de.radioshuttle.mqttpushclient.dash;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
+import android.webkit.WebResourceResponse;
+
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
+import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.utils.HeliosUTF8Decoder;
 import de.radioshuttle.utils.HeliosUTF8Encoder;
@@ -181,7 +192,121 @@ public final class ImageResource {
         return isUserResource(uri) || isImportedResource(uri);
     }
 
+    public static WebResourceResponse handleWebResource(Context context, Uri u) {
+        WebResourceResponse r = null;
+        try {
+            if (u.getScheme().equals("mqtt")) {
+                String path = u.getPath();
+                if (path.startsWith("/")) {
+                    path = path.substring(1);
+                }
+
+                InputStream is = null;
+                String res = ImageResource.getResourceURI(context, path);
+                //TODO: svg tets hack remove
+                if (path.endsWith(".svg")) {
+                    // String svgContent = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"9\" r=\"4\"/><path d=\"M9 15c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm7.76-9.64l-1.68 1.69c.84 1.18.84 2.71 0 3.89l1.68 1.69c2.02-2.02 2.02-5.07 0-7.27zM20.07 2l-1.63 1.63c2.77 3.02 2.77 7.56 0 10.74L20.07 16c3.9-3.89 3.91-9.95 0-14z\"/><path fill=\"none\" d=\"M0 0h24v24H0z\"/></svg>";
+                    String svgContent = "<svg fill=\"\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"9\" r=\"4\"/><path d=\"M9 15c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm7.76-9.64l-1.68 1.69c.84 1.18.84 2.71 0 3.89l1.68 1.69c2.02-2.02 2.02-5.07 0-7.27zM20.07 2l-1.63 1.63c2.77 3.02 2.77 7.56 0 10.74L20.07 16c3.9-3.89 3.91-9.95 0-14z\"/><path fill=\"none\" d=\"M0 0h24v24H0z\"/></svg>";
+
+                    is = new ByteArrayInputStream(svgContent.getBytes("UTF-8"));
+                    return new WebResourceResponse(
+                            "image/svg+xml",
+                            null,
+                            is);
+                } else //END remove
+                if (res != null) {
+                    if (ImageResource.isUserResource(res)) {
+                        String filePath = getImageFilePath(context, res);
+                        File f = new File(filePath);
+                        is = new FileInputStream(f);
+                    } else {
+                        if (ImageResource.isInternalResource(res)) {
+                            /* load vectordrawable, write to bitmap and compress to png*/
+                            VectorDrawableCompat d = VectorDrawableCompat.create(
+                                    context.getResources(), IconHelper.INTENRAL_ICONS.get(res), null);
+
+                            Bitmap bitmap = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888);
+                            Canvas canvas = new Canvas(bitmap);
+                            d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                            d.draw(canvas);
+
+                            ByteArrayOutputStream bao = new ByteArrayOutputStream();
+                            boolean ok = bitmap.compress(Bitmap.CompressFormat.PNG, 100, bao);
+                            Log.d(TAG, " res " + ok + ", size: " + bao);
+                            is = new ByteArrayInputStream(bao.toByteArray());
+                        }
+                    }
+                }
+                WebResourceResponse response = new WebResourceResponse(
+                        "image/png",
+                        null,
+                        is);
+
+                if (Build.VERSION.SDK_INT >= 21) {
+                    // response.setStatusCodeAndReasonPhrase(404, "Resource not found");
+                }
+                return response;
+
+            }
+        } catch(Exception e) {
+            e.printStackTrace(); //TODO: errorhandling: consider returning resource with status code 404 (Android > 21)
+            Log.d(TAG, "Error handling web resource; ", e);
+        }
+        return null;
+    }
+
+    public static String getResourceURI(Context context, String resourceName) {
+        String uri = null;
+        try {
+            boolean checkUserRes;
+            if (resourceName.toLowerCase().startsWith("int/")) {
+                resourceName = resourceName.substring(4);
+                checkUserRes = false;
+            } else {
+                if (resourceName.toLowerCase().startsWith("user/")) {
+                    resourceName = resourceName.substring(5);
+                }
+                checkUserRes = true;
+            }
+            if (checkUserRes) {
+                File userImagesDir = ImportFiles.getUserFilesDir(context);
+                String[] userFiles = userImagesDir.list();
+                if (userFiles.length > 0) {
+                    HeliosUTF8Decoder dec = new HeliosUTF8Decoder();
+                    for(String u : userFiles) {
+                        u = ImageResource.removeExtension(u);
+                        u = dec.format(u);
+                        if (resourceName.equals(u)) {
+                            uri = ImageResource.buildUserResourceURI(u);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (Utils.isEmpty(uri)) { // not found, check if internal
+                String key = "res://internal/" + resourceName;
+                if (IconHelper.INTENRAL_ICONS.containsKey(key)) {
+                    uri = key;
+                }
+            }
+        } catch(Exception e) {
+            Log.d(TAG, "Error checking resource name passed by script: " + resourceName); //TODO
+        }
+        return uri;
+    }
+
     public static BitmapDrawable loadExternalImage(Context context, String uri) throws URISyntaxException, UnsupportedEncodingException {
+        String path = getImageFilePath(context, uri);
+
+        Bitmap bm = BitmapFactory.decodeFile(path);
+        BitmapDrawable bd = null;
+        if (bm != null) {
+            bd = new BitmapDrawable(context.getResources(), bm);
+        }
+        return bd;
+    }
+
+    protected static String getImageFilePath(Context context, String uri) {
         File dir = null;
         String name = null;
         if (isImportedResource(uri)) {
@@ -196,13 +321,7 @@ public final class ImageResource {
             path += "/";
         }
         path += name;
-
-        Bitmap bm = BitmapFactory.decodeFile(path);
-        BitmapDrawable bd = null;
-        if (bm != null) {
-            bd = new BitmapDrawable(context.getResources(), bm);
-        }
-        return bd;
+        return path;
     }
 
     /** removes all image resources which are not referenced */
