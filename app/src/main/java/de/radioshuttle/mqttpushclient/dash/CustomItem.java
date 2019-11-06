@@ -10,21 +10,16 @@ import android.util.Log;
 
 import android.webkit.JavascriptInterface;
 
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.Observer;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Collections;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.net.PublishRequest;
-import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.Utils;
 
 public class CustomItem extends Item {
@@ -291,4 +286,6 @@ public class CustomItem extends Item {
 
     //UI state
     public boolean isLoading;
+
+    public final static String BASE_URL = "mqtt://res/";
 }
