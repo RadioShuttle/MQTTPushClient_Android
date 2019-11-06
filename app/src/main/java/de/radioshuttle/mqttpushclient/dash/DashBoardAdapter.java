@@ -10,8 +10,8 @@ import android.annotation.TargetApi;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +20,7 @@ import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -36,6 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
@@ -489,7 +491,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                     @TargetApi(23)
                     @Override
                     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                        super.onReceivedError(view, request, error);
+                        // super.onReceivedError(view, request, error);
                         /* check if error already reported */
                         String err = error.getDescription().toString();
                         handleWebViewError(err, citem);
@@ -497,14 +499,31 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
 
                     @Override
                     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                        super.onReceivedError(view, errorCode, description, failingUrl);
-                        if (Build.VERSION.SDK_INT < 23) {
-                            handleWebViewError(description, citem);
-                        }
+                        // super.onReceivedError(view, errorCode, description, failingUrl);
+                        handleWebViewError(description, citem);
+                    }
+
+                    @TargetApi(21)
+                    @Nullable
+                    @Override
+                    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                        // Log.d(TAG, "shouldInterceptRequest 1: " + request.getUrl().toString());
+                        return ImageResource.handleWebResource(mActivity, request.getUrl());
+                    }
+
+                    @Nullable
+                    @Override
+                    public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                        // Log.d(TAG, "shouldInterceptRequest 2: " + url);
+                        WebResourceResponse r = null;
+                        try {
+                            r = ImageResource.handleWebResource(mActivity, Uri.parse(url));
+                        } catch(Exception e) {}
+                        return r;
                     }
                 });
-                String encodedHtml = Base64.encodeToString(h.html.getBytes(), Base64.NO_PADDING);
-                webView.loadData(encodedHtml, "text/html", "base64");
+                webView.loadDataWithBaseURL(CustomItem.BASE_URL ,h.html, "text/html", "UTF-8", null);
+
             } else {
                 if (!citem.isLoading && citem.hasMessageData()) {
                     String jsOnMqttMessageCall = CustomItem.build_onMqttMessageCall(citem);

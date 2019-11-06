@@ -9,14 +9,13 @@ package de.radioshuttle.mqttpushclient.dash;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.content.res.Configuration;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.format.DateUtils;
-import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,6 +26,7 @@ import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -38,6 +38,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
@@ -339,7 +340,6 @@ public class DetailViewDialog extends DialogFragment {
                             @TargetApi(23)
                             @Override
                             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                                super.onReceivedError(view, request, error);
                                 /* check if error already reported */
                                 String err = error.getDescription().toString();
                                 handleWebViewError(err, citem);
@@ -347,10 +347,26 @@ public class DetailViewDialog extends DialogFragment {
 
                             @Override
                             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                                super.onReceivedError(view, errorCode, description, failingUrl);
-                                if (Build.VERSION.SDK_INT < 23) {
-                                    handleWebViewError(description, citem);
-                                }
+                                handleWebViewError(description, citem);
+                            }
+
+                            @TargetApi(21)
+                            @Nullable
+                            @Override
+                            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                                // Log.d(TAG, "shouldInterceptRequest 1: " + request.getUrl().toString());
+                                return ImageResource.handleWebResource(getContext(), request.getUrl());
+                            }
+
+                            @Nullable
+                            @Override
+                            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                                // Log.d(TAG, "shouldInterceptRequest 2: " + url);
+                                WebResourceResponse r = null;
+                                try {
+                                    r = ImageResource.handleWebResource(getContext(), Uri.parse(url));
+                                } catch(Exception e) {}
+                                return r;
                             }
                         });
 
@@ -867,8 +883,8 @@ public class DetailViewDialog extends DialogFragment {
                     if (!Utils.equals(mWebViewHTML, citem.getHtml())) { // load html, if not already done or changed
                         mWebViewHTML = citem.getHtml();
                         mWebViewIsLoading = true;
-                        String encodedHtml = Base64.encodeToString(mWebViewHTML.getBytes(), Base64.NO_PADDING);
-                        webView.loadData(encodedHtml, "text/html", "base64");
+                        webView.loadDataWithBaseURL(CustomItem.BASE_URL ,mWebViewHTML, "text/html", "UTF-8", null);
+
                     } else {
                         if (!mWebViewIsLoading && citem.hasMessageData()) {
                             String jsOnMqttMessageCall = CustomItem.build_onMqttMessageCall(citem);
