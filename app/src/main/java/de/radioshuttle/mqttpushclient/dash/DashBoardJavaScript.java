@@ -141,7 +141,7 @@ public class DashBoardJavaScript extends JavaScript {
                 if (resourceName.toLowerCase().startsWith("tmp/")) { // imported but not saved images are not allowed
                     throw new RuntimeException(tempResoure + " " + resourceName);
                 }
-                uri = getResourceURI(resourceName);
+                uri = ImageResource.getResourceURI(app, resourceName);
                 if (Utils.isEmpty(uri)) {
                     throw new RuntimeException(unknownImgtxt + " " + resourceName);
                 }
@@ -175,46 +175,6 @@ public class DashBoardJavaScript extends JavaScript {
                 }
             }
 
-        }
-
-        private String getResourceURI(String resourceName) {
-            String uri = null;
-            try {
-                boolean checkUserRes;
-                if (resourceName.toLowerCase().startsWith("int/")) {
-                    resourceName = resourceName.substring(4);
-                    checkUserRes = false;
-                } else {
-                    if (resourceName.toLowerCase().startsWith("user/")) {
-                        resourceName = resourceName.substring(5);
-                    }
-                    checkUserRes = true;
-                }
-                if (checkUserRes) {
-                    File userImagesDir = ImportFiles.getUserFilesDir(app);
-                    String[] userFiles = userImagesDir.list();
-                    if (userFiles.length > 0) {
-                        HeliosUTF8Decoder dec = new HeliosUTF8Decoder();
-                        for(String u : userFiles) {
-                            u = ImageResource.removeExtension(u);
-                            u = dec.format(u);
-                            if (resourceName.equals(u)) {
-                                uri = ImageResource.buildUserResourceURI(u);
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (Utils.isEmpty(uri)) { // not found, check if internal
-                    String key = "res://internal/" + resourceName;
-                    if (IconHelper.INTENRAL_ICONS.containsKey(key)) {
-                        uri = key;
-                    }
-                }
-            } catch(Exception e) {
-                Log.d(TAG, "Error checking resource name passed by script: " + resourceName);
-            }
-            return uri;
         }
 
         @Override
