@@ -47,13 +47,13 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/visibility_off", R.drawable.xic_visibility_off);
         INTENRAL_ICONS.put("res://internal/phone_enabled", R.drawable.xic_phone_enabled);
         INTENRAL_ICONS.put("res://internal/phone_disabled", R.drawable.xic_phone_disabled);
-        INTENRAL_ICONS.put("res://internal/thumbs_down", R.drawable.xic_thumbs_down);
-        INTENRAL_ICONS.put("res://internal/thumbs_up", R.drawable.xic_thumbs_up);
+        INTENRAL_ICONS.put("res://internal/thumb_down", R.drawable.xic_thumbs_down);
+        INTENRAL_ICONS.put("res://internal/thumb_up", R.drawable.xic_thumbs_up);
 
         // msic
         INTENRAL_ICONS.put("res://internal/check_circle", R.drawable.xic_check_circle);
         INTENRAL_ICONS.put("res://internal/check_circle_outline", R.drawable.xic_check_circle_outline);
-        INTENRAL_ICONS.put("res://internal/wb_send", R.drawable.xic_send);
+        INTENRAL_ICONS.put("res://internal/send", R.drawable.xic_send);
         INTENRAL_ICONS.put("res://internal/clear", R.drawable.xic_clear);
         INTENRAL_ICONS.put("res://internal/mail", R.drawable.xic_mail);
         INTENRAL_ICONS.put("res://internal/vpn_key", R.drawable.xic_vpn_key);
@@ -87,7 +87,7 @@ public class IconHelper {
         INTENRAL_ICONS.put("res://internal/forward_5", R.drawable.xic_forward_5);
         INTENRAL_ICONS.put("res://internal/pause_circle_filled", R.drawable.xic_pause_circle_filled);
         INTENRAL_ICONS.put("res://internal/pause_circle_outline", R.drawable.xic_pause_circle_outline);
-        INTENRAL_ICONS.put("res://internal/pause_play_arrow", R.drawable.xic_play_arrow);
+        INTENRAL_ICONS.put("res://internal/play_arrow", R.drawable.xic_play_arrow);
         INTENRAL_ICONS.put("res://internal/play_circle_filled", R.drawable.xic_play_circle_filled);
         INTENRAL_ICONS.put("res://internal/play_circle_outline", R.drawable.xic_play_circle_outline);
         INTENRAL_ICONS.put("res://internal/replay", R.drawable.xic_replay);
