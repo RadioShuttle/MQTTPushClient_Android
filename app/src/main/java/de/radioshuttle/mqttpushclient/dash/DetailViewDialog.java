@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.format.DateUtils;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.webkit.ConsoleMessage;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -282,7 +284,6 @@ public class DetailViewDialog extends DialogFragment {
 
 
                         final WebView webView = (WebView) mContentContainer;
-                        webView.setWebViewClient(new WebViewClient());
                         webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                         webView.getSettings().setJavaScriptEnabled(true);
                         // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
@@ -327,13 +328,13 @@ public class DetailViewDialog extends DialogFragment {
                                 if (citem.hasMessageData()) {
                                     js.append(CustomItem.build_onMqttMessageCall(citem));
                                 }
-                                Log.d(TAG, "detail view on page finished"); //TODO: remove
+                                Log.d(TAG, "detail view on page finished: "); //TODO: remove
 
                                 if (Build.VERSION.SDK_INT >= 19) {
                                     Log.d(TAG, js.toString());
                                     webView.evaluateJavascript(js.toString(), null);
                                 } else {
-                                    webView.loadUrl("javascript:" + js.toString());
+                                    webView.loadUrl(js.toString());
                                 }
 
                             }
@@ -378,7 +379,7 @@ public class DetailViewDialog extends DialogFragment {
                             mWebViewIsLoading = savedInstanceState.getBoolean(KEY_WEBVIEW_ISLOADING);
                             mWebViewHTML = savedInstanceState.getString(KEY_WEBVIEW_HTML);
                             webView.restoreState(savedInstanceState);
-                            webView.reload();
+                            // webView.reload();
                         }
                         try {
                             m_custom_view_js = Utils.getRawStringResource(getContext(), "cv_interface", true);
@@ -883,7 +884,13 @@ public class DetailViewDialog extends DialogFragment {
                     if (!Utils.equals(mWebViewHTML, citem.getHtml())) { // load html, if not already done or changed
                         mWebViewHTML = citem.getHtml();
                         mWebViewIsLoading = true;
-                        webView.loadDataWithBaseURL(CustomItem.BASE_URL ,mWebViewHTML, "text/html", "UTF-8", null);
+                        //TODO: check, Samsung 4.4 does not refresh if use  loadDataWithBaseURL (see old solution with loadData();
+                        webView.loadDataWithBaseURL(CustomItem.BASE_URL ,mWebViewHTML, "text/html", "utf-8", null);
+
+                        /*
+                        String encodedHtml = Base64.encodeToString(mWebViewHTML.getBytes(), Base64.NO_PADDING);
+                        webView.loadData(encodedHtml, "text/html", "base64");
+                        */
 
                     } else {
                         if (!mWebViewIsLoading && citem.hasMessageData()) {
