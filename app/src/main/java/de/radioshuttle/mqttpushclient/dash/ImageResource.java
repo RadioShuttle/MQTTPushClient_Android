@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -203,25 +204,23 @@ public final class ImageResource {
 
                 InputStream is = null;
                 String res = ImageResource.getResourceURI(context, path);
-                //TODO: svg tets hack remove
-                if (path.endsWith(".svg")) {
-                    // String svgContent = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"9\" r=\"4\"/><path d=\"M9 15c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm7.76-9.64l-1.68 1.69c.84 1.18.84 2.71 0 3.89l1.68 1.69c2.02-2.02 2.02-5.07 0-7.27zM20.07 2l-1.63 1.63c2.77 3.02 2.77 7.56 0 10.74L20.07 16c3.9-3.89 3.91-9.95 0-14z\"/><path fill=\"none\" d=\"M0 0h24v24H0z\"/></svg>";
-                    String svgContent = "<svg fill=\"\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"9\" r=\"4\"/><path d=\"M9 15c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm7.76-9.64l-1.68 1.69c.84 1.18.84 2.71 0 3.89l1.68 1.69c2.02-2.02 2.02-5.07 0-7.27zM20.07 2l-1.63 1.63c2.77 3.02 2.77 7.56 0 10.74L20.07 16c3.9-3.89 3.91-9.95 0-14z\"/><path fill=\"none\" d=\"M0 0h24v24H0z\"/></svg>";
-
-                    is = new ByteArrayInputStream(svgContent.getBytes("UTF-8"));
-                    return new WebResourceResponse(
-                            "image/svg+xml",
-                            null,
-                            is);
-                } else //END remove
+                String mimeType = "image/png"; // default
                 if (res != null) {
                     if (ImageResource.isUserResource(res)) {
                         String filePath = getImageFilePath(context, res);
                         File f = new File(filePath);
                         is = new FileInputStream(f);
+                        // mimeType = "image/png";
                     } else {
                         if (ImageResource.isInternalResource(res)) {
-                            /* load vectordrawable, write to bitmap and compress to png*/
+                            /* return corresponding svg file (instead of creating a png out of vector drawable) */
+                            AssetManager am = context.getResources().getAssets();
+                            String resFileName = new URI(res).getPath().substring(1) + ".svg";
+                            is = am.open("svg/" + resFileName);
+                            // Log.d(TAG, resFileName);
+                            mimeType = "image/svg+xml";
+
+                            /*
                             VectorDrawableCompat d = VectorDrawableCompat.create(
                                     context.getResources(), IconHelper.INTENRAL_ICONS.get(res), null);
 
@@ -234,25 +233,25 @@ public final class ImageResource {
                             boolean ok = bitmap.compress(Bitmap.CompressFormat.PNG, 100, bao);
                             Log.d(TAG, " res " + ok + ", size: " + bao);
                             is = new ByteArrayInputStream(bao.toByteArray());
+                             */
                         }
                     }
                 }
-                WebResourceResponse response = new WebResourceResponse(
-                        "image/png",
+                r = new WebResourceResponse(
+                        mimeType,
                         null,
                         is);
 
                 if (Build.VERSION.SDK_INT >= 21) {
                     // response.setStatusCodeAndReasonPhrase(404, "Resource not found");
                 }
-                return response;
 
             }
         } catch(Exception e) {
-            e.printStackTrace(); //TODO: errorhandling: consider returning resource with status code 404 (Android > 21)
+            //TODO: errorhandling: consider returning resource with status code 404 (Android > 21)
             Log.d(TAG, "Error handling web resource; ", e);
         }
-        return null;
+        return r;
     }
 
     public static String getResourceURI(Context context, String resourceName) {
