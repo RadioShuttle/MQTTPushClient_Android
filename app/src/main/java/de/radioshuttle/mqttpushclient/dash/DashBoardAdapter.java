@@ -522,7 +522,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         return r;
                     }
                 });
-                webView.loadDataWithBaseURL(CustomItem.BASE_URL ,h.html, "text/html", "UTF-8", null);
+                webView.loadDataWithBaseURL(CustomItem.BASE_URL ,h.html, "text/html", "utf-8", null);
 
             } else {
                 if (!citem.isLoading && citem.hasMessageData()) {
