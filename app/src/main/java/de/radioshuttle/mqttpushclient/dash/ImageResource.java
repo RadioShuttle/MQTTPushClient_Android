@@ -240,15 +240,14 @@ public final class ImageResource {
                 r = new WebResourceResponse(
                         mimeType,
                         null,
-                        is);
+                        is == null ? new ByteArrayInputStream(new byte[0]) : is);
 
                 if (Build.VERSION.SDK_INT >= 21) {
-                    // response.setStatusCodeAndReasonPhrase(404, "Resource not found");
+                    r.setStatusCodeAndReasonPhrase(404, "Resource not found");
                 }
 
             }
         } catch(Exception e) {
-            //TODO: errorhandling: consider returning resource with status code 404 (Android > 21)
             Log.d(TAG, "Error handling web resource; ", e);
         }
         return r;
