@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -287,5 +288,13 @@ public class CustomItem extends Item {
     //UI state
     public boolean isLoading;
 
-    public final static String BASE_URL = "mqtt://res/";
+    public final static String BASE_URL = "http://pushclient/";
+    public static URI BASE_URI;
+    static {
+        try {
+            BASE_URI = new URI(BASE_URL);
+        } catch (URISyntaxException e) {
+            Log.e(CustomItem.class.getSimpleName(), "Invalid BASE URL: ", e);
+        }
+    }
 }
