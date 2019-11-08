@@ -196,11 +196,12 @@ public final class ImageResource {
     public static WebResourceResponse handleWebResource(Context context, Uri u) {
         WebResourceResponse r = null;
         try {
-            if (u.getAuthority().equalsIgnoreCase(CustomItem.BASE_URI.getAuthority())) {
+            if (u != null && CustomItem.BASE_URI.getAuthority().equalsIgnoreCase(u.getAuthority())) {
                 String path = u.getPath();
                 if (path.startsWith("/")) {
                     path = path.substring(1);
                 }
+                // Log.d(TAG, "uri: " + u);
 
                 InputStream is = null;
                 String res = ImageResource.getResourceURI(context, path);
@@ -217,7 +218,7 @@ public final class ImageResource {
                             AssetManager am = context.getResources().getAssets();
                             String resFileName = new URI(res).getPath().substring(1) + ".svg";
                             is = am.open("svg/" + resFileName);
-                            // Log.d(TAG, resFileName);
+                            Log.d(TAG, resFileName);
                             mimeType = "image/svg+xml";
 
                             /*
@@ -242,7 +243,7 @@ public final class ImageResource {
                         null,
                         is == null ? new ByteArrayInputStream(new byte[0]) : is);
 
-                if (Build.VERSION.SDK_INT >= 21) {
+                if (Build.VERSION.SDK_INT >= 21 && is == null) {
                     r.setStatusCodeAndReasonPhrase(404, "Resource not found");
                 }
 
