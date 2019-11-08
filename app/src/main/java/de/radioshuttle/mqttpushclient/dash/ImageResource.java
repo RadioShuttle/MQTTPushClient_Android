@@ -196,7 +196,7 @@ public final class ImageResource {
     public static WebResourceResponse handleWebResource(Context context, Uri u) {
         WebResourceResponse r = null;
         try {
-            if (u.getScheme().equals("mqtt")) {
+            if (u.getAuthority().equalsIgnoreCase(CustomItem.BASE_URI.getAuthority())) {
                 String path = u.getPath();
                 if (path.startsWith("/")) {
                     path = path.substring(1);
