@@ -178,6 +178,16 @@ public class CustomItem extends Item {
             return longToDouble(CustomItem.this.getBackgroundColor());
         }
 
+        @JavascriptInterface
+        public void _setUserData(String userData) {
+            data.put("userdata", userData);
+        }
+
+        @JavascriptInterface
+        public String _getUserData() {
+            return  data.get("userdata") == null ? "" : (String) data.get("userdata");
+        }
+
         protected double longToDouble(long i) {
             double v;
             if (i == DColor.CLEAR) {
@@ -232,7 +242,7 @@ public class CustomItem extends Item {
         return js.toString();
     }
 
-    public static String build_onMqttPushClientInitCall(PushAccount accountData, CustomItem item) {
+    public static String build_onMqttPushClientInitCall(PushAccount accountData, CustomItem item, boolean isDialogView) {
         StringBuilder js = new StringBuilder();
 
         if (accountData != null && item != null) {
@@ -248,9 +258,12 @@ public class CustomItem extends Item {
                 Log.d(TAG, "URI parse error: ", e);
             }
             js.append("'; ");
+
             js.append("MQTT.acc.pushServer = '");
             js.append(accountData.pushserver == null ? "" : accountData.pushserver);
             js.append("'; ");
+
+            js.append("MQTT.getView().isDialog = function() { return " + isDialogView + ";};" );
 
             js.append("if (typeof window['onMqttInit'] === 'function') onMqttInit(");
             js.append("MQTT.acc");
