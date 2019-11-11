@@ -90,6 +90,7 @@ public class DashBoardJavaScript extends JavaScript {
         void setTextFieldDefaultValue(String defaultInputValue);
         void setCtrlImage(String resourceName);
         void setCtrlImageOff(String resourceName);
+        void _setUserData(String name);
 
         double getTextColor();
         double getBackgroundColor();
@@ -101,6 +102,7 @@ public class DashBoardJavaScript extends JavaScript {
         double getTextSize();
         String getCtrlImage();
         String getCtrlImageOff();
+        String _getUserData();
     }
 
     private static class ViewPropertiesImpl implements ViewProperties {
@@ -127,7 +129,6 @@ public class DashBoardJavaScript extends JavaScript {
         public void setCtrlImage(String resourceName) {
             setCtrlImage("ctrl_image", resourceName);
         }
-
 
         @Override
         public void setCtrlImageOff(String resourceName) {
@@ -175,6 +176,11 @@ public class DashBoardJavaScript extends JavaScript {
                 }
             }
 
+        }
+
+        @Override
+        public void _setUserData(String name) {
+            p.put("userdata", name);
         }
 
         @Override
@@ -265,7 +271,11 @@ public class DashBoardJavaScript extends JavaScript {
         }
 
         @Override
+        public String _getUserData() {
+            return  p.get("userdata") == null ? "" : (String) p.get("userdata");
+        }
 
+        @Override
         public double getTextSize() {
             return intToDouble((int) (p.get("textsize") == null ? 0 : p.get("textsize")));
         }
