@@ -70,7 +70,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         mActivity = activity;
 
         try {
-            m_custom_view_js = Utils.getRawStringResource(activity, "cv_interface", true);
+            cv_interface_js = Utils.getRawStringResource(activity, "cv_interface", true);
             javascript_color_js = Utils.getRawStringResource(activity, "javascript_color", true);
         } catch (IOException e) {
             Log.d(TAG, "Error loading raw resource: custom_view_js", e);
@@ -464,7 +464,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         if (Build.VERSION.SDK_INT < 19) {
                             js.append("javascript:");
                         }
-                        js.append(m_custom_view_js);
+                        js.append(cv_interface_js);
                         js.append(javascript_color_js);
 
 
@@ -476,7 +476,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         js.append(CustomItem.buildJS_readyState(tmp.toString()));
                          */
 
-                        js.append(CustomItem.build_onMqttPushClientInitCall(mAccount, citem));
+                        js.append(CustomItem.build_onMqttPushClientInitCall(mAccount, citem, false));
                         if (citem.hasMessageData()) {
                             js.append(CustomItem.build_onMqttMessageCall(citem));
                         }
@@ -518,7 +518,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         WebResourceResponse r = null;
                         try {
                             r = ImageResource.handleWebResource(mActivity, Uri.parse(url));
-                        } catch(Exception e) {}
+                        } catch(Exception e) {
+                            //TODO: remove after test
+                        }
                         return r;
                     }
                 });
@@ -739,7 +741,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         return lastSel;
     }
 
-    private String m_custom_view_js;
+    private String cv_interface_js;
     private String javascript_color_js;
 
     private LinkedHashSet<Integer> mSelectedItems;
