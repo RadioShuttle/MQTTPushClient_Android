@@ -145,6 +145,9 @@ public abstract class Item {
         viewProperties.put("textcolor", data.containsKey("textcolor") ? (Long) data.get("textcolor") : textcolor);
         viewProperties.put("textsize", data.containsKey("textsize") ?  (Integer) data.get("textsize") : textsize);
         viewProperties.put("background", data.containsKey("background") ? (Long) data.get("background") : background);
+        if (data.containsKey("userdata")) {
+            viewProperties.put("userdata", data.get("userdata") == null ? "" : data.get("userdata"));
+        }
 
         return viewProperties;
     }
