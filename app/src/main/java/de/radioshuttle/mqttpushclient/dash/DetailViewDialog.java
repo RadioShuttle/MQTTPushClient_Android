@@ -324,7 +324,7 @@ public class DetailViewDialog extends DialogFragment {
                                 js.append(' ');
                                 js.append(javascript_color_js);
 
-                                js.append(CustomItem.build_onMqttPushClientInitCall(mViewModel.getPushAccount(), citem));
+                                js.append(CustomItem.build_onMqttPushClientInitCall(mViewModel.getPushAccount(), citem, true));
                                 if (citem.hasMessageData()) {
                                     js.append(CustomItem.build_onMqttMessageCall(citem));
                                 }
