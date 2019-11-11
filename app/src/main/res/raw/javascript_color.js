@@ -48,3 +48,22 @@ MQTT.Color = {
 	OS_DEFAULT : 0x0100000000,
 	CLEAR : 0x0200000000
 };
+
+var _refViewObj;
+/* code is used in diffrent script environments */
+if (typeof MQTT['getView'] === 'function') {
+  _refViewObj = MQTT.getView(); /* web view */
+} else {
+  _refViewObj = view; /* filter script */
+}
+_refViewObj.setUserData = function(data) {
+  var jsonStr = JSON.stringify(data);
+  if (jsonStr.length > 1048576) {
+    throw "User data is limited to 1 MB.";
+  }
+  this._setUserData(JSON.stringify(data));
+};
+_refViewObj.getUserData = function() {
+  var data = this._getUserData();
+  return data ? JSON.parse(data) : null;
+};
