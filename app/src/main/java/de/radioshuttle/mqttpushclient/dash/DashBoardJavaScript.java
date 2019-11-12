@@ -28,6 +28,7 @@ public class DashBoardJavaScript extends JavaScript {
     private DashBoardJavaScript(Application app) {
         try {
             color_js = Utils.getRawStringResource(app, "javascript_color", true);
+            wrapper_filterscript_js = Utils.getRawStringResource(app, "javascript_wrapper_filterscript", true);
         } catch (IOException e) {
             Log.d(TAG, "Error loading raw resource: javascript_color.js", e);
         }
@@ -46,6 +47,9 @@ public class DashBoardJavaScript extends JavaScript {
         ((Duktape) context.getInterpreter()).set("view", ViewProperties.class, viewProperties);
         if (!Utils.isEmpty(color_js)) {
             ((Duktape) context.getInterpreter()).evaluate(color_js);
+        }
+        if (!Utils.isEmpty(wrapper_filterscript_js)) {
+            ((Duktape) context.getInterpreter()).evaluate(wrapper_filterscript_js);
         }
     }
 
@@ -319,6 +323,7 @@ public class DashBoardJavaScript extends JavaScript {
 
     private Application app;
     private String color_js;
+    private String wrapper_filterscript_js;
     private static DashBoardJavaScript js;
 
     private final static String TAG = JavaScript.class.getSimpleName();
