@@ -4,10 +4,10 @@ MQTT.view.setUserData = function(data) {
   if (jsonStr.length > 1048576) {
     throw "User data is limited to 1 MB.";
   }
-  this.setUserData(JSON.stringify(data));
+  this._setUserData(JSON.stringify(data));
 };
 MQTT.view.getUserData = function() {
-  var data = this.getUserData();
+  var data = this._getUserData();
   return data ? JSON.parse(data) : null;
 };
 
