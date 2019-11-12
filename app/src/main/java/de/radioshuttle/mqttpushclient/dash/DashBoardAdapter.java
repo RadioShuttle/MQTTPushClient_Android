@@ -70,7 +70,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         mActivity = activity;
 
         try {
-            cv_interface_js = Utils.getRawStringResource(activity, "cv_interface", true);
+            wrapper_webview_js = Utils.getRawStringResource(activity, "javascript_wrapper_webview", true);
             javascript_color_js = Utils.getRawStringResource(activity, "javascript_color", true);
         } catch (IOException e) {
             Log.d(TAG, "Error loading raw resource: custom_view_js", e);
@@ -464,7 +464,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         if (Build.VERSION.SDK_INT < 19) {
                             js.append("javascript:");
                         }
-                        js.append(cv_interface_js);
+                        js.append(wrapper_webview_js);
+                        js.append(' ');
                         js.append(javascript_color_js);
 
 
@@ -741,7 +742,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         return lastSel;
     }
 
-    private String cv_interface_js;
+    private String wrapper_webview_js;
     private String javascript_color_js;
 
     private LinkedHashSet<Integer> mSelectedItems;
