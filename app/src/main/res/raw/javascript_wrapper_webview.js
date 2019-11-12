@@ -11,9 +11,6 @@ MQTT.view.getUserData = function() {
   return data ? JSON.parse(data) : null;
 };
 
-MQTT.log("javascript_wrapper_webview.js: " + typeof MQTT);
-MQTT.log("javascript_wrapper_webview.js: " + typeof MQTT.view);
-
 MQTT.buf2hex = function (buffer) {
   var byteArray = new Uint8Array(buffer);
   var hexStr = '';
