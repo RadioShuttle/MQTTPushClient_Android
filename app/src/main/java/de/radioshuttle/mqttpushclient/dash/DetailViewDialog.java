@@ -16,7 +16,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.format.DateUtils;
-import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,7 +23,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.webkit.ConsoleMessage;
-import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -320,7 +318,7 @@ public class DetailViewDialog extends DialogFragment {
                                     js.append("javascript:");
                                 }
                                 Log.d(TAG, "onPageFinished");
-                                js.append(m_custom_view_js);
+                                js.append(wrapper_webview_js);
                                 js.append(' ');
                                 js.append(javascript_color_js);
 
@@ -382,7 +380,7 @@ public class DetailViewDialog extends DialogFragment {
                             // webView.reload();
                         }
                         try {
-                            m_custom_view_js = Utils.getRawStringResource(getContext(), "cv_interface", true);
+                            wrapper_webview_js = Utils.getRawStringResource(getContext(), "javascript_wrapper_webview", true);
                             javascript_color_js = Utils.getRawStringResource(getContext(), "javascript_color", true);
 
                         } catch (IOException e) {
@@ -1017,7 +1015,7 @@ public class DetailViewDialog extends DialogFragment {
     protected PublishViewModel mViewModelPublish;
     protected boolean mWebViewIsLoading;
     protected String mWebViewHTML;
-    protected String m_custom_view_js;
+    protected String wrapper_webview_js;
     protected String javascript_color_js;
 
 
