@@ -263,12 +263,12 @@ public class CustomItem extends Item {
             js.append(accountData.pushserver == null ? "" : accountData.pushserver);
             js.append("'; ");
 
-            js.append("MQTT.getView().isDialog = function() { return " + isDialogView + ";};" );
+            js.append("MQTT.view.isDialog = function() { return " + isDialogView + ";}; ");
 
             js.append("if (typeof window['onMqttInit'] === 'function') onMqttInit(");
             js.append("MQTT.acc");
             js.append(',');
-            js.append("MQTT.getView()");
+            js.append("MQTT.view");
             js.append("); ");
         }
 
