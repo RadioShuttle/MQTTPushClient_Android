@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -70,6 +71,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mDashBoardItemsLiveData = new MutableLiveData<>();
         mGroups = new LinkedList<>();
         mItemsPerGroup = new HashMap<>();
+        mLockedResources = new HashSet<>();
         mApplication = app;
         mModificationDate = 0L;
         mSaveRequest = new MutableLiveData<>();
@@ -225,6 +227,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mInitialized = true;
         mGroups.clear();
         mItemsPerGroup.clear();
+        mLockedResources.clear();
         mItemsRaw = json;
         mModificationDate = modificationDate;
         mMaxID = 0;
@@ -576,6 +579,8 @@ public class DashBoardViewModel extends AndroidViewModel {
     public LinkedList<Item> getItems(int groupID) {
         return mItemsPerGroup.get(groupID);
     }
+
+    public Set<String> getLockedResources() { return mLockedResources; }
 
     public void copyItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> items) {
         if (groups != null && mGroups != null && items != null && mItemsPerGroup != null) {
@@ -995,6 +1000,7 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     private LinkedList<GroupItem> mGroups;
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
+    private HashSet<String> mLockedResources;
     private LinkedHashMap<String, Message> mLastReceivedMessages;
 
     /* observables */
