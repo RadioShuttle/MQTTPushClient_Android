@@ -13,10 +13,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.widget.ImageViewCompat;
+import androidx.paging.PagedList;
 import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
@@ -54,7 +57,41 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
         } else { // VIEW_TYPE_IMAGE_BUTTON
             holder.image = view.findViewById(R.id.image);
             holder.label = view.findViewById(R.id.label);
+            holder.lockedImage = view.findViewById(R.id.resourceLocked);
         }
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (callback != null) {
+                    int pos = holder.getAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        ImageResource item = getItem(pos);
+                        String uri = item.uri;
+                        callback.onImageSelected(pos, uri);
+                    }
+                }
+            }
+        });
+
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                boolean consumed = false;
+                int pos = holder.getAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && pos >= 0 && pos < getItemCount()) {
+                    ImageResource item = getItem(pos);
+                    if (ImageResource.isExternalResource(item.uri)) {
+                        item.locked = !item.locked;
+                        ImageChooserAdapter.this.notifyItemChanged(pos, item);
+                        consumed = true;
+                    }
+
+                }
+                return consumed;
+            }
+        });
+
         return holder;
     }
 
@@ -87,19 +124,16 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
             if (!ImageResource.isInternalResource(uri)) {
                 ImageViewCompat.setImageTintList(vh.image, null);
             }
-            vh.image.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (callback != null) {
-                        int pos = vh.getAdapterPosition();
-                        if (pos != RecyclerView.NO_POSITION) {
-                            ImageResource item = getItem(pos);
-                            String uri = item.uri;
-                            callback.onImageSelected(pos, uri);
-                        }
-                    }
+            if (ImageResource.isExternalResource(uri)) {
+                if (item.locked && vh.lockedImage.getVisibility() != View.VISIBLE) {
+                    vh.lockedImage.setVisibility(View.VISIBLE);
                 }
-            });
+                if (!item.locked && vh.lockedImage.getVisibility() != View.GONE) {
+                    vh.lockedImage.setVisibility(View.GONE);
+                }
+            }
+
+
         }
     }
 
@@ -128,7 +162,8 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
         public ViewHolder(View v) {
             super(v);
         }
-        public ImageButton image;
+        public ImageView image;
+        public ImageView lockedImage;
         public Button noImageButton;
         public TextView label;
     }
