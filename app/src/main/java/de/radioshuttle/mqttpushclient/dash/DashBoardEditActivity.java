@@ -66,8 +66,10 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class DashBoardEditActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener, ColorPickerDialog.Callback,
@@ -613,6 +615,14 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                      }
                 }
 
+                /* locked resources */
+                if (savedInstanceState == null) {
+                    mLockedResources = mViewModel.getLockedResources();
+                } else {
+                    ArrayList<String> tmpList = savedInstanceState.getStringArrayList(KEY_LOCKED_RES);
+                    mLockedResources = new HashSet(tmpList == null ? new ArrayList<>() : tmpList);
+                }
+
                 String title = "";
                 if (mMode == MODE_ADD) {
                     if (mItem instanceof GroupItem) {
@@ -867,6 +877,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
         if (!Utils.isEmpty(mOutputScriptContent)) {
             outState.putString(KEY_OUTPUT_SCRIPT, mOutputScriptContent);
+        }
+        if (!mLockedResources.isEmpty()) {
+            outState.putStringArrayList(KEY_LOCKED_RES, new ArrayList<>(mLockedResources));
         }
 
     }
@@ -1317,6 +1330,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 Intent intent = new Intent(this, ImageChooserActivity.class);
                 intent.putExtra(ImageChooserActivity.ARG_CTRL_IDX, ctrlIdx);
                 intent.putExtra(ImageChooserActivity.ARG_RESOURCE_URI,(ctrlIdx == 0 ? mOnImageURI : mOffImageURI));
+                intent.putStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES, new ArrayList<>(mLockedResources));
 
                 Bundle args = getIntent().getExtras();
                 String acc = args.getString(ARG_ACCOUNT);
@@ -1423,6 +1437,14 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             mOutputScriptContent = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
             setFilterButtonText(mOutputScriptButton, mOutputScriptContent, (mItem != null ? mItem.script_p : null));
         } else if (requestCode == 3) {
+            if (data != null && data.getStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES) != null ) {
+                mLockedResources = new HashSet(data.getStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES));
+                //TODO: remove
+                for(String s : mLockedResources) {
+                    Log.d(TAG, "locked: " + s);
+                }
+
+            }
             if (resultCode == AppCompatActivity.RESULT_OK) {
                 /* if no URI submitted, user has choosen NO IMAGE */
                 String uri = data.getStringExtra(ImageChooserActivity.ARG_RESOURCE_URI);
@@ -1794,6 +1816,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     protected String mOutputScriptContent;
     protected final static String KEY_OUTPUT_SCRIPT = "kEY_OUTPUT_SCRIPT";
+
+    protected Set<String> mLockedResources;
+    protected final static String KEY_LOCKED_RES = "KEY_LOCKED_RES";
 
     protected int mSelectedGroupIdx;
     protected final static String KEY_SELECTED_GROUP = "KEY_SELECTED_GROUP";
