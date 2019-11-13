@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<de.radioshuttle.mqttpushclient.dash.DashConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="@dimen/image_selection_cell_margin"
+    android:background="@drawable/color_label_selector"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <ImageButton
+    <ImageView
         android:id="@+id/image"
         style="@style/Widget.AppCompat.Button.Borderless"
         android:tint="@color/button_tint_default"
@@ -16,6 +17,21 @@
         app:layout_constraintRight_toRightOf="parent"
         android:layout_width="@dimen/image_selection_cell_image_width"
         android:layout_height="@dimen/image_selection_cell_image_width" />
+
+    <ImageView
+        android:id="@+id/resourceLocked"
+        app:layout_constraintTop_toTopOf="@id/image"
+        app:layout_constraintBottom_toBottomOf="@id/image"
+        app:layout_constraintLeft_toLeftOf="@+id/image"
+        android:background="@drawable/ic_locked_image_background"
+        android:tint="@color/locked_image"
+        android:visibility="gone"
+        android:padding="3dp"
+        android:cropToPadding="true"
+        android:elevation="2dp"
+        app:srcCompat="@drawable/xic_lock"
+        android:layout_width="24dp"
+        android:layout_height="24dp" />
 
     <TextView
         android:id="@+id/label"
@@ -28,4 +44,4 @@
         android:textAppearance="?android:textAppearanceSmall"
         />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</de.radioshuttle.mqttpushclient.dash.DashConstraintLayout>
