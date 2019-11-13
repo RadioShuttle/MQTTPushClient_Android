@@ -26,4 +26,8 @@
     <color name="dashboard_color_label_pressed">#35FFFFFF</color>
     <color name="dashboad_item_background">#616161</color>
 
+    <color name="locked_image_background">#000000</color>
+    <color name="locked_image_border">#FFFFFF</color>
+    <color name="locked_image">#FFFFFF</color>
+
 </resources>
