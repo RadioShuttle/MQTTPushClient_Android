@@ -35,6 +35,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 
@@ -47,7 +49,8 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
         setTitle(R.string.title_chooser);
 
-        mViewModel = ViewModelProviders.of(this, new ImageChooserViewModel.Factory(getApplication())).get(ImageChooserViewModel.class);
+        mViewModel = ViewModelProviders.of(this, new ImageChooserViewModel.Factory(
+                getApplication())).get(ImageChooserViewModel.class);
 
         /* internal images */
         mInternalImageList = findViewById(R.id.internalImageList);
@@ -70,11 +73,19 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             }
         });
 
+        /* locked resources */
+        ArrayList<String> lockedResources = null;
+        if (savedInstanceState == null) {
+            lockedResources = getIntent().getStringArrayListExtra(ARG_LOCKED_RES);
+        } else {
+            lockedResources = savedInstanceState.getStringArrayList(ARG_LOCKED_RES);
+        }
+
         /* user images */
         mUserImageList = findViewById(R.id.userImageList);
         layoutManager = new GridLayoutManager(this, spanCount);
         mUserImageList.setLayoutManager(layoutManager);
-        mUserImageAdapter = new ImageChooserAdapter(this, maxCellWidth);
+        mUserImageAdapter = new ImageChooserAdapter(this, maxCellWidth, lockedResources);
 
         mUserImageList.setAdapter(mUserImageAdapter);
         mViewModel.mLiveDataUserImages.observe(this, new Observer<PagedList<ImageResource>>() {
@@ -238,7 +249,9 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
     protected void handleBackPressed() {
         /* if user did not click an image, treat as canceled */
-        setResult(AppCompatActivity.RESULT_CANCELED);
+        Intent data = new Intent();
+        data.putStringArrayListExtra(ARG_LOCKED_RES, mUserImageAdapter.getLockedResources());
+        setResult(AppCompatActivity.RESULT_CANCELED, data);
         finish();
     }
 
@@ -247,6 +260,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         super.onSaveInstanceState(outState);
 
         outState.putInt(KEY_SELECTED_TAB, mSelectedTAB);
+        outState.putStringArrayList(ARG_LOCKED_RES, mUserImageAdapter.getLockedResources());
     }
 
     @Override
@@ -257,6 +271,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             data.putExtra(ARG_CTRL_IDX, receivedArgs.getInt(ARG_CTRL_IDX));
         }
         data.putExtra(ARG_RESOURCE_URI, uri);
+        data.putStringArrayListExtra(ARG_LOCKED_RES, mUserImageAdapter.getLockedResources());
         setResult(AppCompatActivity.RESULT_OK, data);
         finish();
     }
@@ -339,6 +354,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
     public final static String ARG_CTRL_IDX = "ARG_CTRL_IDX";
     public final static String ARG_RESOURCE_URI = "ARG_RESOURCE_URI";
+    public final static String ARG_LOCKED_RES = "ARG_LOCKED_RES";
 
     protected final static String KEY_SELECTED_TAB = " KEY_SELECTED_TAB";
 
