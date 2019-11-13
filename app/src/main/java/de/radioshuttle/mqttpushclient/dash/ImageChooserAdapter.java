@@ -24,12 +24,20 @@ import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 
 public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageChooserAdapter.ViewHolder> {
 
     public ImageChooserAdapter(Context context, int cellWidth) {
+        this(context, cellWidth, null);
+    }
+
+    public ImageChooserAdapter(Context context, int cellWidth, List<String> lockedResources) {
         super(DIFF_CALLBACK);
         mInflater = LayoutInflater.from(context);
         if (context instanceof OnImageSelectListener) {
@@ -37,6 +45,10 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
         }
         mShowLabels = true; //TODO
         mCellWidth = cellWidth;
+        mLockedResources = new HashSet<>();
+        if (lockedResources != null && lockedResources.size() > 0) {
+            mLockedResources.addAll(lockedResources);
+        }
     }
 
     @NonNull
@@ -82,7 +94,11 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
                 if (pos != RecyclerView.NO_POSITION && pos >= 0 && pos < getItemCount()) {
                     ImageResource item = getItem(pos);
                     if (ImageResource.isExternalResource(item.uri)) {
-                        item.locked = !item.locked;
+                        if (mLockedResources.contains(item.uri)) {
+                            mLockedResources.remove(item.uri);
+                        } else {
+                            mLockedResources.add(item.uri);
+                        }
                         ImageChooserAdapter.this.notifyItemChanged(pos, item);
                         consumed = true;
                     }
@@ -125,10 +141,10 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
                 ImageViewCompat.setImageTintList(vh.image, null);
             }
             if (ImageResource.isExternalResource(uri)) {
-                if (item.locked && vh.lockedImage.getVisibility() != View.VISIBLE) {
+                if (mLockedResources.contains(uri) && vh.lockedImage.getVisibility() != View.VISIBLE) {
                     vh.lockedImage.setVisibility(View.VISIBLE);
                 }
-                if (!item.locked && vh.lockedImage.getVisibility() != View.GONE) {
+                if (!mLockedResources.contains(uri) && vh.lockedImage.getVisibility() != View.GONE) {
                     vh.lockedImage.setVisibility(View.GONE);
                 }
             }
@@ -140,6 +156,10 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
     @Override
     public int getItemViewType(int position) {
         return position == 0 ? VIEW_TYPE_NO_SELECTION : VIEW_TYPE_IMAGE_BUTTON;
+    }
+
+    public ArrayList<String> getLockedResources() {
+        return new ArrayList<>(mLockedResources);
     }
 
     private static DiffUtil.ItemCallback<ImageResource> DIFF_CALLBACK =
@@ -154,7 +174,7 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
                 public boolean areContentsTheSame(ImageResource o,
                                                   ImageResource n) {
                     // Log.d(TAG, "areContentsTheSame = " + o.uri + ", " + n.uri + " bool: " + (o.drawable == n.drawable));
-                    return o.drawable == n.drawable;
+                    return o.drawable == n.drawable && ImageResource.isInternalResource(o.uri);
                 }
             };
 
@@ -179,6 +199,7 @@ public class ImageChooserAdapter extends PagedListAdapter<ImageResource, ImageCh
     int mCellWidth;
     LayoutInflater mInflater;
     boolean mShowLabels;
+    HashSet<String> mLockedResources;
 
     protected static final int VIEW_TYPE_NO_SELECTION = 1;
     protected static final int VIEW_TYPE_IMAGE_BUTTON = 2;
