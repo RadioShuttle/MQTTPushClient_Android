@@ -49,8 +49,6 @@ public final class ImageResource {
     public int id;
     public String uri;
     public String label;
-    public boolean locked;
-
 
     public static class LabelComparator implements Comparator<ImageResource> {
 
