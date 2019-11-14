@@ -341,9 +341,20 @@ public final class ImageResource {
                         JSONObject jo = new JSONObject(jsonDash);
 
                         JSONArray groupArray = jo.getJSONArray("groups");
-                        JSONObject groupJSON, itemJSON;
+                        JSONArray resArray = jo.optJSONArray("resources");
                         String uri, resourceName, internalFileName;
                         HeliosUTF8Encoder enc = new HeliosUTF8Encoder();
+                        if (resArray != null) {
+                            for(int i = 0; i < resArray.length(); i++) {
+                               uri = resArray.optString(i);
+                                if (ImageResource.isUserResource(uri)) {
+                                    resourceName = ImageResource.getURIPath(uri);
+                                    internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                    referencedFiles.add(internalFileName);
+                                }
+                            }
+                        }
+                        JSONObject groupJSON, itemJSON;
                         for (int i = 0; i < groupArray.length(); i++) {
                             groupJSON = groupArray.getJSONObject(i);
                             JSONArray itemArray = groupJSON.getJSONArray("items");
