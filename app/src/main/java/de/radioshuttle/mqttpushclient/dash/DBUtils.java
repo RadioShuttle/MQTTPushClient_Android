@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -120,7 +121,7 @@ public class DBUtils {
         dlg.show();
     }
 
-    public static int createItemsFromJSONString(String json, LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems, Map<String, Object> props) {
+    public static int createItemsFromJSONString(String json, LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems, Set<String> lockedResouces, Map<String, Object> props) {
         int maxID = 0;
         if (!Utils.isEmpty(json) && groups != null && groupItems != null) {
             try {
@@ -129,6 +130,18 @@ public class DBUtils {
                 if (props != null) {
                     props.put("version", version);
                 }
+
+                JSONArray resources = dashboardObj.optJSONArray("resources");
+                if (resources != null) {
+                    String r;
+                    for(int i = 0; i < resources.length(); i++) {
+                        r = resources.optString(i);
+                        if (!Utils.isEmpty(r)) {
+                            lockedResouces.add(r);
+                        }
+                    }
+                }
+
                 JSONArray groupArray = dashboardObj.getJSONArray("groups");
                 GroupItem groupItem;
                 Item item;
@@ -161,16 +174,27 @@ public class DBUtils {
         return maxID;
     }
 
-    public static JSONObject createJSONStrFromItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems) {
+    public static JSONObject createJSONStrFromItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> groupItems, Set<String> lockedResources) {
         JSONObject dashboardObj = new JSONObject();
         JSONArray groupItemArray = new JSONArray();
+        JSONArray resourcesArray = new JSONArray();
+
         try {
             dashboardObj.put("version", Item.DASHBOARD_VERSION);
             dashboardObj.put("groups", groupItemArray);
+            dashboardObj.put("resources", resourcesArray);
         } catch (JSONException e) {
             Log.d(Item.TAG, "Error createJSONStrFromItems: " + e.getMessage());
             return dashboardObj;
         }
+        if (lockedResources != null) {
+            for(String resource : lockedResources) {
+                if (!Utils.isEmpty(resource)) {
+                    resourcesArray.put(resource);
+                }
+            }
+        }
+
         if (groups != null && groupItems != null) {
             JSONObject groupJSON = null;
             JSONObject itemJSON = null;
