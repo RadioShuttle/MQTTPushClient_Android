@@ -455,9 +455,10 @@ public class DashBoardActivity extends AppCompatActivity implements
             /* convert complete dashboard to json */
             LinkedList<GroupItem> groupItems = new LinkedList<>();
             HashMap<Integer, LinkedList<Item>> items = new HashMap<>();
-            mViewModel.copyItems(groupItems, items);
+            HashSet<String> resources = new HashSet<>();
+            mViewModel.copyItems(groupItems, items, resources);
             mViewModel.removeItems(groupItems, items, all ? null : mAdapter.getSelectedItems(), mViewModel.mJavaScriptExecutor);
-            JSONObject obj = DBUtils.createJSONStrFromItems(groupItems, items);
+            JSONObject obj = DBUtils.createJSONStrFromItems(groupItems, items, resources);
             mViewModel.saveDashboard(obj, 0);
         }
     }

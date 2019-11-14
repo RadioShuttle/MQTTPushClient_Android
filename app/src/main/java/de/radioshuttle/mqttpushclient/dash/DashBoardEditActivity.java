@@ -1565,7 +1565,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 /* convert complete dashboard to json */
                 LinkedList<GroupItem> groupItems = new LinkedList<>();
                 HashMap<Integer, LinkedList<Item>> items = new HashMap<>();
-                mViewModel.copyItems(groupItems, items);
+                HashSet<String> resources = new HashSet<>(mLockedResources);
+                mViewModel.copyItems(groupItems, items, null);
 
                 if (mMode == MODE_ADD) {
                     if (cItem instanceof GroupItem) {
@@ -1588,7 +1589,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         DashBoardViewModel.setItem(groupItems, items, groupPos, itemPos, cItem);
                     }
                 }
-                JSONObject obj = DBUtils.createJSONStrFromItems(groupItems, items);
+                JSONObject obj = DBUtils.createJSONStrFromItems(groupItems, items, resources);
                 updateUI(false);
                 mViewModel.saveDashboard(obj, cItem.id);
                 Log.d(TAG, "json: "+  obj.toString());
@@ -1694,10 +1695,21 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (!changed) {
                     if (!Utils.equals(mOutputScriptContent, mItem.script_p)) {
                         changed = true;
+                    } else {
+                        /* has user locked images?*/
+                        if (mLockedResources.size() != mViewModel.getLockedResources().size()) {
+                            changed = true;
+                        } else {
+                            for(String key : mViewModel.getLockedResources()) {
+                                if (!mLockedResources.contains(key)) {
+                                    changed = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                     //TODO: continue here
                 }
-
             }
 
             if (!changed && mItem instanceof ProgressItem) {
