@@ -83,7 +83,7 @@ public class DashboardRequest extends Request {
                 }
             }
             // Log.d(TAG, "json: x: " + mDashboardPara.toString());
-            mDashboardPara.remove("resources"); // remove resources, will be reinserted below
+            mDashboardPara.remove("resources");
 
             JSONArray groupArray = mDashboardPara.getJSONArray("groups");
             JSONObject groupJSON, itemJSON;
@@ -97,11 +97,8 @@ public class DashboardRequest extends Request {
                 }
                 JSONArray itemArray = groupJSON.getJSONArray("items");
 
-                String encodedFilename;
-                String cleanFilename; // decoded filename
-                File importedFile;
                 String finalResourceName;
-                String uri, uri2;
+                String uri, uri2, tmp;
 
                 for (int j = 0; j < itemArray.length(); j++) {
                     itemJSON = itemArray.getJSONObject(j);
@@ -114,14 +111,15 @@ public class DashboardRequest extends Request {
                         finalResourceName = addImportedResource(importDir, userDir, uri);
 
                         Log.d(TAG, "Saved image on server: " + finalResourceName);
-                        itemJSON.putOpt("uri", ImageResource.buildUserResourceURI(finalResourceName));
+                        tmp = ImageResource.buildUserResourceURI(finalResourceName);
+                        itemJSON.putOpt("uri", tmp);
                         /* if uri is a locked resource, replace tmp URI with new resrource name */
                         if (lockedResources.contains(uri)) {
                             lockedResources.remove(uri);
                             lockedResources.add(finalResourceName);
                         }
                         if (uri.equals(uri2)) {
-                            itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
+                            itemJSON.putOpt("uri_off", tmp);
                             continue;
                         }
                     } else if (ImageResource.isUserResource(uri)) {
@@ -167,11 +165,34 @@ public class DashboardRequest extends Request {
 
             /* locked resources */
             Iterator<String> it = lockedResources.iterator();
+            String uri;
+            String finalResourceName;
+            resourcesArray = new JSONArray();
             while(it.hasNext()) {
-                Log.d(TAG, "json key: " + it.next());
-            }
-            // resourcesArray.
+                uri = it.next();
+                // Log.d(TAG, "json key: " + uri);
+                if (ImageResource.isImportedResource(uri)) {
+                    Log.d(TAG, "Save image on server (locked res): " + uri);
 
+                    finalResourceName = addImportedResource(importDir, userDir, uri);
+
+                    Log.d(TAG, "Saved image on server: " + finalResourceName);
+                    resourcesArray.put(ImageResource.buildUserResourceURI(finalResourceName));
+                } else if (ImageResource.isUserResource(uri)) {
+                    /* maybe user has chosen an image from another account (which are locally stored in same dir)
+                     * if so, add to account resources */
+                    finalResourceName = addUserResource(userDir, serverResourceSet, uri);
+                    if (finalResourceName != null) {
+                        Log.d(TAG, "Saved image on server (cloned image from other account, locked res): " + finalResourceName);
+                        resourcesArray.put(ImageResource.buildUserResourceURI(finalResourceName));
+                    } else {
+                        resourcesArray.put(uri);
+                    }
+                    //TODO: check for URIs not refering a file (rare case)
+                }
+
+            }
+            mDashboardPara.put("resources", resourcesArray);
         }
     }
 
@@ -390,6 +411,24 @@ public class DashboardRequest extends Request {
                     JSONObject jsonObject = new JSONObject(currentDash);
                     JSONArray groupArray = jsonObject.getJSONArray("groups");
                     JSONObject groupJSON, itemJSON;
+                    JSONArray resourcesArray = jsonObject.optJSONArray("resources");
+                    if (resourcesArray != null) {
+                        for(int i = 0; i < resourcesArray.length(); i++) {
+                            try {
+                                uri = resourcesArray.optString(i);
+                                if (ImageResource.isUserResource(uri)) {
+                                    resourceName = ImageResource.getURIPath(uri);
+                                    internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                    f = new File(localDir, internalFileName);
+                                    if (!f.exists()) {
+                                        resourceNames.add(resourceName);
+                                    }
+                                }
+                            } catch(Exception e) {
+                                Log.d(TAG, "Error checking resource names: ", e);
+                            }
+                        }
+                    }
                     for (int i = 0; i < groupArray.length(); i++) {
                         groupJSON = groupArray.getJSONObject(i);
                         JSONArray itemArray = groupJSON.getJSONArray("items");
@@ -420,6 +459,7 @@ public class DashboardRequest extends Request {
                             }
                         }
                     }
+
                     DataInputStream is = null;
                     for(String r : resourceNames) {
                         /* resource errors are not handled as long as there are not caused by an IO error */
@@ -510,6 +550,13 @@ public class DashboardRequest extends Request {
                         }
 
                     }
+                }
+            }
+            JSONArray resourcesArray = mDashboardPara.optJSONArray("resources");
+            if (resourcesArray != null) {
+                for (int i = 0; i < resourcesArray.length(); i++) {
+                    uri = resourcesArray.optString(i);
+                    usedResoureces.add(uri);
                 }
             }
             unusedResources.removeAll(usedResoureces);
