@@ -234,7 +234,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         if (!Utils.isEmpty(json)) {
             HashMap<String, Object> props = new HashMap<>();
             try {
-                mMaxID = DBUtils.createItemsFromJSONString(json, mGroups, mItemsPerGroup, props);
+                mMaxID = DBUtils.createItemsFromJSONString(json, mGroups, mItemsPerGroup, mLockedResources, props);
                 if (props.containsKey("version")) {
                     mVersion = (Integer) props.get("version");
                 }
@@ -582,13 +582,16 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public Set<String> getLockedResources() { return mLockedResources; }
 
-    public void copyItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> items) {
+    public void copyItems(LinkedList<GroupItem> groups, HashMap<Integer, LinkedList<Item>> items, Set<String> resources) {
         if (groups != null && mGroups != null && items != null && mItemsPerGroup != null) {
             groups.addAll(mGroups);
 
             for(Map.Entry<Integer, LinkedList<Item>> e : mItemsPerGroup.entrySet()) {
                 items.put(e.getKey(), new LinkedList<>(e.getValue()));
             }
+        }
+        if (resources != null) {
+            resources.addAll(mLockedResources);
         }
     }
 
