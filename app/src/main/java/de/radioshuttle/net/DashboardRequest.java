@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import androidx.lifecycle.MutableLiveData;
@@ -69,6 +70,21 @@ public class DashboardRequest extends Request {
                 }
             }
 
+            HashSet<String> lockedResources = new HashSet<>();
+            JSONArray resourcesArray = mDashboardPara.optJSONArray("resources");
+            String r;
+            if (resourcesArray != null) {
+                for(int i = 0; i < resourcesArray.length(); i++) {
+                    r = resourcesArray.optString(i);
+                    if (!Utils.isEmpty(r)) {
+                        lockedResources.add(r);
+                        Log.d(TAG, "locked res: " + r);
+                    }
+                }
+            }
+            // Log.d(TAG, "json: x: " + mDashboardPara.toString());
+            mDashboardPara.remove("resources"); // remove resources, will be reinserted below
+
             JSONArray groupArray = mDashboardPara.getJSONArray("groups");
             JSONObject groupJSON, itemJSON;
             File userDir = ImportFiles.getUserFilesDir(mAppContext);
@@ -94,36 +110,16 @@ public class DashboardRequest extends Request {
                     uri2 = itemJSON.optString("uri_off");
                     if (ImageResource.isImportedResource(uri)) {
                         Log.d(TAG, "Save image on server: " + uri);
-                        encodedFilename = ImageResource.getURIPath(uri);
 
-                        cleanFilename = ImageResource.removeImportedFilePrefix(encodedFilename);
-                        cleanFilename = ImageResource.removeExtension(cleanFilename);
-                        cleanFilename = ImageResource.decodeFilename(cleanFilename);
-
-                        importedFile = new File(importDir, encodedFilename);
-
-                        finalResourceName = mConnection.addResource(cleanFilename, Cmd.DASH512_PNG, importedFile);
-                        if (mConnection.lastReturnCode != Cmd.RC_OK) {
-                            throw new ServerError(0, mAppContext.getString(R.string.error_send_image_invalid_args));
-                        }
-
-                        /* move imported file to user file dir and rename it */
-                        encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
-
-                        File userFile = new File(userDir, encodedFilename);
-                        try {
-                            ImportFiles.copyFile(importedFile, userFile);
-                        } catch(Exception e) {
-                            if (userFile.exists()) {
-                                userFile.delete();
-                            }
-                            throw e;
-                        }
-
-                        mDeleteFiles.add(importedFile); // delete later, save might fail
+                        finalResourceName = addImportedResource(importDir, userDir, uri);
 
                         Log.d(TAG, "Saved image on server: " + finalResourceName);
                         itemJSON.putOpt("uri", ImageResource.buildUserResourceURI(finalResourceName));
+                        /* if uri is a locked resource, replace tmp URI with new resrource name */
+                        if (lockedResources.contains(uri)) {
+                            lockedResources.remove(uri);
+                            lockedResources.add(finalResourceName);
+                        }
                         if (uri.equals(uri2)) {
                             itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
                             continue;
@@ -131,28 +127,8 @@ public class DashboardRequest extends Request {
                     } else if (ImageResource.isUserResource(uri)) {
                         /* maybe user has chosen an image from another account (which are locally stored in same dir)
                         * if so, add to account resources */
-                        cleanFilename = ImageResource.getURIPath(uri);
-                        encodedFilename = ImageResource.encodeFilename(cleanFilename) + '.' + Cmd.DASH512_PNG;
-
-                        File userFile = new File(userDir, encodedFilename);
-                        if (userFile.exists() && serverResourceSet != null && !serverResourceSet.contains(cleanFilename)) {
-                            finalResourceName = mConnection.addResource(cleanFilename, Cmd.DASH512_PNG, userFile);
-                            if (mConnection.lastReturnCode != Cmd.RC_OK) {
-                                throw new ServerError(0, mAppContext.getString(R.string.error_send_image_invalid_args));
-                            }
-                            /* if resource name has changed, we must create a copy of the resource */
-                            if (!cleanFilename.equals(finalResourceName)) {
-                                encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
-                                File target = new File(userDir, encodedFilename);
-                                try {
-                                    ImportFiles.copyFile(userFile, target);
-                                } catch(Exception e) {
-                                    if (target.exists()) {
-                                        target.delete();
-                                    }
-                                    throw e;
-                                }
-                            }
+                        finalResourceName = addUserResource(userDir, serverResourceSet, uri);
+                        if (finalResourceName != null) {
                             Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
                             itemJSON.putOpt("uri", ImageResource.buildUserResourceURI(finalResourceName));
                             if (uri.equals(uri2)) {
@@ -164,68 +140,109 @@ public class DashboardRequest extends Request {
 
                     if (ImageResource.isImportedResource(uri2)) {
                         Log.d(TAG, "Save image2 on server: " + uri2);
-                        encodedFilename = ImageResource.getURIPath(uri2);
 
-                        cleanFilename = ImageResource.removeImportedFilePrefix(encodedFilename);
-                        cleanFilename = ImageResource.removeExtension(cleanFilename);
-                        cleanFilename = ImageResource.decodeFilename(cleanFilename);
+                        finalResourceName = addImportedResource(importDir, userDir, uri2);
 
-                        importedFile = new File(importDir, encodedFilename);
-
-                        finalResourceName = mConnection.addResource(cleanFilename, Cmd.DASH512_PNG, importedFile);
-                        if (mConnection.lastReturnCode != Cmd.RC_OK) {
-                            throw new ServerError(0, mAppContext.getString(R.string.error_send_image_invalid_args));
-                        }
-
-                        /* move imported file to user file dir and rename it */
-                        encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
-
-                        File userFile = new File(userDir, encodedFilename);
-                        try {
-                            ImportFiles.copyFile(importedFile, userFile);
-                        } catch(Exception e) {
-                            if (userFile.exists()) {
-                                userFile.delete();
-                            }
-                            throw e;
-                        }
-                        mDeleteFiles.add(importedFile); // delete later, save might fail
                         itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
+
+                        /* if uri2 is a locked resource, replace tmp URI with new resrource name */
+                        if (lockedResources.contains(uri2)) {
+                            lockedResources.remove(uri2);
+                            lockedResources.add(finalResourceName);
+                        }
 
                         Log.d(TAG, "Saved image2 on server: " + finalResourceName);
                     } else if (ImageResource.isUserResource(uri2)) {
                         /* maybe user has chosen an image from another account (which are locally stored in same dir)
                          * if so, add to account resources */
-                        cleanFilename = ImageResource.getURIPath(uri2);
-                        encodedFilename = ImageResource.encodeFilename(cleanFilename) + '.' + Cmd.DASH512_PNG;
-
-                        File userFile = new File(userDir, encodedFilename);
-                        if (userFile.exists() && serverResourceSet != null && !serverResourceSet.contains(cleanFilename)) {
-                            finalResourceName = mConnection.addResource(cleanFilename, Cmd.DASH512_PNG, userFile);
-                            if (mConnection.lastReturnCode != Cmd.RC_OK) {
-                                throw new ServerError(0, mAppContext.getString(R.string.error_send_image_invalid_args));
-                            }
-                            /* if resource name has changed, we must create a copy of the resource */
-                            if (!cleanFilename.equals(finalResourceName)) {
-                                encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
-                                File target = new File(userDir, encodedFilename);
-                                try {
-                                    ImportFiles.copyFile(userFile, target);
-                                } catch(Exception e) {
-                                    if (target.exists()) {
-                                        target.delete();
-                                    }
-                                    throw e;
-                                }
-                            }
+                        finalResourceName = addUserResource(userDir, serverResourceSet, uri2);
+                        if (finalResourceName != null) {
                             Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
                             itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
                         }
                     }
 
                 }
+            } /* end for */
+
+            /* locked resources */
+            Iterator<String> it = lockedResources.iterator();
+            while(it.hasNext()) {
+                Log.d(TAG, "json key: " + it.next());
             }
+            // resourcesArray.
+
         }
+    }
+
+    protected String addImportedResource(File importDir, File userDir, String uri) throws IOException, ServerError {
+        String encodedFilename;
+        String cleanFilename; // decoded filename
+        File importedFile;
+        String finalResourceName;
+
+        encodedFilename = ImageResource.getURIPath(uri);
+
+        cleanFilename = ImageResource.removeImportedFilePrefix(encodedFilename);
+        cleanFilename = ImageResource.removeExtension(cleanFilename);
+        cleanFilename = ImageResource.decodeFilename(cleanFilename);
+
+        importedFile = new File(importDir, encodedFilename);
+
+        finalResourceName = mConnection.addResource(cleanFilename, Cmd.DASH512_PNG, importedFile);
+        if (mConnection.lastReturnCode != Cmd.RC_OK) {
+            throw new ServerError(0, mAppContext.getString(R.string.error_send_image_invalid_args));
+        }
+
+        /* move imported file to user file dir and rename it */
+        encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
+
+        File userFile = new File(userDir, encodedFilename);
+        try {
+            ImportFiles.copyFile(importedFile, userFile);
+        } catch(Exception e) {
+            if (userFile.exists()) {
+                userFile.delete();
+            }
+            throw e;
+        }
+
+        mDeleteFiles.add(importedFile); // delete later, save might fail
+        return finalResourceName;
+    }
+
+    protected String addUserResource(File userDir, HashSet<String> serverResourceSet, String uri) throws IOException, ServerError {
+        String encodedFilename;
+        String cleanFilename; // decoded filename
+        String finalResourceName = null;
+
+        /* maybe user has chosen an image from another account (which are locally stored in same dir)
+         * if so, add to account resources */
+        cleanFilename = ImageResource.getURIPath(uri);
+        encodedFilename = ImageResource.encodeFilename(cleanFilename) + '.' + Cmd.DASH512_PNG;
+
+        File userFile = new File(userDir, encodedFilename);
+        if (userFile.exists() && serverResourceSet != null && !serverResourceSet.contains(cleanFilename)) {
+            finalResourceName = mConnection.addResource(cleanFilename, Cmd.DASH512_PNG, userFile);
+            if (mConnection.lastReturnCode != Cmd.RC_OK) {
+                throw new ServerError(0, mAppContext.getString(R.string.error_send_image_invalid_args));
+            }
+            /* if resource name has changed, we must create a copy of the resource */
+            if (!cleanFilename.equals(finalResourceName)) {
+                encodedFilename = ImageResource.encodeFilename(finalResourceName) + '.' + Cmd.DASH512_PNG;
+                File target = new File(userDir, encodedFilename);
+                try {
+                    ImportFiles.copyFile(userFile, target);
+                } catch (Exception e) {
+                    if (target.exists()) {
+                        target.delete();
+                    }
+                    throw e;
+                }
+            }
+            Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
+        }
+        return finalResourceName;
     }
 
     @Override
