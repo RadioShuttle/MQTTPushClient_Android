@@ -34,6 +34,7 @@
     <string name="action_update_topic">Update</string>
     <string name="action_mqtt_topics">MQTT Topics</string>
     <string name="action_mqtt_actions">MQTT Actions</string>
+    <string name="action_dashboard_images">Dashboard Images</string>
 
     <string name="dlg_remove_account_title">Remove Account</string>
     <string name="dlg_remove_account_msg">Confirm removal of currently selected account.</string>
@@ -248,14 +249,18 @@ to communicate with the MQTT broker and to receive push notifications
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
     <string name="dash_label_text_color">Text Color:</string>
-    <string name="dash_label_bcolor">Background:</string>
+    <string name="dash_label_bcolor_header">Background</string>
+    <string name="dash_label_bcolor">Color:</string>
+    <string name="dash_label_bcolor_Image">Image</string>
+    <string name="dash_label_bcolor2">Background:</string>
     <string name="dash_label_group">Group:</string>
     <string name="dash_label_position">Pos:</string>
     <string name="dash_label_textsize">Text Size:</string>
+    <string name="dash_label_progress_header">Progress Bar/Slider:</string>
     <string name="dash_label_progress_range">Range:</string>
     <string name="dash_label_progress_decimal">Decimal:</string>
     <string name="dash_label_progress_percent">Display in Percent</string>
-    <string name="dash_label_progress_color">Prog. Color:</string>
+    <string name="dash_label_progress_color">Progress Color:</string>
     <string name="dash_label_on_state">On state</string>
     <string name="dash_label_off_state">Off state</string>
     <string name="dash_label_on_state_text">Value:</string>
