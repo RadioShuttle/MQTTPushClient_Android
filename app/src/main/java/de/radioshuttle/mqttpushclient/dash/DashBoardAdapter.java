@@ -225,14 +225,15 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 lp.height = mWidth;
                 h.contentContainer.setLayoutParams(lp);
             }
-            item.setViewBackground(h.contentContainer, mDefaultBackground);
+            item.setViewBackground(h.contentContainer, mDefaultBackground, false);
+
         } else { // if (h.viewType == TYPE_GROUP) {
             if (lp.width != mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2) {
                 lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
                 h.itemView.setLayoutParams(lp);
             }
 
-            item.setViewBackground(h.itemView, mDefaultBackground);
+            item.setViewBackground(h.itemView, mDefaultBackground, false);
             item.setViewTextAppearance(h.label, h.defaultColor);
         }
 
@@ -655,6 +656,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         View contentContainer;
         TextView value;
         ProgressBar progressBar;
+        ImageView backgroundImage;
         ImageView selectedImageView;
         ImageView errorImage;
         ImageView errorImage2;
