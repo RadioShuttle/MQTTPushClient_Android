@@ -262,6 +262,29 @@ public class DashBoardViewModel extends AndroidViewModel {
                     boolean itemUpdated;
                     for(Item item : list) {
                         itemUpdated = false;
+                        if (item != null && !Utils.isEmpty(item.background_uri)) {
+                            /* check if we have the image already loaded */
+                            if (!Utils.isEmpty(item.background_uri) && Utils.isEmpty(item.backgroundImageURI)) {
+                                try {
+                                    if (ImageResource.isInternalResource(item.background_uri)) {
+                                        item.backgroundImage = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(item.background_uri));
+                                        if (item.backgroundImage != null) {
+                                            item.backgroundImageDetail = item.backgroundImage.getConstantState().newDrawable();
+                                            item.backgroundImageURI = item.background_uri;
+                                        }
+                                    } else {
+                                        item.backgroundImage = ImageResource.loadExternalImage(getApplication(), item.background_uri);
+                                        if (item.backgroundImage != null) {
+                                            item.backgroundImageDetail = item.backgroundImage.getConstantState().newDrawable();
+                                            item.backgroundImageURI = item.background_uri;
+                                        }
+                                    }
+                                    itemUpdated = true;
+                                } catch(Exception e) {
+                                    Log.e(TAG, "error loading image: ", e);
+                                }
+                            }
+                        }
                         if (item instanceof Switch) {
                             Switch sw = (Switch) item;
                             /* check if we have the image already loaded */
@@ -336,10 +359,12 @@ public class DashBoardViewModel extends AndroidViewModel {
         if (mImageLoaderActive) {
             return;
         }
+
+        boolean resourceMissing = false;
+
         if (item instanceof Switch) {
             Switch sw = (Switch) item;
 
-            boolean resourceMissing = false;
             /* an error occured while loading the image (probably server sync was not possible due to network no availabe) */
             if (sw.image == null && !Utils.isEmpty(sw.uri)) {
                 resourceMissing = true;
@@ -347,6 +372,12 @@ public class DashBoardViewModel extends AndroidViewModel {
 
             /* an error occured while loading the image (probably server sync was not possible due to network no availabe) */
             if (sw.imageOff == null && !Utils.isEmpty(sw.uriOff)) {
+                resourceMissing = true;
+            }
+        }
+
+        if (item != null) {
+            if (item.backgroundImage == null && !Utils.isEmpty(item.background_uri)){
                 resourceMissing = true;
             }
 
