@@ -710,7 +710,7 @@ public class DetailViewDialog extends DialogFragment {
 
             /* container backgroud */
             if (mContentContainer != null) {
-                mItem.setViewBackground(mContentContainer, mDefaultBackground);
+                mItem.setViewBackground(mContentContainer, mDefaultBackground, true);
             }
 
             /* text value appearance */
@@ -936,7 +936,7 @@ public class DetailViewDialog extends DialogFragment {
                 }
             }
 
-            mItem.setViewBackground(mErrorContent, mDefaultBackground);
+            mItem.setViewBackground(mErrorContent, mDefaultBackground, true);
             int color;
             if (mItem.textcolor == DColor.OS_DEFAULT || mItem.textcolor == DColor.CLEAR) {
                 color = mDefaultTextColor;
