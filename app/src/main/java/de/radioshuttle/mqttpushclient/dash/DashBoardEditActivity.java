@@ -163,31 +163,30 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     }
                 }
 
-                int defaultColor = Color.BLACK;
+                mDefaultTextColor = Color.BLACK;
                 TextView tv = findViewById(R.id.dash_text_color_label);
                 TableRow rowColor = findViewById(R.id.rowColor);
                 if (tv != null) {
                     ColorStateList tc = tv.getTextColors();
-                    defaultColor = tc.getDefaultColor();
+                    mDefaultTextColor = tc.getDefaultColor();
                 }
-                final int defaultBackground = ContextCompat.getColor(this, R.color.dashboad_item_background);
-                mColorLabelBorderColor = defaultColor; // use default text textcolor as border textcolor
+                mDefaultBackground = ContextCompat.getColor(this, R.color.dashboad_item_background);
+                mColorLabelBorderColor = mDefaultTextColor; // use default text textcolor as border textcolor
 
                 mColorButton = findViewById(R.id.dash_text_color_button);
 
                 if (mColorButton != null) {
                     int color;
                     if (mTextColor == DColor.OS_DEFAULT || mTextColor == DColor.CLEAR) {
-                        color = defaultColor;
+                        color = mDefaultTextColor;
                     } else {
                         color = (int) mTextColor;
                     }
-                    final int defColor = defaultColor;
                     mColorButton.setColor(color, mColorLabelBorderColor);
                     mColorButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defColor, mTextColor, mColorLabelBorderColor, "textcolor", false);
+                            showColorDialog(mDefaultTextColor, mTextColor, mColorLabelBorderColor, "textcolor", false);
                         }
                     });
                 }
@@ -196,7 +195,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (mBColorButton != null) {
                     int color;
                     if (mBackground == DColor.OS_DEFAULT || mBackground == DColor.CLEAR) {
-                        color = defaultBackground;
+                        color = mDefaultBackground;
                     } else {
                         color = (int) mBackground;
                     }
@@ -204,9 +203,37 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mBColorButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(defaultBackground, mBackground, mColorLabelBorderColor,  "bcolor", false);
+                            showColorDialog(mDefaultBackground, mBackground, mColorLabelBorderColor,  "bcolor", false);
                         }
                     });
+                }
+
+                /* background image */
+                if (!(mItem instanceof GroupItem) && mItem != null) {
+                    mButtonBackgroundImg = findViewById(R.id.dash_background_image_button);
+                    mButtonBackgroundImgEmpty = findViewById(R.id.dash_background_text_button);
+                    mBackgroundImageNote = findViewById(R.id.dash_background_image_button_note);
+
+                    mButtonBackgroundImg.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openImageChooser(CTRL_BACKGROUND);
+                        }
+                    });
+                    mButtonBackgroundImgEmpty.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openImageChooser(CTRL_BACKGROUND);
+                        }
+                    });
+
+                    if (savedInstanceState == null) {
+                        mBackgroundURI = (mItem == null ? null : mItem.background_uri);
+                    } else {
+                        mBackgroundURI = savedInstanceState.getString(KEY_BACKGROUND_URI);
+                    }
+                    updateBackgroudImageButton();
+                    tintBackgroundButton();
                 }
 
                 /* name / label */
@@ -215,13 +242,24 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mEditTextLabel.setText(mItem.label);
                 }
 
-
                 /* group */
                 TableRow groupRow = findViewById(R.id.rowGroup);
                 if (groupRow != null && mItem != null) {
                     if (mItem instanceof GroupItem) {
                         /* group selection is not required when item is a group */
                         groupRow.setVisibility(View.GONE);
+
+                        /* hide background header and background image chooser button */
+                        TableRow tmpRow = findViewById(R.id.rowBackgroundHeader);
+                        /*
+                        if (tmpRow != null) {
+                            tmpRow.setVisibility(View.GONE);
+                        }
+                         */
+                        tmpRow = findViewById(R.id.rowBackgroundImage);
+                        if (tmpRow != null) {
+                            tmpRow.setVisibility(View.GONE);
+                        }
                     } else {
                         mGroupSpinner = findViewById(R.id.dash_groupSpinner);
                         if (mGroupSpinner != null) {
@@ -290,12 +328,14 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
 
                 /* progress bar/slider range*/
+                TableRow progressHeader = findViewById(R.id.rowProgressHeader);
                 TableRow rangeRow = findViewById(R.id.rowProgressRange);
-                if (rangeRow != null) {
+                if (rangeRow != null && progressHeader != null) {
                     mEditTextRangeMin = findViewById(R.id.dash_progress_min);
                     mEditTextRangeMax = findViewById(R.id.dash_progress_max);
                     if (!(mItem instanceof ProgressItem)) {
                         rangeRow.setVisibility(View.GONE);
+                        progressHeader.setVisibility(View.GONE);
                     } else if (savedInstanceState == null) {
                         mEditTextRangeMin.setText(String.valueOf(((ProgressItem) mItem).range_min));
                         mEditTextRangeMax.setText(String.valueOf(((ProgressItem) mItem).range_max));
@@ -667,6 +707,33 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     }
 
+    protected void tintBackgroundButton() {
+        if(mButtonBackgroundImg != null && mButtonBackgroundImgEmpty != null && mItem != null) {
+            int color;
+            if (mTextColor == DColor.OS_DEFAULT) {
+                color = mDefaultTextColor; // this is default text color
+            }  else {
+                color = (int) mTextColor;
+            }
+
+            int bg;
+            if (mBackground == DColor.OS_DEFAULT) {
+                bg = mDefaultBackground;
+            } else {
+                bg = (int) mBackground;
+            }
+
+            ColorStateList background = ColorStateList.valueOf(bg);
+
+            if (Utils.isEmpty(mBackgroundURI)) {
+                mButtonBackgroundImgEmpty.setTextColor(color);
+                ViewCompat.setBackgroundTintList(mButtonBackgroundImgEmpty, background);
+            } else {
+                ViewCompat.setBackgroundTintList(mButtonBackgroundImg, background);
+            }
+        }
+    }
+
     protected void tintSwitchButtons() {
         if (mItem instanceof Switch) {
 
@@ -749,6 +816,53 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (mOffClearImage.getVisibility() != View.GONE) {
                     mOffClearImage.setVisibility(View.GONE);
                 }
+            }
+
+        }
+    }
+
+    protected void updateBackgroudImageButton() {
+        if (Utils.isEmpty(mBackgroundURI)) {
+            if (mButtonBackgroundImgEmpty.getVisibility() != View.VISIBLE) {
+                mButtonBackgroundImgEmpty.setVisibility(View.VISIBLE);
+            }
+            if (mButtonBackgroundImg.getVisibility() != View.GONE) {
+                mButtonBackgroundImg.setVisibility(View.GONE);
+            }
+            if (mBackgroundImageNote.getVisibility() != View.GONE) {
+                mBackgroundImageNote.setVisibility(View.GONE);
+            }
+        } else {
+            if (mButtonBackgroundImgEmpty.getVisibility() != View.GONE) {
+                mButtonBackgroundImgEmpty.setVisibility(View.GONE);
+            }
+            if (mButtonBackgroundImg.getVisibility() != View.VISIBLE) {
+                mButtonBackgroundImg.setVisibility(View.VISIBLE);
+            }
+            if (mBackgroundImageNote.getVisibility() != View.VISIBLE) {
+                mBackgroundImageNote.setVisibility(View.VISIBLE);
+            }
+
+            //TODO: consider loading asnyc
+            boolean found = false;
+            if (ImageResource.isInternalResource(mBackgroundURI)) {
+                mButtonBackgroundImg.setImageResource(IconHelper.INTENRAL_ICONS.get(mBackgroundURI));
+                found = true;
+            } else if (ImageResource.isExternalResource(mBackgroundURI)) {
+                try {
+                    BitmapDrawable bm = ImageResource.loadExternalImage(this, mBackgroundURI);
+                    mButtonBackgroundImg.setImageDrawable(bm);
+                    if (bm != null) {
+                        found = true;
+                    }
+                } catch(Exception e) {
+                    Log.d(TAG, "error loading image (ext): " , e);
+                }
+            }
+            if (!found) {
+                mBackgroundImageNote.setText(getString(R.string.error_image_not_found));
+            } else {
+                mBackgroundImageNote.setText("");
             }
 
         }
@@ -858,6 +972,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         outState.putLong(KEY_OFF_COLOR, mOffColor);
         outState.putString(KEY_ON_IMAGE_URI, mOnImageURI);
         outState.putString(KEY_OFF_IMAGE_URI, mOffImageURI);
+        outState.putString(KEY_BACKGROUND_URI, mBackgroundURI);
 
         if (!Utils.isEmpty(mFilterScriptContent)) {
             outState.putString(KEY_FILTER_SCRIPT, mFilterScriptContent);
@@ -1049,6 +1164,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else {
                     mTextColor = color;
                 }
+                tintBackgroundButton();
                 break;
             case "bcolor" :
                 mBColorButton.setColor(color, mColorLabelBorderColor);
@@ -1057,6 +1173,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else {
                     mBackground = color;
                 }
+                tintBackgroundButton();
                 break;
             case "progresscolor" :
                 mProgressColor.setColor(color, mColorLabelBorderColor);
@@ -1322,14 +1439,21 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     }
 
     protected void openImageChooser(int ctrlIdx) {
-        if (mItem instanceof Switch) {
+        if (mItem != null) {
             if (!mActivityStarted) {
                 mActivityStarted = true;
-                Switch sw = (Switch) mItem;
 
                 Intent intent = new Intent(this, ImageChooserActivity.class);
                 intent.putExtra(ImageChooserActivity.ARG_CTRL_IDX, ctrlIdx);
-                intent.putExtra(ImageChooserActivity.ARG_RESOURCE_URI,(ctrlIdx == 0 ? mOnImageURI : mOffImageURI));
+                String uri;
+                if (ctrlIdx == CTRL_ON_STATE) {
+                    uri = mOnImageURI;
+                } else if (ctrlIdx == CTRL_OFF_STATE) {
+                    uri = mOffImageURI;
+                } else {
+                    uri = mBackgroundURI;
+                }
+                intent.putExtra(ImageChooserActivity.ARG_RESOURCE_URI, uri);
                 intent.putStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES, new ArrayList<>(mLockedResources));
 
                 Bundle args = getIntent().getExtras();
@@ -1439,11 +1563,6 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         } else if (requestCode == 3) {
             if (data != null && data.getStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES) != null ) {
                 mLockedResources = new HashSet(data.getStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES));
-                //TODO: remove
-                for(String s : mLockedResources) {
-                    Log.d(TAG, "locked: " + s);
-                }
-
             }
             if (resultCode == AppCompatActivity.RESULT_OK) {
                 /* if no URI submitted, user has choosen NO IMAGE */
@@ -1483,6 +1602,20 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     }
                     updateSwitchButtons();
                     tintSwitchButtons();
+                } else if (ctrlIdx == CTRL_BACKGROUND) {
+                    if (Utils.isEmpty(uri)) {
+                        Log.i(TAG, "selected image (off): none");
+                        mBackgroundURI = "";
+                    } else {
+                        Log.i(TAG, "selected image (off): " + uri);
+                        mBackgroundURI = uri;
+                        // user image? then clear tint color
+                        if (ImageResource.isExternalResource(mBackgroundURI)) {
+                            mOffColor = DColor.CLEAR;
+                        }
+                    }
+                    updateBackgroudImageButton();
+                    tintBackgroundButton();
                 }
             }
         }
@@ -1500,6 +1633,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (cItem != null) {
             if (!(cItem instanceof GroupItem) && mGroupSpinner != null) {
                 cItem.topic_s = mEditTextTopicSub.getText().toString();
+                cItem.background_uri = mBackgroundURI;
                 if (cItem instanceof CustomItem) {
                     CustomItem customItem = (CustomItem) cItem;
                     customItem.setHtml(mEditTextHTML.getText().toString());
@@ -1610,6 +1744,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         setEnabled(mRetainCheckbox, enableFields);
         setEnabled(mInputTypeSpinner, enableFields);
         setEnabled(mOutputScriptButton, enableFields);
+        setEnabled(mButtonBackgroundImg, enableFields);
+        setEnabled(mButtonBackgroundImgEmpty, enableFields);
         if (mItem instanceof ProgressItem) {
             setEnabled(mEditTextRangeMin, enableFields);
             setEnabled(mEditTextRangeMax, enableFields);
@@ -1669,6 +1805,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             if (!(mItem instanceof GroupItem)) {
                 int groupPos = getIntent().getIntExtra(ARG_GROUP_POS, AdapterView.INVALID_POSITION);
                 if (mGroupSpinner.getSelectedItemPosition() != groupPos) {
+                    changed = true;
+                }
+                // background image changed
+                else if (!Utils.equals(mBackgroundURI, mItem.background_uri)) {
                     changed = true;
                 }
                 // subscribe topic changed?
@@ -1786,14 +1926,19 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected int mDefaultButtonTintColor;
     protected int mDefaultButtonBackground;
     protected int mDefaultClearColor;
+    protected int mDefaultTextColor;
+    protected int mDefaultBackground;
     protected Button mButtonSwitchOnEmpty;
     protected ImageButton mButtonSwitchOn;
     protected Button mButtonSwitchOffEmpty;
     protected ImageButton mButtonSwitchOff;
     protected TextView mOnNoteText, mOffNoteText;
     protected ImageView mOffClearImage, mOnClearImage;
+    protected Button mButtonBackgroundImgEmpty;
+    protected ImageButton mButtonBackgroundImg;
+    protected TextView mBackgroundImageNote;
 
-    protected String mOffImageURI, mOnImageURI;
+    protected String mOffImageURI, mOnImageURI, mBackgroundURI;
 
     protected EditText mEditTextRangeMin, mEditTextRangeMax, mEditTextDecimal;
     protected CheckBox mRangeDisplayPercent;
@@ -1822,6 +1967,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static String KEY_OFF_COLOR = "KEY_OFF_COLOR";
     protected final static String KEY_ON_IMAGE_URI = "KEY_ON_IMAGE_URI";
     protected final static String KEY_OFF_IMAGE_URI = "KEY_OFF_IMAGE_URI";
+    protected final static String KEY_BACKGROUND_URI = "KEY_BACKGROUND_URI";
 
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
@@ -1865,4 +2011,5 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     protected final static int CTRL_ON_STATE = 0;
     protected final static int CTRL_OFF_STATE = 1;
+    protected final static int CTRL_BACKGROUND = 2;
 }
