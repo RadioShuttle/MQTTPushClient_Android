@@ -328,9 +328,9 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     Log.e(TAG, "error loading image: ", e);
                                 }
                             }
-                            if (itemUpdated) {
-                                updatedItems.add(item);
-                            }
+                        }
+                        if (itemUpdated) {
+                            updatedItems.add(item);
                         }
                     }
                     return updatedItems;
@@ -377,6 +377,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         }
 
         if (item != null) {
+            Log.d(TAG, "item " + item.label + ", " + item.background_uri + ", item.backgroundImage == null " + (item.backgroundImage ));
             if (item.backgroundImage == null && !Utils.isEmpty(item.background_uri)){
                 resourceMissing = true;
             }
