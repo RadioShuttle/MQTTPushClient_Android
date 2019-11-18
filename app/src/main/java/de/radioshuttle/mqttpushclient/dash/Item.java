@@ -8,13 +8,20 @@ package de.radioshuttle.mqttpushclient.dash;
 
 
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.MainThread;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.TextViewCompat;
 import androidx.lifecycle.MutableLiveData;
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,14 +48,18 @@ public abstract class Item {
     public int textsize; // 0 - default, 1 - small, 2 - medium, 3 - large
     public String topic_s;
     public String script_f;
+    public volatile String background_uri;
 
     public String topic_p;
     public String script_p;
     public boolean retain;
-
     public String label;
-
     public String outputScriptError;
+
+    // transient
+    public Drawable backgroundImage;
+    public Drawable backgroundImageDetail;
+    public String backgroundImageURI;
 
     public JSONObject toJSONObject() throws JSONException {
         JSONObject o = new JSONObject();
@@ -60,6 +71,7 @@ public abstract class Item {
             o.put("script_p", (script_p == null ? "" : script_p));
 
             o.put("retain", retain);
+            o.put("background_uri", background_uri == null ? "" : background_uri);
         }
         o.put("type", getType());
         o.put("label", label);
@@ -81,6 +93,7 @@ public abstract class Item {
         topic_p = o.optString("topic_p");
         script_p = o.optString("script_p");
         retain = o.optBoolean("retain");
+        background_uri = o.optString("background_uri");
         id = o.optInt("id");
     }
 
@@ -102,7 +115,7 @@ public abstract class Item {
 
     /* helper for view component (used in adapter and detail dialog */
 
-    public void setViewBackground(View v, int defalutBackgroundColor) {
+    public void setViewBackground(View v, int defalutBackgroundColor, boolean detailView) {
         if (v != null) {
             long bg = data.containsKey("background") ? (Long) data.get("background") : background;
             // int background = (bg == 0 ? defalutBackgroundColor : bg);
@@ -114,7 +127,53 @@ public abstract class Item {
             } else {
                 background = (int) bg;
             }
-            v.setBackgroundColor(background);
+
+            if (this instanceof GroupItem || this instanceof CustomItem) {
+                /* no background images for groups and CustomItems (webviews) */
+                v.setBackgroundColor(background);
+            } else {
+                Drawable drawable;
+                if (detailView) {
+                    drawable = backgroundImageDetail;
+                } else {
+                    drawable = backgroundImage;
+                }
+                if (!Utils.isEmpty(backgroundImageURI) && drawable != null) {
+                    ColorDrawable drawableBackground = new ColorDrawable(background);
+                    LayerDrawable layerDrawable = new LayerDrawable(new Drawable[] {drawableBackground, drawable});
+                    ViewGroup.LayoutParams lp = v.getLayoutParams();
+                    if (lp != null) {
+                        /* user images (bitmaps) are downscaled*/
+                        if (drawable instanceof BitmapDrawable) {
+                            BitmapDrawable bm = (BitmapDrawable) drawable;
+                            float w = bm.getBitmap().getWidth();
+                            float h = bm.getBitmap().getHeight();
+                            float diff, f = 1f;
+                            if (w > h) {
+                                if (w > lp.width) {
+                                    diff = w - lp.width;
+                                    f = 1f - 1f / w * diff;
+                                }
+                            } else {
+                                if (h > lp.height) {
+                                    diff = h - lp.height;
+                                    f = 1f - 1f / h * diff;
+                                }
+                            }
+
+                            // Log.d(TAG, "bitmap size: " + w + ", h: " + h + ". Item size: " + lp.width + ", " + lp.height);
+                            w = (lp.width - w * f) / 2f;
+                            h = (lp.height - h * f) / 2f;
+                            // Log.d(TAG, "bitmap size (downscaled): " + w + ", h: " + h);
+                            layerDrawable.setLayerInset(1, (int) (int) w, (int) h, (int) w, (int) h );
+                        }
+                        /* vector drawables will be up/daownscaled */
+                    }
+                    v.setBackground(layerDrawable);
+                } else {
+                    v.setBackgroundColor(background);
+                }
+            }
         }
     }
 
@@ -145,6 +204,7 @@ public abstract class Item {
         viewProperties.put("textcolor", data.containsKey("textcolor") ? (Long) data.get("textcolor") : textcolor);
         viewProperties.put("textsize", data.containsKey("textsize") ?  (Integer) data.get("textsize") : textsize);
         viewProperties.put("background", data.containsKey("background") ? (Long) data.get("background") : background);
+        viewProperties.put("background_image", data.containsKey("background_image") ? (String) data.get("background_image") : background_uri);
         if (data.containsKey("userdata")) {
             viewProperties.put("userdata", data.get("userdata") == null ? "" : data.get("userdata"));
         }
