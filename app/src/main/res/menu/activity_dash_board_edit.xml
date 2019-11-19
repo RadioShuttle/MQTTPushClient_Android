@@ -5,5 +5,5 @@
         android:orderInCategory="10"
         android:icon="@drawable/ic_menu_save"
         android:title="@string/action_save_account"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 </menu>
