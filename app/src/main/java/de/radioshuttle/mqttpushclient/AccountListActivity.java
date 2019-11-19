@@ -782,7 +782,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     public final static int RC_ABOUT = 6;
     public final static int RC_PRIVACY = 7;
     public final static int RC_GOOGLE_PLAY_SERVICES = 8;
-
+    public final static int RC_IMAGE_CHOOSER = 9;
 
     private long lastBackPressTime = 0;
     private boolean mActivityStarted;
