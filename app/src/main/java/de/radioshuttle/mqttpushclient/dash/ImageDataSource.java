@@ -35,7 +35,7 @@ public class ImageDataSource extends PositionalDataSource<ImageResource> {
         while(it.hasNext() && i < startPosition + loadCount) {
             if (i >= startPosition) {
                 res = new ImageResource();
-                if (i > 0) { // i == 0 contains an empty entry (= selection none)
+                if (!mViewModel.isSelectionMode() || i > 0) { // i == 0 contains an empty entry (= selection none)
                     entry = it.next();
                     res.uri = entry.getKey();
                     res.id = entry.getValue();
@@ -51,7 +51,8 @@ public class ImageDataSource extends PositionalDataSource<ImageResource> {
 
     @Override
     public void loadInitial(@NonNull LoadInitialParams params, @NonNull LoadInitialCallback callback) {
-        int totalCount = IconHelper.INTENRAL_ICONS.size() + 1; // +1 for none selection entry
+        int totalCount = IconHelper.INTENRAL_ICONS.size() +
+                (mViewModel.isSelectionMode() ? 1 : 0); // +1 for none selection entry
         int position = computeInitialLoadPosition(params, totalCount);
         int loadSize = computeInitialLoadSize(params, position, totalCount);
         callback.onResult(loadRangeInternal(position, loadSize), position, totalCount);

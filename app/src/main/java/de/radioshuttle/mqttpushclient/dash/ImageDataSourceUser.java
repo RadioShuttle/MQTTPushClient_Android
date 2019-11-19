@@ -40,7 +40,7 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
         HeliosUTF8Encoder dec = new HeliosUTF8Encoder();
         for(int i = startPosition; i < startPosition + loadCount && i < mUserImageResources.size(); i++) {
             r = mUserImageResources.get(i);
-            if (i == 0) {
+            if (mViewModel.isSelectionMode() && i == 0) {
                 result.add(r);  // selection none entry
                 continue;
             }
@@ -80,7 +80,9 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
     @Override
     public void loadInitial(@NonNull LoadInitialParams params, @NonNull LoadInitialCallback callback) {
         mUserImageResources.clear();
-        mUserImageResources.add(new ImageResource()); // selection none entry
+        if (mViewModel.isSelectionMode()) {
+            mUserImageResources.add(new ImageResource()); // selection none entry
+        }
 
         List<ImageResource> serverImages = new ArrayList<>();
         File userImagesDir = ImportFiles.getUserFilesDir(mViewModel.getApplication());
