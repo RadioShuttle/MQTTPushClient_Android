@@ -486,31 +486,16 @@ public class DashboardRequest extends Request {
                         for (int j = 0; j < itemArray.length(); j++) {
                             try {
                                 itemJSON = itemArray.getJSONObject(j);
-                                uri = itemJSON.optString("uri");
-                                uri2 = itemJSON.optString("uri_off");
-                                background_uri = itemJSON.optString("background_uri");
-                                if (ImageResource.isUserResource(uri)) {
-                                    resourceName = ImageResource.getURIPath(uri);
-                                    internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
-                                    f = new File(localDir, internalFileName);
-                                    if (!f.exists()) {
-                                        resourceNames.add(resourceName);
-                                    }
-                                }
-                                if (ImageResource.isUserResource(uri2)) {
-                                    resourceName = ImageResource.getURIPath(uri2);
-                                    internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
-                                    f = new File(localDir, internalFileName);
-                                    if (!f.exists()) {
-                                        resourceNames.add(resourceName);
-                                    }
-                                }
-                                if (ImageResource.isUserResource(background_uri)) {
-                                    resourceName = ImageResource.getURIPath(background_uri);
-                                    internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
-                                    f = new File(localDir, internalFileName);
-                                    if (!f.exists()) {
-                                        resourceNames.add(resourceName);
+                                String[] uris = new String[] {"uri", "uri_off", "background_uri"};
+                                for(String u : uris) {
+                                    uri = itemJSON.optString(u);
+                                    if (ImageResource.isUserResource(uri)) {
+                                        resourceName = ImageResource.getURIPath(uri);
+                                        internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                        f = new File(localDir, internalFileName);
+                                        if (!f.exists()) {
+                                            resourceNames.add(resourceName);
+                                        }
                                     }
                                 }
                             } catch(Exception e) {
@@ -521,6 +506,8 @@ public class DashboardRequest extends Request {
 
                     DataInputStream is = null;
                     for(String r : resourceNames) {
+                        Log.d(TAG, "resource names: " + r);
+                        //TODO: remove
                         /* resource errors are not handled as long as there are not caused by an IO error */
                         // Log.d(TAG, "missing local resources: " + resourceNames);
                         int len = 0;
@@ -528,8 +515,8 @@ public class DashboardRequest extends Request {
                         try {
                             is = mConnection.getResource(r, Cmd.DASH512_PNG);
                             if (mConnection.lastReturnCode == Cmd.RC_INVALID_ARGS) {
-                                // Log.d(TAG, "Requested resource does not exist: " + r);
-                                break;
+                                Log.d(TAG, "Requested resource does not exist: " + r);
+                                continue;
                             }
                             if (is != null) {
                                 mdate = is.readLong() * 1000L;
@@ -592,22 +579,20 @@ public class DashboardRequest extends Request {
             HashSet<String> usedResoureces = new HashSet<>();
             JSONArray groupArray = mDashboardPara.getJSONArray("groups");
             JSONObject groupJSON, itemJSON;
-            String uri, uri2;
+            String uri;
             for (int i = 0; i < groupArray.length(); i++) {
                 groupJSON = groupArray.getJSONObject(i);
                 if (groupJSON.has("items")) {
                     JSONArray itemArray = groupJSON.getJSONArray("items");
                     for (int j = 0; j < itemArray.length(); j++) {
                         itemJSON = itemArray.getJSONObject(j);
-                        uri = itemJSON.optString("uri");
-                        uri2 = itemJSON.optString("uri_off");
-                        if (ImageResource.isUserResource(uri)) {
-                            usedResoureces.add(ImageResource.getURIPath(uri));
+                        String[] uris = new String[] {"uri", "uri_off", "background_uri"};
+                        for(String u : uris) {
+                            uri = itemJSON.optString(u);
+                            if (ImageResource.isUserResource(uri)) {
+                                usedResoureces.add(ImageResource.getURIPath(uri));
+                            }
                         }
-                        if (ImageResource.isUserResource(uri2)) {
-                            usedResoureces.add(ImageResource.getURIPath(uri2));
-                        }
-
                     }
                 }
             }
@@ -615,7 +600,7 @@ public class DashboardRequest extends Request {
             if (resourcesArray != null) {
                 for (int i = 0; i < resourcesArray.length(); i++) {
                     uri = resourcesArray.optString(i);
-                    usedResoureces.add(uri);
+                    usedResoureces.add(ImageResource.getURIPath(uri));
                 }
             }
             unusedResources.removeAll(usedResoureces);
