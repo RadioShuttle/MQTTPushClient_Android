@@ -362,17 +362,14 @@ public final class ImageResource {
                             for (int j = 0; j < itemArray.length(); j++) {
                                 try {
                                     itemJSON = itemArray.getJSONObject(j);
-                                    uri = itemJSON.optString("uri");
-                                    if (ImageResource.isUserResource(uri)) {
-                                        resourceName = ImageResource.getURIPath(uri);
-                                        internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
-                                        referencedFiles.add(internalFileName);
-                                    }
-                                    uri = itemJSON.optString("uri_off");
-                                    if (ImageResource.isUserResource(uri)) {
-                                        resourceName = ImageResource.getURIPath(uri);
-                                        internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
-                                        referencedFiles.add(internalFileName);
+                                    String[] uris = new String[] {"uri", "uri_off", "background_uri"};
+                                    for(String u : uris) {
+                                        uri = itemJSON.optString(u);
+                                        if (ImageResource.isUserResource(uri)) {
+                                            resourceName = ImageResource.getURIPath(uri);
+                                            internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                            referencedFiles.add(internalFileName);
+                                        }
                                     }
                                 } catch(Exception e) {
                                     Log.d(TAG, "removeUnreferencedImageResources: error checking resource names: ", e);
