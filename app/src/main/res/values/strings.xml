@@ -10,8 +10,8 @@
     <string name="menu_theme">Theme</string>
     <string name="menu_theme_light">Light</string>
     <string name="menu_theme_dark">Dark</string>
-    <string name="menu_theme_battery_saver">Set by Battery Saver</string>
-    <string name="menu_theme_system_default">System default</string>
+    <string name="menu_theme_battery_saver">System Default</string>
+    <string name="menu_theme_system_default">System Default</string>
 
     <string name="info_no_topics">Add at least one topic to receive notifications. Navigate into the server account edit mode and tap on MQTT TOPICS.</string>
 
@@ -34,7 +34,7 @@
     <string name="action_update_topic">Update</string>
     <string name="action_mqtt_topics">MQTT Topics</string>
     <string name="action_mqtt_actions">MQTT Actions</string>
-    <string name="action_dashboard_images">Dashboard Images</string>
+    <string name="menu_manage_images">Manage Images</string>
 
     <string name="dlg_remove_account_title">Remove Account</string>
     <string name="dlg_remove_account_msg">Confirm removal of currently selected account.</string>
@@ -208,6 +208,7 @@ to communicate with the MQTT broker and to receive push notifications
 
     <!-- Image Chooser Activity -->
     <string name="title_chooser">Select an Image</string>
+    <string name="title_manage_images">Manage Images</string>
     <string name="tab_title_internal">Internal</string>
     <string name="tab_title_user">User</string>
     <string name="no_image">None</string>
