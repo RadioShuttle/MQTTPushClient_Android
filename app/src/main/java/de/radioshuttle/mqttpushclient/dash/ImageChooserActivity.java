@@ -8,6 +8,7 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.paging.PagedList;
@@ -36,21 +37,39 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 
+import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
+import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
+import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.net.AppTrustManager;
+import de.radioshuttle.net.Cmd;
+import de.radioshuttle.net.Connection;
+import de.radioshuttle.net.DashboardRequest;
+import de.radioshuttle.net.MQTTException;
+import de.radioshuttle.net.Request;
 import de.radioshuttle.utils.Utils;
 
-public class ImageChooserActivity extends AppCompatActivity  implements ImageChooserAdapter.OnImageSelectListener  {
+import static de.radioshuttle.mqttpushclient.dash.DashBoardEditActivity.ARG_ACCOUNT;
+import static de.radioshuttle.mqttpushclient.dash.DashBoardEditActivity.ARG_DASHBOARD;
+import static de.radioshuttle.mqttpushclient.dash.DashBoardEditActivity.ARG_DASHBOARD_VERSION;
+
+public class ImageChooserActivity extends AppCompatActivity  implements ImageChooserAdapter.OnImageSelectListener,
+        Observer<Request> {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_chooser);
 
-        setTitle(R.string.title_chooser);
+        Bundle receivedArgs = getIntent().getExtras();
+        boolean selectionMode = receivedArgs != null && receivedArgs.getInt(ARG_CTRL_IDX, -1) >= 0;
 
         mViewModel = ViewModelProviders.of(this, new ImageChooserViewModel.Factory(
-                getApplication())).get(ImageChooserViewModel.class);
+                getApplication(), selectionMode)).get(ImageChooserViewModel.class);
 
         /* internal images */
         mInternalImageList = findViewById(R.id.internalImageList);
@@ -64,7 +83,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
         GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
         mInternalImageList.setLayoutManager(layoutManager);
-        mInternalImageAdapter = new ImageChooserAdapter(this, maxCellWidth);
+        mInternalImageAdapter = new ImageChooserAdapter(this, maxCellWidth, mViewModel.isSelectionMode());
         mInternalImageList.setAdapter(mInternalImageAdapter);
         mViewModel.mLiveDataInternalImages.observe(this, new Observer<PagedList<ImageResource>>() {
             @Override
@@ -73,10 +92,41 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             }
         });
 
+        /* Image Edit Mode ?*/
+        if (!mViewModel.isSelectionMode()) {
+            PushAccount b = null;
+            String json = receivedArgs.getString(ARG_ACCOUNT);
+            String dashboardContentRaw = receivedArgs.getString(ARG_DASHBOARD, "");
+            long dashboardContentVersion =  receivedArgs.getLong(ARG_DASHBOARD_VERSION, 0L);
+            try {
+
+                /* create viewModel */
+                b = PushAccount.createAccountFormJSON(new JSONObject(json));
+                mDashbardViewModel = ViewModelProviders.of(
+                        this, new DashBoardViewModel.Factory(b, getApplication()))
+                        .get(DashBoardViewModel.class);
+
+                if (!mDashbardViewModel.isInitialized()) {
+                    mDashbardViewModel.setItems(dashboardContentRaw, dashboardContentVersion);
+                }
+
+                mDashbardViewModel.mSaveRequest.observe(this, this);
+            } catch (Exception e) {
+                Log.e(TAG, "init error", e);
+            }
+            setTitle(R.string.title_manage_images);
+        } else {
+            setTitle(R.string.title_chooser);
+        }
+
         /* locked resources */
         ArrayList<String> lockedResources = null;
         if (savedInstanceState == null) {
-            lockedResources = getIntent().getStringArrayListExtra(ARG_LOCKED_RES);
+            if (!mViewModel.isSelectionMode()) {
+                lockedResources = new ArrayList<>(mDashbardViewModel.getLockedResources());
+            } else {
+                lockedResources = receivedArgs.getStringArrayList(ARG_LOCKED_RES);
+            }
         } else {
             lockedResources = savedInstanceState.getStringArrayList(ARG_LOCKED_RES);
         }
@@ -85,7 +135,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         mUserImageList = findViewById(R.id.userImageList);
         layoutManager = new GridLayoutManager(this, spanCount);
         mUserImageList.setLayoutManager(layoutManager);
-        mUserImageAdapter = new ImageChooserAdapter(this, maxCellWidth, lockedResources);
+        mUserImageAdapter = new ImageChooserAdapter(this, maxCellWidth, lockedResources, mViewModel.isSelectionMode());
 
         mUserImageList.setAdapter(mUserImageAdapter);
         mViewModel.mLiveDataUserImages.observe(this, new Observer<PagedList<ImageResource>>() {
@@ -166,10 +216,9 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        Bundle receivedArgs = getIntent().getExtras();
         if (savedInstanceState == null) {
             String u = receivedArgs.getString(ARG_RESOURCE_URI);
-            if (ImageResource.isExternalResource(u)) {
+            if (ImageResource.isExternalResource(u) || !mViewModel.isSelectionMode()) {
                 mSelectedTAB = TAB_USER;
             } else {
                 mSelectedTAB = TAB_INTERNAL;
@@ -181,6 +230,12 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         if (tabLayout.getSelectedTabPosition() != mSelectedTAB) {
             tabLayout.getTabAt(mSelectedTAB).select();
         }
+        if (!
+                mViewModel.isSelectionMode()) {
+            tabLayout.setVisibility(View.GONE);
+            //do not show tab in edit mode
+        }
+
         updateView();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -198,6 +253,10 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             case R.id.menu_import :
                 handled = true;
                 importFiles();
+                break;
+            case R.id.menu_save :
+                handled = true;
+                checkAndSave();
                 break;
             default:
                 handled = super.onOptionsItemSelected(item);
@@ -228,7 +287,11 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem m = menu.findItem(R.id.menu_import);
         if (m != null) {
-            m.setVisible(mSelectedTAB == TAB_USER);
+            m.setVisible(mSelectedTAB == TAB_USER && !mViewModel.isSelectionMode());
+        }
+        m = menu.findItem(R.id.menu_save);
+        if (m != null) {
+            m.setVisible(!mViewModel.isSelectionMode());
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -248,11 +311,16 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
     }
 
     protected void handleBackPressed() {
-        /* if user did not click an image, treat as canceled */
-        Intent data = new Intent();
-        data.putStringArrayListExtra(ARG_LOCKED_RES, mUserImageAdapter.getLockedResources());
-        setResult(AppCompatActivity.RESULT_CANCELED, data);
-        finish();
+        if (!mViewModel.isSelectionMode() && hasDataChanged()) {
+            DashBoardEditActivity.QuitWithoutSaveDlg dlg = new DashBoardEditActivity.QuitWithoutSaveDlg();
+            dlg.show(getSupportFragmentManager(), DashBoardEditActivity.QuitWithoutSaveDlg.class.getSimpleName());
+        } else {
+            /* if user did not click an image, treat as canceled */
+            Intent data = new Intent();
+            data.putStringArrayListExtra(ARG_LOCKED_RES, mUserImageAdapter.getLockedResources());
+            setResult(AppCompatActivity.RESULT_CANCELED, data);
+            finish();
+        }
     }
 
     @Override
@@ -340,6 +408,158 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
         }
     }
 
+    // only used in !mSelectionMode
+    protected void checkAndSave() {
+        if (!hasDataChanged()) {
+            Toast.makeText(getApplicationContext(), R.string.error_data_unmodified, Toast.LENGTH_LONG).show();
+        } else {
+            save();
+        }
+    }
+
+    // only used in !mSelectionMode
+    protected boolean hasDataChanged() {
+        boolean changed = false;
+
+        ArrayList<String> lockedResources = mUserImageAdapter.getLockedResources();
+
+        if (lockedResources.size() != mDashbardViewModel.getLockedResources().size()) {
+            changed = true;
+        } else {
+            for(String key : mDashbardViewModel.getLockedResources()) {
+                if (!lockedResources.contains(key)) {
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        return changed;
+    }
+
+    // only used in !mSelectionMode
+    protected void save() {
+        if (mDashbardViewModel.isSaveRequestActive()) {
+            Toast t = Toast.makeText(this, getString(R.string.op_in_progress), Toast.LENGTH_LONG);
+            t.show();
+        } else {
+            /* convert complete dashboard to json */
+            LinkedList<GroupItem> groupItems = new LinkedList<>();
+            HashMap<Integer, LinkedList<Item>> items = new HashMap<>();
+            HashSet<String> resources = new HashSet<>(mUserImageAdapter.getLockedResources());
+            mDashbardViewModel.copyItems(groupItems, items, null);
+
+            JSONObject obj = DBUtils.createJSONStrFromItems(groupItems, items, resources);
+            mDashbardViewModel.saveDashboard(obj, 0);
+            Log.d(TAG, "json: "+  obj.toString());
+
+        }
+    }
+
+    // only used in !mSelectionMode
+    @Override
+    public void onChanged(Request request) {
+        if (request != null && request instanceof DashboardRequest) {
+            DashboardRequest dashboardRequest = (DashboardRequest) request;
+            PushAccount b = dashboardRequest.getAccount();
+            if (b.status == 1) {
+                // mSwipeRefreshLayout.setRefreshing(true);
+            } else {
+                boolean isNew = false;
+                if (mDashbardViewModel.isCurrentSaveRequest(request)) {
+                    isNew = mDashbardViewModel.isSaveRequestActive(); // result already processed/displayed?
+                    mDashbardViewModel.confirmSaveResultDelivered();
+                    // mSwipeRefreshLayout.setRefreshing(false); //TODO
+                    // updateUI(true);
+
+                    /* handle cerificate exception */
+                    if (b.hasCertifiateException()) {
+                        /* only show dialog if the certificate has not already been denied */
+                        if (!AppTrustManager.isDenied(b.getCertificateException().chain[0])) {
+                            FragmentManager fm = getSupportFragmentManager();
+
+                            String DLG_TAG = CertificateErrorDialog.class.getSimpleName() + "_" +
+                                    AppTrustManager.getUniqueKey(b.getCertificateException().chain[0]);
+
+                            /* check if a dialog is not already showing (for this certificate) */
+                            if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                CertificateErrorDialog dialog = new CertificateErrorDialog();
+                                Bundle args = CertificateErrorDialog.createArgsFromEx(
+                                        b.getCertificateException(), request.getAccount().pushserver);
+                                if (args != null) {
+                                    int cmd = dashboardRequest.mCmd;
+                                    args.putInt("cmd", cmd);
+                                    dialog.setArguments(args);
+                                    dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                }
+                            }
+                        }
+                    }
+                    b.setCertificateExeption(null); // mark es "processed"
+
+                    /* handle insecure connection */
+                    if (b.inSecureConnectionAsk) {
+                        if (Connection.mInsecureConnection.get(b.pushserver) == null) {
+                            FragmentManager fm = getSupportFragmentManager();
+
+                            String DLG_TAG = InsecureConnectionDialog.class.getSimpleName() + "_" + b.pushserver;
+
+                            /* check if a dialog is not already showing (for this host) */
+                            if (fm.findFragmentByTag(DLG_TAG) == null) {
+                                InsecureConnectionDialog dialog = new InsecureConnectionDialog();
+                                Bundle args = InsecureConnectionDialog.createArgsFromEx(b.pushserver);
+                                if (args != null) {
+                                    int cmd = dashboardRequest.mCmd;
+                                    args.putInt("cmd", cmd);
+                                    dialog.setArguments(args);
+                                    dialog.show(getSupportFragmentManager(), DLG_TAG);
+                                }
+                            }
+                        }
+                    }
+                    b.inSecureConnectionAsk = false; // mark as "processed"
+
+                    if (b.requestStatus != Cmd.RC_OK) {
+                        String t = (b.requestErrorTxt == null ? "" : b.requestErrorTxt);
+                        if (b.requestStatus == Cmd.RC_MQTT_ERROR || (b.requestStatus == Cmd.RC_NOT_AUTHORIZED && b.requestErrorCode != 0)) {
+                            t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                        }
+                        showErrorMsg(t);
+                    } else {
+                        if (dashboardRequest.saveSuccesful()) {
+                            if (isNew) {
+                                Intent data = new Intent();
+                                data.putExtra(ARG_DASHBOARD, dashboardRequest.getReceivedDashboard());
+                                data.putExtra(ARG_DASHBOARD_VERSION, dashboardRequest.getServerVersion());
+                                setResult(AppCompatActivity.RESULT_OK, data);
+                                Toast.makeText(getApplicationContext(), R.string.info_data_saved, Toast.LENGTH_LONG).show();
+                                finish();
+                            }
+                        } else if (!dashboardRequest.saveSuccesful() && dashboardRequest.requestStatus != Cmd.RC_OK) {
+                            String t = (dashboardRequest.requestErrorTxt == null ? "" : dashboardRequest.requestErrorTxt);
+                            if (dashboardRequest.requestStatus == Cmd.RC_MQTT_ERROR) {
+                                if (dashboardRequest.requestErrorCode == MQTTException.REASON_CODE_SUBSCRIBE_FAILED) {
+                                    t = getString(R.string.dash_err_subscribe_failed);
+                                } else {
+                                    t = getString(R.string.errormsg_mqtt_prefix) + " " + t;
+                                }
+                            }
+                            showErrorMsg(t);
+                        } else if (dashboardRequest.isVersionError()) {
+                            String t = getString(R.string.dash_err_version_err);
+                            showErrorMsg(t);
+                        }
+                    }
+
+                }
+            }
+        }
+
+
+    }
+
+
+    DashBoardViewModel mDashbardViewModel;
     ImageChooserViewModel mViewModel;
     Snackbar mSnackbar;
 
