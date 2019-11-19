@@ -506,8 +506,6 @@ public class DashboardRequest extends Request {
 
                     DataInputStream is = null;
                     for(String r : resourceNames) {
-                        Log.d(TAG, "resource names: " + r);
-                        //TODO: remove
                         /* resource errors are not handled as long as there are not caused by an IO error */
                         // Log.d(TAG, "missing local resources: " + resourceNames);
                         int len = 0;
