@@ -20,6 +20,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
+import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.MessagesActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
@@ -58,6 +59,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import static de.radioshuttle.mqttpushclient.AccountListActivity.RC_IMAGE_CHOOSER;
 import static de.radioshuttle.mqttpushclient.EditAccountActivity.PARAM_ACCOUNT_JSON;
 import static de.radioshuttle.mqttpushclient.MessagesActivity.PARAM_MULTIPLE_PUSHSERVERS;
 
@@ -259,6 +261,9 @@ public class DashBoardActivity extends AppCompatActivity implements
                 break;
             case R.id.action_zoom :
                 zoom();
+                break;
+            case R.id.menu_import_images :
+                openImageChooser();
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -497,6 +502,27 @@ public class DashBoardActivity extends AppCompatActivity implements
             startActivityForResult(intent, RC_EDIT_ITEM);
         }
     }
+
+    protected void openImageChooser() {
+        if (!mActivityStarted) {
+            if (checkIfUpdateRequired()) {
+                return;
+            }
+            mActivityStarted = true;
+
+            // open image chooser in edit mode
+            Intent intent = new Intent(this, ImageChooserActivity.class);
+            intent.putExtra(DashBoardEditActivity.ARG_ACCOUNT, getIntent().getStringExtra(PARAM_ACCOUNT_JSON));
+            intent.putExtra(DashBoardEditActivity.ARG_DASHBOARD, mViewModel.getItemsRaw());
+            intent.putExtra(DashBoardEditActivity.ARG_DASHBOARD_VERSION, mViewModel.getItemsVersion());
+
+            // intent.putStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES, new ArrayList<String>());
+
+            startActivityForResult(intent, RC_IMAGE_CHOOSER);
+        }
+    }
+
+
 
     protected boolean checkIfUpdateRequired() {
         boolean updateRequired = false;
@@ -814,7 +840,7 @@ public class DashBoardActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         mActivityStarted = false;
-        if (requestCode == RC_EDIT_ITEM) {
+        if (requestCode == RC_EDIT_ITEM || requestCode == RC_IMAGE_CHOOSER) {
 
             if (resultCode == AppCompatActivity.RESULT_OK && data != null) {
                 Log.d(TAG, "onActivityResult(): ");
