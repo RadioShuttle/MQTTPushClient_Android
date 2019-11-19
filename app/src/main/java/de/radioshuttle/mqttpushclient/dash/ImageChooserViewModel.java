@@ -26,10 +26,20 @@ import androidx.paging.PagedList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import de.radioshuttle.net.DashboardRequest;
+import de.radioshuttle.net.Request;
+import de.radioshuttle.utils.Utils;
+
 public class ImageChooserViewModel extends AndroidViewModel {
 
-    public ImageChooserViewModel(@NonNull Application application) {
+    public ImageChooserViewModel(@NonNull Application application, boolean selectionMode) {
         super(application);
+        mSelctionMode = selectionMode;
 
         ImageDataSource.Factory factory = new ImageDataSource.Factory(this);
         mLiveDataInternalImages = new LivePagedListBuilder(factory, 100).build();
@@ -41,6 +51,8 @@ public class ImageChooserViewModel extends AndroidViewModel {
         IntentFilter intentFilter = new IntentFilter(ImportFiles.INTENT_ACTION);
         // intentFilter.addAction(FirebaseTokens.TOKEN_UPDATED);
         LocalBroadcastManager.getInstance(application).registerReceiver(broadcastReceiver, intentFilter);
+
+
     }
 
     @Override
@@ -82,23 +94,31 @@ public class ImageChooserViewModel extends AndroidViewModel {
         }
     };
 
+    public boolean isSelectionMode() {
+        return mSelctionMode;
+    }
+
     public final LiveData<PagedList<ImageResource>> mLiveDataInternalImages;
     public final LiveData<PagedList<ImageResource>> mLiveDataUserImages;
     public MutableLiveData<JSONArray> mImportedFilesErrorLiveData;
 
+    private boolean mSelctionMode;
+
     public static class Factory implements ViewModelProvider.Factory {
 
-        public Factory(Application app) {
+        public Factory(Application app, boolean selectionMode) {
             this.app = app;
+            this.selectionMode = selectionMode;
         }
 
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            return (T) new ImageChooserViewModel(app);
+            return (T) new ImageChooserViewModel(app, selectionMode);
         }
 
         Application app;
+        boolean selectionMode;
     }
 
     private final static String TAG = ImageChooserViewModel.class.getSimpleName();
