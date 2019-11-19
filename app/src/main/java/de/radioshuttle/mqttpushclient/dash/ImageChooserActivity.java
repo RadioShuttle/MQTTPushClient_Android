@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.paging.PagedList;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.Activity;
 import android.content.ClipData;
@@ -64,9 +65,13 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_chooser);
+        mSwipeRefreshLayout = findViewById(R.id.root_view);
+        mSwipeRefreshLayout.setEnabled(false);
+
 
         Bundle receivedArgs = getIntent().getExtras();
         boolean selectionMode = receivedArgs != null && receivedArgs.getInt(ARG_CTRL_IDX, -1) >= 0;
+
 
         mViewModel = ViewModelProviders.of(this, new ImageChooserViewModel.Factory(
                 getApplication(), selectionMode)).get(ImageChooserViewModel.class);
@@ -109,7 +114,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
                 if (!mDashbardViewModel.isInitialized()) {
                     mDashbardViewModel.setItems(dashboardContentRaw, dashboardContentVersion);
                 }
-
+                mSwipeRefreshLayout.setRefreshing(mDashbardViewModel.isSaveRequestActive());
                 mDashbardViewModel.mSaveRequest.observe(this, this);
             } catch (Exception e) {
                 Log.e(TAG, "init error", e);
@@ -463,13 +468,13 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             DashboardRequest dashboardRequest = (DashboardRequest) request;
             PushAccount b = dashboardRequest.getAccount();
             if (b.status == 1) {
-                // mSwipeRefreshLayout.setRefreshing(true);
+                mSwipeRefreshLayout.setRefreshing(true);
             } else {
                 boolean isNew = false;
                 if (mDashbardViewModel.isCurrentSaveRequest(request)) {
                     isNew = mDashbardViewModel.isSaveRequestActive(); // result already processed/displayed?
                     mDashbardViewModel.confirmSaveResultDelivered();
-                    // mSwipeRefreshLayout.setRefreshing(false); //TODO
+                    mSwipeRefreshLayout.setRefreshing(false);
                     // updateUI(true);
 
                     /* handle cerificate exception */
@@ -559,6 +564,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
     }
 
 
+    SwipeRefreshLayout mSwipeRefreshLayout;
     DashBoardViewModel mDashbardViewModel;
     ImageChooserViewModel mViewModel;
     Snackbar mSnackbar;
