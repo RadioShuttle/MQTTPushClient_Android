@@ -133,11 +133,15 @@ public abstract class Item {
                 v.setBackgroundColor(background);
             } else {
                 Drawable drawable;
-                if (detailView) {
-                    drawable = backgroundImageDetail;
+                drawable = (Drawable) data.get("background_image_blob");
+                if (drawable != null) {
+                    if (detailView) {
+                        drawable = drawable.getConstantState().newDrawable(v.getResources());
+                    }
                 } else {
-                    drawable = backgroundImage;
+                    drawable = (detailView ? backgroundImageDetail : backgroundImage);
                 }
+
                 if (!Utils.isEmpty(backgroundImageURI) && drawable != null) {
                     ColorDrawable drawableBackground = new ColorDrawable(background);
                     LayerDrawable layerDrawable = new LayerDrawable(new Drawable[] {drawableBackground, drawable});
