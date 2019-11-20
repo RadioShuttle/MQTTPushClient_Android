@@ -102,6 +102,15 @@ public class ImageChooserViewModel extends AndroidViewModel {
     public final LiveData<PagedList<ImageResource>> mLiveDataUserImages;
     public MutableLiveData<JSONArray> mImportedFilesErrorLiveData;
 
+    public boolean isImportAcitve() {
+        return mImportActive;
+    }
+
+    public void setImportActive(boolean active) {
+        mImportActive = active;
+    }
+
+    private boolean mImportActive;
     private boolean mSelctionMode;
 
     public static class Factory implements ViewModelProvider.Factory {
