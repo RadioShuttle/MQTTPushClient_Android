@@ -652,6 +652,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                          if (savedInstanceState == null) {
                              mEditTextHTML.setText(((CustomItem) mItem).getHtml());
                          }
+                         View tmpRow = findViewById(R.id.rowBackgroundImage);
+                         if (tmpRow != null) {
+                             tmpRow.setVisibility(View.GONE);
+                         }
+                         
                      }
                 }
 
