@@ -55,6 +55,7 @@ import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.mqttpushclient.dash.DashBoardActivity;
+import de.radioshuttle.mqttpushclient.dash.ImageResource;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
@@ -125,6 +126,18 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 if (accounts != null) {
                     for(PushAccount a : accounts) {
                         a.executor = Utils.newSingleThreadPool();
+                    }
+                }
+                /* clear temp (imported) files at startup, viewModel.onCleared is not reliable */
+                if (savedInstanceState == null) {
+                    if (accounts != null) {
+                        final ArrayList<PushAccount> cAccounts = new ArrayList<>(accounts);
+                        Utils.executor.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                ImageResource.removeUnreferencedImageResources(getApplication(), cAccounts);
+                            }
+                        });
                     }
                 }
             }
