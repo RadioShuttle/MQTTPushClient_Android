@@ -87,6 +87,7 @@ public class DashBoardJavaScript extends JavaScript {
 
         void setCtrlColorOff(double color);
         void setBackgroundColor(double color);
+        void setBackgroundImage(String resourceName);
         void setCtrlBackgroundColor(double color);
         void setCtrlBackgroundColorOff(double color);
         void setTextColor(double color);
@@ -98,6 +99,7 @@ public class DashBoardJavaScript extends JavaScript {
 
         double getTextColor();
         double getBackgroundColor();
+        String getBackgroundImage();
         double getCtrlBackgroundColor();
         double getCtrlBackgroundColorOff();
         double getCtrlColor();
@@ -131,15 +133,20 @@ public class DashBoardJavaScript extends JavaScript {
 
         @Override
         public void setCtrlImage(String resourceName) {
-            setCtrlImage("ctrl_image", resourceName);
+            _setImage("ctrl_image", resourceName);
         }
 
         @Override
         public void setCtrlImageOff(String resourceName) {
-            setCtrlImage("ctrl_image_off", resourceName);
+            _setImage("ctrl_image_off", resourceName);
         }
 
-        private void setCtrlImage(String propKey, String resourceName) {
+        @Override
+        public void setBackgroundImage(String resourceName) {
+            _setImage("background_image", resourceName);
+        }
+
+        private void _setImage(String propKey, String resourceName) {
             /* resource names differ from internal representation */
             String uri = null;
             if (!Utils.isEmpty(resourceName)) {
@@ -179,7 +186,6 @@ public class DashBoardJavaScript extends JavaScript {
                     // Log.d(TAG, "setCtrlImaage: image already exists. skipping load " + uri);
                 }
             }
-
         }
 
         @Override
@@ -195,6 +201,11 @@ public class DashBoardJavaScript extends JavaScript {
         @Override
         public String getCtrlImageOff() {
             return convertToJSResourceName((String) p.get("ctrl_image_off"));
+        }
+
+        @Override
+        public String getBackgroundImage() {
+            return convertToJSResourceName((String) p.get("background_image"));
         }
 
         private String convertToJSResourceName(String uri) {
