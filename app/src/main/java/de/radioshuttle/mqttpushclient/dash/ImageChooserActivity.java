@@ -114,7 +114,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
                 if (!mDashbardViewModel.isInitialized()) {
                     mDashbardViewModel.setItems(dashboardContentRaw, dashboardContentVersion);
                 }
-                mSwipeRefreshLayout.setRefreshing(mDashbardViewModel.isSaveRequestActive());
+                mSwipeRefreshLayout.setRefreshing(mDashbardViewModel.isSaveRequestActive() || mViewModel.isImportAcitve());
                 mDashbardViewModel.mSaveRequest.observe(this, this);
             } catch (Exception e) {
                 Log.e(TAG, "init error", e);
@@ -156,11 +156,13 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             }
         });
 
-        /* display import error */
+        /* display import error (will also be called if no error) */
         mViewModel.mImportedFilesErrorLiveData.observe(this, new Observer<JSONArray>() {
             @Override
             public void onChanged(JSONArray jsonArray) {
                 if (jsonArray != null) {
+                    mViewModel.setImportActive(false);
+                    mSwipeRefreshLayout.setRefreshing(false);
                     int status;
                     JSONObject e;
                     int error = 0;
@@ -362,17 +364,21 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
     }
 
     protected void importFiles() {
-        Intent requestFiles = new Intent(Intent.ACTION_GET_CONTENT);
-        requestFiles.setType("image/*");
-        requestFiles.addCategory(Intent.CATEGORY_OPENABLE);
-        requestFiles.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)
-            requestFiles.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        if (requestFiles.resolveActivity(getPackageManager()) != null) {
-            Intent browser = Intent.createChooser(requestFiles, getString(R.string.action_import));
-            startActivityForResult(browser, RC_IMPORT_IMAGE);
+        if (mViewModel.isImportAcitve() || mDashbardViewModel.isSaveRequestActive()) {
+            displayPleaseWait();
         } else {
-            Toast.makeText(getApplicationContext(), R.string.import_no_files, Toast.LENGTH_LONG).show();
+            Intent requestFiles = new Intent(Intent.ACTION_GET_CONTENT);
+            requestFiles.setType("image/*");
+            requestFiles.addCategory(Intent.CATEGORY_OPENABLE);
+            requestFiles.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)
+                requestFiles.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            if (requestFiles.resolveActivity(getPackageManager()) != null) {
+                Intent browser = Intent.createChooser(requestFiles, getString(R.string.action_import));
+                startActivityForResult(browser, RC_IMPORT_IMAGE);
+            } else {
+                Toast.makeText(getApplicationContext(), R.string.import_no_files, Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -389,6 +395,8 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
                     ClipData files = data.getClipData();
 
                     if (files != null) {
+                        mViewModel.setImportActive(true);
+                        mSwipeRefreshLayout.setRefreshing(true);
                         Utils.executor.submit(new ImportFiles(this, files));
                         hasClipData = true;
                     }
@@ -396,6 +404,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
                 if (!hasClipData) {
                     Uri fileUri = data.getData();
                     if (fileUri != null) {
+                        mSwipeRefreshLayout.setRefreshing(true);
                         Utils.executor.submit(new ImportFiles(this, fileUri));
                     }
                 }
@@ -445,8 +454,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
     // only used in !mSelectionMode
     protected void save() {
         if (mDashbardViewModel.isSaveRequestActive()) {
-            Toast t = Toast.makeText(this, getString(R.string.op_in_progress), Toast.LENGTH_LONG);
-            t.show();
+            displayPleaseWait();
         } else {
             /* convert complete dashboard to json */
             LinkedList<GroupItem> groupItems = new LinkedList<>();
@@ -459,6 +467,11 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             Log.d(TAG, "json: "+  obj.toString());
 
         }
+    }
+
+    protected void displayPleaseWait() {
+        Toast t = Toast.makeText(this, getString(R.string.op_in_progress), Toast.LENGTH_LONG);
+        t.show();
     }
 
     // only used in !mSelectionMode
