@@ -660,6 +660,37 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                      }
                 }
 
+                /* option list */
+                if (mItem instanceof OptionList) {
+                    mOptionList = new LinkedList<>();
+                    if (savedInstanceState == null) {
+                        //TODO: remove test data
+                        /*
+                        String[] data = {"low", "medium", "high"};
+                        OptionList.Option e;
+                        for(int i = 0; i < data.length; i++) {
+                            e = new OptionList.Option();
+                            e.value = String.valueOf((i + 1) * 10);
+                            e.displayValue = data[i];
+                            mOptionList.add(e);
+                        }
+                         */
+                        //TODO: end test data
+                    } else {
+                        ArrayList<String> optionVals = savedInstanceState.getStringArrayList(KEY_OPTIONLIST_VAL);
+                        ArrayList<String> optionDisplay = savedInstanceState.getStringArrayList(KEY_OPTIONLIST_DISPLAY);
+                        OptionList.Option option;
+                        if (optionVals != null && optionDisplay != null) {
+                            for(int i = 0; i < optionVals.size() && i < optionDisplay.size(); i++) {
+                                option = new OptionList.Option();
+                                option.value = optionVals.get(i);
+                                option.displayValue = optionDisplay.get(i);
+                                mOptionList.add(option);
+                            }
+                        }
+                    }
+                }
+
                 /* locked resources */
                 if (savedInstanceState == null) {
                     mLockedResources = mViewModel.getLockedResources();
@@ -680,6 +711,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         title = getString(R.string.title_add_switch);
                     } else if (mItem instanceof CustomItem) {
                         title = getString(R.string.title_add_custom);
+                    } else if (mItem instanceof OptionList) {
+                        title = getString(R.string.title_add_optionlist);
                     }
                 } else { // mMode == MODE_EDIT
                     if (mItem instanceof GroupItem) {
@@ -692,6 +725,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         title = getString(R.string.title_edit_switch);
                     } else if (mItem instanceof CustomItem) {
                         title = getString(R.string.title_edit_custom);
+                    } else if (mItem instanceof OptionList) {
+                        title = getString(R.string.title_edit_optionlist);
                     }
                 }
                 setTitle(title);
@@ -1000,6 +1035,18 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
         if (!mLockedResources.isEmpty()) {
             outState.putStringArrayList(KEY_LOCKED_RES, new ArrayList<>(mLockedResources));
+        }
+        if (mOptionList != null) {
+            ArrayList<String> vals = new ArrayList<>();
+            ArrayList<String> dvals = new ArrayList<>();
+            for(OptionList.Option o : mOptionList) {
+                vals.add(o.value == null ? "" : o.value);
+                dvals.add(o.displayValue == null ? "" : o.displayValue);
+            }
+            if (vals.size() > 0) {
+                outState.putStringArrayList(KEY_OPTIONLIST_VAL, vals);
+                outState.putStringArrayList(KEY_OPTIONLIST_DISPLAY, dvals);
+            }
         }
 
     }
@@ -1651,16 +1698,14 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
                 if (cItem instanceof TextItem) {
                     ((TextItem) cItem).inputtype = mInputTypeSpinner.getSelectedItemPosition();
-                }
-                if (cItem instanceof ProgressItem) {
+                } else if (cItem instanceof ProgressItem) {
                     ProgressItem item = (ProgressItem) cItem;
                     try {item.range_min = Double.valueOf(mEditTextRangeMin.getText().toString());} catch(Exception e) {}
                     try {item.range_max = Double.valueOf(mEditTextRangeMax.getText().toString());} catch(Exception e) {}
                     try {item.decimal = Integer.valueOf(mEditTextDecimal.getText().toString());} catch(Exception e) {}
                     item.percent = mRangeDisplayPercent.isChecked();
                     item.progresscolor = mProgColor;
-                }
-                if (cItem instanceof Switch) {
+                } else if (cItem instanceof Switch) {
                     Switch item = (Switch) cItem;
                     item.val = mEditTextSwitchOn.getText().toString();
                     item.valOff = mEditTextSwitchOff.getText().toString();
@@ -1670,6 +1715,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     item.bgcolorOff = mOffBackground;
                     item.uri = mOnImageURI;
                     item.uriOff = mOffImageURI;
+                } else if (cItem instanceof OptionList) {
+                    OptionList item = (OptionList) cItem;
+                    if (item.optionList != null) {
+                        item.optionList.clear();
+                    } else {
+                        item.optionList = new LinkedList<>();
+                    }
+                    if (mOptionList != null && mOptionList.size() > 0) {
+                        item.optionList.addAll(mOptionList);
+                    }
                 }
             }
             if (mEditTextLabel != null) {
@@ -1868,6 +1923,31 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         || item.progresscolor != mProgColor;
             }
 
+            if (!changed && mItem instanceof OptionList) {
+                OptionList ol = (OptionList) mItem;
+                LinkedList<OptionList.Option> prev = ol.optionList;
+                LinkedList<OptionList.Option> curr = mOptionList;
+                if (prev == null) {
+                    prev = new LinkedList<>();
+                }
+                if (curr == null) {
+                    curr = new LinkedList<>();
+                }
+                if (prev.size() != curr.size()) {
+                    changed = true;
+                } else {
+                    OptionList.Option o1, o2;
+                    for(int i = 0; i < curr.size(); i++) {
+                        o1 = prev.get(i);
+                        o2 = curr.get(i);
+                        if (!Utils.equals(o1.value, o2.value) || !Utils.equals(o1.displayValue, o2.displayValue)) {
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (!changed) {
                 int itemPos = getIntent().getIntExtra(ARG_ITEM_POS, AdapterView.INVALID_POSITION);
                 if (mPosSpinner.getSelectedItemPosition() != itemPos) {
@@ -1963,6 +2043,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected long mOffColor;
     protected long mOnColor;
 
+    protected LinkedList<OptionList.Option> mOptionList; //TODO: this maybe replaced by an adapter object later
+
     protected final static String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
     protected final static String KEY_BACKGROUND = "KEY_BACKGROUND";
     protected final static String KEY_PROGCOLOR = "KEY_PROGCOLOR";
@@ -1973,6 +2055,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static String KEY_ON_IMAGE_URI = "KEY_ON_IMAGE_URI";
     protected final static String KEY_OFF_IMAGE_URI = "KEY_OFF_IMAGE_URI";
     protected final static String KEY_BACKGROUND_URI = "KEY_BACKGROUND_URI";
+    protected final static String KEY_OPTIONLIST_VAL= "KEY_OPTIONLIST_VAL";
+    protected final static String KEY_OPTIONLIST_DISPLAY= "KEY_OPTIONLIST_DISPLAY";
 
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
