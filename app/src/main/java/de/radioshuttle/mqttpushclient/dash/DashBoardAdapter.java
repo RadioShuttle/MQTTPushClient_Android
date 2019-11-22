@@ -97,7 +97,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         Button button = null;
         ImageButton imageButton = null;
         int defaultColor = 0;
-        if (viewType == TYPE_TEXT) {
+        if (viewType == TYPE_TEXT || viewType == TYPE_OPTIONLIST) {
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
@@ -291,6 +291,35 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             }
             h.progressBar.setProgress(value);
         }
+
+        // if view for text content exists, set content
+        // Log.d(TAG, "ui: " + item.label);
+        if (h.value != null) { //TEXT
+            String content = (String) item.data.get("content");
+            if (h.getItemViewType() == TYPE_PROGRESS) {
+                if (item.data.get("content.progress") instanceof String) {
+                    content = (String) item.data.get("content.progress");
+                }
+            } else if (item instanceof OptionList) { // (h.getItemViewType() == TYPE_OPTIONLIST)
+                OptionList ol = (OptionList) item;
+                String displayValue = ol.getDisplayValue();
+                if (displayValue == null) {
+                    /* if content does not match an option, show content */
+                    displayValue = content; //TODO: consider showing an error if content does not match an option
+                    /*
+                    if (javaScriptError != null) { // only set error if there is not already an error
+                        if (ol.optionList == null || ol.optionList.size() == 0) {
+                        }
+                    }
+                     */
+                }
+                content = displayValue;
+            }
+
+            item.setViewTextAppearance(h.value, h.defaultColor);
+            h.value.setText(content);
+        }
+
         if (h.errorImage != null) {
             if (javaScriptError instanceof String) { // TYPE_TEXT
                 int color;
@@ -311,20 +340,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                     h.errorImage.setVisibility(View.GONE);
                 }
             }
-        }
-
-        // if view for text content exists, set content
-        // Log.d(TAG, "ui: " + item.label);
-        if (h.value != null) { //TEXT
-            String content = (String) item.data.get("content");
-            if (h.getItemViewType() == TYPE_PROGRESS) {
-                if (item.data.get("content.progress") instanceof String) {
-                    content = (String) item.data.get("content.progress");
-                }
-            }
-
-            item.setViewTextAppearance(h.value, h.defaultColor);
-            h.value.setText(content);
         }
 
         // switch
@@ -679,6 +694,8 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 type = TYPE_PROGRESS;
             } else if (item instanceof Switch) {
                 type = TYPE_SWITCH;
+            } else if (item instanceof OptionList) {
+                type = TYPE_OPTIONLIST;
             } else if (item instanceof CustomItem) {
                 type = - mData.get(position).id;
             }
@@ -768,6 +785,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     public final static int TYPE_TEXT = 1;
     public final static int TYPE_PROGRESS = 2;
     public final static int TYPE_SWITCH = 3;
+    public final static int TYPE_OPTIONLIST = 4;
     public final static int TYPE_CUSTOM = 0;
 
     private final static String TAG = DashBoardAdapter.class.getSimpleName();
