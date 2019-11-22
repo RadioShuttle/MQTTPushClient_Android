@@ -9,8 +9,11 @@ package de.radioshuttle.mqttpushclient.dash;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -46,12 +49,17 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -113,9 +121,9 @@ public class DetailViewDialog extends DialogFragment {
                     int w = (int) (defSizeDPI * getResources().getDisplayMetrics().density);
                     int w2 = (int) ((float) a * .9f - 64f * getResources().getDisplayMetrics().density);
 
-                    boolean publishEnabled = !Utils.isEmpty(mItem.topic_p) || !Utils.isEmpty(mItem.script_p);
+                    mPublishEnabled = !Utils.isEmpty(mItem.topic_p) || !Utils.isEmpty(mItem.script_p);
 
-                    if (mItem instanceof TextItem){
+                    if (mItem instanceof TextItem || (mItem instanceof OptionList && !mPublishEnabled)){
                         viewStub.setLayoutResource(R.layout.activity_dash_board_item_text);
                         view = viewStub.inflate();
 
@@ -125,7 +133,7 @@ public class DetailViewDialog extends DialogFragment {
 
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
 
-                        if (publishEnabled) {
+                        if (mPublishEnabled) {
                             /* tint send button and value editor */
                             ImageButton sendButton = view.findViewById(R.id.sendButton);
                             sendButton.setVisibility(View.VISIBLE);
@@ -183,7 +191,7 @@ public class DetailViewDialog extends DialogFragment {
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
                         mDefaultProgressColor = DColor.fetchAccentColor(getContext());
 
-                        if (publishEnabled) {
+                        if (mPublishEnabled) {
                             mProgressFormatter = NumberFormat.getInstance();
                             mProgressFormatter.setMinimumFractionDigits(((ProgressItem) mItem).decimal);
                             mProgressFormatter.setMaximumFractionDigits(((ProgressItem) mItem).decimal);
@@ -250,6 +258,67 @@ public class DetailViewDialog extends DialogFragment {
                             }
                         });
                         // mContentContainer = view.findViewById()
+                    } else if (mItem instanceof OptionList && mPublishEnabled) {
+                        /* if not publish enabled, text view is user (see above) */
+                        OptionList ol = (OptionList) mItem;
+                        viewStub.setLayoutResource(R.layout.activity_dash_board_item_optionlist);
+                        view = viewStub.inflate();
+
+                        //TODO: remove test data
+                        /*
+                        ol.optionList.add(new OptionList.Option("hallo", "hallo"));
+                        ol.optionList.add(new OptionList.Option("Moin", "Moin"));
+                        ol.optionList.add(new OptionList.Option("Test", "Test"));
+                         */
+
+                        mLabel = view.findViewById(R.id.name);
+                        mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
+                        mOptionListRecyclerView = view.findViewById(R.id.optionList);
+
+                        /* init list view*/
+                        mOptionListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+                        mContentContainer = mOptionListRecyclerView;
+
+                        long color = mItem.getTextcolor();
+                        int dcolor;
+                        if (color == DColor.OS_DEFAULT || color == DColor.CLEAR) {
+                            dcolor = mDefaultTextColor;
+                        } else {
+                            dcolor = (int) color;
+                        }
+                        ColorDrawable divider = new ColorDrawable(dcolor);
+
+                        DividerItemDecoration decoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
+                        decoration.setDrawable(divider);
+                        mOptionListRecyclerView.addItemDecoration(decoration);
+
+                        OptionListAdapter adapter = new OptionListAdapter(getContext(), dcolor, dcolor);
+                        LinkedList<OptionList.Option> optionList = new LinkedList<>();
+                        if (ol.optionList != null && ol.optionList.size() > 0) {
+                            optionList.addAll(ol.optionList);
+                        }
+                        adapter.setCallback(new OptionListAdapter.Callback() {
+                            @Override
+                            public void onOptionClicked(OptionList.Option o, boolean isSelected) {
+                                /* if an option is already selected, a click does not deselect */
+                                if (!isSelected) {
+                                    byte[] content = null;
+                                    if (o != null && o.value != null) {
+                                        try {
+                                            content = o.value.getBytes("UTF-8");
+                                        } catch (UnsupportedEncodingException e) {}
+                                    }
+                                    if (content == null) {
+                                        content = new byte[0];
+                                    }
+                                    performSend(content, false);
+                                }
+                            }
+                        });
+
+                        adapter.setData(ol.optionList);
+                        mOptionListRecyclerView.setAdapter(adapter);
+
                     } else if (mItem instanceof CustomItem) {
                         final CustomItem citem = (CustomItem) mItem;
                         viewStub.setLayoutResource(R.layout.activity_dash_board_item_custom);
@@ -717,6 +786,13 @@ public class DetailViewDialog extends DialogFragment {
             if (mTextContent != null) {
                 mItem.setViewTextAppearance(mTextContent, mLabel.getTextColors().getDefaultColor());
                 String content = getContent();
+                if (mItem instanceof OptionList) { // implies mPublishEnabled == false
+                    /* if publish is not enabled, a text view is shown instad an options list */
+                    String displayValue = ((OptionList) mItem).getDisplayValue();
+                    if (displayValue != null) {
+                        content = displayValue;
+                    }
+                }
                 mTextContent.setText(content);
             }
 
@@ -883,7 +959,7 @@ public class DetailViewDialog extends DialogFragment {
                         mWebViewHTML = citem.getHtml();
                         mWebViewIsLoading = true;
                         //TODO: check, Samsung 4.4 does not refresh if use  loadDataWithBaseURL (see old solution with loadData();
-                        webView.loadDataWithBaseURL(CustomItem.BASE_URL ,mWebViewHTML, "text/html", "utf-8", null);
+                        webView.loadDataWithBaseURL(CustomItem.BASE_URL, mWebViewHTML, "text/html", "utf-8", null);
 
                         /*
                         String encodedHtml = Base64.encodeToString(mWebViewHTML.getBytes(), Base64.NO_PADDING);
@@ -901,6 +977,12 @@ public class DetailViewDialog extends DialogFragment {
                         }
                     }
                 }
+            } else if (mItem instanceof OptionList || mPublishEnabled) {
+                if (mOptionListRecyclerView != null && mOptionListRecyclerView.getAdapter() instanceof OptionListAdapter) {
+                    OptionListAdapter adapter = (OptionListAdapter) mOptionListRecyclerView.getAdapter();
+                    adapter.setSelection(getContent());
+                }
+
             } else {
                 //TODO: continue here to set other dash item related data
             }
@@ -1004,6 +1086,7 @@ public class DetailViewDialog extends DialogFragment {
     protected ProgressBar mProgressBar;
     protected Button mSwitchButton;
     protected ImageButton mSwitchImageButton;
+    protected RecyclerView mOptionListRecyclerView;
 
     protected long mCurrentPublishID;
     protected ProgressBar mItemProgressBar;
@@ -1017,7 +1100,7 @@ public class DetailViewDialog extends DialogFragment {
     protected String mWebViewHTML;
     protected String wrapper_webview_js;
     protected String javascript_color_js;
-
+    protected boolean mPublishEnabled;
 
     /* input controls */
     protected boolean mAutofillDisabled; // when user touches control, autofill (setting default value) is disabled until published
