@@ -106,6 +106,7 @@ public abstract class Item {
             case "progress" : item = new ProgressItem(); break;
             case "switch" : item = new Switch(); break;
             case "custom" : item = new CustomItem(); break;
+            case "optionlist" : item = new OptionList(); break;
         }
         if (item != null) {
             item.setJSONData(o);
@@ -128,7 +129,8 @@ public abstract class Item {
                 background = (int) bg;
             }
 
-            if (this instanceof GroupItem || this instanceof CustomItem) {
+            if (this instanceof GroupItem || this instanceof CustomItem || (this instanceof OptionList && detailView)) {
+                //TODO: image may be shown if detailView and not publishEnabled
                 /* no background images for groups and CustomItems (webviews) */
                 v.setBackgroundColor(background);
             } else {
