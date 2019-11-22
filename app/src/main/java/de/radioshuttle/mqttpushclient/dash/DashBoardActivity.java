@@ -259,6 +259,9 @@ public class DashBoardActivity extends AppCompatActivity implements
             case R.id.action_add_custom :
                 openEditor(CustomItem.class);
                 break;
+            case R.id.action_add_optionlist :
+                openEditor(OptionList.class);
+                break;
             case R.id.action_zoom :
                 zoom();
                 break;
