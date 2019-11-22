@@ -24,13 +24,18 @@
                 android:title="@string/action_add_progress"
                 app:showAsAction="never" />
             <item
-                android:id="@+id/action_add_group"
+                android:id="@+id/action_add_optionlist"
                 android:orderInCategory="23"
+                android:title="@string/action_add_optionlist"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_add_group"
+                android:orderInCategory="24"
                 android:title="@string/action_add_group"
                 app:showAsAction="never" />
             <item
                 android:id="@+id/action_add_custom"
-                android:orderInCategory="24"
+                android:orderInCategory="25"
                 android:title="@string/action_add_custom"
                 app:showAsAction="never" />
 
