@@ -664,18 +664,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (mItem instanceof OptionList) {
                     mOptionList = new LinkedList<>();
                     if (savedInstanceState == null) {
-                        //TODO: remove test data
-                        /*
-                        String[] data = {"low", "medium", "high"};
-                        OptionList.Option e;
-                        for(int i = 0; i < data.length; i++) {
-                            e = new OptionList.Option();
-                            e.value = String.valueOf((i + 1) * 10);
-                            e.displayValue = data[i];
-                            mOptionList.add(e);
+                        OptionList ol = (OptionList) mItem;
+                        if (ol.optionList != null && ol.optionList.size() > 0) {
+                            mOptionList.addAll(ol.optionList);
                         }
-                         */
-                        //TODO: end test data
                     } else {
                         ArrayList<String> optionVals = savedInstanceState.getStringArrayList(KEY_OPTIONLIST_VAL);
                         ArrayList<String> optionDisplay = savedInstanceState.getStringArrayList(KEY_OPTIONLIST_DISPLAY);
