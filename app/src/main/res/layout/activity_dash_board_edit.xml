@@ -159,6 +159,25 @@
                 </LinearLayout>
             </TableRow>
 
+            <TableRow android:id="@+id/rowOptionListHeader" android:layout_marginTop="24dp">
+                <TextView
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/dash_label_optionlist"
+                    android:layout_span="2"
+                    />
+            </TableRow>
+
+            <TableRow android:id="@+id/rowOptionList">
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/optionListRecyclerview"
+                    android:layout_marginLeft="24dp"
+                    android:layout_span="2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    />
+
+            </TableRow>
+
             <TableRow android:id="@+id/rowSwitchOn" android:layout_marginTop="24dp">
                 <TextView
                     android:textAppearance="?android:attr/textAppearanceMedium"
