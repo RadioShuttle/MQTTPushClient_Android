@@ -18,6 +18,9 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
@@ -42,6 +45,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -661,7 +665,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
 
                 /* option list */
+                TableRow rowOptionListHeader = findViewById(R.id.rowOptionListHeader);
+                TableRow rowOptionList = findViewById(R.id.rowOptionList);
+                mOptionListRecyclerView = findViewById(R.id.optionListRecyclerview);
                 if (mItem instanceof OptionList) {
+                    RecyclerView.ItemDecoration itemDecoration =
+                            new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+                    mOptionListRecyclerView.addItemDecoration(itemDecoration);
+                    mOptionListRecyclerView.setItemAnimator(null);
+                    mOptionListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
                     mOptionList = new LinkedList<>();
                     if (savedInstanceState == null) {
                         OptionList ol = (OptionList) mItem;
@@ -681,6 +694,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             }
                         }
                     }
+
+                    OptionListAdapter adapter = new OptionListAdapter(this, mDefaultTextColor, mDefaultBackground);
+                    mOptionListRecyclerView.setAdapter(adapter);
+                    LinkedList<OptionList.Option> ll = new LinkedList<>();
+                    ll.addAll(mOptionList);
+                    adapter.setData(ll);
+
+                } else {
+                    rowOptionListHeader.setVisibility(View.GONE);
+                    rowOptionList.setVisibility(View.GONE);
                 }
 
                 /* locked resources */
@@ -739,6 +762,83 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     }
 
+    protected void showEditOptionDialog(int mode, int pos, OptionList.Option entry) {
+        OptionEditDialog dlg = new OptionEditDialog();
+        Bundle args = new Bundle();
+
+        if (mode == MODE_ADD) {
+            args.putInt(ARG_MODE, MODE_ADD);
+        } else {
+            args.putInt(ARG_MODE, MODE_EDIT);
+        }
+        args.putInt(OptionEditDialog.ARG_POS, pos);
+        if (entry != null) {
+            args.putString(OptionEditDialog.ARG_PAYLOAD, entry.value);
+            args.putString(OptionEditDialog.ARG_DISPLAY_VAL, entry.displayValue);
+            args.putString(OptionEditDialog.ARG_IMAGE_URI, entry.imageURI);
+            if (!Utils.isEmpty(entry.error)) {
+                args.putString(OptionEditDialog.ARG_ERROR_1, entry.error);
+            }
+            if (!Utils.isEmpty(entry.errorImage)) {
+                args.putString(OptionEditDialog.ARG_ERROR_3, entry.errorImage);
+            }
+        }
+
+        dlg.setArguments(args);
+        dlg.show(getSupportFragmentManager(), OptionEditDialog.class.getSimpleName());
+    }
+
+    protected void onEditOptionDialogFinished(Bundle args, OptionList.Option entry) {
+        if (args != null && entry != null) {
+            OptionList.Option ae, found = null;
+            int foundPos = -1;
+            for(int i = 0; i < mOptionList.size(); i++) {
+                ae = mOptionList.get(i);
+                if (Utils.equals(entry.value, ae.value)) {
+                    found = ae;
+                    foundPos = i;
+                    break;
+                }
+            }
+
+            int mode = args.getInt(ARG_MODE);
+            int pos = args.getInt(OptionEditDialog.ARG_POS, -1);
+            if (found != null) {
+                // check if value is unique
+                if (mode == MODE_ADD || foundPos != pos) {
+                    entry.error = getString(R.string.dash_err_optionlist_unique);
+                    showEditOptionDialog(mode, pos, entry); //show an error
+                    return;
+                } else {
+                    if (pos >= 0 && pos < mOptionList.size()) {
+                        found = mOptionList.get(pos);
+                        if (Utils.equals(found.value, entry.value) &&
+                                Utils.equals(found.displayValue, entry.displayValue) &&
+                                Utils.equals(found.errorImage, entry.errorImage)) {
+                            return; // nothing has changed!
+                        }
+                    }
+                    found.value = entry.value;
+                    found.displayValue = entry.displayValue;
+                    found.imageURI = entry.imageURI;
+                }
+            } else {
+                if (mode == MODE_ADD) {
+                    mOptionList.add(entry);
+                }
+            }
+
+            //TODO: rework (the adapter will change, and usage of notifydatachanged(pos, list))
+            LinkedList<OptionList.Option> linkedList = new LinkedList<>();
+            linkedList.addAll(mOptionList);
+            RecyclerView.Adapter a = mOptionListRecyclerView.getAdapter();
+            if (a instanceof OptionListAdapter) { //TODO: adapter will change
+                OptionListAdapter ola = (OptionListAdapter) a;
+                ola.setData(linkedList);
+            }
+        }
+    }
+
     protected void tintBackgroundButton() {
         if(mButtonBackgroundImg != null && mButtonBackgroundImgEmpty != null && mItem != null) {
             int color;
@@ -762,6 +862,14 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 ViewCompat.setBackgroundTintList(mButtonBackgroundImgEmpty, background);
             } else {
                 ViewCompat.setBackgroundTintList(mButtonBackgroundImg, background);
+                //TODO: tint internal image with default color?
+                /*
+                if (ImageResource.isInternalResource(mBackgroundURI)) {
+                    ImageViewCompat.setImageTintList(
+                            mButtonBackgroundImg,
+                            ColorStateList.valueOf(ContextCompat.getColor(this, R.color.button_tint_default)));
+                }
+                 */
             }
         }
     }
@@ -1067,6 +1175,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         switch (item.getItemId()) {
             case android.R.id.home:
                 handleBackPressed();
+                break;
+            case R.id.action_add:
+                showEditOptionDialog(MODE_ADD, -1, null);
                 break;
             case R.id.action_save:
                 checkAndSave();
@@ -1830,6 +1941,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (m != null) {
             m.setEnabled(!mViewModel.isSaveRequestActive());
         }
+        m = menu.findItem(R.id.action_add);
+        if (m != null) {
+            m.setVisible(mItem instanceof OptionList);
+            m.setEnabled(!mViewModel.isSaveRequestActive());
+        }
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -2014,6 +2130,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected Button mButtonBackgroundImgEmpty;
     protected ImageButton mButtonBackgroundImg;
     protected TextView mBackgroundImageNote;
+    protected RecyclerView mOptionListRecyclerView;
 
     protected String mOffImageURI, mOnImageURI, mBackgroundURI;
 
@@ -2093,4 +2210,5 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static int CTRL_ON_STATE = 0;
     protected final static int CTRL_OFF_STATE = 1;
     protected final static int CTRL_BACKGROUND = 2;
+
 }
