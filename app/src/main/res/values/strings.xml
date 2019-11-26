@@ -249,9 +249,14 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="title_edit_switch">Edit Button/Switch</string>
     <string name="title_edit_custom">Edit Custom View</string>
     <string name="title_edit_optionlist">Edit Option List</string>
+    <string name="title_add_option_entry">Add Option</string>
+    <string name="title_edit_option_entry">Edit Option</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
+    <string name="dash_label_option_payload">Value:</string>
+    <string name="dash_label_option_displayval">Label:</string>
+    <string name="dash_label_option_image">Image:</string>
     <string name="dash_label_text_color">Text Color:</string>
     <string name="dash_label_bcolor_header">Background</string>
     <string name="dash_label_bcolor">Color:</string>
@@ -274,6 +279,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_label_transparent">Transp.</string>
     <string name="dash_label_clear">Clear</string>
     <string name="dash_label_image">Image:</string>
+    <string name="dash_label_optionlist">Option List</string>
     <string name="dash_label_empty_image_btn">None</string>
 
     <string-array name="dash_label_size_array">
@@ -312,6 +318,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_err_version_err">Version error. Quit the editor to update to the latest version.</string>
     <string name="dash_err_version_err_replaced">Version error. Dashboard has been replaced by a newer version.</string>
     <string name="dash_err_subscribe_failed">Subscribe to topic failed.</string>
+    <string name="dash_err_optionlist_unique">An option with this value already exists.</string>
 
     <string name="dash_update_dlg_title">Update required</string>
     <string name="dash_update_dlg_msg">This dashboard was created with a newer version. To modify the dashboard, update this app.</string>
