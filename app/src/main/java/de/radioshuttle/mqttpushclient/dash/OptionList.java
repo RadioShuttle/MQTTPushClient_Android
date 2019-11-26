@@ -38,6 +38,7 @@ public class OptionList extends Item {
                     jsonOption = new JSONObject();
                     jsonOption.put("value", option.value);
                     jsonOption.put("displayvalue", option.displayValue == null ? "" : option.displayValue);
+                    jsonOption.put("uri", option.value);
                     jsonArr.put(jsonOption);
                 }
             }
@@ -63,9 +64,8 @@ public class OptionList extends Item {
                     option = new Option();
                     option.value = jsonOption.optString("value");
                     option.displayValue = jsonOption.optString("displayvalue");
-                    if (!Utils.isEmpty(option.value)) {
-                        optionList.add(option);
-                    }
+                    option.imageURI = jsonOption.optString("uri");
+                    optionList.add(option);
                 }
             }
         }
@@ -93,5 +93,10 @@ public class OptionList extends Item {
         }
         public String value;
         public String displayValue;
+        public String imageURI;
+
+        // helper vars used in UI
+        public String error; // valueError (e.g. value not unique)
+        public String errorImage; // image resource not found
     }
 }
