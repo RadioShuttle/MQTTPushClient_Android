@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    android:padding="16dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:scrollbars="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/optionListTable"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        >
+
+        <TextView
+            android:id="@+id/dash_option_payload_label"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@+id/dash_option_payload"
+            android:text="@string/dash_label_option_payload"/>
+
+        <EditText
+            android:id="@+id/dash_option_payload"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dash_option_payload_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:ems="15"
+            android:minHeight="48dp"
+            android:layout_marginLeft="4dp"
+            />
+
+        <TextView
+            android:id="@+id/dash_option_displayval_label"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dash_option_payload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@+id/dash_option_displayval"
+            android:text="@string/dash_label_option_displayval"/>
+
+        <EditText
+            android:id="@+id/dash_option_displayval"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dash_option_displayval_label"
+            android:inputType="text"
+            android:ems="15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginLeft="4dp"
+            />
+
+        <TextView
+            android:id="@+id/dash_option_image_label"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dash_option_displayval"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@+id/dash_option_image_none"
+            android:text="@string/dash_label_option_image"
+            />
+
+        <Button
+            android:layout_marginTop="4dp"
+            android:id="@+id/dash_option_image_none"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dash_label_empty_image_btn"
+            android:minHeight="48dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dash_option_image_label"
+            />
+
+        <ImageButton
+            android:layout_marginTop="4dp"
+            android:id="@+id/dash_option_image"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dash_option_image_label"
+            android:visibility="invisible"
+            android:scaleType="fitCenter"
+            android:minHeight="48dp"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            />
+
+        <TextView
+            android:id="@+id/dash_option_image_note"
+            android:textAppearance="?android:textAppearanceSmall"
+            app:layout_constraintTop_toTopOf="@id/dash_option_image_none"
+            app:layout_constraintBottom_toBottomOf="@id/dash_option_image_none"
+            app:layout_constraintLeft_toRightOf="@id/dash_option_image_none"
+            android:layout_gravity="center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>
