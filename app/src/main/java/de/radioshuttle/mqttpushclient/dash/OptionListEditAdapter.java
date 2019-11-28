@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,14 +18,16 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.LinkedList;
+import java.util.Map;
 
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 
 public class OptionListEditAdapter extends RecyclerView.Adapter<OptionListEditAdapter.ViewHolder>{
 
-    public OptionListEditAdapter(Context context) {
+    public OptionListEditAdapter(Context context, DashBoardViewModel viewModel) {
         mInflater = LayoutInflater.from(context);
+        mViewModel = viewModel;
     }
 
     public void setRowSelectionListener(RowSelectionListener callback) {
@@ -89,6 +92,15 @@ public class OptionListEditAdapter extends RecyclerView.Adapter<OptionListEditAd
                 (Utils.isEmpty(item.displayValue) ? "" : item.displayValue);
         holder.label.setText(label);
         holder.itemView.setSelected(item.selected != 0L);
+        if (Utils.isEmpty(item.imageURI)) {
+            if (holder.image.getDrawable() != null) {
+                holder.image.setImageDrawable(null);
+            }
+        } else {
+            Map<String, Drawable> cache = mViewModel.getOptionListImageCache();
+            Drawable img = cache.get(item.imageURI);
+            holder.image.setImageDrawable(img);
+        }
     }
 
     public void setData(LinkedList<OptionList.Option> list) {
@@ -174,6 +186,7 @@ public class OptionListEditAdapter extends RecyclerView.Adapter<OptionListEditAd
         void onSelectionChange(int noOfSelectedItemsBefore, int noOfSelectedItems);
     }
 
+    protected DashBoardViewModel mViewModel;
     protected LayoutInflater mInflater;
     protected LinkedList<OptionList.Option> mData;
     protected RowSelectionListener mRowSelectionListener;
