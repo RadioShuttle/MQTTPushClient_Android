@@ -41,7 +41,7 @@ public class OptionList extends Item {
                     jsonOption = new JSONObject();
                     jsonOption.put("value", option.value);
                     jsonOption.put("displayvalue", option.displayValue == null ? "" : option.displayValue);
-                    jsonOption.put("uri", option.value);
+                    jsonOption.put("uri", option.imageURI);
                     jsonArr.put(jsonOption);
                 }
             }
