@@ -6,6 +6,9 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -87,9 +90,13 @@ public class OptionList extends Item {
 
     public static class Option {
         public Option() {}
-        public Option(String value, String displayValue) {
+        public Option(String value, String displayValue, String uri) {
             this.value = value;
             this.displayValue = displayValue;
+            this.imageURI = uri;
+        }
+        public Option(Option o) {
+            this(o.value, o.displayValue, o.imageURI);
         }
         public String value;
         public String displayValue;
@@ -98,5 +105,8 @@ public class OptionList extends Item {
         // helper vars used in UI
         public String error; // valueError (e.g. value not unique)
         public String errorImage; // image resource not found
+        int newPos = AdapterView.INVALID_POSITION; //
+        long selected; // 0 == not selected, >=0 selection timestamp
+        int temp;
     }
 }
