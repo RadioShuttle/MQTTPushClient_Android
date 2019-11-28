@@ -711,9 +711,21 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         }
                     }
 
-                    mOptionListEditAdapter = new OptionListEditAdapter(this);
+                    mOptionListEditAdapter = new OptionListEditAdapter(this, mViewModel);
                     mOptionListRecyclerView.setAdapter(mOptionListEditAdapter);
                     mOptionListEditAdapter.setData(optionList);
+                    mViewModel.loadOptionListImages(optionList);
+                    mViewModel.mOptionListImageUpdate.observe(this, new Observer<Long>() {
+                        @Override
+                        public void onChanged(Long taskID) {
+                            if (mViewModel != null && mViewModel.isCurrentOptionImageLoadTask(taskID)) {
+                                mViewModel.configrmOptionImageTaskDeliverd();
+                                if (mOptionListEditAdapter != null) {
+                                    mOptionListEditAdapter.notifyDataSetChanged(); // images loaded -> repaint
+                                }
+                            }
+                        }
+                    });
 
                     mOptionListActionModeCallback = new ActionMode.Callback() {
 
@@ -963,7 +975,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
             }
             if (mOptionListEditAdapter != null) {
-                mOptionListEditAdapter.notifyDataSetChanged(); //TODO: test
+                mViewModel.loadOptionListImages(optionList);
+                mOptionListEditAdapter.notifyDataSetChanged();
             }
         }
     }
