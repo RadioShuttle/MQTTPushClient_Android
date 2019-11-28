@@ -299,6 +299,10 @@ to communicate with the MQTT broker and to receive push notifications
         <item name="dash_label_input_number">Number</item>
     </string-array>
 
+    <string name="dlg_delete_option_title">Delete Option</string>
+    <string name="dlg_delete_option_msg">Delete selection option</string>
+    <string name="dlg_delete_option_msg_pl">Delete selection options.</string>
+
     <string name="dash_item_unknown">Unknown view type</string>
     <string name="dash_item_err">Error:</string>
     <string name="error_input_ge0">Value must be greater than 0</string>
