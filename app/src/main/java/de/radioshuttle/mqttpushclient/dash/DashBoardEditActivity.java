@@ -2193,7 +2193,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     for(int i = 0; i < curr.size(); i++) {
                         o1 = prev.get(i);
                         o2 = curr.get(i);
-                        if (!Utils.equals(o1.value, o2.value) || !Utils.equals(o1.displayValue, o2.displayValue)) {
+                        if (!Utils.equals(o1.value, o2.value) || !Utils.equals(o1.displayValue, o2.displayValue)
+                            || !Utils.equals(o1.imageURI, o2.imageURI)) {
                             changed = true;
                             break;
                         }
