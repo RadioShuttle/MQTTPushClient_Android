@@ -9,6 +9,7 @@ package de.radioshuttle.mqttpushclient.dash;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ImageViewCompat;
@@ -71,6 +72,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -78,8 +80,7 @@ import java.util.Set;
 public class DashBoardEditActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener, ColorPickerDialog.Callback,
         CertificateErrorDialog.Callback,
-        Observer<Request>
-{
+        Observer<Request> {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +114,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         int itemID;
         itemID = args.getInt(ARG_ITEM_ID, -1);
         dashboardContentRaw = args.getString(ARG_DASHBOARD, "");
-        dashboardContentVersion =  args.getLong(ARG_DASHBOARD_VERSION, 0L);
+        dashboardContentVersion = args.getLong(ARG_DASHBOARD_VERSION, 0L);
         // mDefaultClearColor = DColor.fetchColor(this, R.attr.background);
         mDefaultClearColor = Color.TRANSPARENT;
 
@@ -139,7 +140,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         }
                         mItem = ic.item;
                         if (savedInstanceState == null) {
-                            mSelectedTextIdx = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize ) -1;
+                            mSelectedTextIdx = (mItem.textsize <= 0 ? Item.DEFAULT_TEXTSIZE : mItem.textsize) - 1;
                             if (mItem instanceof TextItem) {
                                 mSelectedInputTypeIdx = ((TextItem) mItem).inputtype;
                             }
@@ -207,7 +208,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mBColorButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(mDefaultBackground, mBackground, mColorLabelBorderColor,  "bcolor", false);
+                            showColorDialog(mDefaultBackground, mBackground, mColorLabelBorderColor, "bcolor", false);
                         }
                     });
                 }
@@ -270,7 +271,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             // DBUtils.spinnerSelectWorkaround(mGroupSpinner, mSelectedGroupIdx, "group");
                             ArrayList<String> groups = new ArrayList<>();
                             List<GroupItem> groupItems = mViewModel.getGroups();
-                            for(int i = 0; i < groupItems.size(); i++) {
+                            for (int i = 0; i < groupItems.size(); i++) {
                                 groups.add(groupItems.get(i).label);
                             }
                             ArrayAdapter<String> a = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, groups);
@@ -488,13 +489,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mBColorOffButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showColorDialog(mDefaultButtonBackground, mOffBackground, mColorLabelBorderColor,  "off_bcolor", false);
+                            showColorDialog(mDefaultButtonBackground, mOffBackground, mColorLabelBorderColor, "off_bcolor", false);
                         }
                     });
 
                     if (mOnColor == DColor.OS_DEFAULT) {
                         color = mDefaultButtonTintColor;
-                    } else if (mOnColor == DColor.CLEAR){
+                    } else if (mOnColor == DColor.CLEAR) {
                         color = mDefaultClearColor;
                     } else {
                         color = (int) mOnColor;
@@ -511,7 +512,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                     if (mOffColor == DColor.OS_DEFAULT) {
                         color = mDefaultButtonTintColor;
-                    } else if (mOffColor == DColor.CLEAR){
+                    } else if (mOffColor == DColor.CLEAR) {
                         color = mDefaultClearColor;
                     } else {
                         color = (int) mOffColor;
@@ -564,7 +565,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                                 openFilterScriptEditor();
                             }
                         });
-                        if (savedInstanceState == null){
+                        if (savedInstanceState == null) {
                             mFilterScriptContent = mItem.script_f;
                         } else {
                             mFilterScriptContent = savedInstanceState.getString(KEY_FILTER_SCRIPT, "");
@@ -632,7 +633,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                                 openOutputScriptEditor();
                             }
                         });
-                        if (savedInstanceState == null){
+                        if (savedInstanceState == null) {
                             mOutputScriptContent = mItem.script_p;
                         } else {
                             mOutputScriptContent = savedInstanceState.getString(KEY_OUTPUT_SCRIPT, "");
@@ -650,18 +651,18 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 htmlRow = findViewById(R.id.rowHTML);
                 if (htmlRow != null) {
                     mEditTextHTML = findViewById(R.id.editHTML);
-                     if(!(mItem instanceof CustomItem)) {
-                         htmlRow.setVisibility(View.GONE);
-                     } else {
-                         if (savedInstanceState == null) {
-                             mEditTextHTML.setText(((CustomItem) mItem).getHtml());
-                         }
-                         View tmpRow = findViewById(R.id.rowBackgroundImage);
-                         if (tmpRow != null) {
-                             tmpRow.setVisibility(View.GONE);
-                         }
-                         
-                     }
+                    if (!(mItem instanceof CustomItem)) {
+                        htmlRow.setVisibility(View.GONE);
+                    } else {
+                        if (savedInstanceState == null) {
+                            mEditTextHTML.setText(((CustomItem) mItem).getHtml());
+                        }
+                        View tmpRow = findViewById(R.id.rowBackgroundImage);
+                        if (tmpRow != null) {
+                            tmpRow.setVisibility(View.GONE);
+                        }
+
+                    }
                 }
 
                 /* option list */
@@ -675,31 +676,95 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mOptionListRecyclerView.setItemAnimator(null);
                     mOptionListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-                    mOptionList = new LinkedList<>();
+                    LinkedList<OptionList.Option> optionList = new LinkedList<>();
                     if (savedInstanceState == null) {
                         OptionList ol = (OptionList) mItem;
                         if (ol.optionList != null && ol.optionList.size() > 0) {
-                            mOptionList.addAll(ol.optionList);
+                            for (OptionList.Option e : ol.optionList) {
+                                optionList.add(new OptionList.Option(e)); // make a deep copy
+                            }
                         }
                     } else {
                         ArrayList<String> optionVals = savedInstanceState.getStringArrayList(KEY_OPTIONLIST_VAL);
                         ArrayList<String> optionDisplay = savedInstanceState.getStringArrayList(KEY_OPTIONLIST_DISPLAY);
+                        ArrayList<String> optionURI = savedInstanceState.getStringArrayList(KEY_OPTIONLIST_URI);
+                        long[] optionSelected = savedInstanceState.getLongArray(KEY_OPTIONLIST_SELECTED);
                         OptionList.Option option;
-                        if (optionVals != null && optionDisplay != null) {
-                            for(int i = 0; i < optionVals.size() && i < optionDisplay.size(); i++) {
+                        if (optionVals != null && optionDisplay != null && optionURI != null) {
+                            for (int i = 0; i < optionVals.size() && i < optionDisplay.size(); i++) {
                                 option = new OptionList.Option();
                                 option.value = optionVals.get(i);
                                 option.displayValue = optionDisplay.get(i);
-                                mOptionList.add(option);
+                                option.imageURI = optionURI.get(i);
+                                option.selected = optionSelected[i];
+                                optionList.add(option);
                             }
                         }
                     }
 
-                    OptionListAdapter adapter = new OptionListAdapter(this, mDefaultTextColor, mDefaultBackground);
-                    mOptionListRecyclerView.setAdapter(adapter);
-                    LinkedList<OptionList.Option> ll = new LinkedList<>();
-                    ll.addAll(mOptionList);
-                    adapter.setData(ll);
+                    mOptionListEditAdapter = new OptionListEditAdapter(this);
+                    mOptionListRecyclerView.setAdapter(mOptionListEditAdapter);
+                    mOptionListEditAdapter.setData(optionList);
+
+                    mOptionListActionModeCallback = new ActionMode.Callback() {
+
+                        @Override
+                        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                            MenuInflater inflater = mode.getMenuInflater();
+                            /* use topics menu (with edit and delete action)*/
+                            inflater.inflate(R.menu.activity_topics_action, menu);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                            boolean handled = false;
+                            switch (item.getItemId()) {
+                                case R.id.action_delete_topics: // == delete option
+                                    showOptionDeleteDlg();
+                                    handled = true;
+                                    break;
+                                case R.id.action_edit_topic: // == edit option
+                                    if (mOptionListEditAdapter != null) {
+                                        OptionList.Option sel = mOptionListEditAdapter.getLastSelectedItem();
+                                        if (sel != null) {
+                                            showEditOptionDialog(MODE_EDIT, sel.temp, sel);
+                                            handled = true;
+                                        }
+                                    }
+                                    break;
+                            }
+                            return handled;
+                        }
+
+                        @Override
+                        public void onDestroyActionMode(ActionMode mode) {
+                            if (mOptionListEditAdapter != null)
+                                mOptionListEditAdapter.clearSelection();
+                            mOptionListActionMode = null;
+                        }
+                    };
+
+                    if (mOptionListEditAdapter.hasSelection()) {
+                        mOptionListActionMode = startSupportActionMode(mOptionListActionModeCallback);
+                    }
+
+                    mOptionListEditAdapter.setRowSelectionListener(new OptionListEditAdapter.RowSelectionListener() {
+                        @Override
+                        public void onSelectionChange(int noOfSelectedItemsBefore, int noOfSelectedItems) {
+                            if (noOfSelectedItemsBefore == 0 && noOfSelectedItems > 0) {
+                                mOptionListActionMode = startSupportActionMode(mOptionListActionModeCallback);
+                            } else if (noOfSelectedItemsBefore > 0 && noOfSelectedItems == 0) {
+                                if (mOptionListActionMode != null)
+                                    mOptionListActionMode.finish();
+                            }
+                        }
+                    });
 
                 } else {
                     rowOptionListHeader.setVisibility(View.GONE);
@@ -753,7 +818,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        mViewModel.mSaveRequest.observe(this, this );
+        mViewModel.mSaveRequest.observe(this, this);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setEnabled(false);
@@ -762,17 +827,65 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     }
 
+    protected void showOptionDeleteDlg() {
+        if (mOptionListEditAdapter != null) {
+            if (mOptionListEditAdapter.mData != null) {
+                LinkedList<OptionList.Option> list = new LinkedList<>(mOptionListEditAdapter.mData);
+                Iterator<OptionList.Option> it = list.iterator();
+                OptionList.Option e;
+                int cnt = 0;
+                while (it.hasNext()) {
+                    e = it.next();
+                    if (e.selected != 0) {
+                        cnt++;
+                    }
+                }
+                OptionDeleteDialog dlg = new OptionDeleteDialog();
+                Bundle args = new Bundle();
+                args.putInt(OptionDeleteDialog.NO_SELECTED, cnt);
+                dlg.setArguments(args);
+                dlg.show(getSupportFragmentManager(), OptionDeleteDialog.class.getSimpleName());
+            }
+        }
+    }
+
+    protected void deleteSelectedOptions() {
+        if (mOptionListEditAdapter.mData != null) {
+            LinkedList<OptionList.Option> list = new LinkedList<>(mOptionListEditAdapter.mData);
+            Iterator<OptionList.Option> it = list.iterator();
+            OptionList.Option e;
+            int cnt = 0;
+            while (it.hasNext()) {
+                e = it.next();
+                if (e.selected != 0) {
+                    it.remove();
+                }
+            }
+            mOptionListEditAdapter.setData(list);
+            if (!mOptionListEditAdapter.hasSelection()) {
+                if (mOptionListActionMode != null) {
+                    mOptionListActionMode.finish();
+                }
+            }
+        }
+    }
+
     protected void showEditOptionDialog(int mode, int pos, OptionList.Option entry) {
         OptionEditDialog dlg = new OptionEditDialog();
         Bundle args = new Bundle();
+        LinkedList<OptionList.Option> optionList = mOptionListEditAdapter != null ? mOptionListEditAdapter.mData : null;
+
 
         if (mode == MODE_ADD) {
             args.putInt(ARG_MODE, MODE_ADD);
+            pos = (optionList == null ? 0 : optionList.size());
         } else {
             args.putInt(ARG_MODE, MODE_EDIT);
         }
         args.putInt(OptionEditDialog.ARG_POS, pos);
+        args.putInt(OptionEditDialog.ARG_LISTSIZE, optionList == null ? 0 : optionList.size());
         if (entry != null) {
+            args.putInt(OptionEditDialog.ARG_NEW_POS, entry.newPos);
             args.putString(OptionEditDialog.ARG_PAYLOAD, entry.value);
             args.putString(OptionEditDialog.ARG_DISPLAY_VAL, entry.displayValue);
             args.putString(OptionEditDialog.ARG_IMAGE_URI, entry.imageURI);
@@ -789,52 +902,58 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     }
 
     protected void onEditOptionDialogFinished(Bundle args, OptionList.Option entry) {
+        LinkedList<OptionList.Option> optionList = mOptionListEditAdapter != null ? mOptionListEditAdapter.mData : null;
+
+        if (optionList == null) {// should never be the case
+            optionList = new LinkedList<>();
+        }
+
         if (args != null && entry != null) {
-            OptionList.Option ae, found = null;
-            int foundPos = -1;
-            for(int i = 0; i < mOptionList.size(); i++) {
-                ae = mOptionList.get(i);
+            OptionList.Option ae;
+
+            /* entry.value must be unique */
+            int cnt = 0;
+            for(int i = 0; i < optionList.size(); i++) {
+                ae = optionList.get(i);
                 if (Utils.equals(entry.value, ae.value)) {
-                    found = ae;
-                    foundPos = i;
-                    break;
+                    cnt++;
                 }
             }
 
             int mode = args.getInt(ARG_MODE);
             int pos = args.getInt(OptionEditDialog.ARG_POS, -1);
-            if (found != null) {
-                // check if value is unique
-                if (mode == MODE_ADD || foundPos != pos) {
-                    entry.error = getString(R.string.dash_err_optionlist_unique);
-                    showEditOptionDialog(mode, pos, entry); //show an error
-                    return;
-                } else {
-                    if (pos >= 0 && pos < mOptionList.size()) {
-                        found = mOptionList.get(pos);
-                        if (Utils.equals(found.value, entry.value) &&
-                                Utils.equals(found.displayValue, entry.displayValue) &&
-                                Utils.equals(found.errorImage, entry.errorImage)) {
-                            return; // nothing has changed!
-                        }
-                    }
-                    found.value = entry.value;
-                    found.displayValue = entry.displayValue;
-                    found.imageURI = entry.imageURI;
-                }
-            } else {
-                if (mode == MODE_ADD) {
-                    mOptionList.add(entry);
-                }
+            int newPos = entry.newPos;
+
+            if (cnt > 1) { // not unique?
+                entry.error = getString(R.string.dash_err_optionlist_unique);
+                showEditOptionDialog(mode, pos, entry); // reopen edit dialog with error msg
+                return;
             }
 
-            //TODO: rework (the adapter will change, and usage of notifydatachanged(pos, list))
-            LinkedList<OptionList.Option> linkedList = new LinkedList<>();
-            linkedList.addAll(mOptionList);
-            RecyclerView.Adapter a = mOptionListRecyclerView.getAdapter();
-            if (a instanceof OptionListAdapter) { //TODO: adapter will change
-                OptionListAdapter ola = (OptionListAdapter) a;
-                ola.setData(linkedList);
+            if (mode == MODE_ADD) {
+                if (newPos >= 0 && newPos < optionList.size()) {
+                    optionList.add(newPos, entry);
+                } else {
+                    optionList.add(entry);
+                }
+            } else { // MODE_EDIT
+                if (pos >= 0 && pos < optionList.size()) { // should always be the case
+                    ae = optionList.get(pos);
+                    ae.value = entry.value;
+                    ae.displayValue = entry.displayValue;
+                    ae.imageURI = entry.imageURI;
+                    if (newPos != -1 && newPos != pos) {
+                        optionList.remove(pos);
+                        if (newPos >= optionList.size()) {
+                            optionList.add(ae);
+                        } else {
+                            optionList.add(newPos, ae);
+                        }
+                    }
+                }
+            }
+            if (mOptionListEditAdapter != null) {
+                mOptionListEditAdapter.notifyDataSetChanged(); //TODO: test
             }
         }
     }
@@ -1136,19 +1255,29 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (!mLockedResources.isEmpty()) {
             outState.putStringArrayList(KEY_LOCKED_RES, new ArrayList<>(mLockedResources));
         }
-        if (mOptionList != null) {
-            ArrayList<String> vals = new ArrayList<>();
-            ArrayList<String> dvals = new ArrayList<>();
-            for(OptionList.Option o : mOptionList) {
-                vals.add(o.value == null ? "" : o.value);
-                dvals.add(o.displayValue == null ? "" : o.displayValue);
-            }
-            if (vals.size() > 0) {
-                outState.putStringArrayList(KEY_OPTIONLIST_VAL, vals);
-                outState.putStringArrayList(KEY_OPTIONLIST_DISPLAY, dvals);
+
+        if (mOptionListEditAdapter != null) {
+            if (mOptionListEditAdapter.mData != null) {
+                ArrayList<String> vals = new ArrayList<>();
+                ArrayList<String> dvals = new ArrayList<>();
+                ArrayList<String> uris = new ArrayList<>();
+                long[] selected = new long[mOptionListEditAdapter.mData.size()];
+                OptionList.Option o;
+                for(int i = 0; i < mOptionListEditAdapter.mData.size(); i++) {
+                    o = mOptionListEditAdapter.mData.get(i);
+                    vals.add(o.value == null ? "" : o.value);
+                    dvals.add(o.displayValue == null ? "" : o.displayValue);
+                    uris.add(o.imageURI == null ? "" : o.imageURI);
+                    selected[i] = o.selected;
+                }
+                if (vals.size() > 0) {
+                    outState.putStringArrayList(KEY_OPTIONLIST_VAL, vals);
+                    outState.putStringArrayList(KEY_OPTIONLIST_DISPLAY, dvals);
+                    outState.putStringArrayList(KEY_OPTIONLIST_URI, uris);
+                    outState.putLongArray(KEY_OPTIONLIST_SELECTED, selected);
+                }
             }
         }
-
     }
 
     protected void handleBackPressed() {
@@ -1825,8 +1954,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     } else {
                         item.optionList = new LinkedList<>();
                     }
-                    if (mOptionList != null && mOptionList.size() > 0) {
-                        item.optionList.addAll(mOptionList);
+
+                    if (mOptionListEditAdapter != null) {
+                        if (mOptionListEditAdapter.mData != null && mOptionListEditAdapter.mData.size() > 0) {
+                            item.optionList.addAll(mOptionListEditAdapter.mData);
+                        }
                     }
                 }
             }
@@ -2034,7 +2166,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             if (!changed && mItem instanceof OptionList) {
                 OptionList ol = (OptionList) mItem;
                 LinkedList<OptionList.Option> prev = ol.optionList;
-                LinkedList<OptionList.Option> curr = mOptionList;
+                LinkedList<OptionList.Option> curr = mOptionListEditAdapter != null ? mOptionListEditAdapter.mData : null;
                 if (prev == null) {
                     prev = new LinkedList<>();
                 }
@@ -2130,7 +2262,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected Button mButtonBackgroundImgEmpty;
     protected ImageButton mButtonBackgroundImg;
     protected TextView mBackgroundImageNote;
+
     protected RecyclerView mOptionListRecyclerView;
+    protected OptionListEditAdapter mOptionListEditAdapter;
+    private ActionMode mOptionListActionMode;
+    private ActionMode.Callback mOptionListActionModeCallback;
 
     protected String mOffImageURI, mOnImageURI, mBackgroundURI;
 
@@ -2152,8 +2288,6 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected long mOffColor;
     protected long mOnColor;
 
-    protected LinkedList<OptionList.Option> mOptionList; //TODO: this maybe replaced by an adapter object later
-
     protected final static String KEY_TEXTCOLOR = "KEY_TEXTCOLOR";
     protected final static String KEY_BACKGROUND = "KEY_BACKGROUND";
     protected final static String KEY_PROGCOLOR = "KEY_PROGCOLOR";
@@ -2164,8 +2298,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static String KEY_ON_IMAGE_URI = "KEY_ON_IMAGE_URI";
     protected final static String KEY_OFF_IMAGE_URI = "KEY_OFF_IMAGE_URI";
     protected final static String KEY_BACKGROUND_URI = "KEY_BACKGROUND_URI";
-    protected final static String KEY_OPTIONLIST_VAL= "KEY_OPTIONLIST_VAL";
-    protected final static String KEY_OPTIONLIST_DISPLAY= "KEY_OPTIONLIST_DISPLAY";
+    protected final static String KEY_OPTIONLIST_VAL = "KEY_OPTIONLIST_VAL";
+    protected final static String KEY_OPTIONLIST_DISPLAY = "KEY_OPTIONLIST_DISPLAY";
+    protected final static String KEY_OPTIONLIST_URI = "KEY_OPTIONLIST_URI";
+    protected final static String KEY_OPTIONLIST_SELECTED = "KEY_OPTIONLIST_SELECTED";
 
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
