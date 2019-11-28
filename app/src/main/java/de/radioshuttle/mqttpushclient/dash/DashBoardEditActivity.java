@@ -933,18 +933,21 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (args != null && entry != null) {
             OptionList.Option ae;
 
+            int mode = args.getInt(ARG_MODE);
+            int pos = args.getInt(OptionEditDialog.ARG_POS, -1);
+            int newPos = entry.newPos;
+
             /* entry.value must be unique */
             int cnt = 0;
             for(int i = 0; i < optionList.size(); i++) {
                 ae = optionList.get(i);
-                if (Utils.equals(entry.value, ae.value)) {
+                if (Utils.equals(entry.value, ae.value) || pos == i) {
                     cnt++;
                 }
             }
-
-            int mode = args.getInt(ARG_MODE);
-            int pos = args.getInt(OptionEditDialog.ARG_POS, -1);
-            int newPos = entry.newPos;
+            if (mode == MODE_ADD) {
+                cnt++;
+            }
 
             if (cnt > 1) { // not unique?
                 entry.error = getString(R.string.dash_err_optionlist_unique);
