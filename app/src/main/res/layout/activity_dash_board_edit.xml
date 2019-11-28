@@ -171,9 +171,11 @@
 
             <TableRow android:id="@+id/rowOptionListHeader" android:layout_marginTop="24dp">
                 <TextView
+                    android:layout_span="2"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="@string/dash_label_optionlist"
-                    android:layout_span="2"
                     />
             </TableRow>
 
@@ -185,8 +187,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     />
-
             </TableRow>
+
+            <TableRow android:id="@+id/rowOptionListAdd">
+                <Button
+                    android:layout_gravity="left|center_vertical"
+                    android:layout_column="1"
+                    android:id="@+id/optionListAddButton"
+                    android:minHeight="48dp"
+                    style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                    android:text="@string/action_add"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </TableRow>
+
 
             <TableRow android:id="@+id/rowSwitchOn" android:layout_marginTop="24dp">
                 <TextView

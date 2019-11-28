@@ -668,6 +668,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 /* option list */
                 TableRow rowOptionListHeader = findViewById(R.id.rowOptionListHeader);
                 TableRow rowOptionList = findViewById(R.id.rowOptionList);
+                TableRow rowOptionAdd = findViewById(R.id.rowOptionListAdd);
                 mOptionListRecyclerView = findViewById(R.id.optionListRecyclerview);
                 if (mItem instanceof OptionList) {
                     RecyclerView.ItemDecoration itemDecoration =
@@ -675,6 +676,14 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     mOptionListRecyclerView.addItemDecoration(itemDecoration);
                     mOptionListRecyclerView.setItemAnimator(null);
                     mOptionListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+                    mButtonOptionAdd = findViewById(R.id.optionListAddButton);
+                    mButtonOptionAdd.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            showEditOptionDialog(MODE_ADD, -1, null);
+                        }
+                    });
 
                     LinkedList<OptionList.Option> optionList = new LinkedList<>();
                     if (savedInstanceState == null) {
@@ -769,6 +778,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 } else {
                     rowOptionListHeader.setVisibility(View.GONE);
                     rowOptionList.setVisibility(View.GONE);
+                    rowOptionAdd.setVisibility(View.GONE);
                 }
 
                 /* locked resources */
@@ -2063,6 +2073,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (mItem instanceof CustomItem) {
             setEnabled(mEditTextHTML, enableFields);
         }
+        if (mItem instanceof OptionList) {
+            setEnabled(mButtonOptionAdd, enableFields);
+        }
 
         invalidateOptionsMenu();
     }
@@ -2267,6 +2280,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected OptionListEditAdapter mOptionListEditAdapter;
     private ActionMode mOptionListActionMode;
     private ActionMode.Callback mOptionListActionModeCallback;
+    protected Button mButtonOptionAdd;
 
     protected String mOffImageURI, mOnImageURI, mBackgroundURI;
 
