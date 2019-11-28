@@ -9,6 +9,7 @@ package de.radioshuttle.mqttpushclient.dash;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.database.sqlite.SQLiteConstraintException;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
@@ -122,6 +123,76 @@ public class DashBoardViewModel extends AndroidViewModel {
             mRequestExecutor.shutdown();
         }
 
+    }
+
+    public long loadOptionListImages(List<OptionList.Option> optionList) {
+        long requestID = -1;
+        if (optionList != null && optionList.size() > 0) {
+            if (mOptionListImageCache == null) {
+                mOptionListImageCache = new HashMap<>();
+            }
+            ArrayList<String> taskList = new ArrayList<>();
+            for(OptionList.Option opt : optionList) {
+                if (!Utils.isEmpty(opt.imageURI) && !mOptionListImageCache.containsKey(opt.imageURI)) {
+                    taskList.add(opt.imageURI);
+                }
+            }
+            if (taskList.size() > 0) {
+                mLoadOptionsCnt++;
+                requestID = mLoadOptionsCnt;
+                final long taskID = requestID;
+                @SuppressLint("StaticFieldLeak")
+                AsyncTask<List<String>, Void, Map<String, Drawable>> task =
+                        new AsyncTask<List<String>, Void, Map<String, Drawable>>() {
+                            @Override
+                            protected Map<String, Drawable> doInBackground(List<String>... lists) {
+                                HashMap<String, Drawable> result = new HashMap<>();
+                                if (lists != null && lists.length > 0) {
+                                    List<String> uris = lists[0];
+                                    for(String uri : uris) {
+                                        try {
+                                            Drawable drawable;
+                                            if (ImageResource.isInternalResource(uri)) {
+                                                drawable = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(uri));
+                                            } else {
+                                                drawable =  ImageResource.loadExternalImage(getApplication(), uri);
+                                            }
+                                            result.put(uri, drawable);
+                                        } catch (Exception e) {
+                                            result.put(uri, null);
+                                            Log.d(TAG, "Error loading image (option list): ", e);
+                                        }
+                                    }
+                                }
+                                return result;
+                            }
+
+                            @Override
+                            protected void onPostExecute(Map<String, Drawable> stringDrawableMap) {
+                                super.onPostExecute(stringDrawableMap);
+                                mOptionListImageCache.putAll(stringDrawableMap);
+                                mOptionListImageUpdate.setValue(taskID);
+                            }
+                        };
+                task.executeOnExecutor(Utils.executor, taskList);
+            }
+        }
+        return requestID;
+    }
+
+    public boolean isCurrentOptionImageLoadTask(long taksid) {
+        return taksid == mLoadOptionsCnt;
+    }
+
+    public void configrmOptionImageTaskDeliverd() {
+        mLoadOptionsCnt = 0;
+    }
+
+    public Map<String, Drawable> getOptionListImageCache() {
+        if (mOptionListImageCache == null) {
+            mOptionListImageCache = new HashMap<>();
+        }
+        return mOptionListImageCache;
     }
 
     @MainThread
@@ -1038,6 +1109,10 @@ public class DashBoardViewModel extends AndroidViewModel {
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
     private HashSet<String> mLockedResources;
     private LinkedHashMap<String, Message> mLastReceivedMessages;
+
+    private HashMap<String, Drawable> mOptionListImageCache;
+    private int mLoadOptionsCnt;
+    public MutableLiveData<Long> mOptionListImageUpdate = new MutableLiveData<>();
 
     /* observables */
     public MutableLiveData<Request> mSaveRequest;
