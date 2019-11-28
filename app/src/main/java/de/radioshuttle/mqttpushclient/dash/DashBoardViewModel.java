@@ -518,6 +518,7 @@ public class DashBoardViewModel extends AndroidViewModel {
             Item replacedItem = null;
             if (group != null) {
                 LinkedList<Item> items = itemsPerGroup.get(group.id);
+                //TODO: fix replacement similar to Option List editor
                 if (items != null) {
                     ItemContext ic = null;
                     if (itemPos >= items.size()) {
