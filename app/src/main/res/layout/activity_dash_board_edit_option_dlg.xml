@@ -80,22 +80,62 @@
             android:id="@+id/dash_option_image"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toBottomOf="@id/dash_option_image_label"
-            android:visibility="invisible"
+            android:visibility="gone"
             android:scaleType="fitCenter"
             android:minHeight="48dp"
             android:layout_width="96dp"
             android:layout_height="96dp"
             />
 
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrierRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="end"
+            app:barrierAllowsGoneWidgets="true"
+            app:constraint_referenced_ids="dash_option_image,dash_option_image_none"
+            />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrierBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:barrierAllowsGoneWidgets="true"
+            app:constraint_referenced_ids="dash_option_image,dash_option_image_none"
+            />
+
         <TextView
+            android:layout_marginTop="4dp"
+            android:layout_marginLeft="8dp"
             android:id="@+id/dash_option_image_note"
             android:textAppearance="?android:textAppearanceSmall"
-            app:layout_constraintTop_toTopOf="@id/dash_option_image_none"
-            app:layout_constraintBottom_toBottomOf="@id/dash_option_image_none"
-            app:layout_constraintLeft_toRightOf="@id/dash_option_image_none"
-            android:layout_gravity="center_vertical"
+            app:layout_constraintTop_toBottomOf="@id/dash_option_image_label"
+            app:layout_constraintBottom_toBottomOf="@id/barrierBottom"
+            app:layout_constraintLeft_toRightOf="@id/barrierRight"
+            android:gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/dash_option_pos_label"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/barrierBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@+id/dash_option_image_none"
+            android:text="@string/dash_label_position"
+            />
+
+        <Spinner
+            android:id="@+id/dash_posSpinner"
+            app:layout_constraintTop_toBottomOf="@id/dash_option_pos_label"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:dropDownWidth="64dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
