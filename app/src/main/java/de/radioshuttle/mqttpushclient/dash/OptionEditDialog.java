@@ -15,9 +15,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -26,6 +30,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.R;
@@ -35,7 +40,7 @@ import static de.radioshuttle.mqttpushclient.dash.DashBoardEditActivity.ARG_ACCO
 import static de.radioshuttle.mqttpushclient.dash.DashBoardEditActivity.ARG_MODE;
 import static de.radioshuttle.mqttpushclient.dash.DashBoardEditActivity.MODE_ADD;
 
-public class OptionEditDialog extends DialogFragment {
+public class OptionEditDialog extends DialogFragment implements AdapterView.OnItemSelectedListener {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +62,7 @@ public class OptionEditDialog extends DialogFragment {
         mImageNote = dialogView.findViewById(R.id.dash_option_image_note);
         mImageNone = dialogView.findViewById(R.id.dash_option_image_none);
         mImageButton = dialogView.findViewById(R.id.dash_option_image);
+        mPosSpinner = dialogView.findViewById(R.id.dash_posSpinner);
         if (args != null) {
             if (savedInstanceState == null) {
                 String error = args.getString(ARG_ERROR_1);
@@ -78,6 +84,25 @@ public class OptionEditDialog extends DialogFragment {
             } else {
                 mURI = savedInstanceState.getString(ARG_IMAGE_URI);
             }
+            int size = args.getInt(ARG_LISTSIZE, -1);
+            if (size >= 0) {
+                if (savedInstanceState == null) {
+                    mSelectedPosIdx = args.getInt(ARG_NEW_POS, -1); // pos set by a previous call
+                    if (mSelectedPosIdx == AdapterView.INVALID_POSITION) {
+                        mSelectedPosIdx = args.getInt(ARG_POS, -1);
+                    }
+                } else {
+                    mSelectedPosIdx = savedInstanceState.getInt(ARG_POS);
+                }
+                mPosSpinner.setOnItemSelectedListener(this);
+                initPosSpinner(size, mode);
+
+                if (mSelectedPosIdx >= 0) {
+                    mPosSpinner.setSelection(mSelectedPosIdx, false);
+                }
+
+            }
+
             setImageButton();
         }
 
@@ -91,6 +116,7 @@ public class OptionEditDialog extends DialogFragment {
                         result.value = mPayload.getText().toString();
                         result.displayValue = mDisplayVal.getText().toString();
                         result.imageURI = mURI;
+                        result.newPos = mPosSpinner.getSelectedItemPosition();
                         if (getActivity() instanceof DashBoardEditActivity) {
                             DashBoardEditActivity activity = (DashBoardEditActivity) getActivity();
                             activity.onEditOptionDialogFinished(getArguments(), result);
@@ -150,12 +176,12 @@ public class OptionEditDialog extends DialogFragment {
             if (mImageButton.getVisibility() != View.VISIBLE) {
                 mImageButton.setVisibility(View.VISIBLE);
             }
-            if (mImageNone.getVisibility() != View.INVISIBLE) {
-                mImageNone.setVisibility(View.INVISIBLE);
+            if (mImageNone.getVisibility() != View.GONE) {
+                mImageNone.setVisibility(View.GONE);
             }
         } else {
-            if (mImageButton.getVisibility() != View.INVISIBLE) {
-                mImageButton.setVisibility(View.INVISIBLE);
+            if (mImageButton.getVisibility() != View.GONE) {
+                mImageButton.setVisibility(View.GONE);
             }
             if (mImageNone.getVisibility() != View.VISIBLE) {
                 mImageNone.setVisibility(View.VISIBLE);
@@ -214,10 +240,60 @@ public class OptionEditDialog extends DialogFragment {
         }
     }
 
+    protected ArrayAdapter<String> createPosAdapter(Spinner s, List<String> adapterItems) {
+        ArrayAdapter<String> a = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, adapterItems) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View v = super.getView(position, convertView, parent);
+                if (v instanceof TextView) {
+                    ((TextView) v).setText(String.valueOf(position +1));
+                }
+                return v;
+            }
+        };
+        return a;
+    }
+
+    protected void initPosSpinner(int size, int mode) {
+        if (mPosSpinner != null && size >= 0) {
+            ArrayList<String> adapterItems = new ArrayList<>();
+            int i = 0;
+            for(i = 0; i < size; i++) {
+                adapterItems.add(String.valueOf(i + 1) /* + " - " + itemList.get(i).label  */);
+            }
+            if (mode == MODE_ADD) {
+                adapterItems.add(String.valueOf(i + 1));
+            }
+            ArrayAdapter<String> a = createPosAdapter(mPosSpinner, adapterItems);
+            a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            // mPosSpinner.setOnItemSelectedListener(this);
+            mPosSpinner.setAdapter(a);
+        }
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        if (parent == mPosSpinner) {
+            if (!mPinit) {
+                if (mSelectedPosIdx >= 0 && position != mSelectedPosIdx) {
+                    mPosSpinner.setSelection(mSelectedPosIdx);
+                }
+            }
+            mPinit = true;
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(ARG_IMAGE_URI, mURI);
+        outState.putInt(ARG_POS, mPosSpinner.getSelectedItemPosition());
     }
 
     boolean mActivityStarted;
@@ -226,11 +302,16 @@ public class OptionEditDialog extends DialogFragment {
     TextView mImageNote;
     Button mImageNone;
     ImageButton mImageButton;
+    Spinner mPosSpinner;
+    boolean mPinit;
+    int mSelectedPosIdx;
     String mURI;
 
     static final int REQUEST_CODE = 4;
     static final int CONTROL_CODE = 4;
     static final String ARG_POS  = "ARG_POS";
+    static final String ARG_NEW_POS  = "ARG_NEW_POS";
+    static final String ARG_LISTSIZE  = "ARG_LISTSIZE";
     static final String ARG_PAYLOAD = "ARG_PAYLOAD";
     static final String ARG_DISPLAY_VAL = "ARG_DISPLAY_VAL";
     static final String ARG_IMAGE_URI = "ARG_IMAGE_URI";
@@ -239,4 +320,5 @@ public class OptionEditDialog extends DialogFragment {
     static final String ARG_ERROR_3 = "ARG_ERROR_3";
 
     private final static String TAG = OptionEditDialog.class.getSimpleName();
+
 }
