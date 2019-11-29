@@ -89,6 +89,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mLastReceivedMsgDate = 0L;
         mLastReceivedMsgSeqNo = 0;
         mLastReceivedMessages = null;
+        mLoadResources = false;
         mTimer = Executors.newScheduledThreadPool(1);
         mRequestExecutor = Utils.newSingleThreadPool();
     }
@@ -104,6 +105,10 @@ public class DashBoardViewModel extends AndroidViewModel {
             */
             // Test data end
         }
+    }
+
+    public void setLoadResources(boolean load) {
+        mLoadResources = load;
     }
 
     @Override
@@ -184,7 +189,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         return taksid == mLoadOptionsCnt;
     }
 
-    public void configrmOptionImageTaskDeliverd() {
+    public void configrmOptionImageTaskDelivered() {
         mLoadOptionsCnt = 0;
     }
 
@@ -319,10 +324,13 @@ public class DashBoardViewModel extends AndroidViewModel {
     /** refreshes UI (does not perform a reload). for single item updates use item.notifyDataChanged() */
     public void refresh() {
         List<Item> list = buildDisplayList();
-        loadImages(list);
+        if (mLoadResources) {
+            loadImages(list);
+        }
     }
 
     protected void loadImages(final List<Item> list) {
+        //TODO: loadImages() is not required when viewmodel is used with other activities than DashBoarActivity
         if (list != null) {
             @SuppressLint("StaticFieldLeak")
             AsyncTask<List<Item>, Void, List<Item>> loadImages = new AsyncTask<List<Item>, Void, List<Item>>() {
@@ -339,16 +347,12 @@ public class DashBoardViewModel extends AndroidViewModel {
                                 try {
                                     if (ImageResource.isInternalResource(item.background_uri)) {
                                         item.backgroundImage = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(item.background_uri));
-                                        if (item.backgroundImage != null) {
-                                            item.backgroundImageDetail = item.backgroundImage.getConstantState().newDrawable();
-                                            item.backgroundImageURI = item.background_uri;
-                                        }
                                     } else {
                                         item.backgroundImage = ImageResource.loadExternalImage(getApplication(), item.background_uri);
-                                        if (item.backgroundImage != null) {
-                                            item.backgroundImageDetail = item.backgroundImage.getConstantState().newDrawable();
-                                            item.backgroundImageURI = item.background_uri;
-                                        }
+                                    }
+                                    if (item.backgroundImage != null) {
+                                        item.backgroundImageDetail = item.backgroundImage.getConstantState().newDrawable();
+                                        item.backgroundImageURI = item.background_uri;
                                     }
                                     itemUpdated = true;
                                 } catch(Exception e) {
@@ -363,16 +367,12 @@ public class DashBoardViewModel extends AndroidViewModel {
                                 try {
                                     if (ImageResource.isInternalResource(sw.uri)) {
                                         sw.image = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri));
-                                        if (sw.image != null) {
-                                            sw.imageDetail = sw.image.getConstantState().newDrawable();
-                                            sw.imageUri = sw.uri;
-                                        }
                                     } else {
                                         sw.image = ImageResource.loadExternalImage(getApplication(), sw.uri);
-                                        if (sw.image != null) {
-                                            sw.imageDetail = sw.image.getConstantState().newDrawable();
-                                            sw.imageUri = sw.uri;
-                                        }
+                                    }
+                                    if (sw.image != null) {
+                                        sw.imageDetail = sw.image.getConstantState().newDrawable();
+                                        sw.imageUri = sw.uri;
                                     }
                                     itemUpdated = true;
                                 } catch(Exception e) {
@@ -383,21 +383,43 @@ public class DashBoardViewModel extends AndroidViewModel {
                                 try {
                                     if (ImageResource.isInternalResource(sw.uriOff)) {
                                         sw.imageOff = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uriOff));
-                                        if (sw.imageOff != null) {
-                                            sw.imageDetailOff = sw.imageOff.getConstantState().newDrawable();
-                                            sw.imageUriOff = sw.uriOff;
-                                        }
                                     } else {
                                         sw.imageOff = ImageResource.loadExternalImage(getApplication(), sw.uriOff);
-                                        if (sw.imageOff != null) {
-                                            sw.imageDetailOff = sw.imageOff.getConstantState().newDrawable();
-                                            sw.imageUriOff = sw.uriOff;
-                                        }
+                                    }
+                                    if (sw.imageOff != null) {
+                                        sw.imageDetailOff = sw.imageOff.getConstantState().newDrawable();
+                                        sw.imageUriOff = sw.uriOff;
                                     }
                                     itemUpdated = true;
                                 } catch(Exception e) {
                                     Log.e(TAG, "error loading image: ", e);
                                 }
+                            }
+                        } else if (item instanceof OptionList) {
+                            OptionList ol = (OptionList) item;
+                            try {
+                                if (ol.optionList != null) {
+                                    OptionList.Option opt;
+                                    for(int i = 0; i < ol.optionList.size(); i++) {
+                                        opt = ol.optionList.get(i);
+                                        if (!Utils.isEmpty(opt.imageURI) && Utils.isEmpty(opt.uiImageURL)) {
+                                            if (opt != null) {
+                                                if (ImageResource.isInternalResource(opt.imageURI)) {
+                                                    opt.uiImage = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(opt.imageURI));
+                                                } else {
+                                                    opt.uiImage = ImageResource.loadExternalImage(getApplication(), opt.imageURI);
+                                                }
+                                                if (opt.uiImage != null) {
+                                                    opt.uiImageDetail = opt.uiImage.getConstantState().newDrawable();
+                                                    opt.uiImageURL = opt.imageURI;
+                                                }
+                                                itemUpdated = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch(Exception e) {
+                                Log.e(TAG, "error loading image: ", e);
                             }
                         }
                         if (itemUpdated) {
@@ -444,6 +466,18 @@ public class DashBoardViewModel extends AndroidViewModel {
             /* an error occured while loading the image (probably server sync was not possible due to network no availabe) */
             if (sw.imageOff == null && !Utils.isEmpty(sw.uriOff)) {
                 resourceMissing = true;
+            }
+        }
+
+        if (item instanceof OptionList) {
+            OptionList ol = (OptionList) item;
+            if (ol.optionList != null) {
+                for(OptionList.Option option : ol.optionList) {
+                    if (option.uiImage == null && !Utils.isEmpty(option.imageURI)) {
+                        resourceMissing = true;
+                        break;
+                    }
+                }
             }
         }
 
@@ -1113,6 +1147,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     private HashMap<String, Drawable> mOptionListImageCache;
     private int mLoadOptionsCnt;
     public MutableLiveData<Long> mOptionListImageUpdate = new MutableLiveData<>();
+    boolean mLoadResources;
 
     /* observables */
     public MutableLiveData<Request> mSaveRequest;
