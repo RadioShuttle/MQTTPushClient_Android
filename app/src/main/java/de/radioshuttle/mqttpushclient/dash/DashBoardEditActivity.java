@@ -46,7 +46,6 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -719,7 +718,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         @Override
                         public void onChanged(Long taskID) {
                             if (mViewModel != null && mViewModel.isCurrentOptionImageLoadTask(taskID)) {
-                                mViewModel.configrmOptionImageTaskDeliverd();
+                                mViewModel.configrmOptionImageTaskDelivered();
                                 if (mOptionListEditAdapter != null) {
                                     mOptionListEditAdapter.notifyDataSetChanged(); // images loaded -> repaint
                                 }
