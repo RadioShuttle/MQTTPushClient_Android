@@ -90,6 +90,7 @@ public class DashBoardActivity extends AppCompatActivity implements
             mViewModel = ViewModelProviders.of(
                     this, new DashBoardViewModel.Factory(b, getApplication()))
                     .get(DashBoardViewModel.class);
+            mViewModel.setLoadResources(true); // cache images (buttons, backgrounds ...)
 
             ViewState vs = ViewState.getInstance(getApplication());
             String account = b.getKey();
