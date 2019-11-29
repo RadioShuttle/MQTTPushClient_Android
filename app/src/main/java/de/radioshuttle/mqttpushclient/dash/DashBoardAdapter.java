@@ -318,7 +318,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                     /* OptionList uses Text Item layout resource. Change alignment for textview */
                     //TODO: consider using own layout resource file
                     if (h.contentContainer instanceof TextView) {
-                        ((TextView) h.contentContainer).setGravity(Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
+                        TextView textView = (TextView) h.contentContainer;
+                        OptionList.Option sel = ol.getSelectedOption();
+                        if (sel != null && !Utils.isEmpty(sel.imageURI) && sel.uiImage != null) {
+                            textView.setGravity(Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
+                        } else {
+                            textView.setGravity(Gravity.CENTER);
+                        }
                     }
                 }
             }
