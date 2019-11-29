@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -101,7 +102,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             view = mInflater.inflate(R.layout.activity_dash_board_item_text, parent, false);
             label = view.findViewById(R.id.name);
             defaultColor = label.getTextColors().getDefaultColor();
-
             contentContainer = view.findViewById(R.id.textContent);
             value = view.findViewById(R.id.textContent);
             selectedImageView = view.findViewById(R.id.check);
@@ -314,6 +314,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                      */
                 }
                 content = displayValue;
+                if (!Utils.isEmpty(content)) {
+                    /* OptionList uses Text Item layout resource. Change alignment for textview */
+                    //TODO: consider using own layout resource file
+                    if (h.contentContainer instanceof TextView) {
+                        ((TextView) h.contentContainer).setGravity(Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
+                    }
+                }
             }
 
             item.setViewTextAppearance(h.value, h.defaultColor);
