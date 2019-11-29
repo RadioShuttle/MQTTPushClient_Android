@@ -26,6 +26,7 @@ import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -144,34 +145,51 @@ public abstract class Item {
                     drawable = (detailView ? backgroundImageDetail : backgroundImage);
                 }
 
-                if (!Utils.isEmpty(backgroundImageURI) && drawable != null) {
+                Drawable optionDrawable = null;
+                if (this instanceof OptionList) {
+                    optionDrawable = ((OptionList) this).getDisplayDrawable(); //TODO: what about detailView?
+                }
+
+                if ((!Utils.isEmpty(backgroundImageURI) && drawable != null)  || optionDrawable != null) {
                     ColorDrawable drawableBackground = new ColorDrawable(background);
-                    LayerDrawable layerDrawable = new LayerDrawable(new Drawable[] {drawableBackground, drawable});
+                    ArrayList<Drawable> drawables = new ArrayList<>();
+                    drawables.add(drawableBackground);
+                    if (!Utils.isEmpty(backgroundImageURI) && drawable != null) {
+                        drawables.add(drawable);
+                    }
+                    if (optionDrawable != null) {
+                        drawables.add(optionDrawable);
+                    }
+
+                    LayerDrawable layerDrawable = new LayerDrawable(drawables.toArray(new Drawable[drawables.size()]));
                     ViewGroup.LayoutParams lp = v.getLayoutParams();
                     if (lp != null) {
-                        /* user images (bitmaps) are downscaled*/
-                        if (drawable instanceof BitmapDrawable) {
-                            BitmapDrawable bm = (BitmapDrawable) drawable;
-                            float w = bm.getBitmap().getWidth();
-                            float h = bm.getBitmap().getHeight();
-                            float diff, f = 1f;
-                            if (w > h) {
-                                if (w > lp.width) {
-                                    diff = w - lp.width;
-                                    f = 1f - 1f / w * diff;
+                        for(int i = 1; i < drawables.size(); i++) {
+                            /* user images (bitmaps) are downscaled*/
+                            Drawable dr = drawables.get(i);
+                            if (dr instanceof BitmapDrawable) {
+                                BitmapDrawable bm = (BitmapDrawable) dr;
+                                float w = bm.getBitmap().getWidth();
+                                float h = bm.getBitmap().getHeight();
+                                float diff, f = 1f;
+                                if (w > h) {
+                                    if (w > lp.width) {
+                                        diff = w - lp.width;
+                                        f = 1f - 1f / w * diff;
+                                    }
+                                } else {
+                                    if (h > lp.height) {
+                                        diff = h - lp.height;
+                                        f = 1f - 1f / h * diff;
+                                    }
                                 }
-                            } else {
-                                if (h > lp.height) {
-                                    diff = h - lp.height;
-                                    f = 1f - 1f / h * diff;
-                                }
-                            }
 
-                            // Log.d(TAG, "bitmap size: " + w + ", h: " + h + ". Item size: " + lp.width + ", " + lp.height);
-                            w = (lp.width - w * f) / 2f;
-                            h = (lp.height - h * f) / 2f;
-                            // Log.d(TAG, "bitmap size (downscaled): " + w + ", h: " + h);
-                            layerDrawable.setLayerInset(1, (int) (int) w, (int) h, (int) w, (int) h );
+                                // Log.d(TAG, "bitmap size: " + w + ", h: " + h + ". Item size: " + lp.width + ", " + lp.height);
+                                w = (lp.width - w * f) / 2f;
+                                h = (lp.height - h * f) / 2f;
+                                // Log.d(TAG, "bitmap size (downscaled): " + w + ", h: " + h);
+                                layerDrawable.setLayerInset(i, (int) w, (int) h, (int) w, (int) h );
+                            }
                         }
                         /* vector drawables will be up/daownscaled */
                     }
