@@ -77,30 +77,34 @@ public class OptionList extends Item {
 
     public String getDisplayValue() {
         String displayValue = null;
-        String content = (String) data.get("content");
-        if (optionList != null) {
-            for(OptionList.Option o : optionList) {
-                if (Utils.equals(content, o.value)) {
-                    displayValue = o.displayValue;
-                    break;
-                }
-            }
+        OptionList.Option option = getSelectedOption();
+        if (option != null) {
+            displayValue = option.displayValue;
         }
         return displayValue;
     }
 
     public Drawable getDisplayDrawable() { //TODO: detailView?
         Drawable drawable = null;
+        OptionList.Option option = getSelectedOption();
+        if (option != null) {
+            drawable = option.uiImage;
+        }
+        return drawable;
+    }
+
+    public OptionList.Option getSelectedOption() {
+        OptionList.Option option = null;
         String content = (String) data.get("content");
         if (optionList != null) {
             for(OptionList.Option o : optionList) {
                 if (Utils.equals(content, o.value)) {
-                    drawable = o.uiImage;
+                    option = o;
                     break;
                 }
             }
         }
-        return drawable;
+        return option;
     }
 
     public static class Option {
