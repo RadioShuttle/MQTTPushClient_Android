@@ -371,6 +371,22 @@ public final class ImageResource {
                                             referencedFiles.add(internalFileName);
                                         }
                                     }
+                                    JSONArray optionListArr = itemJSON.optJSONArray("optionlist");
+                                    if (optionListArr != null) {
+                                        JSONObject jsonOption;
+                                        for(int z = 0; z < optionListArr.length(); z++) {
+                                            jsonOption = optionListArr.optJSONObject(z);
+                                            if (jsonOption != null) {
+                                                uri = jsonOption.optString("uri");
+                                                if (ImageResource.isUserResource(uri)) {
+                                                    resourceName = ImageResource.getURIPath(uri);
+                                                    internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                                    referencedFiles.add(internalFileName);
+                                                }
+                                            }
+                                        }
+                                    }
+
                                 } catch(Exception e) {
                                     Log.d(TAG, "removeUnreferencedImageResources: error checking resource names: ", e);
                                 }
