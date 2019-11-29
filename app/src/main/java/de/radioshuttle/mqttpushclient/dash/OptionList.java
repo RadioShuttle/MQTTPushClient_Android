@@ -6,6 +6,7 @@
 
 package de.radioshuttle.mqttpushclient.dash;
 
+import android.graphics.drawable.Drawable;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 
@@ -88,6 +89,20 @@ public class OptionList extends Item {
         return displayValue;
     }
 
+    public Drawable getDisplayDrawable() { //TODO: detailView?
+        Drawable drawable = null;
+        String content = (String) data.get("content");
+        if (optionList != null) {
+            for(OptionList.Option o : optionList) {
+                if (Utils.equals(content, o.value)) {
+                    drawable = o.uiImage;
+                    break;
+                }
+            }
+        }
+        return drawable;
+    }
+
     public static class Option {
         public Option() {}
         public Option(String value, String displayValue, String uri) {
@@ -108,5 +123,8 @@ public class OptionList extends Item {
         int newPos = AdapterView.INVALID_POSITION; //
         long selected; // 0 == not selected, >=0 selection timestamp
         int temp;
+        Drawable uiImage;
+        Drawable uiImageDetail;
+        String uiImageURL;
     }
 }
