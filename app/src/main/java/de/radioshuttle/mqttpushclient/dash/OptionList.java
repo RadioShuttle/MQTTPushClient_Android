@@ -40,9 +40,9 @@ public class OptionList extends Item {
             for(Option option : optionList) {
                 if (!Utils.isEmpty(option.value)) {
                     jsonOption = new JSONObject();
-                    jsonOption.put("value", option.value);
+                    jsonOption.put("value", option.value == null ? "" : option.value);
                     jsonOption.put("displayvalue", option.displayValue == null ? "" : option.displayValue);
-                    jsonOption.put("uri", option.imageURI);
+                    jsonOption.put("uri", option.imageURI == null ? "" : option.imageURI);
                     jsonArr.put(jsonOption);
                 }
             }
