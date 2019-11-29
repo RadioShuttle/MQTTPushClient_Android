@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -55,6 +56,43 @@ public class DashboardRequest extends Request {
         mItemIDPara = itemID;
     }
 
+    protected void saveResource(
+            String objKey,
+            JSONObject jsonObject,
+            HashMap<String, String> replacedImportedResources,
+            HashSet<String> serverResourceSet,
+            File userDir, File importDir) throws JSONException, IOException, ServerError {
+
+        String uri = jsonObject.optString(objKey);
+
+        if (uri != null) {
+            if (replacedImportedResources.containsKey(uri)) {
+                // already done for this uri
+                jsonObject.putOpt(objKey, replacedImportedResources.get(uri));
+            } else if (ImageResource.isImportedResource(uri)) {
+                Log.d(TAG, "Save image on server (background_uri): " + uri);
+
+                String finalResourceName = addImportedResource(importDir, userDir, uri);
+
+                Log.d(TAG, "Saved image on server: " + finalResourceName);
+                String tmp = ImageResource.buildUserResourceURI(finalResourceName);
+                jsonObject.putOpt(objKey, tmp);
+                replacedImportedResources.put(uri, tmp);
+            } else if (ImageResource.isUserResource(uri)) {
+                /* maybe user has chosen an image from another account (which are locally stored in same dir)
+                 * if so, add to account resources */
+                String finalResourceName = addUserResource(userDir, serverResourceSet, uri);
+                if (finalResourceName != null) {
+                    Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
+                    String tmp = ImageResource.buildUserResourceURI(finalResourceName);
+                    jsonObject.putOpt(objKey, tmp);
+                    replacedImportedResources.put(uri, tmp);
+                }
+            }
+        }
+
+    }
+
     protected void saveImportedResources(List<Cmd.FileInfo> serverResourceList) throws IOException, ServerError, JSONException {
 
         /*
@@ -85,6 +123,8 @@ public class DashboardRequest extends Request {
             // Log.d(TAG, "json: x: " + mDashboardPara.toString());
             mDashboardPara.remove("resources");
 
+            HashMap<String, String> replacedImportedResources = new HashMap<>();
+
             JSONArray groupArray = mDashboardPara.getJSONArray("groups");
             JSONObject groupJSON, itemJSON;
             File userDir = ImportFiles.getUserFilesDir(mAppContext);
@@ -97,116 +137,20 @@ public class DashboardRequest extends Request {
                 }
                 JSONArray itemArray = groupJSON.getJSONArray("items");
 
-                String finalResourceName;
-                String uri, uri2, background_uri, tmp;
-                boolean skipUri, skipUri2;
-
                 for (int j = 0; j < itemArray.length(); j++) {
                     itemJSON = itemArray.getJSONObject(j);
 
-                    uri = itemJSON.optString("uri");
-                    uri2 = itemJSON.optString("uri_off");
-                    background_uri = itemJSON.optString("background_uri");
-                    skipUri = false;
-                    skipUri2 = false;
+                    saveResource("uri", itemJSON, replacedImportedResources, serverResourceSet, userDir, importDir);
+                    saveResource("uri2", itemJSON, replacedImportedResources, serverResourceSet, userDir, importDir);
+                    saveResource("background_uri", itemJSON, replacedImportedResources, serverResourceSet, userDir, importDir);
 
-                    if (ImageResource.isImportedResource(background_uri)) {
-                        Log.d(TAG, "Save image on server (background_uri): " + background_uri);
-
-                        finalResourceName = addImportedResource(importDir, userDir, background_uri);
-
-                        Log.d(TAG, "Saved image on server: " + finalResourceName);
-                        tmp = ImageResource.buildUserResourceURI(finalResourceName);
-                        itemJSON.putOpt("background_uri", tmp);
-                        /* if uri is a locked resource, replace tmp URI with new resrource name */
-                        if (lockedResources.contains(background_uri)) {
-                            lockedResources.remove(background_uri);
-                            lockedResources.add(finalResourceName);
-                        }
-                        if (background_uri.equals(uri)) {
-                            itemJSON.putOpt("uri", tmp);
-                            skipUri = true;
-                        }
-                        if (background_uri.equals(uri2)) {
-                            itemJSON.putOpt("uri_off", tmp);
-                            skipUri2 = true;
-                        }
-
-                    } else if (ImageResource.isUserResource(background_uri)) {
-                        /* maybe user has chosen an image from another account (which are locally stored in same dir)
-                         * if so, add to account resources */
-                        finalResourceName = addUserResource(userDir, serverResourceSet, background_uri);
-                        if (finalResourceName != null) {
-                            Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
-                            tmp = ImageResource.buildUserResourceURI(finalResourceName);
-                            itemJSON.putOpt("background_uri", tmp);
-                            if (background_uri.equals(uri)) {
-                                itemJSON.putOpt("uri", tmp);
-                                skipUri = true;
-                            }
-                            if (background_uri.equals(uri2)) {
-                                itemJSON.putOpt("uri_off", tmp);
-                                skipUri2 = true;
-                            }
-                        }
-                    }
-
-                    if (!skipUri) {
-                        if (ImageResource.isImportedResource(uri)) {
-                            Log.d(TAG, "Save image on server (uri): " + uri);
-
-                            finalResourceName = addImportedResource(importDir, userDir, uri);
-
-                            Log.d(TAG, "Saved image on server: " + finalResourceName);
-                            tmp = ImageResource.buildUserResourceURI(finalResourceName);
-                            itemJSON.putOpt("uri", tmp);
-                            /* if uri is a locked resource, replace tmp URI with new resrource name */
-                            if (lockedResources.contains(uri)) {
-                                lockedResources.remove(uri);
-                                lockedResources.add(finalResourceName);
-                            }
-                            if (uri.equals(uri2)) {
-                                itemJSON.putOpt("uri_off", tmp);
-                                skipUri2 = true;
-                            }
-                        } else if (ImageResource.isUserResource(uri)) {
-                            /* maybe user has chosen an image from another account (which are locally stored in same dir)
-                             * if so, add to account resources */
-                            finalResourceName = addUserResource(userDir, serverResourceSet, uri);
-                            if (finalResourceName != null) {
-                                Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
-                                tmp = ImageResource.buildUserResourceURI(finalResourceName);
-                                itemJSON.putOpt("uri", tmp);
-                                if (uri.equals(uri2)) {
-                                    itemJSON.putOpt("uri_off", tmp);
-                                    skipUri2 = true;
-                                }
-                            }
-                        }
-                    }
-
-                    if (!skipUri2) {
-                        if (ImageResource.isImportedResource(uri2)) {
-                            Log.d(TAG, "Save image2 on server (uri_off): " + uri2);
-
-                            finalResourceName = addImportedResource(importDir, userDir, uri2);
-
-                            itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
-
-                            /* if uri2 is a locked resource, replace tmp URI with new resrource name */
-                            if (lockedResources.contains(uri2)) {
-                                lockedResources.remove(uri2);
-                                lockedResources.add(finalResourceName);
-                            }
-
-                            Log.d(TAG, "Saved image2 on server: " + finalResourceName);
-                        } else if (ImageResource.isUserResource(uri2)) {
-                            /* maybe user has chosen an image from another account (which are locally stored in same dir)
-                             * if so, add to account resources */
-                            finalResourceName = addUserResource(userDir, serverResourceSet, uri2);
-                            if (finalResourceName != null) {
-                                Log.d(TAG, "Saved image on server (cloned image from other account): " + finalResourceName);
-                                itemJSON.putOpt("uri_off", ImageResource.buildUserResourceURI(finalResourceName));
+                    JSONArray optionListArr = itemJSON.optJSONArray("optionlist");
+                    if (optionListArr != null) {
+                        JSONObject jsonOption;
+                        for(int z = 0; z < optionListArr.length(); z++) {
+                            jsonOption = optionListArr.optJSONObject(z);
+                            if (jsonOption != null) {
+                                saveResource("uri", jsonOption, replacedImportedResources, serverResourceSet, userDir, importDir);
                             }
                         }
                     }
@@ -220,25 +164,28 @@ public class DashboardRequest extends Request {
             resourcesArray = new JSONArray();
             while(it.hasNext()) {
                 uri = it.next();
-                // Log.d(TAG, "json key: " + uri);
-                if (ImageResource.isImportedResource(uri)) {
-                    Log.d(TAG, "Save image on server (locked res): " + uri);
+                if (uri != null) {
+                    if (replacedImportedResources.containsKey(uri)) {
+                        resourcesArray.put(replacedImportedResources.get(uri));
+                    } else if (ImageResource.isImportedResource(uri)) {
+                        Log.d(TAG, "Save image on server (locked res): " + uri);
 
-                    finalResourceName = addImportedResource(importDir, userDir, uri);
+                        finalResourceName = addImportedResource(importDir, userDir, uri);
 
-                    Log.d(TAG, "Saved image on server: " + finalResourceName);
-                    resourcesArray.put(ImageResource.buildUserResourceURI(finalResourceName));
-                } else if (ImageResource.isUserResource(uri)) {
-                    /* maybe user has chosen an image from another account (which are locally stored in same dir)
-                     * if so, add to account resources */
-                    finalResourceName = addUserResource(userDir, serverResourceSet, uri);
-                    if (finalResourceName != null) {
-                        Log.d(TAG, "Saved image on server (cloned image from other account, locked res): " + finalResourceName);
+                        Log.d(TAG, "Saved image on server: " + finalResourceName);
                         resourcesArray.put(ImageResource.buildUserResourceURI(finalResourceName));
-                    } else {
-                        resourcesArray.put(uri);
+                    } else if (ImageResource.isUserResource(uri)) {
+                        /* maybe user has chosen an image from another account (which are locally stored in same dir)
+                         * if so, add to account resources */
+                        finalResourceName = addUserResource(userDir, serverResourceSet, uri);
+                        if (finalResourceName != null) {
+                            Log.d(TAG, "Saved image on server (cloned image from other account, locked res): " + finalResourceName);
+                            resourcesArray.put(ImageResource.buildUserResourceURI(finalResourceName));
+                        } else {
+                            resourcesArray.put(uri);
+                        }
+                        //TODO: check for URIs not refering a file (rare case)
                     }
-                    //TODO: check for URIs not refering a file (rare case)
                 }
 
             }
@@ -498,6 +445,25 @@ public class DashboardRequest extends Request {
                                         }
                                     }
                                 }
+                                JSONArray optionListArr = itemJSON.optJSONArray("optionlist");
+                                if (optionListArr != null) {
+                                    JSONObject jsonOption;
+                                    for(int z = 0; z < optionListArr.length(); z++) {
+                                        jsonOption = optionListArr.optJSONObject(z);
+                                        if (jsonOption != null) {
+                                            uri = jsonOption.optString("uri");
+                                            if (ImageResource.isUserResource(uri)) {
+                                                resourceName = ImageResource.getURIPath(uri);
+                                                internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                                f = new File(localDir, internalFileName);
+                                                if (!f.exists()) {
+                                                    resourceNames.add(resourceName);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
                             } catch(Exception e) {
                                 Log.d(TAG, "Error checking resource names: ", e);
                             }
@@ -591,6 +557,20 @@ public class DashboardRequest extends Request {
                                 usedResoureces.add(ImageResource.getURIPath(uri));
                             }
                         }
+                        JSONArray optionListArr = itemJSON.optJSONArray("optionlist");
+                        if (optionListArr != null) {
+                            JSONObject jsonOption;
+                            for(int z = 0; z < optionListArr.length(); z++) {
+                                jsonOption = optionListArr.optJSONObject(z);
+                                if (jsonOption != null) {
+                                    uri = jsonOption.optString("uri");
+                                    if (ImageResource.isUserResource(uri)) {
+                                        usedResoureces.add(ImageResource.getURIPath(uri));
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
             }
