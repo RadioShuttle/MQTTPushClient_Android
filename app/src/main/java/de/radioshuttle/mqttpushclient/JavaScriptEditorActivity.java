@@ -301,6 +301,14 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
                 webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_FILTER_SCRIPTS);
                 startActivityForResult(webIntent, 0);
+            } else if (mComponentType == CONTENT_FILTER_DASHBOARD) {
+                Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
+                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_DASH_FILTER_SCRIPT);
+                startActivityForResult(webIntent, 0);
+            } else if (mComponentType == CONTENT_OUTPUT_DASHBOARD) {
+                Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
+                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_DASH_OUTPUT_SCRIPT);
+                startActivityForResult(webIntent, 0);
             }
         }
     }
