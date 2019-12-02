@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
+import de.radioshuttle.mqttpushclient.ConfirmClearDialog;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
@@ -653,6 +654,12 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     if (!(mItem instanceof CustomItem)) {
                         htmlRow.setVisibility(View.GONE);
                     } else {
+                        try {
+                            mHTMLExampleBasic = Utils.getRawStringResource(getApplication(), "cv_empty", false);
+                        } catch(Exception e) {
+                            Log.e(TAG, "Could not load resource: ", e);
+                        }
+
                         if (savedInstanceState == null) {
                             mEditTextHTML.setText(((CustomItem) mItem).getHtml());
                         }
@@ -1335,6 +1342,12 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 break;
             case R.id.action_save:
                 checkAndSave();
+                break;
+            case R.id.menu_clear:
+                clear();
+                break;
+            case R.id.htmL_example_basic:
+                insertHTMLExample(mHTMLExampleBasic);
                 break;
             default:
                 consumed = super.onOptionsItemSelected(item);
@@ -2106,6 +2119,18 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             m.setVisible(mItem instanceof OptionList);
             m.setEnabled(!mViewModel.isSaveRequestActive());
         }
+        if (mItem instanceof CustomItem) {
+            m = menu.findItem(R.id.menu_clear);
+            if (m !=  null) {
+                m.setVisible(true);
+                m.setEnabled(!mViewModel.isSaveRequestActive());
+            }
+            m = menu.findItem(R.id.menu_html_example);
+            if (m !=  null) {
+                m.setVisible(true);
+                m.setEnabled(!mViewModel.isSaveRequestActive());
+            }
+        }
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -2253,6 +2278,28 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         return changed;
     }
 
+    protected void clear() {
+        ConfirmClearDialog dlg = new ConfirmClearDialog();
+        dlg.show(getSupportFragmentManager(), ConfirmClearDialog.class.getSimpleName());
+    }
+
+    protected void insertHTMLExample(String code) {
+        if (!Utils.isEmpty(code)) {
+            mEditTextHTML.requestFocus();
+            String content = mEditTextHTML.getText().toString();
+            int setStart = content.length();
+            //TODO: consider not to append code (because inserted code is a complete HTML file)
+            if (!Utils.isEmpty(content) && !content.endsWith("\n")) {
+                content += "\n";
+            }
+            content += code;
+            mEditTextHTML.setText(content);
+            mEditTextHTML.setSelection(setStart, content.length());
+        }
+        // Log.d(TAG, "sel start: " + s);
+    }
+
+
     protected boolean mActivityStarted;
 
     //UI elements
@@ -2276,7 +2323,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     protected EditText mEditTextSwitchOn;
     protected EditText mEditTextSwitchOff;
-    protected EditText mEditTextHTML;
+    public EditText mEditTextHTML;
     protected int mDefaultButtonTintColor;
     protected int mDefaultButtonBackground;
     protected int mDefaultClearColor;
@@ -2358,6 +2405,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private Snackbar mSnackbar;
+
+    /* html example codes (custom view) */
+    protected String mHTMLExampleBasic;
 
     private final static String TAG = DashBoardEditActivity.class.getSimpleName();
 
