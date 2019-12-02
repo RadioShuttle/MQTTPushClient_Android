@@ -252,6 +252,9 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="title_add_option_entry">Add Option</string>
     <string name="title_edit_option_entry">Edit Option</string>
 
+    <string name="menu_html_example">Insert Example</string>
+    <string name="menu_html_basic">Basic HTML</string>
+
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
     <string name="dash_label_option_payload">Value:</string>
@@ -302,6 +305,8 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dlg_delete_option_title">Delete Option</string>
     <string name="dlg_delete_option_msg">Delete selection option</string>
     <string name="dlg_delete_option_msg_pl">Delete selection options.</string>
+    <string name="dlg_confirm_clear_html_title">Clear HTML content?</string>
+
 
     <string name="dash_item_unknown">Unknown view type</string>
     <string name="dash_item_err">Error:</string>
