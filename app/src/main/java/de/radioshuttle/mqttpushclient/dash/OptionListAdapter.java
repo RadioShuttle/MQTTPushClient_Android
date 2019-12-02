@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,6 +51,7 @@ public class OptionListAdapter extends RecyclerView.Adapter<OptionListAdapter.Vi
         vh.radioChecked = view.findViewById(R.id.radioChecked);
         ImageViewCompat.setImageTintList(vh.radioUnchecked, mRadioTintColor);
         ImageViewCompat.setImageTintList(vh.radioChecked, mRadioTintColor);
+        vh.backgroundImage = view.findViewById(R.id.image);
 
         vh.label.setTextColor(mTextColor);
 
@@ -99,7 +101,19 @@ public class OptionListAdapter extends RecyclerView.Adapter<OptionListAdapter.Vi
                 holder.radioUnchecked.setVisibility(View.VISIBLE);
             }
         }
-
+        if (!Utils.isEmpty(item.imageURI) && item.uiImageDetail != null) {
+            holder.backgroundImage.setImageDrawable(item.uiImageDetail);
+            if (holder.backgroundImage.getVisibility() != View.VISIBLE) {
+                holder.backgroundImage.setVisibility(View.VISIBLE);
+            }
+            if (holder.label.getVisibility() != View.GONE) {
+                holder.label.setVisibility(View.GONE);
+            }
+        } else {
+            if (holder.label.getVisibility() != View.VISIBLE) {
+                holder.label.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     public void setData(LinkedList<OptionList.Option> list) {
@@ -154,6 +168,7 @@ public class OptionListAdapter extends RecyclerView.Adapter<OptionListAdapter.Vi
         public TextView label;
         public ImageView radioUnchecked;
         public ImageView radioChecked;
+        ImageView backgroundImage;
     }
 
     protected Callback mCallback;
