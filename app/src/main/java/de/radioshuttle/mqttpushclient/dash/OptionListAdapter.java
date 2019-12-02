@@ -12,6 +12,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -101,17 +103,23 @@ public class OptionListAdapter extends RecyclerView.Adapter<OptionListAdapter.Vi
                 holder.radioUnchecked.setVisibility(View.VISIBLE);
             }
         }
+        ViewGroup.LayoutParams lp = holder.label.getLayoutParams();
         if (!Utils.isEmpty(item.imageURI) && item.uiImageDetail != null) {
             holder.backgroundImage.setImageDrawable(item.uiImageDetail);
             if (holder.backgroundImage.getVisibility() != View.VISIBLE) {
                 holder.backgroundImage.setVisibility(View.VISIBLE);
+
             }
-            if (holder.label.getVisibility() != View.GONE) {
-                holder.label.setVisibility(View.GONE);
+            if (lp instanceof ConstraintLayout.LayoutParams) {
+                ConstraintLayout.LayoutParams clp = (ConstraintLayout.LayoutParams) lp;
+                clp.topToTop = ConstraintLayout.LayoutParams.UNSET;
+                clp.rightToRight = ConstraintLayout.LayoutParams.PARENT_ID;
             }
         } else {
-            if (holder.label.getVisibility() != View.VISIBLE) {
-                holder.label.setVisibility(View.VISIBLE);
+            if (lp instanceof ConstraintLayout.LayoutParams) {
+                ConstraintLayout.LayoutParams clp = (ConstraintLayout.LayoutParams) lp;
+                clp.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+                clp.rightToRight = ConstraintLayout.LayoutParams.UNSET;
             }
         }
     }
