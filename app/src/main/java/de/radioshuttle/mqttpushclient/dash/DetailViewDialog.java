@@ -50,6 +50,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -277,6 +278,9 @@ public class DetailViewDialog extends DialogFragment {
 
                         /* init list view*/
                         mOptionListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+                        // mOptionListRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+
+
                         mContentContainer = mOptionListRecyclerView;
 
                         long color = mItem.getTextcolor();
@@ -318,6 +322,12 @@ public class DetailViewDialog extends DialogFragment {
 
                         adapter.setData(ol.optionList);
                         mOptionListRecyclerView.setAdapter(adapter);
+                        if (savedInstanceState == null) {
+                            int pos = ol.getSelectedPosition();
+                            if (pos != -1) {
+                                mOptionListRecyclerView.scrollToPosition(pos);
+                            }
+                        }
 
                     } else if (mItem instanceof CustomItem) {
                         final CustomItem citem = (CustomItem) mItem;
