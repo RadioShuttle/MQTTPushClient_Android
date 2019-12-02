@@ -107,6 +107,22 @@ public class OptionList extends Item {
         return option;
     }
 
+    public int getSelectedPosition() {
+        int pos = -1;
+        OptionList.Option option = null, o;
+        String content = (String) data.get("content");
+        if (optionList != null) {
+            for(int i = 0; i < optionList.size(); i++) {
+                o = optionList.get(i);
+                if (Utils.equals(content, o.value)) {
+                    pos = i;
+                    break;
+                }
+            }
+        }
+        return pos;
+    }
+
     public static class Option {
         public Option() {}
         public Option(String value, String displayValue, String uri) {
