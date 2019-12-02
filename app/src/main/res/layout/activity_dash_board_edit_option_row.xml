@@ -15,6 +15,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
+        android:scaleType="fitCenter"
         android:layout_width="48dp"
         android:layout_height="48dp" />
 
