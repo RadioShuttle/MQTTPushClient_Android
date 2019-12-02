@@ -14,4 +14,27 @@
         android:icon="@drawable/ic_menu_save"
         android:title="@string/action_save_account"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menu_clear"
+        android:orderInCategory="20"
+        android:title="@string/action_clear"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:visible="false"
+        android:id="@+id/menu_html_example"
+        android:orderInCategory="25"
+        android:title="@string/menu_html_example"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/htmL_example_basic"
+                android:orderInCategory="26"
+                android:title="@string/menu_html_basic"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+
 </menu>
