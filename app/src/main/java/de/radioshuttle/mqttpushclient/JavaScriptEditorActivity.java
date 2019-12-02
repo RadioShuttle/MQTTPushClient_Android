@@ -290,8 +290,8 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     }
 
     protected void clear() {
-        ConfirmClearDlg dlg = new ConfirmClearDlg();
-        dlg.show(getSupportFragmentManager(), ConfirmClearDlg.class.getSimpleName());
+        ConfirmClearDialog dlg = new ConfirmClearDialog();
+        dlg.show(getSupportFragmentManager(), ConfirmClearDialog.class.getSimpleName());
     }
 
     protected void help() {
@@ -332,40 +332,6 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
             changed = !Utils.equals(org, current);
         }
         return changed;
-    }
-
-    public static class ConfirmClearDlg extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.dlg_confirm_clear_title));
-            // builder.setMessage(getString(R.string.dlg_back_without_save_js_msg));
-
-            builder.setPositiveButton(R.string.action_clear, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    FragmentActivity a = getActivity();
-                    if (a instanceof JavaScriptEditorActivity) {
-                        if (((JavaScriptEditorActivity) a).mEditor != null) {
-                            ((JavaScriptEditorActivity) a).mEditor.setText(null);
-                        }
-                    }
-                }
-            });
-
-            builder.setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-
-            AlertDialog dlg = builder.create();
-            dlg.setCanceledOnTouchOutside(false);
-
-            return dlg;
-        }
     }
 
     protected boolean mActivityStarted;
