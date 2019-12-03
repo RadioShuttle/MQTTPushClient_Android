@@ -8,17 +8,12 @@ package de.radioshuttle.mqttpushclient;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.utils.Utils;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Base64;
@@ -31,6 +26,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -302,13 +298,21 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_FILTER_SCRIPTS);
                 startActivityForResult(webIntent, 0);
             } else if (mComponentType == CONTENT_FILTER_DASHBOARD) {
+                Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
+                mActivityStarted = false; //TODO: remove line, activate help
+                /*
                 Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
-                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_DASH_FILTER_SCRIPT);
+                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_FILTER_SCRIPT);
                 startActivityForResult(webIntent, 0);
+                 */
             } else if (mComponentType == CONTENT_OUTPUT_DASHBOARD) {
+                Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
+                mActivityStarted = false; //TODO: remove line, activate help
+                /*
                 Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
-                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_DASH_OUTPUT_SCRIPT);
+                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_OUTPUT_SCRIPT);
                 startActivityForResult(webIntent, 0);
+                 */
             }
         }
     }
