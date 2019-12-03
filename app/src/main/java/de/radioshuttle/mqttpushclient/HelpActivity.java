@@ -217,7 +217,8 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
     public final static String HELP_TOPIC_FILTER_SCRIPTS = "filter-scripts.html";
 
     //TODO: replace placeholder (filter-scripts.html)
-    public final static String HELP_TOPIC_DASH_FILTER_SCRIPT = "filter-scripts.html";
-    public final static String HELP_TOPIC_DASH_OUTPUT_SCRIPT = "filter-scripts.html";
+    public final static String HELP_DASH_FILTER_SCRIPT = "filter-scripts.html";
+    public final static String HELP_DASH_OUTPUT_SCRIPT = "filter-scripts.html";
+    public final static String HELP_DASH_CUSTOM_VIEW_HTML = "filter-scripts.html";
 
 }
