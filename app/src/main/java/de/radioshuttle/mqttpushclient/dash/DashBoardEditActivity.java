@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
 import de.radioshuttle.mqttpushclient.ConfirmClearDialog;
+import de.radioshuttle.mqttpushclient.HelpActivity;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
@@ -1349,6 +1350,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             case R.id.htmL_example_basic:
                 insertHTMLExample(mHTMLExampleBasic);
                 break;
+            case R.id.menu_help:
+                showHelp();
+                break;
             default:
                 consumed = super.onOptionsItemSelected(item);
         }
@@ -1783,7 +1787,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (!Utils.isEmpty(acc)) {
                     intent.putExtra(JavaScriptEditorActivity.ARG_ACCOUNT, acc);
                 }
-                startActivityForResult(intent, 3);
+                startActivityForResult(intent, ACTIVITY_REQUEST_IMAGE_CHOOSER);
             }
         }
     }
@@ -1826,7 +1830,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             if (!Utils.isEmpty(acc)) {
                 intent.putExtra(JavaScriptEditorActivity.ARG_ACCOUNT, acc);
             }
-            startActivityForResult(intent, 1);
+            startActivityForResult(intent, ACTIVITY_REQUEST_JS_FILTER);
         }
     }
 
@@ -1866,7 +1870,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             if (!Utils.isEmpty(acc)) {
                 intent.putExtra(JavaScriptEditorActivity.ARG_ACCOUNT, acc);
             }
-            startActivityForResult(intent, 2);
+            startActivityForResult(intent, ACTIVITY_REQUEST_JS_OUTPUT);
         }
     }
 
@@ -1876,13 +1880,13 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         super.onActivityResult(requestCode, resultCode, data);
         mActivityStarted = false;
         // requestCode == 1 for JavaScriptEditor Filter Script
-        if (requestCode == 1 && resultCode == AppCompatActivity.RESULT_OK) {
+        if (requestCode == ACTIVITY_REQUEST_JS_FILTER && resultCode == AppCompatActivity.RESULT_OK) {
             mFilterScriptContent = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
             setFilterButtonText(mFiterScriptButton, mFilterScriptContent, (mItem != null ? mItem.script_f : null));
-        } else if (requestCode == 2 && resultCode == AppCompatActivity.RESULT_OK) {
+        } else if (requestCode == ACTIVITY_REQUEST_JS_OUTPUT && resultCode == AppCompatActivity.RESULT_OK) {
             mOutputScriptContent = data.getStringExtra(JavaScriptEditorActivity.ARG_JAVASCRIPT);
             setFilterButtonText(mOutputScriptButton, mOutputScriptContent, (mItem != null ? mItem.script_p : null));
-        } else if (requestCode == 3) {
+        } else if (requestCode == ACTIVITY_REQUEST_IMAGE_CHOOSER) {
             if (data != null && data.getStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES) != null ) {
                 mLockedResources = new HashSet(data.getStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES));
             }
@@ -2130,6 +2134,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 m.setVisible(true);
                 m.setEnabled(!mViewModel.isSaveRequestActive());
             }
+            m = menu.findItem(R.id.menu_help);
+            if (m !=  null) {
+                m.setVisible(true); //
+            }
+
         }
 
         return super.onPrepareOptionsMenu(menu);
@@ -2299,6 +2308,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         // Log.d(TAG, "sel start: " + s);
     }
 
+    protected void showHelp() {
+        if (mItem instanceof CustomItem) {
+            Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
+            mActivityStarted = false; //TODO: remove line, activate help
+            /*
+            Intent webIntent = new Intent(this, HelpActivity.class);
+            webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_CUSTOM_VIEW_HTML);
+            startActivityForResult(webIntent, ACTIVITY_REQUEST_CUSTOM_VIEW_HELP);
+             */
+        }
+    }
 
     protected boolean mActivityStarted;
 
@@ -2426,5 +2446,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static int CTRL_ON_STATE = 0;
     protected final static int CTRL_OFF_STATE = 1;
     protected final static int CTRL_BACKGROUND = 2;
+
+    final static int ACTIVITY_REQUEST_JS_FILTER = 1;
+    final static int ACTIVITY_REQUEST_JS_OUTPUT = 2;
+    final static int ACTIVITY_REQUEST_IMAGE_CHOOSER = 3;
+    final static int ACTIVITY_REQUEST_CUSTOM_VIEW_HELP= 4;
 
 }
