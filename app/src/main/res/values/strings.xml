@@ -254,6 +254,8 @@ to communicate with the MQTT broker and to receive push notifications
 
     <string name="menu_html_example">Insert Example</string>
     <string name="menu_html_basic">Basic HTML</string>
+    <string name="menu_html_color_picker">Color Picker</string>
+    <string name="menu_html_gauge">Gauge</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
