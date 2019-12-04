@@ -188,6 +188,16 @@ public class CustomItem extends Item {
             return  data.get("userdata") == null ? "" : (String) data.get("userdata");
         }
 
+        @JavascriptInterface
+        public String getSubscribedTopic() {
+            return topic_s == null ? "" :  topic_s;
+        }
+
+        @JavascriptInterface
+        public String getPublishTopic() { //TODO: currently not available in UI (but may in future)
+            return topic_p == null ? "" :  topic_p;
+        }
+
         protected double longToDouble(long i) {
             double v;
             if (i == DColor.CLEAR) {

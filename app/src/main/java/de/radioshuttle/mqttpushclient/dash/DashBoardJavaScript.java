@@ -109,6 +109,8 @@ public class DashBoardJavaScript extends JavaScript {
         String getCtrlImage();
         String getCtrlImageOff();
         String _getUserData();
+        String getPublishTopic();
+        String getSubscribedTopic();
     }
 
     private static class ViewPropertiesImpl implements ViewProperties {
@@ -287,7 +289,17 @@ public class DashBoardJavaScript extends JavaScript {
 
         @Override
         public String _getUserData() {
-            return  p.get("userdata") == null ? "" : (String) p.get("userdata");
+            return p.get("userdata") == null ? "" : (String) p.get("userdata");
+        }
+
+        @Override
+        public String getPublishTopic() {
+            return p.get("topic_p") == null ? "" : (String) p.get("topic_p");
+        }
+
+        @Override
+        public String getSubscribedTopic() {
+            return p.get("topic_s") == null ? "" : (String) p.get("topic_s");
         }
 
         @Override
