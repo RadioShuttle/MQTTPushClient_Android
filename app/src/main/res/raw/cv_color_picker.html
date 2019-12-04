@@ -38,8 +38,8 @@
     }
 
     function onColorSelected(t) {
-      <!-- IMPORTANT, set your topic here -->
-      MQTT.publish("demo/color", t.value, false);
+      <!-- IMPORTANT! set your topic (publish) here, if it differs form subscribed topic -->
+      MQTT.publish(MQTT.view.getSubscribedTopic(), t.value, false);
     }
 
     window.addEventListener('resize', onMqttResize);
