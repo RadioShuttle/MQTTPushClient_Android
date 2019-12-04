@@ -47,8 +47,8 @@ public abstract class Item {
     public volatile long textcolor; // flag, alpha, r, g, b
     public volatile long background; // flag, alpha, r, g, b
     public int textsize; // 0 - default, 1 - small, 2 - medium, 3 - large
-    public String topic_s;
-    public String script_f;
+    public volatile String topic_s;
+    public volatile String script_f;
     public volatile String background_uri;
 
     public String topic_p;
@@ -229,6 +229,8 @@ public abstract class Item {
         viewProperties.put("textsize", data.containsKey("textsize") ?  (Integer) data.get("textsize") : textsize);
         viewProperties.put("background", data.containsKey("background") ? (Long) data.get("background") : background);
         viewProperties.put("background_image", data.containsKey("background_image") ? (String) data.get("background_image") : background_uri);
+        viewProperties.put("topic_s", topic_s);
+        viewProperties.put("topic_p", topic_p);
         if (data.containsKey("userdata")) {
             viewProperties.put("userdata", data.get("userdata") == null ? "" : data.get("userdata"));
         }
