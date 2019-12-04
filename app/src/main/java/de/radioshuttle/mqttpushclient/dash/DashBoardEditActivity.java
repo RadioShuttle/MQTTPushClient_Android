@@ -70,6 +70,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1693,6 +1694,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     protected boolean isValidInput() {
         boolean valid = true;
+        //TODO: remove when tested
+        if (mViewModel.getPushAccount() != null) {
+            PushAccount acc = mViewModel.getPushAccount();
+            if (acc != null && "pushsrv.radioshuttle.de:2033".equals(acc.pushserverID)) {
+                showErrorMsg("Saving a dashbaord is disabled for pushsrv.radioshuttle.de");
+                return false;
+            }
+        }
+
         if (!(mItem instanceof GroupItem)) {
             String subTopic = mEditTextTopicSub.getText().toString();
             if (!Utils.isEmpty(subTopic)) {
@@ -2151,7 +2161,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     }
 
     protected void showErrorMsg(String msg) {
-        View v = findViewById(R.id.rView);
+        View v = findViewById(R.id.swiperefresh);
         if (v != null) {
             mSnackbar = Snackbar.make(v, msg, Snackbar.LENGTH_INDEFINITE);
             mSnackbar.show();
