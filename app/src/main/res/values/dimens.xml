@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="dashboard_spacing">4dp</dimen>
+    <dimen name="dashboard_cellspacing">4dp</dimen>
     <dimen name="dashboard_zoom_1">100dp</dimen>
     <dimen name="dashboard_zoom_2">150dp</dimen>
     <dimen name="dashboard_zoom_3">200dp</dimen>
