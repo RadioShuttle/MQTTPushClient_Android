@@ -308,7 +308,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             } else if (item instanceof OptionList) { // (h.getItemViewType() == TYPE_OPTIONLIST)
                 OptionList ol = (OptionList) item;
                 String displayValue = ol.getDisplayValue();
-                if (displayValue == null) {
+                OptionList.Option selOption = ol.getSelectedOption();
+                boolean hasImage = selOption != null && !Utils.isEmpty(selOption.imageURI) && selOption.uiImage != null;
+                if (Utils.isEmpty(displayValue) && !hasImage) {
                     /* if content does not match an option, show content */
                     displayValue = content; //TODO: consider showing an error if content does not match an option
                     /*
