@@ -38,7 +38,7 @@
     }
 
     function onColorSelected(t) {
-      <!-- IMPORTANT! set your topic (publish) here, if it differs form subscribed topic -->
+      /* IMPORTANT! set your topic (publish) here, if it differs form subscribed topic */
       MQTT.publish(MQTT.view.getSubscribedTopic(), t.value, false);
     }
 
