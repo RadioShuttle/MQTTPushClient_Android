@@ -38,23 +38,6 @@ import de.radioshuttle.utils.Utils;
 
 public class DBUtils {
 
-    public static class ItemDecoration extends RecyclerView.ItemDecoration {
-        public ItemDecoration(Context context) {
-            mSpacing  = context.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
-        }
-
-        @Override
-        public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
-            super.getItemOffsets(outRect, view, parent, state);
-            outRect.top = mSpacing;
-            outRect.left = mSpacing;
-            outRect.right = mSpacing;
-            outRect.bottom = mSpacing;
-        }
-
-        int mSpacing;
-    }
-
     public static class SpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
         public SpanSizeLookup(RecyclerView recyclerView) {
             mRecyclerView = recyclerView;
