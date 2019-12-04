@@ -20,7 +20,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.AccountListActivity;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
-import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.MessagesActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
@@ -150,8 +149,8 @@ public class DashBoardActivity extends AppCompatActivity implements
             layoutManager.setSpanSizeLookup(new DBUtils.SpanSizeLookup(mControllerList));
 
             DisplayMetrics dm = getResources().getDisplayMetrics();
-            final int spacing = getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
-            int listWidth = getWidthPixel() * spanCount + (spanCount - 1) * spacing;
+            final int cellSpacing = getResources().getDimensionPixelSize(R.dimen.dashboard_cellspacing);
+            int listWidth = (getWidthPixel() + cellSpacing * 2) * spanCount;
             int paddinglR = (dm.widthPixels - listWidth) / 2;
             if (paddinglR < 0) {
                 paddinglR = 0;
@@ -159,10 +158,9 @@ public class DashBoardActivity extends AppCompatActivity implements
             int paddingTB = (int) (4f * dm.density);
             mControllerList.setPadding(paddinglR, paddingTB, paddinglR, paddingTB);
 
-            Log.d(TAG, "spacing: " + spacing + " dpi " + (int) ((float) spacing * (160f / (float) getResources().getDisplayMetrics().densityDpi)));
+            Log.d(TAG, "spacing: " + cellSpacing + " dpi " + (int) ((float) cellSpacing * (160f / (float) getResources().getDisplayMetrics().densityDpi)));
 
             mControllerList.setLayoutManager(layoutManager);
-            mControllerList.addItemDecoration(new DBUtils.ItemDecoration(getApplication()));
             LinkedHashSet<Integer> selectedItems = new LinkedHashSet<>();
             if (savedInstanceState != null) {
                 List<Integer> itemsList= savedInstanceState.getIntegerArrayList(KEY_SELECTED_ITEMS);
@@ -360,8 +358,8 @@ public class DashBoardActivity extends AppCompatActivity implements
                 ((DashBoardAdapter) adapter).setItemWidth(getWidthPixel(), spanCount);
 
                 DisplayMetrics dm = getResources().getDisplayMetrics();
-                final int spacing = getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
-                int listWidth = getWidthPixel() * spanCount + (spanCount - 1) * spacing;
+                final int cellSpacing = getResources().getDimensionPixelSize(R.dimen.dashboard_cellspacing);
+                int listWidth = (getWidthPixel() + cellSpacing * 2) * spanCount;
                 int paddinglR = (dm.widthPixels - listWidth) / 2;
                 if (paddinglR < 0) {
                     paddinglR = 0;
@@ -377,7 +375,7 @@ public class DashBoardActivity extends AppCompatActivity implements
         int spanCount = 0;
         DisplayMetrics dm = getResources().getDisplayMetrics();
 
-        float spacingDPI = getResources().getDimension(R.dimen.dashboard_spacing) / dm.density;
+        float spacingDPI = getResources().getDimension(R.dimen.dashboard_cellspacing) / dm.density;
 
         // Log.d(TAG, "width px: " + getWidthPixel() + " width dpi: " + getWidthDPI());
 

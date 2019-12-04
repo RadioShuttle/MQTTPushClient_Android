@@ -64,12 +64,11 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
 
         mDefaultProgressColor = DColor.fetchAccentColor(activity);
         mDefaultButtonBackground = DColor.fetchColor(activity, R.attr.colorButtonNormal);
-        spacing = activity.getResources().getDimensionPixelSize(R.dimen.dashboard_spacing);
         mSpanCnt = spanCount;
         mSelectedItems = selectedItems;
         mAccount = account;
         mActivity = activity;
-
+        mCellSpacing = mActivity.getResources().getDimensionPixelSize(R.dimen.dashboard_cellspacing);
         try {
             wrapper_webview_js = Utils.getRawStringResource(activity, "javascript_wrapper_webview", true);
             javascript_color_js = Utils.getRawStringResource(activity, "javascript_color", true);
@@ -149,6 +148,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         } // TODO: handle unknown view type
 
         // Log.d(TAG, "onCreateViewHolder: " + viewType);
+        view.setPadding(mCellSpacing, mCellSpacing, mCellSpacing, mCellSpacing);
 
         final ViewHolder holder = new ViewHolder(view);
         holder.label = label; // item label
@@ -200,7 +200,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         final ViewHolder h = (ViewHolder) holder;
         Item item = mData.get(position);
         // Log.d(TAG, "onBindViewHolder: " + item.label );
-
         h.label.setText(item.label);
 
         if (mSelectedItems.contains(item.id)) {
@@ -218,6 +217,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         ViewGroup.LayoutParams lp = h.itemView.getLayoutParams();
 
         if (h.getItemViewType() != TYPE_GROUP) {
+            /* set item container cell width including cell padding*/
+            lp.width = mWidth + 2 * mCellSpacing;
+            h.itemView.setLayoutParams(lp);
+
             lp = h.contentContainer.getLayoutParams();
 
             if (lp.width != mWidth || lp.height != mWidth) {
@@ -228,12 +231,14 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             item.setViewBackground(h.contentContainer, mDefaultBackground, false);
 
         } else { // if (h.viewType == TYPE_GROUP) {
-            if (lp.width != mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2) {
-                lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * spacing * 2;
-                h.itemView.setLayoutParams(lp);
-            }
+            lp.width = (mWidth + mCellSpacing * 2) * mSpanCnt;
+            h.itemView.setLayoutParams(lp);
 
-            item.setViewBackground(h.itemView, mDefaultBackground, false);
+            lp = h.label.getLayoutParams();
+            lp.width = mSpanCnt * mWidth + (mSpanCnt - 1) * mCellSpacing * 2;
+            h.label.setLayoutParams(lp);
+
+            item.setViewBackground(h.label, mDefaultBackground, false);
             item.setViewTextAppearance(h.label, h.defaultColor);
         }
 
@@ -786,13 +791,13 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
     private int mDefaultButtonBackground;
     private int mWidth;
     private int mSpanCnt;
-    private int spacing;
     private LayoutInflater mInflater;
     private List<Item> mData;
     private HashMap<Integer, Integer> mDataIdPositionMap;
     private PushAccount mAccount;
     private DashBoardActivity mActivity;
     private long mLiveDataSince;
+    private int mCellSpacing;
 
     public final static int TYPE_GROUP = 0;
     public final static int TYPE_TEXT = 1;
