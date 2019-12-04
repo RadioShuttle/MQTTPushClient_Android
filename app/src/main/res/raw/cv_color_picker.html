@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+
+  <style>
+    body {margin: 0; padding: 0;}
+    #colorInput {margin: 0; padding: 0; position: relative;}
+  </style>
+
+  <!-- android specific meta -->
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+
+  <script>
+
+    function onMqttInit(account, view) {
+      var colorInput = document.getElementById("colorInput");
+       colorInput.value = "#000000";
+       onMqttResize();
+    }
+
+    function onMqttMessage(msg) {
+      var colorInput = document.getElementById("colorInput");
+      colorInput.value = msg.text;
+    }
+
+    function onMqttResize() {
+      var h = window.innerHeight;
+      var w = window.innerWidth;
+      var viewPortArea = document.getElementById('visible_area');
+      viewPortArea.style.width = w + "px";
+      viewPortArea.style.height = h + "px";
+      var colorInput = document.getElementById('colorInput');
+      colorInput.style.width = Math.floor(w * .8) + "px";
+      colorInput.style.height = Math.floor(h * .8) + "px";
+      colorInput.style.left = Math.floor(w * .1) + "px";
+      colorInput.style.top = Math.floor(h * .1) + "px";
+    }
+
+    function onColorSelected(t) {
+      <!-- IMPORTANT, set your topic here -->
+      MQTT.publish("demo/color", t.value, false);
+    }
+
+    window.addEventListener('resize', onMqttResize);
+  </script>
+ </head>
+
+ <body>
+  <div id="visible_area">
+    <input id="colorInput" type="color" onchange="onColorSelected(this);"></input>
+  </div>
+ </body>
+</html>
