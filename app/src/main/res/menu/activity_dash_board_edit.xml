@@ -34,6 +34,16 @@
                 android:orderInCategory="26"
                 android:title="@string/menu_html_basic"
                 app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_color_picker"
+                android:orderInCategory="27"
+                android:title="@string/menu_html_color_picker"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_gauge"
+                android:orderInCategory="28"
+                android:title="@string/menu_html_gauge"
+                app:showAsAction="never" />
         </menu>
     </item>
 
