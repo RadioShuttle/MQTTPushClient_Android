@@ -13,6 +13,7 @@
         android:singleLine="true"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="center"
+        android:padding="8dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
