@@ -25,7 +25,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
 import de.radioshuttle.mqttpushclient.ConfirmClearDialog;
-import de.radioshuttle.mqttpushclient.HelpActivity;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
@@ -70,7 +69,6 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -658,6 +656,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     } else {
                         try {
                             mHTMLExampleBasic = Utils.getRawStringResource(getApplication(), "cv_empty", false);
+                            mHTMLExampleColorPicker = Utils.getRawStringResource(getApplication(), "cv_color_picker", false);
+                            mHTMLExampleGauge = Utils.getRawStringResource(getApplication(), "cv_gauge", false);
                         } catch(Exception e) {
                             Log.e(TAG, "Could not load resource: ", e);
                         }
@@ -1350,6 +1350,12 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 break;
             case R.id.htmL_example_basic:
                 insertHTMLExample(mHTMLExampleBasic);
+                break;
+            case R.id.htmL_example_color_picker:
+                insertHTMLExample(mHTMLExampleColorPicker);
+                break;
+            case R.id.htmL_example_gauge:
+                insertHTMLExample(mHTMLExampleGauge);
                 break;
             case R.id.menu_help:
                 showHelp();
@@ -2438,6 +2444,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     /* html example codes (custom view) */
     protected String mHTMLExampleBasic;
+    protected String mHTMLExampleColorPicker;
+    protected String mHTMLExampleGauge;
 
     private final static String TAG = DashBoardEditActivity.class.getSimpleName();
 
