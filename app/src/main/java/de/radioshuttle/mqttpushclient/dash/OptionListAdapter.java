@@ -86,7 +86,6 @@ public class OptionListAdapter extends RecyclerView.Adapter<OptionListAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         OptionList.Option item = mData.get(position);
-        holder.label.setText(Utils.isEmpty(item.displayValue) ? item.value : item.displayValue );
 
         if (!Utils.isEmpty(mSelectedValue) && Utils.equals(item.value, mSelectedValue)) {
             if (holder.radioChecked.getVisibility() != View.VISIBLE) {
@@ -103,12 +102,13 @@ public class OptionListAdapter extends RecyclerView.Adapter<OptionListAdapter.Vi
                 holder.radioUnchecked.setVisibility(View.VISIBLE);
             }
         }
+        boolean hasImage = false;
         ViewGroup.LayoutParams lp = holder.label.getLayoutParams();
         if (!Utils.isEmpty(item.imageURI) && item.uiImageDetail != null) {
             holder.backgroundImage.setImageDrawable(item.uiImageDetail);
+            hasImage = true;
             if (holder.backgroundImage.getVisibility() != View.VISIBLE) {
                 holder.backgroundImage.setVisibility(View.VISIBLE);
-
             }
             if (lp instanceof ConstraintLayout.LayoutParams) {
                 ConstraintLayout.LayoutParams clp = (ConstraintLayout.LayoutParams) lp;
@@ -122,6 +122,11 @@ public class OptionListAdapter extends RecyclerView.Adapter<OptionListAdapter.Vi
                 clp.rightToRight = ConstraintLayout.LayoutParams.UNSET;
             }
         }
+        String displayText = item.displayValue;
+        if (!hasImage && Utils.isEmpty(displayText)) {
+            displayText = item.value;
+        }
+        holder.label.setText(displayText);
     }
 
     public void setData(LinkedList<OptionList.Option> list) {
