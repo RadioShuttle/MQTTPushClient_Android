@@ -262,9 +262,8 @@ public class OptionEditDialog extends DialogFragment implements AdapterView.OnIt
             for(i = 0; i < size; i++) {
                 adapterItems.add(String.valueOf(i + 1) /* + " - " + itemList.get(i).label  */);
             }
-            if (mode == MODE_ADD) {
-                adapterItems.add(String.valueOf(i + 1));
-            }
+            adapterItems.add(String.valueOf(i + 1));
+
             ArrayAdapter<String> a = createPosAdapter(mPosSpinner, adapterItems);
             a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             // mPosSpinner.setOnItemSelectedListener(this);

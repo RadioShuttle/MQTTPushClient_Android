@@ -940,6 +940,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
         if (args != null && entry != null) {
             OptionList.Option ae;
+            OptionList.Option oldEntry = null;
 
             int mode = args.getInt(ARG_MODE);
             int pos = args.getInt(OptionEditDialog.ARG_POS, -1);
@@ -952,6 +953,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (Utils.equals(entry.value, ae.value) || pos == i) {
                     cnt++;
                 }
+                if (pos == i) {
+                    oldEntry = ae;
+                }
             }
             if (mode == MODE_ADD) {
                 cnt++;
@@ -963,6 +967,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 return;
             }
 
+            if (newPos < 0 || newPos > optionList.size()) {
+                newPos = optionList.size();
+            }
+
+            optionList.add(newPos, entry);
+            if (oldEntry != null) {
+                optionList.remove(oldEntry);
+                entry.selected = oldEntry.selected;
+            }
+
+            /*
             if (mode == MODE_ADD) {
                 if (newPos >= 0 && newPos < optionList.size()) {
                     optionList.add(newPos, entry);
@@ -985,6 +1000,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     }
                 }
             }
+             */
             if (mOptionListEditAdapter != null) {
                 mViewModel.loadOptionListImages(optionList);
                 mOptionListEditAdapter.notifyDataSetChanged();
