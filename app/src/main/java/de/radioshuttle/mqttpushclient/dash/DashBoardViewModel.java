@@ -330,7 +330,6 @@ public class DashBoardViewModel extends AndroidViewModel {
     }
 
     protected void loadImages(final List<Item> list) {
-        //TODO: loadImages() is not required when viewmodel is used with other activities than DashBoarActivity
         if (list != null) {
             @SuppressLint("StaticFieldLeak")
             AsyncTask<List<Item>, Void, List<Item>> loadImages = new AsyncTask<List<Item>, Void, List<Item>>() {
@@ -590,6 +589,19 @@ public class DashBoardViewModel extends AndroidViewModel {
 
     public static void setGroup(LinkedList<GroupItem> mGroups, int pos, GroupItem groupItem) {
         if (pos >= 0) {
+            if (pos < 0 || pos > mGroups.size()) {
+                pos = mGroups.size();
+            }
+            mGroups.add(pos, groupItem);
+            for(int i = 0; i < mGroups.size(); i++) {
+                if (mGroups.get(i).id == groupItem.id && i != pos) {
+                    groupItem.data = mGroups.get(i).data;
+                    mGroups.remove(i);
+                    break;
+                }
+            }
+
+            /*
             boolean removeOld = false;
             if (pos >= mGroups.size()) {
                 pos = mGroups.size();
@@ -613,6 +625,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                     }
                 }
             }
+             */
         }
     }
 
@@ -623,34 +636,29 @@ public class DashBoardViewModel extends AndroidViewModel {
             Item replacedItem = null;
             if (group != null) {
                 LinkedList<Item> items = itemsPerGroup.get(group.id);
-                //TODO: fix replacement similar to Option List editor
+
+                if (itemPos < 0 || itemPos > items.size()) {
+                    itemPos = items.size();
+                }
+                items.add(itemPos, item);
+
                 if (items != null) {
-                    ItemContext ic = null;
-                    if (itemPos >= items.size()) {
-                        itemPos = items.size();
-                        ic = getItem(groups, itemsPerGroup, item.id);
-                        items.add(item);
-                    } else {
-                        Item currentItem = items.get(itemPos);
-                        if (currentItem.id == item.id) {
-                            item.data = currentItem.data;
-                            replacedItem = items.set(itemPos, item); // replace
-                        } else {
-                            ic = getItem(groups, itemsPerGroup, item.id);
-                            items.add(itemPos, item); // insert
-                        }
-                    }
-                    if (ic != null ) { // remove from old pos
+                    ItemContext ic = getItem(groups, itemsPerGroup, item.id);
+                    if (ic != null) {
+                        item.data = ic.item.data;
                         items = itemsPerGroup.get(ic.group.id);
                         if (items != null) {
+                            Item ele;
                             for(int i = 0; i < items.size(); i++) {
-                                if ((itemPos != i || ic.groupPos != groupIdx) && items.get(i).id == item.id) {
+                                ele = items.get(i);
+                                if (ele.id == item.id && (ic.groupPos != groupIdx || itemPos != i)) {
                                     replacedItem = items.remove(i);
                                     break;
                                 }
                             }
                         }
                     }
+
                     //TODO: topic, javascript might have changed: subscribe and/or unsubscribe, set new content / retrigger JavaScript
                     if (replacedItem != null) {
                     }
