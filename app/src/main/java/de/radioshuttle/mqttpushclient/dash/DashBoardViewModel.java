@@ -593,39 +593,15 @@ public class DashBoardViewModel extends AndroidViewModel {
                 pos = mGroups.size();
             }
             mGroups.add(pos, groupItem);
+            GroupItem item;
             for(int i = 0; i < mGroups.size(); i++) {
-                if (mGroups.get(i).id == groupItem.id && i != pos) {
-                    groupItem.data = mGroups.get(i).data;
+                item = mGroups.get(i);
+                if (item.id == groupItem.id && item != groupItem) {
+                    groupItem.data = item.data;
                     mGroups.remove(i);
                     break;
                 }
             }
-
-            /*
-            boolean removeOld = false;
-            if (pos >= mGroups.size()) {
-                pos = mGroups.size();
-                mGroups.add(groupItem);
-                removeOld = true;
-            } else {
-                GroupItem currentGr = mGroups.get(pos);
-                if (currentGr.id == groupItem.id) {
-                    groupItem.data = currentGr.data;
-                    mGroups.set(pos, groupItem); // replace
-                } else {
-                    mGroups.add(pos, groupItem); // insert
-                    removeOld = true;
-                }
-            }
-            if (removeOld) {
-                for(int i = 0; i < mGroups.size(); i++) {
-                    if (pos != i && mGroups.get(i).id == groupItem.id) {
-                        mGroups.remove(i); // remove from old pos
-                        break;
-                    }
-                }
-            }
-             */
         }
     }
 
@@ -635,6 +611,9 @@ public class DashBoardViewModel extends AndroidViewModel {
             GroupItem group = groups.get(groupIdx);
             Item replacedItem = null;
             if (group != null) {
+                // get reference of edited item
+                ItemContext ic = getItem(groups, itemsPerGroup, item.id);
+
                 LinkedList<Item> items = itemsPerGroup.get(group.id);
 
                 if (itemPos < 0 || itemPos > items.size()) {
@@ -643,7 +622,6 @@ public class DashBoardViewModel extends AndroidViewModel {
                 items.add(itemPos, item);
 
                 if (items != null) {
-                    ItemContext ic = getItem(groups, itemsPerGroup, item.id);
                     if (ic != null) {
                         item.data = ic.item.data;
                         items = itemsPerGroup.get(ic.group.id);
@@ -651,7 +629,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                             Item ele;
                             for(int i = 0; i < items.size(); i++) {
                                 ele = items.get(i);
-                                if (ele.id == item.id && (ic.groupPos != groupIdx || itemPos != i)) {
+                                if (ele.id == item.id && ele != item) {
                                     replacedItem = items.remove(i);
                                     break;
                                 }
