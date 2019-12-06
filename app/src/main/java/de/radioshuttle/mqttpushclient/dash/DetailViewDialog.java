@@ -1028,6 +1028,11 @@ public class DetailViewDialog extends DialogFragment {
                 }
             }
 
+            // set default colors for error content
+            mErrorContent.setBackgroundColor(mDefaultBackground);
+            mErrorContent.setTextColor(mDefaultTextColor);
+
+            /*
             mItem.setViewBackground(mErrorContent, mDefaultBackground, true);
             int color;
             if (mItem.textcolor == DColor.OS_DEFAULT || mItem.textcolor == DColor.CLEAR) {
@@ -1039,6 +1044,7 @@ public class DetailViewDialog extends DialogFragment {
             if (mItem.textcolor != 0) { //TODO: if transparent (=0) consider using system default
                 mErrorContent.setTextColor(color);
             }
+             */
 
             mErrorContent.setText(displayError);
             mErrorLabel.setText(mItem.label + (receivedDateStr != null ? " - " + receivedDateStr : ""));
