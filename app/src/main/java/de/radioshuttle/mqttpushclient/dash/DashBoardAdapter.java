@@ -451,8 +451,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             tintProgressBar(color, h.progressBar);
             // Log.d(TAG, "tint progress bar color: " + citem.label + ", "  + color);
 
-            if (!Utils.equals(h.html, citem.getHtml())) { // load html, if not already done or changed
+            if (!Utils.equals(h.html, citem.getHtml()) || citem.reloadRequested) { // load html, if not already done or changed
                 // Log.d(TAG, "custom item loading: " + citem.label);
+                citem.reloadRequested = false;
                 h.html = citem.getHtml();
 
                 citem.isLoading = true;
