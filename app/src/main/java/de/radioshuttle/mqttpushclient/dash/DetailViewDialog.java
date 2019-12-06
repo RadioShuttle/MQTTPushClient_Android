@@ -110,6 +110,7 @@ public class DetailViewDialog extends DialogFragment {
                     root = (ViewGroup) inflater.inflate(R.layout.dialog_detail_view, null);
                     View view = null;
                     ViewStub viewStub = root.findViewById(R.id.viewStub);
+                    ImageButton refreshButton = root.findViewById(R.id.refreshButton);
 
                     mDefaultBackground = ContextCompat.getColor(getActivity(), R.color.dashboad_item_background);
 
@@ -447,7 +448,27 @@ public class DetailViewDialog extends DialogFragment {
                                 return r;
                             }
                         });
-
+                        if (refreshButton != null) {
+                            refreshButton.setVisibility(View.VISIBLE);
+                            refreshButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    webView.reload();
+                                    /* reload dashboard item instance too: */
+                                    Bundle args = getArguments();
+                                    DashBoardViewModel.ItemContext itemContext = mViewModel.getItem(args.getInt("id"));
+                                    if (itemContext != null && itemContext.item instanceof CustomItem) {
+                                        /* we do not know antything about the adapters webview here, but the adapter
+                                        * can be notified to refresh its content */
+                                        CustomItem customItem = (CustomItem) itemContext.item;
+                                        if (!customItem.reloadRequested) {
+                                            customItem.reloadRequested = true;
+                                            customItem.notifyDataChanged();
+                                        }
+                                    }
+                                }
+                            });
+                        }
 
                         if (savedInstanceState == null) {
                             // loading is done in updateView
@@ -506,6 +527,10 @@ public class DetailViewDialog extends DialogFragment {
                                 dismiss();
                             }
                         });
+
+                        if (refreshButton != null) {
+                            ImageViewCompat.setImageTintList(refreshButton, csl);
+                        }
 
                         mErrorButton = root.findViewById(R.id.errorButton);
                         ImageViewCompat.setImageTintList(mErrorButton, csl);
