@@ -448,18 +448,21 @@ public class DetailViewDialog extends DialogFragment {
                                 return r;
                             }
                         });
+
+                        //TOOO: consider enabliing refresh button for custom view (reloads html page)
+                        /*
                         if (refreshButton != null) {
                             refreshButton.setVisibility(View.VISIBLE);
                             refreshButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     webView.reload();
-                                    /* reload dashboard item instance too: */
+                                    // reload dashboard item instance too:
                                     Bundle args = getArguments();
                                     DashBoardViewModel.ItemContext itemContext = mViewModel.getItem(args.getInt("id"));
                                     if (itemContext != null && itemContext.item instanceof CustomItem) {
-                                        /* we do not know antything about the adapters webview here, but the adapter
-                                        * can be notified to refresh its content */
+                                        // we do not know antything about the adapters webview here, but the adapter
+                                        // can be notified to refresh its content
                                         CustomItem customItem = (CustomItem) itemContext.item;
                                         if (!customItem.reloadRequested) {
                                             customItem.reloadRequested = true;
@@ -469,6 +472,7 @@ public class DetailViewDialog extends DialogFragment {
                                 }
                             });
                         }
+                        */
 
                         if (savedInstanceState == null) {
                             // loading is done in updateView
