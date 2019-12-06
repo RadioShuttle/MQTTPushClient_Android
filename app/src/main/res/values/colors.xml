@@ -25,6 +25,7 @@
     <color name="dashboard_selected_background">#80000000</color>
     <color name="dashboard_color_label_pressed">#d7d7d7</color>
     <color name="dashboad_item_background">#d7d7d7</color>
+    <color name="dashboad_error_img_background">#FAFAFA</color>
 
     <color name="locked_image_background">#FFFFFF</color>
     <color name="locked_image_border">#000000</color>
