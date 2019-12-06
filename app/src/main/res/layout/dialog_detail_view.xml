@@ -21,13 +21,24 @@
         android:layout_height="48dp" />
 
     <ImageButton
+        android:id="@+id/refreshButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        app:srcCompat="@drawable/ic_button_refresh"
+        android:visibility="gone"
+        app:layout_constraintRight_toLeftOf="@+id/closeButton"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <ImageButton
         android:id="@+id/errorButton2"
         android:minHeight="48dp"
         android:minWidth="48dp"
         style="@style/Widget.AppCompat.Button.Borderless"
         android:visibility="gone"
         app:srcCompat="@drawable/ic_button_error"
-        app:layout_constraintRight_toLeftOf="@+id/closeButton"
+        app:layout_constraintRight_toLeftOf="@+id/refreshButton"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_width="48dp"
         android:layout_height="48dp" />
