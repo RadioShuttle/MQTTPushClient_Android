@@ -310,6 +310,7 @@ public class CustomItem extends Item {
 
     //UI state
     public boolean isLoading;
+    public boolean reloadRequested; // detail view triggered a reload
 
     public final static String BASE_URL = "http://pushclient/";
     public static URI BASE_URI;
