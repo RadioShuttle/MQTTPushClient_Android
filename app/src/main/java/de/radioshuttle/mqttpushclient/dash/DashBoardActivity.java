@@ -267,10 +267,34 @@ public class DashBoardActivity extends AppCompatActivity implements
             case R.id.menu_import_images :
                 openImageChooser();
                 break;
+            case R.id.menu_reload :
+                reload();
+                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
         return true;
+    }
+
+    protected void reload() {
+        /* refresh call below ensures adapter.bind for all items.
+         * But to enforce a webview.reload() of a custom item, reloadRequested must be set */
+        LinkedList<GroupItem> groups = mViewModel.getGroups();
+        if (groups != null) {
+            LinkedList<Item> items;
+            for(GroupItem group : groups) {
+                items = mViewModel.getItems(group.id);
+                if (items != null) {
+                    for(Item item : items) {
+                        if (item instanceof CustomItem) {
+                            ((CustomItem) item).reloadRequested = true;
+                        }
+                    }
+                }
+            }
+            mViewModel.refresh();
+            setCachedMessages(); // run filter scripts
+        }
     }
 
     @Override
