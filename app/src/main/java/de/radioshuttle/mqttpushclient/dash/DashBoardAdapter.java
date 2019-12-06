@@ -245,14 +245,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         Object publishError = item.data.get("error2");
         if (h.errorImage2 != null) {
             if (publishError instanceof String) { // value set?
-                int color;
-                if (item.textcolor == DColor.OS_DEFAULT || item.textcolor == DColor.CLEAR) {
-                    color = h.defaultColor;
-                } else {
-                    color = (int) item.textcolor;
-                }
-                ColorStateList csl = ColorStateList.valueOf(color);
+                ColorStateList csl = ColorStateList.valueOf(h.defaultColor);
                 ImageViewCompat.setImageTintList(h.errorImage2, csl);
+                h.errorImage2.setBackgroundResource(R.drawable.ic_error_image_background);
+
 
                 if (h.errorImage2.getVisibility() != View.VISIBLE) {
                     h.errorImage2.setVisibility(View.VISIBLE);
@@ -342,15 +338,9 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
 
         if (h.errorImage != null) {
             if (javaScriptError instanceof String) { // TYPE_TEXT
-                int color;
-                if (item.textcolor == DColor.OS_DEFAULT || item.textcolor == DColor.CLEAR) {
-                    color = h.defaultColor;
-                } else {
-                    color = (int) item.textcolor;
-                }
-
-                ColorStateList csl = ColorStateList.valueOf(color);
+                ColorStateList csl = ColorStateList.valueOf(h.defaultColor);
                 ImageViewCompat.setImageTintList(h.errorImage, csl);
+                h.errorImage.setBackgroundResource(R.drawable.ic_error_image_background);
 
                 if (h.errorImage.getVisibility() != View.VISIBLE) {
                     h.errorImage.setVisibility(View.VISIBLE);
