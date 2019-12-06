@@ -171,6 +171,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 mDefaultTextColor = Color.BLACK;
                 TextView tv = findViewById(R.id.dash_text_color_label);
                 TableRow rowColor = findViewById(R.id.rowColor);
+                if (mItem instanceof CustomItem || mItem instanceof Switch) {
+                    rowColor.setVisibility(View.GONE);
+                }
                 if (tv != null) {
                     ColorStateList tc = tv.getTextColors();
                     mDefaultTextColor = tc.getDefaultColor();
@@ -309,6 +312,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
 
                 /* text size */
+                TableRow texSizeRow = findViewById(R.id.rowTextSize);
+                if (mItem instanceof CustomItem || mItem instanceof Switch) {
+                    texSizeRow.setVisibility(View.GONE);
+                }
+
                 mTextSizeSpinner = findViewById(R.id.dash_textSize);
                 if (mTextSizeSpinner != null) {
                     ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
