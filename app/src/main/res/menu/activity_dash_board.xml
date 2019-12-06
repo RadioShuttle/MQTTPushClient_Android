@@ -62,4 +62,10 @@
         android:title="@string/menu_manage_images"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/menu_reload"
+        android:orderInCategory="111"
+        android:title="@string/menu_reload"
+        app:showAsAction="never" />
+
 </menu>
