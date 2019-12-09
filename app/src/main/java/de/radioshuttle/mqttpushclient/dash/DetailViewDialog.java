@@ -125,7 +125,8 @@ public class DetailViewDialog extends DialogFragment {
 
                     mPublishEnabled = !Utils.isEmpty(mItem.topic_p) || !Utils.isEmpty(mItem.script_p);
 
-                    if (mItem instanceof TextItem || (mItem instanceof OptionList && !mPublishEnabled)){
+                    // treat optionlist with no items as text
+                    if (mItem instanceof TextItem || (mItem instanceof OptionList && ((OptionList) mItem).optionList.isEmpty())){
                         viewStub.setLayoutResource(R.layout.activity_dash_board_item_text);
                         view = viewStub.inflate();
 
@@ -260,18 +261,11 @@ public class DetailViewDialog extends DialogFragment {
                             }
                         });
                         // mContentContainer = view.findViewById()
-                    } else if (mItem instanceof OptionList && mPublishEnabled) {
+                    } else if (mItem instanceof OptionList) {
                         /* if not publish enabled, text view is user (see above) */
                         OptionList ol = (OptionList) mItem;
                         viewStub.setLayoutResource(R.layout.activity_dash_board_item_optionlist);
                         view = viewStub.inflate();
-
-                        //TODO: remove test data
-                        /*
-                        ol.optionList.add(new OptionList.Option("hallo", "hallo"));
-                        ol.optionList.add(new OptionList.Option("Moin", "Moin"));
-                        ol.optionList.add(new OptionList.Option("Test", "Test"));
-                         */
 
                         mLabel = view.findViewById(R.id.name);
                         mDefaultTextColor = mLabel.getTextColors().getDefaultColor();
@@ -279,8 +273,6 @@ public class DetailViewDialog extends DialogFragment {
 
                         /* init list view*/
                         mOptionListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-                        // mOptionListRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
-
 
                         mContentContainer = mOptionListRecyclerView;
 
@@ -302,24 +294,27 @@ public class DetailViewDialog extends DialogFragment {
                         if (ol.optionList != null && ol.optionList.size() > 0) {
                             optionList.addAll(ol.optionList);
                         }
-                        adapter.setCallback(new OptionListAdapter.Callback() {
-                            @Override
-                            public void onOptionClicked(OptionList.Option o, boolean isSelected) {
-                                /* if an option is already selected, a click does not deselect */
-                                if (!isSelected) {
-                                    byte[] content = null;
-                                    if (o != null && o.value != null) {
-                                        try {
-                                            content = o.value.getBytes("UTF-8");
-                                        } catch (UnsupportedEncodingException e) {}
+                        if (mPublishEnabled) {
+                            adapter.setCallback(new OptionListAdapter.Callback() {
+                                @Override
+                                public void onOptionClicked(OptionList.Option o, boolean isSelected) {
+                                    /* if an option is already selected, a click does not deselect */
+                                    if (!isSelected) {
+                                        byte[] content = null;
+                                        if (o != null && o.value != null) {
+                                            try {
+                                                content = o.value.getBytes("UTF-8");
+                                            } catch (UnsupportedEncodingException e) {
+                                            }
+                                        }
+                                        if (content == null) {
+                                            content = new byte[0];
+                                        }
+                                        performSend(content, false);
                                     }
-                                    if (content == null) {
-                                        content = new byte[0];
-                                    }
-                                    performSend(content, false);
                                 }
-                            }
-                        });
+                            });
+                        }
 
                         adapter.setData(ol.optionList);
                         mOptionListRecyclerView.setAdapter(adapter);
