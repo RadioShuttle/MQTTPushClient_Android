@@ -666,6 +666,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             mHTMLExampleBasic = Utils.getRawStringResource(getApplication(), "cv_empty", false);
                             mHTMLExampleColorPicker = Utils.getRawStringResource(getApplication(), "cv_color_picker", false);
                             mHTMLExampleGauge = Utils.getRawStringResource(getApplication(), "cv_gauge", false);
+                            mHTMLExampleClock = Utils.getRawStringResource(getApplication(), "cv_clock", false);
                         } catch(Exception e) {
                             Log.e(TAG, "Could not load resource: ", e);
                         }
@@ -1381,6 +1382,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             case R.id.htmL_example_gauge:
                 insertHTMLExample(mHTMLExampleGauge);
                 break;
+            case R.id.htmL_example_clock:
+                insertHTMLExample(mHTMLExampleClock);
+                break;
             case R.id.menu_help:
                 showHelp();
                 break;
@@ -1725,6 +1729,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected boolean isValidInput() {
         boolean valid = true;
         //TODO: remove when tested
+        /*
         if (mViewModel.getPushAccount() != null) {
             PushAccount acc = mViewModel.getPushAccount();
             if (acc != null && "pushsrv.radioshuttle.de:2033".equals(acc.pushserverID)) {
@@ -1732,6 +1737,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 return false;
             }
         }
+         */
 
         if (!(mItem instanceof GroupItem)) {
             String subTopic = mEditTextTopicSub.getText().toString();
@@ -2470,6 +2476,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected String mHTMLExampleBasic;
     protected String mHTMLExampleColorPicker;
     protected String mHTMLExampleGauge;
+    protected String mHTMLExampleClock;
 
     private final static String TAG = DashBoardEditActivity.class.getSimpleName();
 
