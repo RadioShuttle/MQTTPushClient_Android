@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+
+  <style>
+    body {margin: 0; padding: 0;}
+    #clock {margin: 0; padding: 0;}
+  </style>
+
+  <!-- android specific meta -->
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+
+  <script>
+
+   function clock() {
+     var now = new Date();
+     var canv = document.getElementById('clock');
+     var a = Math.round(Math.min(window.innerWidth, window.innerHeight) * .9);  
+     /* calculate scaling factor */
+     var f = a / 150 * window.devicePixelRatio;
+     
+     var ctx = canv.getContext('2d');  
+     ctx.save();
+     ctx.clearRect(0, 0, 150 * f, 150 * f);
+     ctx.translate(75 * f, 75 * f);
+     ctx.scale(0.4, 0.4);
+     ctx.rotate(-Math.PI / 2);
+     ctx.strokeStyle = 'black';
+     ctx.fillStyle = 'white';
+     ctx.lineWidth = 8 * f;
+     ctx.lineCap = 'round';
+   
+     ctx.save();
+     ctx.beginPath();
+     ctx.arc(0, 0, 142 * f, 0, Math.PI * 2, true);
+     ctx.stroke();
+     ctx.fillStyle = 'white';
+     ctx.fill();  
+     ctx.restore();
+   
+     /* Hour marks */
+     ctx.save();
+     for (var i = 0; i < 12; i++) {
+    ctx.beginPath();
+    ctx.rotate(Math.PI / 6);
+    ctx.moveTo(100 * f, 0);
+    ctx.lineTo(120 * f, 0);
+    ctx.stroke();
+     }
+     ctx.restore();
+   
+     /* Minute marks */
+     ctx.save();
+     ctx.lineWidth = 5 * f;
+     for (i = 0; i < 60; i++) {
+    if (i % 5!= 0) {
+   ctx.beginPath();
+   ctx.moveTo(117 * f, 0);
+   ctx.lineTo(120 * f, 0);
+   ctx.stroke();
+    }
+    ctx.rotate(Math.PI / 30);
+     }
+     ctx.restore();
+    
+     var sec = now.getSeconds();
+     var min = now.getMinutes();
+     var hr  = now.getHours();
+     hr = hr >= 12 ? hr - 12 : hr;
+   
+     ctx.fillStyle = 'black';
+   
+     /* write Hours */
+     ctx.save();
+     ctx.rotate(hr * (Math.PI / 6) + (Math.PI / 360) * min + (Math.PI / 21600) *sec);
+     ctx.lineWidth = 14 * f;
+     ctx.beginPath();
+     ctx.moveTo(-20 * f, 0);
+     ctx.lineTo(80 * f, 0);
+     ctx.stroke();
+     ctx.restore();
+   
+     /* write Minutes */
+     ctx.save();
+     ctx.rotate((Math.PI / 30) * min + (Math.PI / 1800) * sec);
+     ctx.lineWidth = 10 * f;
+     ctx.beginPath();
+     ctx.moveTo(-28 * f, 0);
+     ctx.lineTo(112 * f, 0);
+     ctx.stroke();
+     ctx.restore();
+    
+     /* Write seconds */
+     ctx.save();
+     ctx.rotate(sec * Math.PI / 30);
+     ctx.strokeStyle = '#D40000';
+     ctx.fillStyle = '#D40000';
+     ctx.lineWidth = 6 * f;
+     ctx.beginPath();
+     ctx.moveTo(-30 * f, 0);
+     ctx.lineTo(83 * f, 0);
+     ctx.stroke();
+     ctx.beginPath();
+     ctx.arc(0, 0, 10 * f, 0, Math.PI * 2, true);
+     ctx.fill();
+     ctx.beginPath();
+     ctx.arc(95 * f, 0, 10 * f, 0, Math.PI * 2, true);
+     ctx.stroke();
+     ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+     ctx.arc(0, 0, 3 * f, 0, Math.PI * 2, true);
+     ctx.fill();
+     ctx.restore();
+   
+     ctx.beginPath();
+     ctx.lineWidth = 14 * f;
+     ctx.strokeStyle = '#325FA2';
+     ctx.arc(0, 0, 142 * f, 0, Math.PI * 2, true);
+     ctx.stroke();
+     ctx.restore();
+   
+     window.requestAnimationFrame(clock);
+   }
+
+    function onMqttInit(account, view) {
+      onMqttResize();
+    }
+
+    function onMqttResize() {
+      document.getElementById('visible_area').style.width = window.innerWidth + "px";
+      document.getElementById('visible_area').style.height = window.innerHeight + "px";
+      
+      var canv = document.getElementById('clock');            
+      var a = Math.min(window.innerWidth, window.innerHeight);
+      
+      canv.style.marginLeft = Math.round(a * .05) + "px";
+      canv.style.marginTop = Math.round(a * .05) + "px";
+      canv.style.width = Math.round(a * .9) + "px";
+      canv.style.height = Math.round(a * .9) + "px";
+      canv.width = '' + Math.round(a * .9 * window.devicePixelRatio);
+      canv.height = '' +  Math.round(a * .9 * window.devicePixelRatio);
+      clock();
+    }
+
+   window.addEventListener('resize', onMqttResize);
+
+  </script>
+ </head>
+
+ <body>
+  <div id="visible_area">
+   <canvas id="clock" width="90" height="90"></canvas>
+  </div>
+ </body>
+</html>
