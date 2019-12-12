@@ -18,7 +18,8 @@
      var a = Math.round(Math.min(window.innerWidth, window.innerHeight) * .9);
      /* calculate scaling factor (150px = 100%) and multiply with devicePixelRatio */
      var f = a / 150 * window.devicePixelRatio;
-     
+
+     var canv = document.getElementById('clock');
      var ctx = canv.getContext('2d');  
      ctx.save();
      ctx.clearRect(0, 0, 150 * f, 150 * f);
@@ -117,7 +118,7 @@
      ctx.arc(0, 0, 142 * f, 0, Math.PI * 2, true);
      ctx.stroke();
      ctx.restore();
-   
+
      window.requestAnimationFrame(clock);
    }
 
