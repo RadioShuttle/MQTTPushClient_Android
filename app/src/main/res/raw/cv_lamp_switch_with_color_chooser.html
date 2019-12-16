@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+
+  <style>
+   body {margin: 0; padding: 0;}
+   #buttonWrapper, #imageWrapper {visibility: hidden;}
+   #colorInput {visibility: hidden; position: fixed;}
+   #colorLabel {display: table-cell;}
+  </style>
+
+  <!-- android specific meta -->
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet">
+
+  <script>
+   var obj = null;
+   const COLOR_YELLOW = 0xFFEE33;
+   const COLOR_DK_GRAY = 0xA0A0A0;
+    
+   function onMqttInit(account, view) {
+     var colorLabel = document.getElementById("colorLabel");
+     colorLabel.style.backgroundColor = numToHex(COLOR_YELLOW);
+     var image = document.getElementById("bimage");
+     image.style.color = numToHex(COLOR_DK_GRAY);
+     onMqttResize();
+     window.addEventListener('resize', onMqttResize);
+   }
+
+   function onMqttMessage(msg) {
+     var colorLabel = document.getElementById("colorLabel");
+     if (!msg.text) {
+       obj = new Object();
+       obj.state = 'off';
+       obj.color = COLOR_YELLOW;
+     } else {
+       obj = JSON.parse(msg.text);
+       if (!obj.color) {
+         obj.color = COLOR_YELLOW;
+       }
+     }
+     var image = document.getElementById("bimage");
+     if (obj.state == 'on') {
+       image.style.color = numToHex(obj.color);
+     } else {
+       image.style.color = numToHex(COLOR_DK_GRAY);
+     }
+     colorLabel.style.backgroundColor = numToHex(obj.color);
+    }    
+
+    function onMqttResize() {
+      var h = window.innerHeight;
+      var w = window.innerWidth;
+      var viewPortArea = document.getElementById('visible_area');
+      viewPortArea.style.width = w + "px";
+      viewPortArea.style.height = h + "px";
+      
+      var buttonWrapper = document.getElementById("buttonWrapper");
+      var colorLabel = document.getElementById('colorLabel');
+      buttonWrapper.style.visibility = "visible";
+      
+      var imageWrapper = document.getElementById("imageWrapper");
+      var image = document.getElementById("bimage");
+      imageWrapper.style.visibility = "visible";
+
+      imageWrapper.style.paddingTop = Math.floor(h * .15) + "px";
+      image.style.fontSize = Math.floor(h * .5) + "px";
+      var r = h * .35;
+
+      colorLabel.style.width = Math.floor(r / 2) + "px";
+      if (MQTT.view.isDialog()) {
+        buttonWrapper.style.marginTop = Math.floor(r * .1) + "px";
+        colorLabel.style.height = Math.floor(r * .5) + "px";
+      } else {
+        buttonWrapper.style.marginTop = Math.floor(r / 2 / 3) + "px";
+        colorLabel.style.height = Math.floor(r / 3) + "px";
+      }
+    }
+
+    function onImageClicked(t) {
+      if (obj == null) {
+        obj = new Object();
+        obj.state = 'off';
+        obj.color = COLOR_YELLOW;
+      }
+      if (obj.state == 'off') {
+        obj.state = 'on';
+      } else {
+        obj.state = 'off';
+      }
+      var t = document.getElementById('colorInput');
+      MQTT.publish(MQTT.view.getSubscribedTopic(), JSON.stringify(obj), false);
+    }
+
+    function onButtonWrapperClicked() {
+      var colorInput = document.getElementById('colorInput');
+      var color;
+      if (obj == null || !obj.color) {
+        color = COLOR_YELLOW;
+      } else {
+        color = obj.color;
+      }
+      colorInput.value = numToHex(color);
+      colorInput.click();
+    }
+
+    function onColorSelected(t) {
+      if (obj == null) {
+        obj = new Object();
+      }
+      obj.state = 'on';
+      obj.color = hexToNum(t.value);
+      MQTT.publish(MQTT.view.getSubscribedTopic(), JSON.stringify(obj), false);
+    }
+
+
+    function numToHex(i) {
+      var c = i.toString(16);
+      var h = '';
+      for(var i = 0; i < 6 - c.length; i++) {
+        h += '0';
+      }
+      return "#" + h + c;
+    }
+
+    function hexToNum(h) {
+      var c = (h.length > 0 && h.substring(0,1) == '#' ? h.substring(1) : h);
+      return parseInt(c, 16);
+    }
+
+  </script>
+ </head>
+
+ <body>
+  <div id="visible_area">
+   <div align="center" id="imageWrapper" onclick="onImageClicked(this);"> <i id="bimage" class="material-icons">&#xe42e</i></div>
+
+   <div align="center" id="buttonWrapper" align="center">
+    <input id="colorInput" type="color" onchange="onColorSelected(this);"></input>
+    <div id="colorLabel" onclick="onButtonWrapperClicked();"></div>
+   </div>
+  </div>
+ </body>
+</html>
