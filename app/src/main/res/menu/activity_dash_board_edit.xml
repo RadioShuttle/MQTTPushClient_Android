@@ -49,6 +49,11 @@
                 android:orderInCategory="29"
                 android:title="@string/menu_html_clock"
                 app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_lamp_color_chooser"
+                android:orderInCategory="30"
+                android:title="@string/menu_html_lamp_color_chooser"
+                app:showAsAction="never" />
         </menu>
     </item>
 

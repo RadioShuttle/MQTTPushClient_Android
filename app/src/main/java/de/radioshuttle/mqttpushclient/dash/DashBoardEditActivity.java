@@ -667,6 +667,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             mHTMLExampleColorPicker = Utils.getRawStringResource(getApplication(), "cv_color_picker", false);
                             mHTMLExampleGauge = Utils.getRawStringResource(getApplication(), "cv_gauge", false);
                             mHTMLExampleClock = Utils.getRawStringResource(getApplication(), "cv_clock", false);
+                            mHTMLExampleLampColorChooser = Utils.getRawStringResource(getApplication(), "cv_lamp_switch_with_color_chooser", false);
                         } catch(Exception e) {
                             Log.e(TAG, "Could not load resource: ", e);
                         }
@@ -1384,6 +1385,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 break;
             case R.id.htmL_example_clock:
                 insertHTMLExample(mHTMLExampleClock);
+                break;
+            case R.id.htmL_example_lamp_color_chooser:
+                insertHTMLExample(mHTMLExampleLampColorChooser);
                 break;
             case R.id.menu_help:
                 showHelp();
@@ -2477,6 +2481,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected String mHTMLExampleColorPicker;
     protected String mHTMLExampleGauge;
     protected String mHTMLExampleClock;
+    protected String mHTMLExampleLampColorChooser;
 
     private final static String TAG = DashBoardEditActivity.class.getSimpleName();
 
