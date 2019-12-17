@@ -5,8 +5,7 @@ android {
         config {
             keyAlias 'upload'
             keyPassword 'XXXXXXXXXXX'
-            storeFile file('../android.jksX')
-            // renamed keystore to prevent accidentally building a release (of this branch) for playstore
+            storeFile file('../android.jks')
             storePassword 'XXXXXXXXXX'
         }
     }
