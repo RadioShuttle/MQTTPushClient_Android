@@ -54,6 +54,11 @@
                 android:orderInCategory="30"
                 android:title="@string/menu_html_lamp_color_chooser"
                 app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_thermometer"
+                android:orderInCategory="30"
+                android:title="@string/menu_html_thermometer"
+                app:showAsAction="never" />
         </menu>
     </item>
 

@@ -258,6 +258,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="menu_html_gauge">Gauge</string>
     <string name="menu_html_clock">Canvas-based Clock</string>
     <string name="menu_html_lamp_color_chooser">Lamp Switch With Color Chooser</string>
+    <string name="menu_html_thermometer">Thermometer</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
