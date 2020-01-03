@@ -210,7 +210,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                 if (items != null && items.size() > 0) {
                     for(Item item : items) {
                         try {
-                            if (!Utils.isEmpty(item.topic_s) && message.filter.equals(item.topic_s)) {
+                            if (!Utils.isEmpty(item.topic_s) && MqttUtils.topicIsMatched(item.topic_s, message.getTopic())) {
                                 //TODO:
                                 // Log.d(TAG, "onMessageReceived: " + item.label + " " + message.getTopic() + " " + new Date(message.getWhen()) + " " + new String(message.getPayload()));
                                 item.data.put("sub_topic_stat", message.status);

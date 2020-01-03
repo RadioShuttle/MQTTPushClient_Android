@@ -36,6 +36,7 @@ import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.mqttpushclient.dash.DashBoardJavaScript;
 import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.mqttpushclient.dash.Message;
+import de.radioshuttle.utils.MqttUtils;
 import de.radioshuttle.utils.Utils;
 import de.radioshuttle.utils.JavaScript;
 
@@ -185,7 +186,7 @@ public class JavaScriptViewModel extends AndroidViewModel {
                                     }
                                     jsonReader.endObject();
                                     // Log.d(TAG, "message read: " + m.filter + ", " + m.status + ", " + m.getTopic() + ", " + new String(m.getPayload()) + ", " +m.getWhen() + ", " + m.getSeqno());
-                                    if (t.equals(m.filter)) {
+                                    if (!t.isEmpty() && MqttUtils.topicIsMatched(t, m.getTopic())) {
                                         request.result = m;
                                         break;
                                     }
