@@ -281,7 +281,6 @@ public class DashBoardViewModel extends AndroidViewModel {
                     try {
                         if (!Utils.isEmpty(item.topic_s) && MqttUtils.topicIsMatched(item.topic_s, pm.getTopic())) {
                             Message m = new Message();
-                            m.filter = item.topic_s;
                             m.status = 0; //TODO: ?
                             m.setTopic(pm.getTopic());
                             m.setWhen(pm.getWhen());
@@ -899,9 +898,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                             jsonReader.beginObject();
                                             while(jsonReader.hasNext()) {
                                                 name = jsonReader.nextName();
-                                                if (name.equals("filter")) {
-                                                    m.filter = jsonReader.nextString();
-                                                } else if (name.equals("status")) {
+                                                if (name.equals("status")) {
                                                     m.status = jsonReader.nextInt();
                                                 } else if (name.equals("received")) {
                                                     m.setWhen(jsonReader.nextLong());
@@ -991,8 +988,6 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     jsonWriter.beginArray();
                                     for(Message m : msgArr) {
                                         jsonWriter.beginObject();
-                                        jsonWriter.name("filter");
-                                        jsonWriter.value(m.filter);
                                         jsonWriter.name("status");
                                         jsonWriter.value(m.status);
                                         jsonWriter.name("received");
@@ -1070,7 +1065,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                 mLastReceivedMessages = new LinkedHashMap<>();
             }
             for(Message m : messages) {
-                mLastReceivedMessages.put(m.filter, m);
+                mLastReceivedMessages.put(m.getTopic(), m);
             }
         }
         mLastReceivedMsgDate = lastReceivedMsgDate;

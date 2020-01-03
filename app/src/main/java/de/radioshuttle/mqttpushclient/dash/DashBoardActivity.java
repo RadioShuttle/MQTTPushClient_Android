@@ -658,16 +658,16 @@ public class DashBoardActivity extends AppCompatActivity implements
                     if (msgs != null && msgs.size() > 0) {
                         cachedMsgs = new HashMap<>();
                         for(Message m : msgs) {
-                            if (m.filter != null)
-                                cachedMsgs.put(m.filter, m);
+                            if (m.getTopic() != null)
+                                cachedMsgs.put(m.getTopic(), m);
                         }
                     }
                 }
 
                 for(Message m : request.getReceivedMessages()) {
                     /* filter received messages which have already been set (local cache) */
-                    if (cachedMsgs != null && m.filter != null) {
-                        Message c = cachedMsgs.get(m.filter);
+                    if (cachedMsgs != null && m.getTopic() != null) {
+                        Message c = cachedMsgs.get(m.getTopic());
                         if (c != null && c.getWhen() == m.getWhen() && c.getSeqno() == m.getSeqno()) {
                             // Log.d(TAG, "onLoadMessagesFinished - onMessageReceived - filtered: ");
                             continue;

@@ -623,7 +623,6 @@ public class Cmd {
                     }
                     os.writeInt((Integer) msg[3]);
                     os.writeShort(dashboardTopics.containsKey(topic) ? dashboardTopics.get(topic) : 0);
-                    writeString((String) msg[4], os);
                 }
             }
         }
@@ -643,7 +642,6 @@ public class Cmd {
                 o[2] = readByteArray(is);
                 o[3] = is.readInt();
                 o[4] = is.readShort();
-                o[5] = readString(is);
                 messages.add(o);
             }
         }

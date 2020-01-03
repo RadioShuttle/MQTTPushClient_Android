@@ -172,9 +172,7 @@ public class JavaScriptViewModel extends AndroidViewModel {
                                     jsonReader.beginObject();
                                     while (jsonReader.hasNext()) {
                                         name = jsonReader.nextName();
-                                        if (name.equals("filter")) {
-                                            m.filter = jsonReader.nextString();
-                                        } else if (name.equals("received")) {
+                                        if (name.equals("received")) {
                                             m.setWhen(jsonReader.nextLong());
                                         } else if (name.equals("topic")) {
                                             m.setTopic(jsonReader.nextString());

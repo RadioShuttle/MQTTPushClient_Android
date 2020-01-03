@@ -10,5 +10,4 @@ import de.radioshuttle.db.MqttMessage;
 
 public class Message extends MqttMessage {
     public int status;
-    public String filter;
 }

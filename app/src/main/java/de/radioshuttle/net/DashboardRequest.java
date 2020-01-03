@@ -346,7 +346,6 @@ public class DashboardRequest extends Request {
                     mqttMessage.setPayload((byte[]) result.get(i)[2]);
                     mqttMessage.setSeqno((Integer) result.get(i)[3]);
                     mqttMessage.status = (Short) result.get(i)[4];
-                    mqttMessage.filter = (String) result.get(i)[5];
                     mReceivedMessages.add(mqttMessage);
                     if (mLastReceivedMsgDate < mqttMessage.getWhen() || (mLastReceivedMsgDate == mqttMessage.getWhen()
                             && mLastReceivedMsgSeqNo < mqttMessage.getSeqno())) {
