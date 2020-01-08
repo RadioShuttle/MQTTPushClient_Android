@@ -56,6 +56,7 @@ public abstract class Item {
     public boolean retain;
     public String label;
     public String outputScriptError;
+    public boolean history;
 
     // transient
     public Drawable backgroundImage;
@@ -73,6 +74,8 @@ public abstract class Item {
 
             o.put("retain", retain);
             o.put("background_uri", background_uri == null ? "" : background_uri);
+
+            o.put("history", history);
         }
         o.put("type", getType());
         o.put("label", label);
@@ -95,6 +98,7 @@ public abstract class Item {
         script_p = o.optString("script_p");
         retain = o.optBoolean("retain");
         background_uri = o.optString("background_uri");
+        history = o.optBoolean("history");
         id = o.optInt("id");
     }
 
