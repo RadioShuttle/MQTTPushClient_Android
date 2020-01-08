@@ -90,6 +90,7 @@ public class DashBoardViewModel extends AndroidViewModel {
         mLastReceivedMsgSeqNo = 0;
         mLastReceivedMessages = null;
         mLoadResources = false;
+        mHistoricalData = new HashMap<>();
         mTimer = Executors.newScheduledThreadPool(1);
         mRequestExecutor = Utils.newSingleThreadPool();
     }
@@ -1076,6 +1077,53 @@ public class DashBoardViewModel extends AndroidViewModel {
         return mLastReceivedMessages;
     }
 
+    public void setHistoricalData(Map<String, LinkedList<Message>> historicalData) {
+        if (historicalData != null && historicalData.size() > 0) {
+            String topic;
+            for( Map.Entry<String, LinkedList<Message>> e : historicalData.entrySet() ) {
+                topic = e.getKey();
+                LinkedList<Message> dataList = mHistoricalData.get(topic);
+                if (dataList == null) {
+                    dataList = e.getValue();
+                    mHistoricalData.put(topic, dataList);
+                } else {
+                    synchronized (dataList) {
+                        dataList.addAll(e.getValue());
+                    }
+                }
+
+                synchronized (dataList) {
+                    if (dataList.size() > MAX_HISTOICAL_DATA) {
+                        int n = dataList.size() - MAX_HISTOICAL_DATA;
+                        while(n > 0) {
+                            n--;
+                            if (dataList.poll() == null) {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                for (GroupItem gr : mGroups) {
+                    LinkedList<Item> items = mItemsPerGroup.get(gr.id);
+                    if (items != null && items.size() > 0) {
+                        for (Item item : items) {
+                            if (item.history && !Utils.isEmpty(item.topic_s)) {
+                                if (historicalData.containsKey(item.topic_s)) {
+                                    Object history = item.data.get("history");
+                                    // history might return a jsonstring (representing history in json format), then pass datalist reference
+                                    if (history != dataList ) {
+                                        item.data.put("history", dataList);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public static class ItemContext {
         public Item item;
         public GroupItem group;
@@ -1124,6 +1172,8 @@ public class DashBoardViewModel extends AndroidViewModel {
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
     private HashSet<String> mLockedResources;
     private LinkedHashMap<String, Message> mLastReceivedMessages;
+    private HashMap<String, LinkedList<Message>> mHistoricalData;
+    private final static int MAX_HISTOICAL_DATA = 200;
 
     private HashMap<String, Drawable> mOptionListImageCache;
     private int mLoadOptionsCnt;
