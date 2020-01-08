@@ -10,6 +10,18 @@ MQTT.view.getUserData = function() {
   var data = this._getUserData();
   return data ? JSON.parse(data) : null;
 };
+MQTT.view.getHistoricalData = function() {
+  var result = null;
+  var data = this._getHistoricalData();
+  if (data) {
+    result = JSON.parse(data);
+    for(var i = 0; i < result.length; i++) {
+      result[i].receivedDate = new Date(result[i]._received);
+      result[i].raw = MQTT.hex2buf(result[i]._raw);
+    }
+  }
+  return result;
+};
 
 MQTT.buf2hex = function (buffer) {
   var byteArray = new Uint8Array(buffer);
