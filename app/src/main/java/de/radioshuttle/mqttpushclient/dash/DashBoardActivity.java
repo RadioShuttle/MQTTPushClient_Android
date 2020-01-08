@@ -638,6 +638,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                             }
                             mViewModel.setLastReceivedMessages(request.getReceivedMessages(),
                                     request.getLastReceivedMsgDate(), request.getLastReceivedMsgSeqNo()); // to be cached later
+                            mViewModel.setHistoricalData(request.getHistoricalData());
                             mLastErrorStr = null;
                             if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
                                 mSnackbar.dismiss(); //TODO: make sure, error message is shown at least a few seconds (there may be a publish, deletion error currntyl showing)
