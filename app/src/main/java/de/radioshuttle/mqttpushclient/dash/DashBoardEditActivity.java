@@ -683,6 +683,17 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
                     }
                 }
+                TableRow historicalDataRow = findViewById(R.id.rowHistoricalData);
+                if (historicalDataRow != null) {
+                    mHistoryCheckbox = findViewById(R.id.historicalData);
+                    if (!(mItem instanceof CustomItem)) {
+                        historicalDataRow.setVisibility(View.GONE);
+                    } else {
+                        if (savedInstanceState == null) {
+                            mHistoryCheckbox.setChecked(mItem.history);
+                        }
+                    }
+                }
 
                 /* option list */
                 TableRow rowOptionListHeader = findViewById(R.id.rowOptionListHeader);
@@ -1750,10 +1761,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (!(mItem instanceof GroupItem)) {
             String subTopic = mEditTextTopicSub.getText().toString();
             if (!Utils.isEmpty(subTopic)) {
+                boolean wildCardsAllowd = !(mHistoryCheckbox != null && mHistoryCheckbox.isChecked());
                 try {
-                    MqttUtils.topicValidate(subTopic, true);
+                    MqttUtils.topicValidate(subTopic, wildCardsAllowd);
                 } catch(IllegalArgumentException i) {
-                    mEditTextTopicSub.setError(getString(R.string.err_invalid_topic_format));
+                    if (!wildCardsAllowd) {
+                        mEditTextTopicSub.setError(getString(R.string.err_invalid_topic_format_wc));
+                    } else {
+                        mEditTextTopicSub.setError(getString(R.string.err_invalid_topic_format));
+                    }
                     valid = false;
                 }
             }
@@ -2017,6 +2033,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (cItem instanceof CustomItem) {
                     CustomItem customItem = (CustomItem) cItem;
                     customItem.setHtml(mEditTextHTML.getText().toString());
+                    cItem.history = mHistoryCheckbox.isChecked();
                 } else {
                     // all items but customItem
                     cItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
@@ -2162,6 +2179,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         if (mItem instanceof OptionList) {
             setEnabled(mButtonOptionAdd, enableFields);
         }
+        if (mItem instanceof CustomItem) {
+            setEnabled(mHistoryCheckbox, enableFields);
+        }
 
         invalidateOptionsMenu();
     }
@@ -2243,7 +2263,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 else if (mRetainCheckbox.isChecked() != mItem.retain) {
                     changed = true;
                 }
-                else if (mItem instanceof TextItem && mInputTypeSpinner.getAdapter() != null && mInputTypeSpinner.getAdapter().getCount() > 0) {
+                // history changed
+                else if (mHistoryCheckbox.isChecked() != mItem.history) {
+                    changed = true;
+                } else if (mItem instanceof TextItem && mInputTypeSpinner.getAdapter() != null && mInputTypeSpinner.getAdapter().getCount() > 0) {
                     if (mInputTypeSpinner.getSelectedItemPosition() != ((TextItem) mItem).inputtype) {
                         changed = true;
                     }
@@ -2382,6 +2405,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected EditText mEditTextTopicSub;
     protected EditText mEditTextTopicPub;
     protected CheckBox mRetainCheckbox;
+    protected CheckBox mHistoryCheckbox;
     protected Spinner mInputTypeSpinner;
     protected ColorLabel mColorButton;
     protected ColorLabel mBColorButton;
