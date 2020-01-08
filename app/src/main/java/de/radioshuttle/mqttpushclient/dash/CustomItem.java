@@ -10,6 +10,7 @@ import android.util.Log;
 
 import android.webkit.JavascriptInterface;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,6 +18,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
@@ -186,6 +188,39 @@ public class CustomItem extends Item {
         @JavascriptInterface
         public String _getUserData() {
             return  data.get("userdata") == null ? "" : (String) data.get("userdata");
+        }
+
+        @JavascriptInterface
+        public String _getHistoricalData() {
+            Object history = data.get("history");
+            String jsonStr;
+            if (history instanceof String) {
+                jsonStr = (String) history;
+            } else if (history instanceof LinkedList) {
+                LinkedList<Message> historyList = (LinkedList<Message>) history;
+                JSONArray arr = new JSONArray();
+                JSONObject entry;
+                synchronized (historyList) {
+                    for(Message m : historyList) { //TODO: data preparation might be done in request
+                        entry = new JSONObject();
+                        try {
+                            entry.put("_received", m.getWhen());
+                            entry.put("topic", m.getTopic());
+                            entry.put("text", new String(m.getPayload()));
+                            entry.put("_raw", Utils.byteArrayToHex(m.getPayload()));
+
+                        } catch (JSONException e) {
+                            Log.e(TAG, "error pasing json: " , e);
+                        }
+                        arr.put(entry);
+                    }
+                    jsonStr = arr.toString();
+                    data.put("userdata", jsonStr); // for reuse
+                }
+            } else {
+                jsonStr = "[]";
+            }
+            return jsonStr;
         }
 
         @JavascriptInterface
