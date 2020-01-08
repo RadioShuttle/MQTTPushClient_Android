@@ -536,6 +536,21 @@
 
             </TableRow>
 
+            <TableRow android:id="@+id/rowHistoricalData">
+                <CheckBox
+                    android:id="@+id/historicalData"
+                    android:layout_column="1"
+                    android:layout_gravity="left|center_vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dash_label_historical_data"
+                    android:minHeight="48dp"
+                    android:minWidth="48dp"
+                    android:checked="false"
+                    />
+            </TableRow>
+
+
             <TableRow android:id="@+id/rowFilterScript" android:gravity="center_vertical">
                 <TextView
                     android:id="@+id/filterLabel"
