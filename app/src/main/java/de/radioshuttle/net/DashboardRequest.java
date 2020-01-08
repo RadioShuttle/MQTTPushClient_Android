@@ -18,12 +18,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import androidx.lifecycle.MutableLiveData;
+
+import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.mqttpushclient.dash.ImageResource;
@@ -337,6 +344,8 @@ public class DashboardRequest extends Request {
             try {
                 mServerVersion = mConnection.getCachedMessagesDash(mLastReceivedMsgDate / 1000L, mLastReceivedMsgSeqNo, result);
                 mReceivedMessages = new ArrayList<>();
+                HashMap<String, LinkedList<Message>> msgs = new HashMap<>();
+                LinkedList<Message> mList;
 
                 Message mqttMessage;
                 for(int i = 0; i < result.size(); i++) {
@@ -346,13 +355,33 @@ public class DashboardRequest extends Request {
                     mqttMessage.setPayload((byte[]) result.get(i)[2]);
                     mqttMessage.setSeqno((Integer) result.get(i)[3]);
                     mqttMessage.status = (Short) result.get(i)[4];
-                    mReceivedMessages.add(mqttMessage);
+
+                    mList = msgs.get(mqttMessage.getTopic());
+                    if (mList == null) {
+                        mList = new LinkedList<>();
+                        msgs.put(mqttMessage.getTopic(), mList);
+                    }
+                    mList.add(mqttMessage);
+                    // mReceivedMessages.add(mqttMessage);
+
                     if (mLastReceivedMsgDate < mqttMessage.getWhen() || (mLastReceivedMsgDate == mqttMessage.getWhen()
                             && mLastReceivedMsgSeqNo < mqttMessage.getSeqno())) {
                         mLastReceivedMsgDate = mqttMessage.getWhen();
                         mLastReceivedMsgSeqNo = mqttMessage.getSeqno();
                     }
                 }
+                Message.AscComparator comp = new Message.AscComparator();
+
+                for(Iterator<LinkedList<Message>> it = msgs.values().iterator(); it.hasNext();) {
+                    mList = it.next();
+                    if (mList.size() > 1) {
+                        Collections.sort(mList, comp);
+                    }
+                    mReceivedMessages.add(mList.getLast());
+                }
+                Collections.sort(mReceivedMessages, comp);
+                mHistroicalData = (msgs.size() > 0 ? msgs : null);
+
 
             } catch (ServerError e) {
                 requestErrorCode = e.errorCode;
@@ -630,12 +659,17 @@ public class DashboardRequest extends Request {
     public String getReceivedDashboard() {
         return mReceivedDashboard;
     }
+
     public List<Message> getReceivedMessages() {
         return mReceivedMessages == null ? new ArrayList<Message>() : mReceivedMessages;
     }
 
     public long getLastReceivedMsgDate() {
         return mLastReceivedMsgDate;
+    }
+
+    public Map<String, LinkedList<Message>> getHistoricalData() {
+        return mHistroicalData;
     }
 
     public int getLastReceivedMsgSeqNo() {
@@ -647,7 +681,8 @@ public class DashboardRequest extends Request {
     public String requestErrorTxt;
 
     List<File> mDeleteFiles;
-    List<Message> mReceivedMessages;
+    private List<Message> mReceivedMessages;
+    private Map<String, LinkedList<Message>> mHistroicalData;
 
     boolean mSaved;
     boolean invalidVersion;
