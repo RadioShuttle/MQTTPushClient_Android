@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+
+  <style>
+   body {margin: 0; padding: 0;}
+   #canvas {visibility: hidden;}
+  </style>
+
+  <!-- android specific meta -->
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true"></meta-data>
+
+  <script>
+   function onMqttInit(account, view) {
+     var canv = document.getElementById('canvas');
+     canv.style.visibility = "visible";
+     window.addEventListener('resize', onMqttResize);
+     onMqttResize();
+   }
+
+   function onMqttMessage(msg) {
+     onMqttResize();
+   }
+
+   function onMqttResize() {
+     document.getElementById('visible_area').style.width = window.innerWidth + "px";
+     document.getElementById('visible_area').style.height = window.innerHeight + "px";
+
+     var canv = document.getElementById('canvas');
+     var a = Math.min(window.innerWidth, window.innerHeight);
+
+     canv.style.marginLeft = Math.round(a * .05) + "px";
+     canv.style.marginTop = Math.round(a * .05) + "px";
+     canv.style.width = Math.round(a * .9) + "px";
+     canv.style.height = Math.round(a * .9) + "px";
+
+     canv.width = '' + Math.round(a * .9 * window.devicePixelRatio);
+     canv.height = '' +  Math.round(a * .9 * window.devicePixelRatio);
+
+     draw();
+    }
+
+   function draw() {
+     var COLOR1 = "#000000";
+     var COLOR2 = "#0000FF";
+
+     var Y_MIN = -10;
+     var Y_MAX = 30;
+     var Y_GRID = 5;
+
+     var data = MQTT.view.getHistoricalData();
+
+     if (data != null && data.length > 0) {
+       X_MAX = data[data.length - 1].receivedDate;
+     } else {
+       X_MAX = new Date().getTime();
+     }
+
+     var X_MIN = X_MAX - 1000 * 60 * 3; /* default */
+     var X_GRID = 1000 * 30;
+
+     var a = Math.min(window.innerWidth, window.innerHeight) * .9;
+     var b = a;
+
+     var canv = document.getElementById('canvas');
+     var ctx = canv.getContext('2d');
+     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+     ctx.clearRect(0, 0, a, a);
+
+     /* y-axys calc */
+     var y_range = Y_MAX - Y_MIN;
+     var ys = Math.floor(y_range / Y_GRID);
+     a -= 25;
+     var y_len = a - a % ys;
+     var y_grid_len = y_len / ys;
+     /* var y_offset = Math.floor(a - y_len) / 2 + 5; */
+     var y_offset = 10;
+     var y_ml = 6 / 2;
+
+     var f1 = '' + Y_MAX + '°';
+     var f2= '' + Y_MIN + '°';
+     /* ctx.font = "10px Monospace"; */
+     var m1 = ctx.measureText(f1);
+     var m2 = ctx.measureText(f2);
+     var y_label_width = Math.max(m1.width, m2.width);
+     var x_offset = y_label_width + y_ml;
+     var y_labels = new Array();
+     for(var i = 0; i < ys + 1; i++) {
+       var label = '' + (Y_MAX - Y_GRID * i) + '°';
+       y_labels.push(label);
+     }
+
+     ctx.beginPath();
+     ctx.lineWidth = 1;
+     ctx.moveTo(x_offset, y_offset);
+     ctx.lineTo(x_offset, y_offset + y_len);
+     ctx.textBaseline = "middle";
+     ctx.textAlign = "right";
+
+     var lastPos = 0;
+     for(var i = 0; i < ys + 1; i++) {
+       ctx.moveTo(x_offset - y_ml, i * y_grid_len + y_offset);
+       ctx.lineTo(x_offset + y_ml, i * y_grid_len + y_offset);
+       if (i == 0 || i == ys) {
+         ctx.fillText(y_labels[i], x_offset - y_ml, i * y_grid_len + y_offset);
+       } else {
+         if (i * y_grid_len > lastPos * y_grid_len + 15 &&
+           i * y_grid_len + 15 < ys * y_grid_len) {
+          lastPos = i;
+          ctx.fillText(y_labels[i], x_offset - y_ml, i * y_grid_len + y_offset);
+         }
+       }
+     }
+
+     ctx.textBaseline = "alphabetic";
+     ctx.textAlign = "start";
+
+     ctx.strokeStyle = COLOR1;
+     ctx.closePath();
+     ctx.stroke();
+
+     /* x-axys calc */
+     var x_range = X_MAX - X_MIN; /* t in millis */
+
+     var x_unit, x_div;
+     if (x_range <= 1000 * 60) {
+       x_unit = 's';
+       x_div = 1000;
+     } else if (x_range <= 1000 * 60 * 60) {
+       x_unit = 'm';
+       x_div = 1000 * 60;
+     } else if (x_range <= 1000 * 60 * 60 * 24) {
+       x_unit = 'h';
+       x_div = 1000 * 60 * 60;
+     } else {
+       x_unit = 'd';
+       x_div = 1000 * 60 * 60 * 24;
+     }
+
+     var b = b - x_offset - 15;
+     var x_range_unit = Math.ceil(x_range / x_div);
+     var xs = x_range / X_GRID;
+
+     var x_len = b - b % xs;
+     var x_grid_len = x_len / xs;
+
+     var x_labels = new Array();
+     var label;
+     for(var i = xs; i >= 0; i--) {
+       label = (x_range_unit / xs * (-i)).toFixed(1);
+       if (label.endsWith(".0")) {
+         label = label.substring(0, label.length-2);
+       }
+       x_labels.push(label);
+     }
+
+     ctx.beginPath();
+     ctx.lineWidth = 1;
+     ctx.moveTo(x_offset, y_offset + y_len);
+     ctx.lineTo(x_offset + x_len, y_offset + y_len);
+     ctx.textAlign = 'center';
+     lastPos = 0;
+     var wl, wc, we;
+     we = ctx.measureText(x_labels[xs]).width / 2;
+     for(var i = 0; i < xs + 1; i++) {
+       ctx.moveTo(x_offset + i * x_grid_len, y_offset + y_len - y_ml);
+       ctx.lineTo(x_offset + i * x_grid_len, y_offset + y_len + y_ml);
+       if (i == 0 || i == xs) {
+         ctx.fillText(x_labels[i], x_offset + i * x_grid_len, y_offset + y_len + 10 + y_ml);
+       } else {
+         wl = ctx.measureText(x_labels[lastPos]).width / 2;
+         wc = ctx.measureText(x_labels[i]).width / 2;
+         if (i * x_grid_len - wc > lastPos * x_grid_len + wl + 2 &&
+           i * x_grid_len + wl + 2 < xs * x_grid_len - we) {
+           lastPos = i;
+           ctx.fillText(x_labels[i], x_offset + i * x_grid_len, y_offset + y_len + 10 + y_ml);
+         }
+       }
+     }
+
+     ctx.textAlign = 'start';
+     ctx.textBaseline = "middle";
+     ctx.fillText(x_unit, x_offset + xs * x_grid_len + 5, y_offset + y_len);
+     ctx.textBaseline = "alphabetic";
+
+     ctx.strokeStyle = COLOR1;
+     ctx.closePath();
+     ctx.stroke();
+
+     var x,y, x2, y2;
+     if (data && data.length > 0) {
+       ctx.beginPath();
+       ctx.strokeStyle = COLOR2;
+       ctx.lineWidth = 2;
+
+       var maxTime = data[data.length - 1].receivedDate.getTime()
+       if (data.length == 1) {
+         y = y_len - (Number(data[0].text) - Y_MIN) / y_range * y_len;
+         x = x_len - (maxTime - data[0].receivedDate.getTime()) / x_range * x_len;
+         ctx.arc(x_offset + x, y_offset + y, 2, 0, 2 * Math.PI);
+         ctx.closePath();
+         ctx.fill();
+       } else {
+         var outOfRange = false;
+         for(var i = data.length - 1; i > 0 && !outOfRange; i--) {
+           y = y_len - (Number(data[i].text) - Y_MIN) / y_range * y_len;
+           y2 = y_len - (Number(data[i - 1].text) - Y_MIN) / y_range * y_len;
+           x = x_len - (maxTime - data[i].receivedDate.getTime()) / x_range * x_len;
+           x2 = x_len - (maxTime - data[i - 1].receivedDate.getTime()) / x_range * x_len;
+           if (data[i - 1].receivedDate.getTime() < X_MIN) {
+             outOfRange = true;
+             var m = (y - y2) / (x - x2);
+             x2 = 0;
+             y2 = y - (m * x);
+           }
+           ctx.moveTo(x_offset + x, y_offset + y);
+           ctx.lineTo(x_offset + x2, y_offset + y2);
+         }
+         ctx.closePath();
+         ctx.stroke();
+       }
+     }
+   }
+  </script>
+ </head>
+
+ <body>
+  <div id="visible_area">
+   <canvas id="canvas" width="100" height="100" style="background-color: white;"></canvas>
+  </div>
+ </body>
+</html>
