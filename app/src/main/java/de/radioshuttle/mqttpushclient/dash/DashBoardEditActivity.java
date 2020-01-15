@@ -667,7 +667,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             mHTMLExampleColorPicker = Utils.getRawStringResource(getApplication(), "cv_color_picker", false);
                             mHTMLExampleGauge = Utils.getRawStringResource(getApplication(), "cv_gauge", false);
                             mHTMLExampleClock = Utils.getRawStringResource(getApplication(), "cv_clock", false);
-                            mHTMLExampleLampColorChooser = Utils.getRawStringResource(getApplication(), "cv_lamp_switch_with_color_chooser", false);
+                            mHTMLExampleLampColorChooser = Utils.getRawStringResource(getApplication(), "cv_light_switch_with_color_chooser", false);
                             mHTMLExampleThermometer =  Utils.getRawStringResource(getApplication(), "cv_thermometer", false);
                         } catch(Exception e) {
                             Log.e(TAG, "Could not load resource: ", e);
