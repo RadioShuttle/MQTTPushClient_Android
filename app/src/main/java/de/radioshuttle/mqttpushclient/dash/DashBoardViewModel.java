@@ -1104,23 +1104,31 @@ public class DashBoardViewModel extends AndroidViewModel {
                     }
                 }
 
-                for (GroupItem gr : mGroups) {
-                    LinkedList<Item> items = mItemsPerGroup.get(gr.id);
-                    if (items != null && items.size() > 0) {
-                        for (Item item : items) {
-                            if (item.history && !Utils.isEmpty(item.topic_s)) {
-                                if (historicalData.containsKey(item.topic_s)) {
-                                    Object history = item.data.get("history");
-                                    // history might return a jsonstring (representing history in json format), then pass datalist reference
-                                    if (history != dataList ) {
-                                        item.data.put("history", dataList);
+            } // end for
+            for (GroupItem gr : mGroups) {
+                LinkedList<Item> items = mItemsPerGroup.get(gr.id);
+                if (items != null && items.size() > 0) {
+                    for (Item item : items) {
+                        if (item.history && !Utils.isEmpty(item.topic_s) && historicalData.containsKey(item.topic_s)) {
+                            LinkedList<Message> dataList = mHistoricalData.get(item.topic_s);
+                            if (dataList != null) {
+                                Object history = item.data.get("history");
+                                // history might return a jsonstring (representing history in json format), then pass datalist reference
+                                if (history != dataList ) {
+                                    /*
+                                    Log.d(TAG, "historic data: " + item.label);
+                                    for(Message m : dataList) {
+                                        Log.d(TAG, "historic data: " + m.getTopic() + " " + new String(m.getPayload()));
                                     }
+                                     */
+                                    item.data.put("history", dataList);
                                 }
                             }
                         }
                     }
                 }
             }
+
         }
     }
 
