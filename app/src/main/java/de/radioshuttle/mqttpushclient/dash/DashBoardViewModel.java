@@ -311,6 +311,22 @@ public class DashBoardViewModel extends AndroidViewModel {
             HashMap<String, Object> props = new HashMap<>();
             try {
                 mMaxID = DBUtils.createItemsFromJSONString(json, mGroups, mItemsPerGroup, mLockedResources, props);
+                if (mHistoricalData != null && mHistoricalData.size() > 0) {
+                    for (GroupItem gr : mGroups) {
+                        LinkedList<Item> items = mItemsPerGroup.get(gr.id);
+                        if (items != null) {
+                            for (Item item : items) {
+                                if (item.history && !Utils.isEmpty(item.topic_s) && mHistoricalData.containsKey(item.topic_s)) {
+                                    LinkedList<Message> dataList = mHistoricalData.get(item.topic_s);
+                                    if (dataList != null) {
+                                        item.data.put("history", dataList);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (props.containsKey("version")) {
                     mVersion = (Integer) props.get("version");
                 }
