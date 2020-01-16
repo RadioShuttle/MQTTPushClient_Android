@@ -5,13 +5,15 @@
 
   <style>
    body {margin: 0; padding: 0;}
-   #canvas {visibility: hidden;}
+   #canvas {visibility: hidden; background-color: white;}
   </style>
 
   <!-- android specific meta -->
   <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true"></meta-data>
 
   <script>
+    const BORDER_PX = 3;
+
    function onMqttInit(account, view) {
      var canv = document.getElementById('canvas');
      canv.style.visibility = "visible";
@@ -29,19 +31,30 @@
 
      var canv = document.getElementById('canvas');
      var a = Math.min(window.innerWidth, window.innerHeight);
+     var a2 = (a - 2 * BORDER_PX);
 
-     canv.style.marginLeft = Math.round(a * .05) + "px";
-     canv.style.marginTop = Math.round(a * .05) + "px";
-     canv.style.width = Math.round(a * .9) + "px";
-     canv.style.height = Math.round(a * .9) + "px";
+     canv.style.marginLeft = BORDER_PX + "px";
+     canv.style.marginTop = BORDER_PX + "px";
+     canv.style.width = a2  + "px";
+     canv.style.height = a2 + + "px";
 
-     canv.width = '' + Math.round(a * .9 * window.devicePixelRatio);
-     canv.height = '' +  Math.round(a * .9 * window.devicePixelRatio);
+     canv.width = '' + Math.round(a2 * window.devicePixelRatio);
+     canv.height = '' +  Math.round(a2 * window.devicePixelRatio);
 
-     draw();
+     var p = new Object();
+     p['y_label'] = "C";
+     p['y_min'] = -10;
+     p['y_max'] = 30;
+     p['y_grid'] = 5;
+
+     p['x_label'] = "min";
+     p['x_range'] = "3m"; /* s, m, h, d, a (=all) */
+     p['x_grid'] = "30s";
+
+     draw(p, MQTT.view.getHistoricalData());
     }
 
-   function draw() {
+   function draw(p, data) {
      var COLOR1 = "#000000";
      var COLOR2 = "#0000FF";
 
@@ -49,7 +62,9 @@
      var Y_MAX = 30;
      var Y_GRID = 5;
 
-     var data = MQTT.view.getHistoricalData();
+     var FONT_SIZE = 10;
+     var X_LABEL = "min";
+     var Y_LABEL = "°C";
 
      if (data != null && data.length > 0) {
        X_MAX = data[data.length - 1].receivedDate;
@@ -60,10 +75,10 @@
      var X_MIN = X_MAX - 1000 * 60 * 3; /* default */
      var X_GRID = 1000 * 30;
 
-     var a = Math.min(window.innerWidth, window.innerHeight) * .9;
+     var canv = document.getElementById('canvas');
+     var a = canv.width / window.devicePixelRatio;
      var b = a;
 
-     var canv = document.getElementById('canvas');
      var ctx = canv.getContext('2d');
      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
@@ -72,15 +87,14 @@
      /* y-axys calc */
      var y_range = Y_MAX - Y_MIN;
      var ys = Math.floor(y_range / Y_GRID);
-     a -= 25;
+     var y_ml = 6 / 2;
+     a -= (Math.ceil(FONT_SIZE / 2) + 2) + (FONT_SIZE + 2 + y_ml);
      var y_len = a - a % ys;
      var y_grid_len = y_len / ys;
-     /* var y_offset = Math.floor(a - y_len) / 2 + 5; */
-     var y_offset = 10;
-     var y_ml = 6 / 2;
+     var y_offset = Math.ceil(FONT_SIZE / 2) + 2;
 
-     var f1 = '' + Y_MAX + '°';
-     var f2= '' + Y_MIN + '°';
+     var f1 = '' + Y_MAX;
+     var f2= '' + Y_MIN;
      /* ctx.font = "10px Monospace"; */
      var m1 = ctx.measureText(f1);
      var m2 = ctx.measureText(f2);
@@ -88,7 +102,7 @@
      var x_offset = y_label_width + y_ml;
      var y_labels = new Array();
      for(var i = 0; i < ys + 1; i++) {
-       var label = '' + (Y_MAX - Y_GRID * i) + '°';
+       var label = '' + (Y_MAX - Y_GRID * i) + '';
        y_labels.push(label);
      }
 
@@ -113,6 +127,11 @@
          }
        }
      }
+
+     ctx.textBaseline = "middle";
+     ctx.textAlign = "left";
+
+     ctx.fillText(Y_LABEL, x_offset + y_ml, y_offset);
 
      ctx.textBaseline = "alphabetic";
      ctx.textAlign = "start";
@@ -139,7 +158,7 @@
        x_div = 1000 * 60 * 60 * 24;
      }
 
-     var b = b - x_offset - 15;
+     var b = b - x_offset - ctx.measureText("0").width / 2
      var x_range_unit = Math.ceil(x_range / x_div);
      var xs = x_range / X_GRID;
 
@@ -180,9 +199,10 @@
        }
      }
 
+     ctx.textAlign = 'center';
+     ctx.textBaseline = "bottom";
+     ctx.fillText(X_LABEL, x_offset + x_len / 2, y_offset + y_len - y_ml);
      ctx.textAlign = 'start';
-     ctx.textBaseline = "middle";
-     ctx.fillText(x_unit, x_offset + xs * x_grid_len + 5, y_offset + y_len);
      ctx.textBaseline = "alphabetic";
 
      ctx.strokeStyle = COLOR1;
@@ -228,7 +248,7 @@
 
  <body>
   <div id="visible_area">
-   <canvas id="canvas" width="100" height="100" style="background-color: white;"></canvas>
+   <canvas id="canvas" width="100" height="100"></canvas>
   </div>
  </body>
 </html>
