@@ -357,9 +357,7 @@ public class DetailViewDialog extends DialogFragment {
 
 
                         final WebView webView = (WebView) mContentContainer;
-                        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                         webView.getSettings().setJavaScriptEnabled(true);
-                        // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                         CustomItem.JSObject webInterface = citem.getWebInterface();
                         webInterface.setViewModel(mViewModel);
                         webView.addJavascriptInterface(webInterface, "MQTT");

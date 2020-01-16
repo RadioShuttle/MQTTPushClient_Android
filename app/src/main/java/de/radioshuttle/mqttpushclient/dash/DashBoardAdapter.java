@@ -139,7 +139,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             contentContainer = view.findViewById(R.id.webContent);
             WebView webView = (WebView) contentContainer;
             webView.getSettings().setJavaScriptEnabled(true);
-            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            /* webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null); */
             progressBar = view.findViewById(R.id.webProgressBar);
             selectedImageView = view.findViewById(R.id.check);
             errorImageView = view.findViewById(R.id.errorImage);
