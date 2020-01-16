@@ -169,7 +169,7 @@
      var label;
      for(var i = xs; i >= 0; i--) {
        label = (x_range_unit / xs * (-i)).toFixed(1);
-       if (label.endsWith(".0")) {
+       if (label.length > 1 && label.substring(label.length-2) == ".0") {
          label = label.substring(0, label.length-2);
        }
        x_labels.push(label);
