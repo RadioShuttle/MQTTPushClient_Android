@@ -56,8 +56,13 @@
                 app:showAsAction="never" />
             <item
                 android:id="@+id/htmL_example_thermometer"
-                android:orderInCategory="30"
+                android:orderInCategory="31"
                 android:title="@string/menu_html_thermometer"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_line_graph"
+                android:orderInCategory="31"
+                android:title="@string/menu_html_line_graph"
                 app:showAsAction="never" />
         </menu>
     </item>

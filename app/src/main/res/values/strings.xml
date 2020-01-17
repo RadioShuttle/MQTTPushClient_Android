@@ -259,6 +259,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="menu_html_clock">Clock</string>
     <string name="menu_html_light_color_chooser">Light Switch With Color Picker</string>
     <string name="menu_html_thermometer">Thermometer</string>
+    <string name="menu_html_line_graph">Line Graph</string>
 
     <!-- Dashboard edit activity -->
     <string name="dash_label_name">Name:</string>
