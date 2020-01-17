@@ -668,7 +668,8 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                             mHTMLExampleGauge = Utils.getRawStringResource(getApplication(), "cv_gauge", false);
                             mHTMLExampleClock = Utils.getRawStringResource(getApplication(), "cv_clock", false);
                             mHTMLExampleLampColorChooser = Utils.getRawStringResource(getApplication(), "cv_light_switch_with_color_chooser", false);
-                            mHTMLExampleThermometer =  Utils.getRawStringResource(getApplication(), "cv_thermometer", false);
+                            mHTMLExampleThermometer = Utils.getRawStringResource(getApplication(), "cv_thermometer", false);
+                            mHTMLExampleLineGraph  = Utils.getRawStringResource(getApplication(), "cv_line_graph", false);
                         } catch(Exception e) {
                             Log.e(TAG, "Could not load resource: ", e);
                         }
@@ -1403,6 +1404,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 break;
             case R.id.htmL_example_thermometer:
                 insertHTMLExample(mHTMLExampleThermometer);
+                break;
+            case R.id.htmL_example_line_graph:
+                insertHTMLExample(mHTMLExampleLineGraph);
                 break;
             case R.id.menu_help:
                 showHelp();
@@ -2511,6 +2515,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected String mHTMLExampleClock;
     protected String mHTMLExampleLampColorChooser;
     protected String mHTMLExampleThermometer;
+    protected String mHTMLExampleLineGraph;
 
     private final static String TAG = DashBoardEditActivity.class.getSimpleName();
 
