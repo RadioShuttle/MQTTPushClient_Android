@@ -42,38 +42,65 @@
      canv.height = '' +  Math.round(a2 * window.devicePixelRatio);
 
      var p = new Object();
-     p['y_label'] = "C";
-     p['y_min'] = -10;
-     p['y_max'] = 30;
-     p['y_grid'] = 5;
+     p['y_label'] = "°C";
+     p['y_min'] = -20;
+     p['y_max'] = 40;
+     p['y_tick_interval'] = 10;
 
-     p['x_label'] = "min";
-     p['x_range'] = "3m"; /* s, m, h, d, a (=all) */
-     p['x_grid'] = "30s";
+     p['x_range'] = "6h"; /* s, min, h, d */
+     p['x_label'] = "h";
+     p['x_tick_interval'] = "60min";
 
      draw(p, MQTT.view.getHistoricalData());
     }
 
    function draw(p, data) {
      var COLOR1 = "#000000";
-     var COLOR2 = "#0000FF";
+     var COLOR2 = "#2196f3";
 
-     var Y_MIN = -10;
-     var Y_MAX = 30;
-     var Y_GRID = 5;
+     var Y_MIN = p['y_min'];
+     var Y_MAX = p['y_max'];
+     var Y_TICK = p['y_tick_interval'];
 
      var FONT_SIZE = 10;
-     var X_LABEL = "min";
-     var Y_LABEL = "°C";
+     var X_LABEL = p['x_label'];
+     var Y_LABEL = p['y_label'];
 
+     var X_MAX;
      if (data != null && data.length > 0) {
        X_MAX = data[data.length - 1].receivedDate;
      } else {
        X_MAX = new Date().getTime();
      }
 
-     var X_MIN = X_MAX - 1000 * 60 * 3; /* default */
-     var X_GRID = 1000 * 30;
+     var reg = new RegExp('^\\s*(\\d+)\\s*(s|min|m|h|d)\\s*$', 'i');
+     var res = p['x_range'].match(reg);
+     var _x_unit = res[2].toLowerCase();
+     var _x_range = Number(res[1]);
+     if (_x_unit == 's') {
+       _x_range *= 1000;
+     } else if (_x_unit == 'min' || _x_unit == 'm') {
+       _x_range *= 1000 * 60;
+     } else if (_x_unit == 'h') {
+       _x_range *= 1000 * 60 * 60;
+     } else {
+       _x_range *= 1000 * 60 * 60 * 24;
+     }
+     var X_MIN = X_MAX - _x_range;
+
+     res = p['x_tick_interval'].match(reg);
+     _x_unit = res[2].toLowerCase();
+     var _x_tick = Number(res[1]);
+     if (_x_unit == 's') {
+       _x_tick *= 1000;
+     } else if (_x_unit == 'min' || _x_unit == 'm') {
+       _x_tick *= 1000 * 60;
+     } else if (_x_unit == 'h') {
+       _x_tick *= 1000 * 60 * 60;
+     } else {
+       _x_tick *= 1000 * 60 * 60 * 24;
+     }
+     var X_TICK = _x_tick;
 
      var canv = document.getElementById('canvas');
      var a = canv.width / window.devicePixelRatio;
@@ -86,11 +113,11 @@
 
      /* y-axys calc */
      var y_range = Y_MAX - Y_MIN;
-     var ys = Math.floor(y_range / Y_GRID);
+     var ys = Math.floor(y_range / Y_TICK);
      var y_ml = 6 / 2;
      a -= (Math.ceil(FONT_SIZE / 2) + 2) + (FONT_SIZE + 2 + y_ml);
      var y_len = a - a % ys;
-     var y_grid_len = y_len / ys;
+     var y_tick_px = y_len / ys;
      var y_offset = Math.ceil(FONT_SIZE / 2) + 2;
 
      var f1 = '' + Y_MAX;
@@ -102,7 +129,7 @@
      var x_offset = y_label_width + y_ml;
      var y_labels = new Array();
      for(var i = 0; i < ys + 1; i++) {
-       var label = '' + (Y_MAX - Y_GRID * i) + '';
+       var label = '' + (Y_MAX - Y_TICK * i) + '';
        y_labels.push(label);
      }
 
@@ -115,24 +142,22 @@
 
      var lastPos = 0;
      for(var i = 0; i < ys + 1; i++) {
-       ctx.moveTo(x_offset - y_ml, i * y_grid_len + y_offset);
-       ctx.lineTo(x_offset + y_ml, i * y_grid_len + y_offset);
+       ctx.moveTo(x_offset - y_ml, i * y_tick_px + y_offset);
+       ctx.lineTo(x_offset + y_ml, i * y_tick_px + y_offset);
        if (i == 0 || i == ys) {
-         ctx.fillText(y_labels[i], x_offset - y_ml, i * y_grid_len + y_offset);
+         ctx.fillText(y_labels[i], x_offset - y_ml, i * y_tick_px + y_offset);
        } else {
-         if (i * y_grid_len > lastPos * y_grid_len + 15 &&
-           i * y_grid_len + 15 < ys * y_grid_len) {
+         if (i * y_tick_px > lastPos * y_tick_px + 15 &&
+           i * y_tick_px + 15 < ys * y_tick_px) {
           lastPos = i;
-          ctx.fillText(y_labels[i], x_offset - y_ml, i * y_grid_len + y_offset);
+          ctx.fillText(y_labels[i], x_offset - y_ml, i * y_tick_px + y_offset);
          }
        }
      }
 
      ctx.textBaseline = "middle";
      ctx.textAlign = "left";
-
      ctx.fillText(Y_LABEL, x_offset + y_ml, y_offset);
-
      ctx.textBaseline = "alphabetic";
      ctx.textAlign = "start";
 
@@ -160,7 +185,7 @@
 
      var b = b - x_offset - ctx.measureText("0").width / 2
      var x_range_unit = Math.ceil(x_range / x_div);
-     var xs = x_range / X_GRID;
+     var xs = x_range / X_TICK;
 
      var x_len = b - b % xs;
      var x_grid_len = x_len / xs;
@@ -212,6 +237,7 @@
      var x,y, x2, y2;
      if (data && data.length > 0) {
        ctx.beginPath();
+       ctx.globalCompositeOperation = "destination-over";
        ctx.strokeStyle = COLOR2;
        ctx.lineWidth = 2;
 
@@ -223,20 +249,16 @@
          ctx.closePath();
          ctx.fill();
        } else {
-         var outOfRange = false;
-         for(var i = data.length - 1; i > 0 && !outOfRange; i--) {
+         for(var i = data.length - 1; i > 0; i--) {
            y = y_len - (Number(data[i].text) - Y_MIN) / y_range * y_len;
            y2 = y_len - (Number(data[i - 1].text) - Y_MIN) / y_range * y_len;
            x = x_len - (maxTime - data[i].receivedDate.getTime()) / x_range * x_len;
            x2 = x_len - (maxTime - data[i - 1].receivedDate.getTime()) / x_range * x_len;
-           if (data[i - 1].receivedDate.getTime() < X_MIN) {
-             outOfRange = true;
-             var m = (y - y2) / (x - x2);
-             x2 = 0;
-             y2 = y - (m * x);
-           }
            ctx.moveTo(x_offset + x, y_offset + y);
            ctx.lineTo(x_offset + x2, y_offset + y2);
+           if (data[i - 1].receivedDate.getTime() < X_MIN) {
+             break;
+           }
          }
          ctx.closePath();
          ctx.stroke();
