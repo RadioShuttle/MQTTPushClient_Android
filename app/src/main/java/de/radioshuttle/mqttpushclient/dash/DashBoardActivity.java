@@ -105,7 +105,7 @@ public class DashBoardActivity extends AppCompatActivity implements
                         if (messages != null) {
                             /* only set cahced messages if we do not have received any messages so far */
                             if (mViewModel.getLastReceivedMessages() == null) {
-                                Log.d(TAG, "oncreate -  onMessageReceived");//TODO: raus
+                                // Log.d(TAG, "oncreate -  onMessageReceived");
                                 for(Message m : messages) {
                                     mViewModel.onMessageReceived(m);
                                 }
@@ -671,7 +671,9 @@ public class DashBoardActivity extends AppCompatActivity implements
                         Message c = cachedMsgs.get(m.getTopic());
                         if (c != null && c.getWhen() == m.getWhen() && c.getSeqno() == m.getSeqno()) {
                             // Log.d(TAG, "onLoadMessagesFinished - onMessageReceived - filtered: ");
-                            continue;
+                            if (mViewModel.mHistoricalData == null || !mViewModel.mHistoricalData.containsKey(m.getTopic())) {
+                                continue;
+                            }
                         }
                     }
                     mViewModel.onMessageReceived(m);
