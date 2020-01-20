@@ -451,10 +451,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             tintProgressBar(color, h.progressBar);
             // Log.d(TAG, "tint progress bar color: " + citem.label + ", "  + color);
 
-            if (!Utils.equals(h.html, citem.getHtml()) || citem.reloadRequested) { // load html, if not already done or changed
+            if (h.html != citem || citem.reloadRequested) { // load html, if not already done or changed
                 // Log.d(TAG, "custom item loading: " + citem.label);
                 citem.reloadRequested = false;
-                h.html = citem.getHtml();
+                h.html = citem;
 
                 citem.isLoading = true;
                 citem.data.remove("error"); // clear erros
@@ -552,11 +552,12 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         return r;
                     }
                 });
-                webView.loadDataWithBaseURL(CustomItem.BASE_URL ,h.html, "text/html", "utf-8", null);
+                webView.loadDataWithBaseURL(CustomItem.BASE_URL , citem.getHtml(), "text/html", "utf-8", null);
 
             } else {
                 if (!citem.isLoading && citem.hasMessageData()) {
                     String jsOnMqttMessageCall = CustomItem.build_onMqttMessageCall(citem);
+                    //
 
                     if (Build.VERSION.SDK_INT >= 19) {
                         webView.evaluateJavascript(jsOnMqttMessageCall, null);
@@ -646,6 +647,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             }
         }
 
+        Log.d(TAG, "setData: onMessage");
         notifyDataSetChanged();
     }
 
@@ -689,7 +691,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         Button button;
         ImageButton imageButton;
         int defaultColor;
-        String html;
+        CustomItem html;
     }
 
     @Override
