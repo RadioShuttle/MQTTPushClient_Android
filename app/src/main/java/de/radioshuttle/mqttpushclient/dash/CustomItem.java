@@ -215,7 +215,7 @@ public class CustomItem extends Item {
                         arr.put(entry);
                     }
                     jsonStr = arr.toString();
-                    data.put("userdata", jsonStr); // for reuse
+                    data.put("history", jsonStr); // for reuse
                 }
             } else {
                 jsonStr = "[]";
