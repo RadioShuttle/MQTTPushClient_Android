@@ -1196,7 +1196,7 @@ public class DashBoardViewModel extends AndroidViewModel {
     private HashMap<Integer, LinkedList<Item>> mItemsPerGroup;
     private HashSet<String> mLockedResources;
     private LinkedHashMap<String, Message> mLastReceivedMessages;
-    private HashMap<String, LinkedList<Message>> mHistoricalData;
+    protected HashMap<String, LinkedList<Message>> mHistoricalData;
     private final static int MAX_HISTOICAL_DATA = 200;
 
     private HashMap<String, Drawable> mOptionListImageCache;
