@@ -17,6 +17,12 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -274,15 +280,23 @@ public class CustomItem extends Item {
             byte[] msgRaw = item.data.get("msg.raw") == null ? new byte[0] : (byte[]) item.data.get("msg.raw");
             String paraMsgRaw = Utils.byteArrayToHex(msgRaw);
             String paraMsg = item.data.get("msg.text") == null ? "" : (String) item.data.get("msg.text");
+
+            String paraMsgURLEnc = "";
+            try {
+                paraMsgURLEnc = URLEncoder.encode(paraMsg, "UTF-8").replace("+", "%20");
+            } catch (UnsupportedEncodingException e) {
+            }
+
             js.append("if (typeof window['onMqttMessage'] === 'function') _onMqttMessage(");
             js.append(paraWhen);
             js.append(",'");
             js.append(paraTopic);
-            js.append("','");
-            js.append(paraMsg);
-            js.append("','");
+            js.append("', decodeURIComponent('");
+            js.append(paraMsgURLEnc);
+            js.append("'),'");
             js.append(paraMsgRaw);
             js.append("');");
+
         }
         return js.toString();
     }
