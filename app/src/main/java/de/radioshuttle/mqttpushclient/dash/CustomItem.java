@@ -18,11 +18,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -36,6 +32,7 @@ public class CustomItem extends Item {
     public CustomItem() {
         super();
         data = Collections.synchronizedMap(data);
+        mParameter = new ArrayList<>();
     }
 
     @Override
@@ -47,12 +44,26 @@ public class CustomItem extends Item {
     public JSONObject toJSONObject() throws JSONException {
         JSONObject o = super.toJSONObject();
         o.put("html", html == null ? "" : html);
+        JSONArray paras = new JSONArray();
+        if (mParameter != null) {
+            for(String p : mParameter) {
+                paras.put(p);
+            }
+            o.put("parameter", paras);
+        }
         return o;
     }
 
     protected void setJSONData(JSONObject o) {
         super.setJSONData(o);
         html = o.optString("html");
+        mParameter.clear();
+        JSONArray paras = o.optJSONArray("parameter");
+        if (paras != null) {
+            for(int i = 0; i < paras.length(); i++) {
+                mParameter.add(paras.optString(i));
+            }
+        }
     }
 
     public void setHtml(String html) {
@@ -67,6 +78,17 @@ public class CustomItem extends Item {
             h = html;
         }
         return h;
+    }
+
+    public ArrayList<String> getParameterList() {
+        if (mParameter == null) {
+            mParameter = new ArrayList<>();
+        }
+        return mParameter;
+    }
+
+    public void setParameterList(ArrayList<String> parameterList) {
+        mParameter = parameterList;
     }
 
     public JSObject getWebInterface() {
@@ -356,6 +378,7 @@ public class CustomItem extends Item {
 
     private JSObject mWebviewInterface;
     private String html = "";
+    private ArrayList<String> mParameter;
 
     //UI state
     public boolean isLoading;
