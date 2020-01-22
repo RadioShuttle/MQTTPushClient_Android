@@ -303,18 +303,23 @@ public class CustomItem extends Item {
             String paraMsgRaw = Utils.byteArrayToHex(msgRaw);
             String paraMsg = item.data.get("msg.text") == null ? "" : (String) item.data.get("msg.text");
 
-            String paraMsgURLEnc = "";
+            String paraMsgEnc = "";
+            String paraTopicEnc = "";
             try {
-                paraMsgURLEnc = URLEncoder.encode(paraMsg, "UTF-8").replace("+", "%20");
+                paraMsgEnc = URLEncoder.encode(paraMsg, "UTF-8").replace("+", "%20");
+            } catch (UnsupportedEncodingException e) {
+            }
+            try {
+                paraTopicEnc = URLEncoder.encode(paraTopic, "UTF-8").replace("+", "%20");
             } catch (UnsupportedEncodingException e) {
             }
 
             js.append("if (typeof window['onMqttMessage'] === 'function') _onMqttMessage(");
             js.append(paraWhen);
-            js.append(",'");
-            js.append(paraTopic);
-            js.append("', decodeURIComponent('");
-            js.append(paraMsgURLEnc);
+            js.append(", decodeURIComponent('");
+            js.append(paraTopicEnc);
+            js.append("'), decodeURIComponent('");
+            js.append(paraMsgEnc);
             js.append("'),'");
             js.append(paraMsgRaw);
             js.append("');");
@@ -327,22 +332,35 @@ public class CustomItem extends Item {
         StringBuilder js = new StringBuilder();
 
         if (accountData != null && item != null) {
+            String enc;
             js.append("MQTT.acc = new Object();");
-            js.append("MQTT.acc.user = '");
-            js.append(accountData.user == null ? "" : accountData.user);
-            js.append("'; ");
-            js.append("MQTT.acc.mqttServer = '");
+            js.append("MQTT.acc.user = decodeURIComponent('");
+            enc = accountData.user == null ? "" : accountData.user;
+            try {
+                enc = URLEncoder.encode(enc, "UTF-8").replace("+", "%20");
+            } catch (UnsupportedEncodingException e) {}
+            js.append(enc);
+            js.append("'); ");
+            js.append("MQTT.acc.mqttServer = decodeURIComponent('");
             try {
                 URI u = new URI(accountData.uri);
-                js.append(u.getAuthority());
+                enc = u.getAuthority();
+                try {
+                    enc = URLEncoder.encode(enc, "UTF-8").replace("+", "%20");
+                } catch (UnsupportedEncodingException e) {}
+                js.append(enc);
             } catch (Exception e) {
                 Log.d(TAG, "URI parse error: ", e);
             }
-            js.append("'; ");
+            js.append("'); ");
 
-            js.append("MQTT.acc.pushServer = '");
-            js.append(accountData.pushserver == null ? "" : accountData.pushserver);
-            js.append("'; ");
+            js.append("MQTT.acc.pushServer = decodeURIComponent('");
+            enc = accountData.pushserver == null ? "" : accountData.pushserver;
+            try {
+                enc = URLEncoder.encode(enc, "UTF-8").replace("+", "%20");
+            } catch (UnsupportedEncodingException e) {}
+            js.append(enc);
+            js.append("'); ");
 
             js.append("MQTT.view.isDialog = function() { return " + isDialogView + ";}; ");
 
