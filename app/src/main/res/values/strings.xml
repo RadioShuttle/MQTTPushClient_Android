@@ -291,6 +291,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="dash_label_optionlist">Option List</string>
     <string name="dash_label_empty_image_btn">None</string>
 
+
     <string-array name="dash_label_size_array">
         <item name="dash_label_textsize_s">Small</item>
         <item name="dash_label_textsize_m">Medium</item>
@@ -308,6 +309,7 @@ to communicate with the MQTT broker and to receive push notifications
         <item name="dash_label_input_number">Number</item>
     </string-array>
     <string name="dash_label_historical_data">Provide historical data</string>
+    <string name="dash_label_parameter">Parameter</string>
 
     <string name="dlg_delete_option_title">Delete Option</string>
     <string name="dlg_delete_option_msg">Delete selection option</string>
