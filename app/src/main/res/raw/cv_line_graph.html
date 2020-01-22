@@ -13,11 +13,36 @@
 
   <script>
     const BORDER_PX = 3;
+    var g_settings = new Object();
 
    function onMqttInit(account, view) {
      var canv = document.getElementById('canvas');
      canv.style.visibility = "visible";
      window.addEventListener('resize', onMqttResize);
+
+     var paras = view.getParameters();
+     var args, arg;
+     var p = new Object();
+     for(var i = 0; i < paras.length; i++) {
+       var args = paras[i].split(new RegExp('\\s+'));
+       for(var j = 0; j < args.length; j++) {
+         args[j] = args[j].replace(new RegExp('\"|\'','g'), '');
+         arg = args[j].split("=");
+         if (arg.length >= 2) {
+           p[arg[0].toLowerCase()] = arg[1];
+         }
+       }
+     }
+
+     g_settings['y_label'] = 'ylabel' in p ? p['ylabel'] : "°C";
+     g_settings['y_min'] = 'ymin' in p ? Number(p['ymin']) : -20;
+     g_settings['y_max'] = 'ymax' in p ? Number(p['ymax']) : 40;
+     g_settings['y_tick_interval'] = 'yinterval' in p ? Number(p['yinterval']) : 10;
+
+     g_settings['x_range'] = 'xrange' in p ? p['xrange'] : "6h"; /* s, min, h, d */
+     g_settings['x_label'] = 'xlabel' in p ? p['xlabel'] : "h";
+     g_settings['x_tick_interval'] = 'xinterval' in p ? p['xinterval'] : "60min";
+
      onMqttResize();
    }
 
@@ -41,34 +66,24 @@
      canv.width = '' + Math.round(a2 * window.devicePixelRatio);
      canv.height = '' +  Math.round(a2 * window.devicePixelRatio);
 
-     var p = new Object();
-     p['y_label'] = "°C";
-     p['y_min'] = -20;
-     p['y_max'] = 40;
-     p['y_tick_interval'] = 10;
-
-     p['x_range'] = "6h"; /* s, min, h, d */
-     p['x_label'] = "h";
-     p['x_tick_interval'] = "60min";
-
-     draw(p, MQTT.view.getHistoricalData());
+     draw(MQTT.view.getHistoricalData());
     }
 
    function filterMsg(msg) {
      return Number(msg.text);
    }
 
-   function draw(p, data) {
+   function draw(data) {
      var COLOR1 = "#000000";
      var COLOR2 = "#2196f3";
 
-     var Y_MIN = p['y_min'];
-     var Y_MAX = p['y_max'];
-     var Y_TICK = p['y_tick_interval'];
+     var Y_MIN = g_settings['y_min'];
+     var Y_MAX = g_settings['y_max'];
+     var Y_TICK = g_settings['y_tick_interval'];
 
      var FONT_SIZE = 10;
-     var X_LABEL = p['x_label'];
-     var Y_LABEL = p['y_label'];
+     var X_LABEL = g_settings['x_label'];
+     var Y_LABEL = g_settings['y_label'];
 
      var X_MAX;
      if (data != null && data.length > 0) {
@@ -78,7 +93,7 @@
      }
 
      var reg = new RegExp('^\\s*(\\d+)\\s*(s|min|m|h|d)\\s*$', 'i');
-     var res = p['x_range'].match(reg);
+     var res = g_settings['x_range'].match(reg);
      var _x_unit = res[2].toLowerCase();
      var _x_range = Number(res[1]);
      if (_x_unit == 's') {
@@ -92,7 +107,7 @@
      }
      var X_MIN = X_MAX - _x_range;
 
-     res = p['x_tick_interval'].match(reg);
+     res = g_settings['x_tick_interval'].match(reg);
      _x_unit = res[2].toLowerCase();
      var _x_tick = Number(res[1]);
      if (_x_unit == 's') {
