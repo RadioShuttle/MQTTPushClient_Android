@@ -22,7 +22,9 @@ MQTT.view.getHistoricalData = function() {
   }
   return result;
 };
-
+MQTT.view.getParameters = function() {
+  return JSON.parse(this._getParameters());
+};
 MQTT.buf2hex = function (buffer) {
   var byteArray = new Uint8Array(buffer);
   var hexStr = '';

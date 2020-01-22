@@ -219,6 +219,16 @@ public class CustomItem extends Item {
         }
 
         @JavascriptInterface
+        public String _getParameters() {
+            ArrayList<String> list = getParameterList();
+            JSONArray arr = new JSONArray();
+            arr.put(list.size() > 0 ? list.get(0) : "");
+            arr.put(list.size() > 1 ? list.get(1) : "");
+            arr.put(list.size() > 2 ? list.get(2) : "");
+            return arr.toString();
+        }
+
+        @JavascriptInterface
         public String _getHistoricalData() {
             Object history = data.get("history");
             String jsonStr;
