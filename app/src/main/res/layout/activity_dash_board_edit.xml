@@ -550,6 +550,99 @@
                     />
             </TableRow>
 
+            <TableRow android:id="@+id/rowParameter">
+                <TextView
+                    android:layout_gravity="left|center_vertical"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:labelFor="@+id/dash_parameter"
+                    android:text="@string/dash_label_parameter"
+                    />
+
+            </TableRow>
+
+            <TableRow android:id="@+id/rowParameterList">
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_span="2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    >
+                    <TextView
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/dash_parameter0"
+                        app:layout_constraintBottom_toBottomOf="@+id/dash_parameter0"
+                        android:typeface="monospace"
+                        android:textAppearance="?android:textAppearanceSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0:"
+                        android:id="@+id/dash_parameter0_label"
+                        />
+                    <EditText
+                        android:id="@+id/dash_parameter0"
+                        app:layout_constraintLeft_toRightOf="@id/dash_parameter0_label"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:ems="15"
+                        android:inputType="text|textNoSuggestions"
+                        android:typeface="monospace"
+                        android:textAppearance="?android:textAppearanceSmall"
+                        android:minHeight="48dp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        />
+
+                    <TextView
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/dash_parameter1"
+                        app:layout_constraintBottom_toBottomOf="@+id/dash_parameter1"
+                        android:typeface="monospace"
+                        android:textAppearance="?android:textAppearanceSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1:"
+                        android:id="@+id/dash_parameter1_label"
+                        />
+                    <EditText
+                        android:id="@+id/dash_parameter1"
+                        app:layout_constraintLeft_toRightOf="@id/dash_parameter1_label"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/dash_parameter0_label"
+                        android:ems="15"
+                        android:inputType="text|textNoSuggestions"
+                        android:typeface="monospace"
+                        android:textAppearance="?android:textAppearanceSmall"
+                        android:minHeight="48dp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        />
+
+                    <TextView
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/dash_parameter2"
+                        app:layout_constraintBottom_toBottomOf="@+id/dash_parameter2"
+                        android:typeface="monospace"
+                        android:textAppearance="?android:textAppearanceSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2:"
+                        android:id="@+id/dash_parameter2_label"
+                        />
+                    <EditText
+                        android:id="@+id/dash_parameter2"
+                        app:layout_constraintLeft_toRightOf="@id/dash_parameter2_label"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/dash_parameter1_label"
+                        android:ems="15"
+                        android:inputType="text|textNoSuggestions"
+                        android:typeface="monospace"
+                        android:textAppearance="?android:textAppearanceSmall"
+                        android:minHeight="48dp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </TableRow>
 
             <TableRow android:id="@+id/rowFilterScript" android:gravity="center_vertical">
                 <TextView
