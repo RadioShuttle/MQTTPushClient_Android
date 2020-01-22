@@ -651,39 +651,62 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 }
 
                 /* custom view */
-                TableRow htmlRow = findViewById(R.id.rowHTMLHeader);
-                if (htmlRow != null && !(mItem instanceof CustomItem)) {
-                    htmlRow.setVisibility(View.GONE);
-                }
-
-                htmlRow = findViewById(R.id.rowHTML);
-                if (htmlRow != null) {
-                    mEditTextHTML = findViewById(R.id.editHTML);
-                    if (!(mItem instanceof CustomItem)) {
+                TableRow htmlRowHeader = findViewById(R.id.rowHTMLHeader);
+                TableRow parameterRow = findViewById(R.id.rowParameter);
+                TableRow parameterListRow = findViewById(R.id.rowParameterList);
+                TableRow htmlRow = findViewById(R.id.rowHTML);
+                mPara0TextView = findViewById(R.id.dash_parameter0);
+                mPara1TextView = findViewById(R.id.dash_parameter1);
+                mPara2TextView = findViewById(R.id.dash_parameter2);
+                mEditTextHTML = findViewById(R.id.editHTML);
+                if (!(mItem instanceof CustomItem)) {
+                    if (htmlRowHeader != null) {
+                        htmlRowHeader.setVisibility(View.GONE);
+                    }
+                    parameterRow.setVisibility(View.GONE);
+                    parameterListRow.setVisibility(View.GONE);
+                    if (htmlRow != null) {
                         htmlRow.setVisibility(View.GONE);
-                    } else {
-                        try {
-                            mHTMLExampleBasic = Utils.getRawStringResource(getApplication(), "cv_empty", false);
-                            mHTMLExampleColorPicker = Utils.getRawStringResource(getApplication(), "cv_color_picker", false);
-                            mHTMLExampleGauge = Utils.getRawStringResource(getApplication(), "cv_gauge", false);
-                            mHTMLExampleClock = Utils.getRawStringResource(getApplication(), "cv_clock", false);
-                            mHTMLExampleLampColorChooser = Utils.getRawStringResource(getApplication(), "cv_light_switch_with_color_chooser", false);
-                            mHTMLExampleThermometer = Utils.getRawStringResource(getApplication(), "cv_thermometer", false);
-                            mHTMLExampleLineGraph  = Utils.getRawStringResource(getApplication(), "cv_line_graph", false);
-                        } catch(Exception e) {
-                            Log.e(TAG, "Could not load resource: ", e);
-                        }
+                    }
+                } else {
+                    try {
+                        mHTMLExampleBasic = Utils.getRawStringResource(getApplication(), "cv_empty", false);
+                        mHTMLExampleColorPicker = Utils.getRawStringResource(getApplication(), "cv_color_picker", false);
+                        mHTMLExampleGauge = Utils.getRawStringResource(getApplication(), "cv_gauge", false);
+                        mHTMLExampleClock = Utils.getRawStringResource(getApplication(), "cv_clock", false);
+                        mHTMLExampleLampColorChooser = Utils.getRawStringResource(getApplication(), "cv_light_switch_with_color_chooser", false);
+                        mHTMLExampleThermometer = Utils.getRawStringResource(getApplication(), "cv_thermometer", false);
+                        mHTMLExampleLineGraph  = Utils.getRawStringResource(getApplication(), "cv_line_graph", false);
+                    } catch(Exception e) {
+                        Log.e(TAG, "Could not load resource: ", e);
+                    }
+                    CustomItem custItem = (CustomItem) mItem;
 
-                        if (savedInstanceState == null) {
-                            mEditTextHTML.setText(((CustomItem) mItem).getHtml());
-                        }
-                        View tmpRow = findViewById(R.id.rowBackgroundImage);
-                        if (tmpRow != null) {
-                            tmpRow.setVisibility(View.GONE);
-                        }
+                    if (savedInstanceState == null) {
+                        mEditTextHTML.setText(custItem.getHtml());
+                    }
+                    View tmpRow = findViewById(R.id.rowBackgroundImage);
+                    if (tmpRow != null) {
+                        tmpRow.setVisibility(View.GONE);
+                    }
 
+                    /* parameter */
+                    if (savedInstanceState == null) {
+                        ArrayList<String> list = custItem.getParameterList();
+                        if (list != null) {
+                            if (list.size() > 0) {
+                                mPara0TextView.setText(list.get(0));
+                            }
+                            if (list.size() > 1) {
+                                mPara1TextView.setText(list.get(1));
+                            }
+                            if (list.size() > 2) {
+                                mPara2TextView.setText(list.get(2));
+                            }
+                        }
                     }
                 }
+
                 TableRow historicalDataRow = findViewById(R.id.rowHistoricalData);
                 if (historicalDataRow != null) {
                     mHistoryCheckbox = findViewById(R.id.historicalData);
@@ -2038,6 +2061,11 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     CustomItem customItem = (CustomItem) cItem;
                     customItem.setHtml(mEditTextHTML.getText().toString());
                     cItem.history = mHistoryCheckbox.isChecked();
+                    ArrayList<String> parameter = new ArrayList<>();
+                    parameter.add(mPara0TextView.getText().toString());
+                    parameter.add(mPara1TextView.getText().toString());
+                    parameter.add(mPara2TextView.getText().toString());
+                    customItem.setParameterList(parameter);
                 } else {
                     // all items but customItem
                     cItem.script_f = mFilterScriptContent == null ? "" : mFilterScriptContent;
@@ -2185,6 +2213,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         }
         if (mItem instanceof CustomItem) {
             setEnabled(mHistoryCheckbox, enableFields);
+            setEnabled(mPara0TextView, enableFields);
+            setEnabled(mPara1TextView, enableFields);
+            setEnabled(mPara2TextView, enableFields);
         }
 
         invalidateOptionsMenu();
@@ -2362,6 +2393,25 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             if (!changed && mItem instanceof CustomItem) {
                 CustomItem customItem = (CustomItem) mItem;
                 changed = !mEditTextHTML.getText().toString().equals(customItem.getHtml());
+                if (!changed) {
+                    ArrayList<String> parameter;
+                    if (customItem.getParameterList() == null) {
+                        parameter = new ArrayList<>();
+                    } else {
+                        parameter = new ArrayList<>(customItem.getParameterList());
+                        int n = parameter.size();
+                        for(int i = 0; i < 3 - n; i++) {
+                            parameter.add("");
+                        }
+                    }
+                    if (!Utils.equals(mPara0TextView.getText().toString(), parameter.get(0))) {
+                        changed = true;
+                    } else if (!Utils.equals(mPara1TextView.getText().toString(), parameter.get(1))) {
+                        changed = true;
+                    } else if (!Utils.equals(mPara2TextView.getText().toString(), parameter.get(2))) {
+                        changed = true;
+                    }
+                }
             }
         }
 
@@ -2452,6 +2502,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected EditText mEditTextRangeMin, mEditTextRangeMax, mEditTextDecimal;
     protected CheckBox mRangeDisplayPercent;
 
+    protected TextView mPara0TextView, mPara1TextView, mPara2TextView;
 
     boolean mGinit, mPinit, mTinit;
     boolean mInputTypeInit;
@@ -2481,6 +2532,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected final static String KEY_OPTIONLIST_DISPLAY = "KEY_OPTIONLIST_DISPLAY";
     protected final static String KEY_OPTIONLIST_URI = "KEY_OPTIONLIST_URI";
     protected final static String KEY_OPTIONLIST_SELECTED = "KEY_OPTIONLIST_SELECTED";
+    protected final static String KEY_PARAMETER = "KEY_PARAMETER";
 
     protected String mFilterScriptContent;
     protected final static String KEY_FILTER_SCRIPT = "KEY_FILTER_SCRIPT";
