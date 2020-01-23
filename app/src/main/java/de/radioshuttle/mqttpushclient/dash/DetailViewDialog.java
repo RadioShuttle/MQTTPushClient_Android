@@ -1004,7 +1004,7 @@ public class DetailViewDialog extends DialogFragment {
                             if (Build.VERSION.SDK_INT >= 19) {
                                 webView.evaluateJavascript(jsOnMqttMessageCall, null);
                             } else {
-                                webView.loadUrl(jsOnMqttMessageCall);
+                                webView.loadUrl("javascript:" + jsOnMqttMessageCall);
                             }
                         }
                     }
