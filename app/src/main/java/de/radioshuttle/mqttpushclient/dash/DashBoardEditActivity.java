@@ -69,6 +69,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -669,17 +670,6 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                         htmlRow.setVisibility(View.GONE);
                     }
                 } else {
-                    try {
-                        mHTMLExampleBasic = Utils.getRawStringResource(getApplication(), "cv_empty", false);
-                        mHTMLExampleColorPicker = Utils.getRawStringResource(getApplication(), "cv_color_picker", false);
-                        mHTMLExampleGauge = Utils.getRawStringResource(getApplication(), "cv_gauge", false);
-                        mHTMLExampleClock = Utils.getRawStringResource(getApplication(), "cv_clock", false);
-                        mHTMLExampleLampColorChooser = Utils.getRawStringResource(getApplication(), "cv_light_switch_with_color_chooser", false);
-                        mHTMLExampleThermometer = Utils.getRawStringResource(getApplication(), "cv_thermometer", false);
-                        mHTMLExampleLineGraph  = Utils.getRawStringResource(getApplication(), "cv_line_graph", false);
-                    } catch(Exception e) {
-                        Log.e(TAG, "Could not load resource: ", e);
-                    }
                     CustomItem custItem = (CustomItem) mItem;
 
                     if (savedInstanceState == null) {
@@ -1411,25 +1401,25 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 clear();
                 break;
             case R.id.htmL_example_basic:
-                insertHTMLExample(mHTMLExampleBasic);
+                insertHTMLExample("cv_empty");
                 break;
             case R.id.htmL_example_color_picker:
-                insertHTMLExample(mHTMLExampleColorPicker);
+                insertHTMLExample("cv_color_picker");
                 break;
             case R.id.htmL_example_gauge:
-                insertHTMLExample(mHTMLExampleGauge);
+                insertHTMLExample("cv_gauge");
                 break;
             case R.id.htmL_example_clock:
-                insertHTMLExample(mHTMLExampleClock);
+                insertHTMLExample("cv_clock");
                 break;
             case R.id.htmL_example_lamp_color_chooser:
-                insertHTMLExample(mHTMLExampleLampColorChooser);
+                insertHTMLExample("cv_light_switch_with_color_chooser");
                 break;
             case R.id.htmL_example_thermometer:
-                insertHTMLExample(mHTMLExampleThermometer);
+                insertHTMLExample("cv_thermometer");
                 break;
             case R.id.htmL_example_line_graph:
-                insertHTMLExample(mHTMLExampleLineGraph);
+                insertHTMLExample("cv_line_graph");
                 break;
             case R.id.menu_help:
                 showHelp();
@@ -2423,7 +2413,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
         dlg.show(getSupportFragmentManager(), ConfirmClearDialog.class.getSimpleName());
     }
 
-    protected void insertHTMLExample(String code) {
+    protected void insertHTMLExample(String resourceName) {
+
+        String code = "";
+
+        try {
+            code =  Utils.getRawStringResource(getApplication(), resourceName, false);
+        } catch (IOException e) {
+            Log.e(TAG, "Could not load resource: ", e);
+        }
+
         if (!Utils.isEmpty(code)) {
             mEditTextHTML.requestFocus();
             String content = mEditTextHTML.getText().toString();
@@ -2435,6 +2434,20 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             content += code;
             mEditTextHTML.setText(content);
             mEditTextHTML.setSelection(setStart, content.length());
+
+            /* add parameter */
+            if (EXAMPLE_PARAS.containsKey(resourceName)) {
+                /* only add parameter, if user has not already entered parameter */
+                if (Utils.isEmpty(mPara0TextView.getText().toString()) &&
+                        Utils.isEmpty(mPara1TextView.getText().toString()) &&
+                        Utils.isEmpty(mPara2TextView.getText().toString())
+                ) {
+                    String[] paras = EXAMPLE_PARAS.get(resourceName);
+                    mPara0TextView.setText(paras[0]);
+                    mPara1TextView.setText(paras[1]);
+                    mPara2TextView.setText(paras[2]);
+                }
+            }
         }
         // Log.d(TAG, "sel start: " + s);
     }
@@ -2502,7 +2515,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected EditText mEditTextRangeMin, mEditTextRangeMax, mEditTextDecimal;
     protected CheckBox mRangeDisplayPercent;
 
-    protected TextView mPara0TextView, mPara1TextView, mPara2TextView;
+    public TextView mPara0TextView, mPara1TextView, mPara2TextView;
 
     boolean mGinit, mPinit, mTinit;
     boolean mInputTypeInit;
@@ -2560,15 +2573,6 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private Snackbar mSnackbar;
 
-    /* html example codes (custom view) */
-    protected String mHTMLExampleBasic;
-    protected String mHTMLExampleColorPicker;
-    protected String mHTMLExampleGauge;
-    protected String mHTMLExampleClock;
-    protected String mHTMLExampleLampColorChooser;
-    protected String mHTMLExampleThermometer;
-    protected String mHTMLExampleLineGraph;
-
     private final static String TAG = DashBoardEditActivity.class.getSimpleName();
 
     public final static int MODE_ADD = 1;
@@ -2591,5 +2595,15 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     final static int ACTIVITY_REQUEST_JS_OUTPUT = 2;
     final static int ACTIVITY_REQUEST_IMAGE_CHOOSER = 3;
     final static int ACTIVITY_REQUEST_CUSTOM_VIEW_HELP= 4;
+
+    static HashMap<String, String[]> EXAMPLE_PARAS;
+    static {
+        EXAMPLE_PARAS = new HashMap<>();
+        EXAMPLE_PARAS.put("cv_line_graph", new String[]{
+                "ymin=-20 ymax=40 yinterval=10",
+                "xrange=6h xinterval=1h",
+                "ylabel=\"°C\" xlabel=\"h\""
+        });
+    }
 
 }
