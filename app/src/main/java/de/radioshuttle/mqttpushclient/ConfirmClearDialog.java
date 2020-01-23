@@ -42,6 +42,9 @@ public class ConfirmClearDialog extends DialogFragment {
                     DashBoardEditActivity da = (DashBoardEditActivity) a;
                     if (da.mEditTextHTML != null) {
                         da.mEditTextHTML.setText(null);
+                        da.mPara0TextView.setText("");
+                        da.mPara1TextView.setText("");
+                        da.mPara2TextView.setText("");
                     }
                 }
             }
