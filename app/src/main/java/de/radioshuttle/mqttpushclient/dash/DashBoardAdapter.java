@@ -512,7 +512,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         if (Build.VERSION.SDK_INT >= 19) {
                             webView.evaluateJavascript(js.toString(), null);
                         } else {
-                            webView.loadUrl("javascript:" + js.toString());
+                            webView.loadUrl(js.toString());
                         }
 
                     }
