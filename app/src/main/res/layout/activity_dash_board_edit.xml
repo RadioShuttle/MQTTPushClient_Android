@@ -555,7 +555,7 @@
                     android:layout_gravity="left|center_vertical"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:labelFor="@+id/dash_parameter"
-                    android:text="@string/dash_label_parameter"
+                    android:text="@string/dash_label_parameters"
                     />
 
             </TableRow>
