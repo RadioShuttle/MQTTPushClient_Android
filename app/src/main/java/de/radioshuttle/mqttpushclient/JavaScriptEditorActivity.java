@@ -299,20 +299,14 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 startActivityForResult(webIntent, 0);
             } else if (mComponentType == CONTENT_FILTER_DASHBOARD) {
                 Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
-                mActivityStarted = false; //TODO: remove line, activate help
-                /*
                 Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
                 webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_FILTER_SCRIPT);
                 startActivityForResult(webIntent, 0);
-                 */
             } else if (mComponentType == CONTENT_OUTPUT_DASHBOARD) {
                 Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
-                mActivityStarted = false; //TODO: remove line, activate help
-                /*
                 Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
                 webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_OUTPUT_SCRIPT);
                 startActivityForResult(webIntent, 0);
-                 */
             }
         }
     }

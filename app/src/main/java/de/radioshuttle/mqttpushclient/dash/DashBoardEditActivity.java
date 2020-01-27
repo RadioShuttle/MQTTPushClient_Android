@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
 import de.radioshuttle.mqttpushclient.ConfirmClearDialog;
+import de.radioshuttle.mqttpushclient.HelpActivity;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
 import de.radioshuttle.mqttpushclient.JavaScriptEditorActivity;
 import de.radioshuttle.mqttpushclient.PushAccount;
@@ -2455,12 +2456,9 @@ public class DashBoardEditActivity extends AppCompatActivity implements
     protected void showHelp() {
         if (mItem instanceof CustomItem) {
             Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
-            mActivityStarted = false; //TODO: remove line, activate help
-            /*
             Intent webIntent = new Intent(this, HelpActivity.class);
             webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_CUSTOM_VIEW_HTML);
             startActivityForResult(webIntent, ACTIVITY_REQUEST_CUSTOM_VIEW_HELP);
-             */
         }
     }
 
