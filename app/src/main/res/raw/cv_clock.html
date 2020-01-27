@@ -16,7 +16,7 @@
    function clock() {
      var now = new Date();
      var a = Math.round(Math.min(window.innerWidth, window.innerHeight) * .9);
-     /* calculate scaling factor (150px = 100%) and multiply with devicePixelRatio */
+     /* calculate scaling factor (150px = 100%) and multiply with devicePixelRatio for sharper images */
      var f = a / 150 * window.devicePixelRatio;
 
      var canv = document.getElementById('clock');
@@ -43,11 +43,11 @@
      /* Hour marks */
      ctx.save();
      for (var i = 0; i < 12; i++) {
-    ctx.beginPath();
-    ctx.rotate(Math.PI / 6);
-    ctx.moveTo(100, 0);
-    ctx.lineTo(120, 0);
-    ctx.stroke();
+       ctx.beginPath();
+       ctx.rotate(Math.PI / 6);
+       ctx.moveTo(100, 0);
+       ctx.lineTo(120, 0);
+       ctx.stroke();
      }
      ctx.restore();
    
@@ -55,13 +55,13 @@
      ctx.save();
      ctx.lineWidth = 5;
      for (i = 0; i < 60; i++) {
-    if (i % 5!= 0) {
-   ctx.beginPath();
-   ctx.moveTo(117, 0);
-   ctx.lineTo(120, 0);
-   ctx.stroke();
-    }
-    ctx.rotate(Math.PI / 30);
+       if (i % 5!= 0) {
+         ctx.beginPath();
+         ctx.moveTo(117, 0);
+         ctx.lineTo(120, 0);
+         ctx.stroke();
+       }
+       ctx.rotate(Math.PI / 30);
      }
      ctx.restore();
     
@@ -128,19 +128,21 @@
    }
 
    function onMqttResize() {
-    document.getElementById('visible_area').style.width = window.innerWidth + "px";
-    document.getElementById('visible_area').style.height = window.innerHeight + "px";
+     /* the size of the component must be adjusted to the size of the viewport */
+     document.getElementById('visible_area').style.width = window.innerWidth + "px";
+     document.getElementById('visible_area').style.height = window.innerHeight + "px";
       
-    var canv = document.getElementById('clock');
-    var a = Math.min(window.innerWidth, window.innerHeight);
+     var canv = document.getElementById('clock');
+     var a = Math.min(window.innerWidth, window.innerHeight);
       
-    canv.style.marginLeft = Math.round(a * .05) + "px";
-    canv.style.marginTop = Math.round(a * .05) + "px";
-    canv.style.width = Math.round(a * .9) + "px";
-    canv.style.height = Math.round(a * .9) + "px";
-    canv.width = '' + Math.round(a * .9 * window.devicePixelRatio);
-    canv.height = '' +  Math.round(a * .9 * window.devicePixelRatio);
-    clock();
+     canv.style.marginLeft = Math.round(a * .05) + "px";
+     canv.style.marginTop = Math.round(a * .05) + "px";
+     canv.style.width = Math.round(a * .9) + "px";
+     canv.style.height = Math.round(a * .9) + "px";
+     /* multiply canvas dimensions with window.devicePixelRatio for sharper images */
+     canv.width = '' + Math.round(a * .9 * window.devicePixelRatio);
+     canv.height = '' +  Math.round(a * .9 * window.devicePixelRatio);
+     clock();
    }
 
    window.addEventListener('resize', onMqttResize);

@@ -13,6 +13,7 @@
   <!-- android specific meta -->
   <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
 
+  <!-- see Material Icons: https://google.github.io/material-design-icons/ -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
     rel="stylesheet">
 
@@ -37,6 +38,7 @@
        obj.state = 'off';
        obj.color = COLOR_YELLOW;
      } else {
+       /* message content is in JSON format */
        obj = JSON.parse(msg.text);
        if (!obj.color) {
          obj.color = COLOR_YELLOW;
@@ -52,6 +54,7 @@
     }    
 
     function onMqttResize() {
+      /* the size of the component must be adjusted to the size of the viewport */
       var h = window.innerHeight;
       var w = window.innerWidth;
       var viewPortArea = document.getElementById('visible_area');
@@ -92,6 +95,7 @@
         obj.state = 'off';
       }
       var t = document.getElementById('colorInput');
+      /* send values */
       MQTT.publish(MQTT.view.getSubscribedTopic(), JSON.stringify(obj), false);
     }
 
@@ -113,6 +117,7 @@
       }
       obj.state = 'on';
       obj.color = hexToNum(t.value);
+      /* send values */
       MQTT.publish(MQTT.view.getSubscribedTopic(), JSON.stringify(obj), false);
     }
 
@@ -136,7 +141,10 @@
 
  <body>
   <div id="visible_area">
-   <div align="center" id="imageWrapper" onclick="onImageClicked(this);"> <i id="bimage" class="material-icons">&#xe42e</i></div>
+   <div align="center" id="imageWrapper" onclick="onImageClicked(this);">
+     <!-- see Material Icons: https://google.github.io/material-design-icons/ -->
+     <i id="bimage" class="material-icons">&#xe42e</i><
+    /div>
 
    <div align="center" id="buttonWrapper" align="center">
     <input id="colorInput" type="color" onchange="onColorSelected(this);"></input>

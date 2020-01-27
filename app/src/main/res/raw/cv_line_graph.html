@@ -32,7 +32,7 @@
      g_settings['x_label'] = 'xlabel' in p ? p['xlabel'] : "h";
      g_settings['x_tick_interval'] = 'xinterval' in p ? p['xinterval'] : "60min";
 
-     /* 2nd Y axis. must be set visible. */
+     /* 2nd Y axis. Must be set to visible. */
      g_settings['y2_visible'] = 'y2visible' in p ? p['y2visible'] : "false";
      g_settings['y2_label'] = 'y2label' in p ? p['y2label'] : "%";
      g_settings['y2_min'] = 'y2min' in p ? Number(p['y2min']) : 0;
@@ -47,7 +47,7 @@
    }
 
    function onMqttResize() {
-     /* the size of the component must be adapted to the size of the viewport */
+     /* the size of the component must be adjusted to the size of the viewport */
      document.getElementById('visible_area').style.width = window.innerWidth + "px";
      document.getElementById('visible_area').style.height = window.innerHeight + "px";
 
@@ -68,7 +68,7 @@
      draw(MQTT.view.getHistoricalData());
     }
 
-   /* get Y value from historical data record. must be numeric */
+   /* get Y value from historical data record. Must be numeric */
    function getYValue(msg) {
      return Number(msg.text);
    }
@@ -319,7 +319,7 @@
        ctx.stroke();
      }
 
-     /* line graph */
+     /* graph */
      var x,y, x2, y2;
      if (data && data.length > 0) {
        if (showY2axis) {
@@ -334,8 +334,10 @@
          ctx.globalCompositeOperation = "destination-over";
          if (k == 0) {
            ctx.strokeStyle = COLOR2;
+           ctx.fillStyle = COLOR2;
          } else {
            ctx.strokeStyle = COLOR3;
+           ctx.fillStyle = COLOR3;
          }
          ctx.lineWidth = 2;
 
@@ -348,10 +350,12 @@
            }
            x = x_len - (maxTime - data[0].receivedDate.getTime()) / x_range * x_len;
            ctx.arc(x_offset + x, y_offset + y, 2, 0, 2 * Math.PI);
+
            ctx.closePath();
            ctx.fill();
          } else {
            /* draw lines */
+           MQTT.log("stroke color: daraw line ");
            for(var i = data.length - 1; i > 0; i--) {
              if (k == 0) {
                y = y_len - (getYValue(data[i]) - Y_MIN) / y_range * y_len;

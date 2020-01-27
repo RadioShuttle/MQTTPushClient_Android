@@ -34,36 +34,41 @@
        temp = 50;
      }
      temp += 30;
+     /* set new value */
      fillPC = temp / 80
      onMqttResize();
    }
 
    function onMqttResize() {
+     /* the size of the component must be adjusted to the size of the viewport */
      document.getElementById('visible_area').style.width = window.innerWidth + "px";
      document.getElementById('visible_area').style.height = window.innerHeight + "px";
 
-   var canv = document.getElementById('thermometer');
-   var thermo_label = document.getElementById('thermo_label');
-   var a = Math.min(window.innerWidth, window.innerHeight);
+     var canv = document.getElementById('thermometer');
+     var thermo_label = document.getElementById('thermo_label');
+     var a = Math.min(window.innerWidth, window.innerHeight);
 
-   canv.style.marginLeft = Math.round(a * .05) + "px";
-   canv.style.marginTop = Math.round(a * .05) + "px";
-   canv.style.width = Math.round(a * .9 * .4) + "px";
-   canv.style.height = Math.round(a * .9) + "px";
-   thermo_label.style.height = window.innerHeight + "px";
+     canv.style.marginLeft = Math.round(a * .05) + "px";
+     canv.style.marginTop = Math.round(a * .05) + "px";
+     canv.style.width = Math.round(a * .9 * .4) + "px";
+     canv.style.height = Math.round(a * .9) + "px";
+     thermo_label.style.height = window.innerHeight + "px";
 
-   canv.width = '' + Math.round(a * .9 * .4 * window.devicePixelRatio);
-   canv.height = '' +  Math.round(a * .9 * window.devicePixelRatio);
+     /* multiply canvas dimensions with window.devicePixelRatio for sharper images */
+     canv.width = '' + Math.round(a * .9 * .4 * window.devicePixelRatio);
+     canv.height = '' +  Math.round(a * .9 * window.devicePixelRatio);
 
-      if (MQTT.view.isDialog()) {
-         thermo_label.style.fontSize = "x-large";
+     /* increase font size when component is displayed in detail view */
+     if (MQTT.view.isDialog()) {
+       thermo_label.style.fontSize = "x-large";
+     }
+
+     draw(fillPC);
    }
-
-   draw(fillPC);
-    }
 
    function draw(f) {
      var a = Math.round(Math.min(window.innerWidth, window.innerHeight) * .9);
+     /* calculate scaling factor and multiply with devicePixelRatio for sharper images */
      var s = a / 100 * window.devicePixelRatio;
 
      if (isNaN(f) || f < 0) {

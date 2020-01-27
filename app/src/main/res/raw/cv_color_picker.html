@@ -15,16 +15,19 @@
 
     function onMqttInit(account, view) {
       var colorInput = document.getElementById("colorInput");
-       colorInput.value = "#000000";
-       onMqttResize();
+      /* set default color */
+      colorInput.value = "#000000";
+      onMqttResize();
     }
 
     function onMqttMessage(msg) {
       var colorInput = document.getElementById("colorInput");
+      /* set color value */
       colorInput.value = msg.text;
     }
 
     function onMqttResize() {
+      /* the size of the component must be adjusted to the size of the viewport */
       var h = window.innerHeight;
       var w = window.innerWidth;
       var viewPortArea = document.getElementById('visible_area');
@@ -38,7 +41,7 @@
     }
 
     function onColorSelected(t) {
-      /* IMPORTANT! set your topic (publish) here, if it differs form subscribed topic */
+      /* send (publish) selected color value */
       MQTT.publish(MQTT.view.getSubscribedTopic(), t.value, false);
     }
 
