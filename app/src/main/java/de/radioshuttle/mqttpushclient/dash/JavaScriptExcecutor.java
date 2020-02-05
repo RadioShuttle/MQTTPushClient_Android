@@ -209,20 +209,23 @@ public class JavaScriptExcecutor {
                     try {
                         /* if java script souce has changed, create a new context object and release resouces of the previous one */
                         if ((!Utils.equals(lastSrc, task.item.script_f))) {
-                            viewProperties = null;
+                            viewProperties = new HashMap<>();
                             timeoutError = false;
-                            lastSrc = task.item.script_f;
                             if (jsContext != null) { // release resources
                                 jsContext.close();
                             }
-                            jsContext = js.initFormatter(
-                                    task.item.script_f, mAccount.user,
-                                    new URI(mAccount.uri).getAuthority(), mAccount.pushserver);
 
+                            try {
+                                jsContext = js.initFormatter(
+                                        task.item.script_f, mAccount.user,
+                                        new URI(mAccount.uri).getAuthority(), mAccount.pushserver);
+                            } catch (Exception e) {
+                                lastSrc = null;
+                                throw e;
+                            }
 
-                            viewProperties = new HashMap<>();
                             js.initViewProperties(jsContext, viewProperties);
-
+                            lastSrc = task.item.script_f;
                         }
                         /* if there was a timeout error in the previous run, do not try again, just return error*/
                         if (timeoutError) {
