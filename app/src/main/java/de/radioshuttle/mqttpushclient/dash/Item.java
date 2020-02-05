@@ -141,11 +141,13 @@ public abstract class Item {
             } else {
                 Drawable drawable;
                 drawable = (Drawable) data.get("background_image_blob");
+                String drawableURI = (String) data.get("background_image");
                 if (drawable != null) {
                     if (detailView) {
                         drawable = drawable.getConstantState().newDrawable(v.getResources());
                     }
                 } else {
+                    drawableURI = backgroundImageURI;
                     drawable = (detailView ? backgroundImageDetail : backgroundImage);
                 }
 
@@ -154,11 +156,11 @@ public abstract class Item {
                     optionDrawable = ((OptionList) this).getDisplayDrawable(); //TODO: what about detailView?
                 }
 
-                if ((!Utils.isEmpty(backgroundImageURI) && drawable != null)  || optionDrawable != null) {
+                if ((!Utils.isEmpty(drawableURI) && drawable != null)  || optionDrawable != null) {
                     ColorDrawable drawableBackground = new ColorDrawable(background);
                     ArrayList<Drawable> drawables = new ArrayList<>();
                     drawables.add(drawableBackground);
-                    if (!Utils.isEmpty(backgroundImageURI) && drawable != null) {
+                    if (!Utils.isEmpty(drawableURI) && drawable != null) {
                         drawables.add(drawable);
                     }
                     if (optionDrawable != null) {
