@@ -1,14 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'upload'
-            keyPassword 'XXXXXXXXXXX'
-            storeFile file('../android.jks')
-            storePassword 'XXXXXXXXXX'
-        }
+
+    if(project.hasProperty("MQTTPushClient.signing")
+            && new File(project.property("MQTTPushClient.signing") + "signing.gradle").exists()) {
+        apply from: project.property("MQTTPushClient.signing") + "signing.gradle";
     }
+
     compileSdkVersion 28
     defaultConfig {
         applicationId "de.radioshuttle.mqttpushclient"
@@ -18,7 +16,6 @@ android {
         versionName "1.1.6"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-        signingConfig signingConfigs.config
     }
     buildTypes {
         release {
