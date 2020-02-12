@@ -8,17 +8,15 @@ package de.radioshuttle.mqttpushclient;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+
+import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.utils.Utils;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,6 +26,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,12 +43,15 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
 
         setTitle("JavaScript Editor"); //Default will be overriden
 
-        mViewModel = ViewModelProviders.of(this).get(JavaScriptViewModel.class);
+        mViewModel = ViewModelProviders.of(
+                this, new JavaScriptViewModel.Factory(getApplication()))
+                .get(JavaScriptViewModel.class);
 
         Bundle args = getIntent().getExtras();
         if (args != null) {
 
             mComponentType = args.getInt(ARG_COMPONENT);
+            mViewModel.setComponentType(mComponentType);
 
             if (!Utils.isEmpty(args.getString(ARG_TITLE))) {
                 setTitle(args.getString(ARG_TITLE));
@@ -67,6 +69,17 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 TextView pref = findViewById(R.id.functionSuffix);
                 pref.setText(args.getString(ARG_JSSUFFIX));
             }
+
+            if (!Utils.isEmpty(args.getString(ARG_ITEM))) {
+                String jsonStr = args.getString(ARG_ITEM);
+                try {
+                    JSONObject jsonObject = new JSONObject(jsonStr);
+                    mViewModel.mItem = Item.createItemFromJSONObject(jsonObject);
+                } catch (Exception e) {
+                    Log.e(TAG,"Error parsing arg ARG_ITEM", e);
+                }
+            }
+
 
             if (!Utils.isEmpty(args.getString(ARG_ACCOUNT))) {
                 try {
@@ -104,7 +117,14 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 public void onChanged(JavaScriptViewModel.JSResult jsResult) {
                     if (jsResult != null) {
                         if (jsResult.code == 0) {
-                            mResultTextView.setText(getString(R.string.javascript_result) + "\n" + jsResult.result);
+                            String val = "";
+                            if (mComponentType == CONTENT_OUTPUT_DASHBOARD && !Utils.isEmpty(jsResult.result)) {
+                                val = new String(Base64.decode(jsResult.result, Base64.DEFAULT));
+                            } else {
+                                val = jsResult.result;
+                            }
+                            mResultTextView.setText(getString(R.string.javascript_result) + "\n" + val);
+
                         } else if (jsResult.code == 1) {
                             mResultTextView.setText(getString(R.string.javascript_err) + "\n" + getString(R.string.javascript_err_timeout));
                         } else {
@@ -128,6 +148,13 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                     }
                 }
             });
+            // testDataLabel
+            if (mComponentType == CONTENT_OUTPUT_DASHBOARD) {
+                TextView v = findViewById(R.id.testDataLabel);
+                if (v != null) {
+                    v.setText(R.string.test_data_label_outputscript);
+                }
+            }
             if (!mTestDataLoaded) {
                 mViewModel.latestMessage.observe(this, new Observer<JavaScriptViewModel.Request>() {
                     @Override
@@ -140,7 +167,9 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                         }
                     }
                 });
-                mViewModel.loadLastReceivedMsg(getApplication(), mViewModel.mContentFilterCache.get("msg.topic"));
+                if (mComponentType == CONTENT_FILTER || mComponentType == CONTENT_FILTER_DASHBOARD) {
+                    mViewModel.loadLastReceivedMsg(mViewModel.mContentFilterCache.get("msg.topic"));
+                }
             }
         }
 
@@ -257,8 +286,8 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     }
 
     protected void clear() {
-        ConfirmClearDlg dlg = new ConfirmClearDlg();
-        dlg.show(getSupportFragmentManager(), ConfirmClearDlg.class.getSimpleName());
+        ConfirmClearDialog dlg = new ConfirmClearDialog();
+        dlg.show(getSupportFragmentManager(), ConfirmClearDialog.class.getSimpleName());
     }
 
     protected void help() {
@@ -268,6 +297,16 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
                 webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_FILTER_SCRIPTS);
                 startActivityForResult(webIntent, 0);
+            } else if (mComponentType == CONTENT_FILTER_DASHBOARD) {
+                Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
+                Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
+                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_FILTER_SCRIPT);
+                startActivityForResult(webIntent, 0);
+            } else if (mComponentType == CONTENT_OUTPUT_DASHBOARD) {
+                Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
+                Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
+                webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_OUTPUT_SCRIPT);
+                startActivityForResult(webIntent, 0);
             }
         }
     }
@@ -275,9 +314,9 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     protected void runJS() {
         if (mEditor != null) {
             if (mTestDataMsgContent != null) {
-                mViewModel.mContentFilterCache.put("msg.content", mTestDataMsgContent.getText().toString());
+                mViewModel.mContentFilterCache.put("msg.text", mTestDataMsgContent.getText().toString());
             }
-            mViewModel.runJavaScript( mEditor.getText().toString());
+            mViewModel.runJavaScript(mEditor.getText().toString());
         }
     }
 
@@ -301,40 +340,6 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
         return changed;
     }
 
-    public static class ConfirmClearDlg extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.dlg_confirm_clear_title));
-            // builder.setMessage(getString(R.string.dlg_back_without_save_js_msg));
-
-            builder.setPositiveButton(R.string.action_clear, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    FragmentActivity a = getActivity();
-                    if (a instanceof JavaScriptEditorActivity) {
-                        if (((JavaScriptEditorActivity) a).mEditor != null) {
-                            ((JavaScriptEditorActivity) a).mEditor.setText(null);
-                        }
-                    }
-                }
-            });
-
-            builder.setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-
-            AlertDialog dlg = builder.create();
-            dlg.setCanceledOnTouchOutside(false);
-
-            return dlg;
-        }
-    }
-
     protected boolean mActivityStarted;
     protected boolean mTestDataLoaded;
     protected JavaScriptViewModel mViewModel;
@@ -352,8 +357,11 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     public final static String ARG_JAVASCRIPT = "ARG_JAVASCRIPT";
     public final static String ARG_ACCOUNT = "ARG_ACCOUNT";
     public final static String ARG_COMPONENT = "ARG_COMPONENT";
+    public final static String ARG_ITEM = "ARG_ITEM";
 
     public final static int CONTENT_FILTER = 1;
+    public final static int CONTENT_FILTER_DASHBOARD = 2;
+    public final static int CONTENT_OUTPUT_DASHBOARD = 3;
 
     private final static String TAG = JavaScriptEditorActivity.class.getSimpleName();
 }

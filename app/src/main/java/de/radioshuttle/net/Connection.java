@@ -12,7 +12,9 @@ import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -159,8 +161,42 @@ public class Connection {
         return response;
     }
 
+    public String addResource(String filename, String type, File resourceFile) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.saveResourceRequest(++mSeqNo, 0, filename, type, resourceFile);
+
+        handleError(response);
+        DataInputStream d = mCmd.getDataInputStream(response.data);
+
+        return Cmd.readString(d);
+    }
+
+    public int[] deleteResources(List<String> resourceNames, String type) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.deleteResourcesRequest(++mSeqNo, resourceNames, type);
+        handleError(response);
+        return mCmd.readIntArray(response.data);
+    }
+
+    public DataInputStream getResource(String filename, String type) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.getResourceRequest(++mSeqNo, filename, type);
+        DataInputStream dataInputStream = null;
+
+        handleError(response);
+        if (response.rc == Cmd.RC_OK) { // handle error does not throw exception if invalid args error (= file not found)
+            dataInputStream = mCmd.getInputStream();
+        }
+
+        return dataInputStream;
+    }
+
+    public List<Cmd.FileInfo> enumResources(String type) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.enumResourcesRequest(++mSeqNo, type);
+        handleError(response);
+        return mCmd.readEnumResourcesData(response.data);
+    }
+
+
     public Map<String, String> getFCMData() throws IOException, ServerError {
-        Cmd.RawCmd response = mCmd.fcmDataRequest(++mSeqNo);
+        Cmd.RawCmd response = mCmd.request(Cmd.CMD_GET_FCM_DATA, ++mSeqNo);
         handleError(response);
         return mCmd.readFCMData(response.data);
     }
@@ -247,7 +283,7 @@ public class Connection {
         return mCmd.readIntArray(response.data);
     }
 
-    public int[] publish(String topic, String content, boolean retain) throws IOException, ServerError {
+    public int[] publish(String topic, byte[] content, boolean retain) throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.mqttPublishRequest(++mSeqNo, topic, content, retain);
         handleError(response);
         return mCmd.readIntArray(response.data);
@@ -267,12 +303,43 @@ public class Connection {
 
     public List<Object[]> getCachedMessages(long since, int seqNo)  throws IOException, ServerError {
         List<Object[]> messages = new ArrayList<>();
-        Cmd.RawCmd response = mCmd.getCachedMessagesRequest(++mSeqNo, since, seqNo);
+        Cmd.RawCmd response = mCmd.getCachedMessagesRequest(Cmd.CMD_GET_MESSAGES, ++mSeqNo, since, seqNo);
         handleError(response);
         if (lastReturnCode == Cmd.RC_OK) {
             messages = mCmd.readCachedMessages(response.data);
         }
         return messages;
+    }
+
+    public long getCachedMessagesDash(long since, int seqNo, List<Object[]> result) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.getCachedMessagesRequest(Cmd.CMD_GET_MESSAGES_DASH, ++mSeqNo, since, seqNo);
+        handleError(response);
+        long version = -1;
+        if (lastReturnCode == Cmd.RC_OK) {
+            version = mCmd.readCachedMessageDashboard(response.data, result);
+        }
+        return version;
+    }
+
+    public Object[] getDashboard() throws IOException, ServerError {
+        Object[] result = null;
+        Cmd.RawCmd repoonse = mCmd.request(Cmd.CMD_GET_DASHBOARD, ++mSeqNo);
+        handleError(repoonse);
+        if (lastReturnCode == Cmd.RC_OK) {
+            result = mCmd.readDashboardData(repoonse.data);
+        }
+        return result;
+    }
+
+    public long setDashboardRequest(long version, int itemID, String dashboard) throws IOException, ServerError {
+        long result = 0L;
+        Cmd.RawCmd repoonse = mCmd.setDashboardRequest(++mSeqNo, version, itemID, dashboard);
+        handleError(repoonse);
+        if (lastReturnCode == Cmd.RC_OK) {
+            DataInputStream is = mCmd.getDataInputStream(repoonse.data);
+            result = is.readLong();
+        }
+        return result;
     }
 
 
@@ -299,6 +366,12 @@ public class Connection {
 
             errorCode = (m.containsKey("err_code") ? (short) m.get("err_code") : 0);
             errorTxt = (m.containsKey("err_msg") ? (String) m.get("err_msg") : "");
+            //TODO
+            /*
+            if (errorCode != 0 && Utils.isEmpty(errorTxt)) {
+                errorTxt = "error code " + errorCode;
+            }
+            */
 
             if (response.rc == Cmd.RC_MQTT_ERROR) {
                 throw new MQTTException(errorCode, errorTxt);

@@ -7,7 +7,14 @@
 package de.radioshuttle.mqttpushclient;
 
 import android.app.Application;
+import android.util.Base64;
+import android.util.JsonReader;
+import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -17,19 +24,29 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
+
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.db.MqttMessageDao;
+import de.radioshuttle.mqttpushclient.dash.DashBoardJavaScript;
+import de.radioshuttle.mqttpushclient.dash.Item;
+import de.radioshuttle.mqttpushclient.dash.Message;
+import de.radioshuttle.utils.MqttUtils;
 import de.radioshuttle.utils.Utils;
 import de.radioshuttle.utils.JavaScript;
 
-public class JavaScriptViewModel extends ViewModel {
+public class JavaScriptViewModel extends AndroidViewModel {
 
     public MutableLiveData<Request> latestMessage;
     public MutableLiveData<JSResult> javaScriptResult;
     public MutableLiveData<Boolean> runState;
+
+    public Item mItem;
 
     /* used to cache test data */
     public HashMap<String, String> mContentFilterCache = new HashMap<>();
@@ -41,7 +58,7 @@ public class JavaScriptViewModel extends ViewModel {
             executed = true;
             runState.setValue(true);
             final MqttMessage para = new MqttMessage();
-            para.setPayload(mContentFilterCache.get("msg.content").getBytes(Utils.UTF_8));
+            para.setPayload(mContentFilterCache.get("msg.text").getBytes(Utils.UTF_8));
             para.setTopic(mContentFilterCache.get("msg.topic"));
             para.setWhen(System.currentTimeMillis());
             final String accUser = mContentFilterCache.get("acc.user");
@@ -52,17 +69,33 @@ public class JavaScriptViewModel extends ViewModel {
                 @Override
                 public void run() {
                     JSResult result = new JSResult();
-                    final JavaScript js = JavaScript.getInstance();
+                    final DashBoardJavaScript js = DashBoardJavaScript.getInstance(getApplication());
                     final JavaScript.Context context;
                     try {
-                        context = js.initFormatter(souceCode, accUser, accMqttServer , accPushServer);
+                        if (mMode == JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD) {
+                            context = js.initSetContent(souceCode, accUser, accMqttServer , accPushServer);
+                        } else {
+                            context = js.initFormatter(souceCode, accUser, accMqttServer , accPushServer);
+                        }
+
+                        if (mMode == JavaScriptEditorActivity.CONTENT_FILTER_DASHBOARD || mMode == JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD) {
+                            HashMap<String, Object> viewProperties = new HashMap<>();
+                            if (mItem != null) {
+                                mItem.getJSViewProperties(viewProperties);
+                            }
+                            js.initViewProperties(context, viewProperties);
+                        }
                         try {
                             Future<JSResult> future = Utils.executor.submit(new Callable<JSResult>() {
                                 @Override
                                 public JSResult call() {
                                     JSResult result = new JSResult();
                                     try {
-                                        result.result = js.formatMsg(context, para, 0);
+                                        if (mMode == JavaScriptEditorActivity.CONTENT_OUTPUT_DASHBOARD) {
+                                            result.result = js.setContent(context, new String(para.getPayload()), para.getTopic());
+                                        } else {
+                                            result.result = js.formatMsg(context, para, 0);
+                                        }
                                     } finally {
                                         context.close();
                                     }
@@ -100,28 +133,71 @@ public class JavaScriptViewModel extends ViewModel {
         return executed;
     }
 
-    public void loadLastReceivedMsg(Application app, final String topic) {
-        this.app = app; // context is required for database access
+    public void loadLastReceivedMsg(final String topic) {
         requestCnt++;
         final Request request = new Request();
         request.id = requestCnt;
         request.result = null;
         currentRequest = request;
 
-        if (this.app != null && mAccount != null) {
+        if (mAccount != null) {
             Utils.executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    AppDatabase db = AppDatabase.getInstance(JavaScriptViewModel.this.app);
+                    AppDatabase db = AppDatabase.getInstance(getApplication());
                     MqttMessageDao dao = db.mqttMessageDao();
                     long psid = dao.getCode(mAccount.pushserverID);
                     long accountID = dao.getCode(mAccount.getMqttAccountName());
                     String t = (topic == null ? "" : topic);
-                    List<MqttMessage> result = dao.loadReceivedMessagesForTopic(psid, accountID, t);
-                    if (result != null && result.size() > 0) {
-                        request.result = result.get(0);
-                    } else {
-                        request.result = null;
+                    if (mMode == JavaScriptEditorActivity.CONTENT_FILTER) {
+                        List<MqttMessage> result = dao.loadReceivedMessagesForTopic(psid, accountID, t);
+                        if (result != null && result.size() > 0) {
+                            request.result = result.get(0);
+                        } else {
+                            request.result = null;
+                        }
+                    } else if (mMode == JavaScriptEditorActivity.CONTENT_FILTER_DASHBOARD) {
+                        File msgsD = new File(getApplication().getFilesDir(), "mc_" + psid + "_" + accountID + ".json");
+                        BufferedReader bufferedReader = null;
+                        JsonReader jsonReader = null;
+                        Message m;
+                        try {
+                            if (msgsD.exists()) {
+                                bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(msgsD), "UTF-8"));
+                                jsonReader = new JsonReader(bufferedReader);
+                                String name;
+                                jsonReader.beginArray();
+                                while (jsonReader.hasNext()) {
+                                    m = new Message();
+                                    jsonReader.beginObject();
+                                    while (jsonReader.hasNext()) {
+                                        name = jsonReader.nextName();
+                                        if (name.equals("received")) {
+                                            m.setWhen(jsonReader.nextLong());
+                                        } else if (name.equals("topic")) {
+                                            m.setTopic(jsonReader.nextString());
+                                        } else if (name.equals("payload")) {
+                                            m.setPayload(Base64.decode(jsonReader.nextString(), Base64.DEFAULT));
+                                        } else {
+                                            jsonReader.skipValue();
+                                        }
+                                    }
+                                    jsonReader.endObject();
+                                    // Log.d(TAG, "message read: " + m.filter + ", " + m.status + ", " + m.getTopic() + ", " + new String(m.getPayload()) + ", " +m.getWhen() + ", " + m.getSeqno());
+                                    if (!t.isEmpty() && MqttUtils.topicIsMatched(t, m.getTopic())) {
+                                        request.result = m;
+                                        break;
+                                    }
+                                }
+                                jsonReader.endArray();
+                            }
+                        } catch(Exception e) {
+                            Log.d(TAG,"Error reading file cached messages: " + e.getMessage());
+                        } finally {
+                            if (jsonReader != null) {
+                                try {jsonReader.close();} catch(Exception e) {}
+                            }
+                        }
                     }
                     latestMessage.postValue(request);
                 }
@@ -130,14 +206,18 @@ public class JavaScriptViewModel extends ViewModel {
 
     }
 
-    public JavaScriptViewModel() {
+    public JavaScriptViewModel(Application app) {
+        super(app);
         latestMessage = new MutableLiveData<>();
         javaScriptResult = new MutableLiveData<>();
         runState = new MutableLiveData<>();
         currentRequest = null;
         requestCnt = 0;
-        app = null;
         javaScriptRunning = new AtomicBoolean(false);
+    }
+
+    public void setComponentType(int scriptType) {
+        mMode = scriptType;
     }
 
     public boolean isCurrentRequest(Request request) {
@@ -163,10 +243,28 @@ public class JavaScriptViewModel extends ViewModel {
         public static int ERR_UNEXPECTED = 3;
     }
 
+    public static class Factory implements ViewModelProvider.Factory {
+
+        public Factory(Application app) {
+            this.app = app;
+        }
+
+        @NonNull
+        @Override
+        public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+            return (T) new JavaScriptViewModel(app);
+        }
+
+        PushAccount pushAccount;
+        Application app;
+    }
+
+
     private AtomicBoolean javaScriptRunning;
     private Request currentRequest;
     private int requestCnt;
-    private Application app;
+
+    private int mMode;
 
     private final static String TAG = JavaScriptViewModel.class.getSimpleName();
 }

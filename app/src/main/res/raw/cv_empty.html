@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+
+  <style>
+    /* clear (default) margins */
+    body {margin: 0; padding: 0;}
+  </style>
+
+  <!-- android specific meta -->
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+
+  <script>
+
+    /* called when view has been initialized */
+    function onMqttInit(account, view) {
+      onMqttResize();
+    }
+
+    /* called when a new message has arrived */
+    function onMqttMessage(msg) {
+    }
+
+    /* handle resize events */
+    function onMqttResize() {
+      /* the size of the component must be adjusted to the size of the viewport */
+      document.getElementById('visible_area').style.width = window.innerWidth + "px";
+      document.getElementById('visible_area').style.height = window.innerHeight + "px";
+    }
+
+   /* register callback for resize events */
+   window.addEventListener('resize', onMqttResize);
+
+  </script>
+</head>
+
+<body>
+  <div id="visible_area">
+    <!-- add your HTML code here -->
+  </div>
+</body>
+</html>

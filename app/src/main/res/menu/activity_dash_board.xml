@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_add"
+        android:orderInCategory="10"
+        android:icon="@drawable/ic_menu_add"
+        android:title="@string/action_add_account"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/action_add_text"
+                android:orderInCategory="20"
+                android:title="@string/action_add_text"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_add_switch"
+                android:orderInCategory="21"
+                android:title="@string/action_add_switch"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_add_progress"
+                android:orderInCategory="22"
+                android:title="@string/action_add_progress"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_add_optionlist"
+                android:orderInCategory="23"
+                android:title="@string/action_add_optionlist"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_add_group"
+                android:orderInCategory="24"
+                android:title="@string/action_add_group"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_add_custom"
+                android:orderInCategory="25"
+                android:title="@string/action_add_custom"
+                app:showAsAction="never" />
+
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/action_zoom"
+        android:orderInCategory="90"
+        android:icon="@drawable/ic_menu_zoom"
+        android:title="@string/action_zoom"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menu_change_view"
+        android:orderInCategory="100"
+        android:icon="@drawable/ic_menu_list"
+        android:title="@string/action_list"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menu_import_images"
+        android:orderInCategory="110"
+        android:title="@string/menu_manage_images"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_reload"
+        android:orderInCategory="111"
+        android:title="@string/menu_reload"
+        app:showAsAction="never" />
+
+</menu>

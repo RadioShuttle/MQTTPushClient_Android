@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+
+  <style>
+    body {margin: 0; padding: 0;}
+    #colorInput {margin: 0; padding: 0; position: relative;}
+  </style>
+
+  <!-- android specific meta -->
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+
+  <script>
+
+    function onMqttInit(account, view) {
+      var colorInput = document.getElementById("colorInput");
+      /* set default color */
+      colorInput.value = "#000000";
+      onMqttResize();
+    }
+
+    function onMqttMessage(msg) {
+      var colorInput = document.getElementById("colorInput");
+      /* set color value */
+      colorInput.value = msg.text;
+    }
+
+    function onMqttResize() {
+      /* the size of the component must be adjusted to the size of the viewport */
+      var h = window.innerHeight;
+      var w = window.innerWidth;
+      var viewPortArea = document.getElementById('visible_area');
+      viewPortArea.style.width = w + "px";
+      viewPortArea.style.height = h + "px";
+      var colorInput = document.getElementById('colorInput');
+      colorInput.style.width = Math.floor(w * .7) + "px";
+      colorInput.style.height = Math.floor(h * .7) + "px";
+      colorInput.style.left = Math.floor(w * .15) + "px";
+      colorInput.style.top = Math.floor(h * .15) + "px";
+    }
+
+    function onColorSelected(t) {
+      /* send (publish) selected color value */
+      MQTT.publish(MQTT.view.getSubscribedTopic(), t.value, false);
+    }
+
+    window.addEventListener('resize', onMqttResize);
+  </script>
+ </head>
+
+ <body>
+  <div id="visible_area">
+    <input id="colorInput" type="color" onchange="onColorSelected(this);"></input>
+  </div>
+ </body>
+</html>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:paddingTop="0dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="16dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageButton
+        android:id="@+id/closeButton"
+        android:minHeight="48dp"
+        android:minWidth="48dp"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        app:srcCompat="@drawable/ic_button_close"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="48dp"
+        android:layout_height="48dp" />
+
+    <ImageButton
+        android:id="@+id/refreshButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        app:srcCompat="@drawable/ic_button_refresh"
+        android:visibility="gone"
+        app:layout_constraintRight_toLeftOf="@+id/closeButton"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <ImageButton
+        android:id="@+id/errorButton2"
+        android:minHeight="48dp"
+        android:minWidth="48dp"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_button_error"
+        app:layout_constraintRight_toLeftOf="@+id/refreshButton"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="48dp"
+        android:layout_height="48dp" />
+
+    <ImageButton
+        android:id="@+id/errorButton"
+        android:minHeight="48dp"
+        android:minWidth="48dp"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_button_error"
+        app:layout_constraintRight_toLeftOf="@+id/errorButton2"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="48dp"
+        android:layout_height="48dp" />
+
+    <ViewStub
+        android:id="@+id/viewStub"
+        app:layout_constraintTop_toBottomOf="@id/closeButton"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <TextView
+        android:id="@+id/errorContent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/closeButton"
+        android:visibility="gone"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/errorLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/errorContent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

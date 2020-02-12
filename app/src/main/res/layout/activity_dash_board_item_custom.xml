@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<de.radioshuttle.mqttpushclient.dash.DashConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/itemCustomConstraintLayout"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <WebView
+        android:id="@+id/webContent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:scrollbars="none"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ProgressBar
+        android:id="@+id/webProgressBar"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="@id/webContent"
+        app:layout_constraintRight_toRightOf="@id/webContent"
+        app:layout_constraintTop_toTopOf="@id/webContent"
+        app:layout_constraintBottom_toBottomOf="@id/webContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+    </ProgressBar>
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:gravity="center"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/webContent" />
+
+    <ImageView
+        android:id="@+id/check"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/webContent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_check"
+        android:background="@drawable/ic_check_background"
+        android:visibility="gone"
+        android:layout_marginLeft="8dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp" />
+
+    <include layout="@layout/activity_dash_board_item_error_img" />
+
+</de.radioshuttle.mqttpushclient.dash.DashConstraintLayout>

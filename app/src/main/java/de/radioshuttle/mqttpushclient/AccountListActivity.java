@@ -11,18 +11,22 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import androidx.annotation.Nullable;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.fragment.app.DialogFragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Build;
 import android.os.Bundle;
 import androidx.appcompat.view.ActionMode;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -41,13 +45,18 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessageDao;
 import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.fcm.Notifications;
+import de.radioshuttle.mqttpushclient.dash.DashBoardActivity;
+import de.radioshuttle.mqttpushclient.dash.ImageResource;
+import de.radioshuttle.mqttpushclient.dash.ViewState;
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
 import de.radioshuttle.net.DeleteToken;
@@ -102,11 +111,36 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             e.commit();
         }
 
+        /* UI prefs */
+        SharedPreferences uprefs = getSharedPreferences(PREFS_UI, Activity.MODE_PRIVATE);
+        mTheme = uprefs.getInt(THEME, 0);
+        invalidateOptionsMenu();
+        setNightMode();
 
         mViewModel = ViewModelProviders.of(this).get(AccountViewModel.class);
         boolean accountsChecked = mViewModel.initialized;
         try {
             mViewModel.init(accountsJSON);
+            if (!accountsChecked) {
+                List<PushAccount> accounts = mViewModel.accountList.getValue();
+                if (accounts != null) {
+                    for(PushAccount a : accounts) {
+                        a.executor = Utils.newSingleThreadPool();
+                    }
+                }
+                /* clear temp (imported) files at startup, viewModel.onCleared is not reliable */
+                if (savedInstanceState == null) {
+                    if (accounts != null) {
+                        final ArrayList<PushAccount> cAccounts = new ArrayList<>(accounts);
+                        Utils.executor.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                ImageResource.removeUnreferencedImageResources(getApplication(), cAccounts);
+                            }
+                        });
+                    }
+                }
+            }
         } catch (JSONException e) {
             Log.e(TAG, "Loading accounts failed." , e);
             Toast.makeText(getApplicationContext(), R.string.error_loading_accounts, Toast.LENGTH_LONG).show();
@@ -129,19 +163,28 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                             PushAccount pushAccount = request.getAccount();
                             if (request.getAccount().getKey().equals(pushAccounts.get(i).getKey())) {
                                 pushAccounts.set(i, pushAccount);
-                                boolean requestFinished = (pushAccount.status == 0);
+                                boolean requestFinished = mViewModel.isCurrentRequest(request); // last request of this account
                                 mAdapter.setData(pushAccounts);
                                 Log.d(TAG, "status: " + pushAccount.status + " requestStatus: " + pushAccount.requestStatus
                                         + " request: " + (request instanceof DeleteToken ? "deleteDevice"  : "check"));
 
                                 if (requestFinished) {
-                                    if (mViewModel.isCurrentRequest(request)) {
+                                    mViewModel.confirmResultDelivered(request);
+
+                                    // hide progress, if no requests active anymore
+                                    if (!mViewModel.isRequestActive()) {
                                         mSwipeRefreshLayout.setRefreshing(false);
-                                        mViewModel.confirmResultDelivered();
                                     }
                                     if (request instanceof DeleteToken && !((DeleteToken) request).deletionAborted ) {
                                         /* success */
                                         DeleteToken dt = (DeleteToken) request;
+                                        if (dt.deviceRemoved) {
+                                            if (pushAccount.executor != null) {
+                                                pushAccount.executor.shutdown();
+                                            }
+                                            removeAccountData(pushAccount);
+                                            return;
+                                        }
                                         //TODO: consider checking dt.dt.deviceRemoved (=successful removed from server and/or fcm token deleted)
                                         /* even if removal failed, the account will be removed */
                                         removeAccountData(pushAccount);
@@ -285,7 +328,16 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     }
 
     protected void startMessagesActivity(PushAccount b, boolean notifstart) {
-        Intent intent = new Intent(AccountListActivity.this, MessagesActivity.class);
+
+        Class<?> m = MessagesActivity.class;
+        if (!notifstart && b != null) {
+            int lastState = ViewState.getInstance(getApplication()).getLastState(b.getKey());
+            if (lastState == ViewState.VIEW_DASHBOARD) {
+                m = DashBoardActivity.class;
+            }
+        }
+
+        Intent intent = new Intent(AccountListActivity.this, m);
         intent.putExtra(PARAM_MULTIPLE_PUSHSERVERS, mViewModel.hasMultiplePushServers());
         try {
             intent.putExtra(PARAM_ACCOUNT_JSON, b.getJSONObject().toString());
@@ -303,10 +355,12 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 try {
                     /* save account data locally without */
                     FirebaseTokens.getInstance(getApplication()).removeAccount(account.getKey());
-                    SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = settings.edit();
-                    editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
-                    editor.commit();
+                    synchronized (Request.ACCOUNTS) {
+                        SharedPreferences settings = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = settings.edit();
+                        editor.putString(ACCOUNTS, mViewModel.getAccountsJSON());
+                        editor.commit();
+                    }
                     ArrayList<PushAccount> pushAccounts = mViewModel.accountList.getValue();
                     boolean found = false;
                     if (pushAccounts != null) {
@@ -328,12 +382,23 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                 long psid = dao.getCode(objects[0]);
                                 long accountID = dao.getCode(objects[1]);
                                 dao.deleteMessagesForAccount(psid, accountID);
+
+                                /* delete cached dashboard messages */
+                                try {
+                                    File cachedMessages = new File(getApplication().getFilesDir(), "mc_" + psid + "_" + accountID + ".json");
+                                    boolean deleted = cachedMessages.delete();
+                                    Log.d(TAG, "Cached dashboard messages deleted for account " + objects[0] + ", " + objects[1] + ": " + deleted);
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Deletion of cached messages failed: " + e.getMessage());
+                                }
+
                                 return null;
                             }
 
                         };
-                        t.execute(new String[] {account.pushserverID, account.getMqttAccountName()});
-                        // Log.d(TAG, "deleteDevice: account data removed!!"); //TODO: remove
+                        t.executeOnExecutor(Utils.executor, new String[] {account.pushserverID, account.getMqttAccountName()});
+                        ViewState.getInstance(getApplication()).removeAccount(account.getKey());
+                        // Log.d(TAG, "deleteDevice: account data removed!!");
                     }
 
                 } catch (JSONException e) {
@@ -402,12 +467,14 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                                 boolean found = false;
                                 for (int i = 0; i < list.size(); i++) {
                                     if (list.get(i).getKey().equals(b.getKey())) {
+                                        b.executor = list.get(i).executor;
                                         list.set(i, b);
                                         found = true;
                                         break;
                                     }
                                 }
                                 if (!found) {
+                                    b.executor = Utils.newSingleThreadPool();
                                     list.add(b);
                                 }
                                 mViewModel.accountList.setValue(list);
@@ -453,6 +520,27 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             case R.id.menu_refresh:
                 refresh();
                 return true;
+            case R.id.menu_theme_system:
+                if (mTheme != 0) {
+                    mTheme = 0;
+                    saveTheme();
+                    setNightMode();
+                }
+                return true;
+            case R.id.menu_theme_light:
+                if (mTheme != 1) {
+                    mTheme = 1;
+                    saveTheme();
+                    setNightMode();
+                }
+                return true;
+            case R.id.menu_theme_dark:
+                if (mTheme != 2) {
+                    mTheme = 2;
+                    saveTheme();
+                    setNightMode();
+                }
+                return true;
             case R.id.menu_about:
                 intent = new Intent(this, AboutActivity.class);
                 if (!mActivityStarted) {
@@ -462,6 +550,30 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    protected void saveTheme() {
+        SharedPreferences uprefs = getSharedPreferences(PREFS_UI, Activity.MODE_PRIVATE);
+        SharedPreferences.Editor e = uprefs.edit();
+        e.putInt(THEME, mTheme);
+        e.apply();
+        invalidateOptionsMenu();
+    }
+
+    protected void setNightMode() {
+        if (mTheme == 1) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        } else if (mTheme == 2) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else { // mTheme == 0
+            if (Build.VERSION.SDK_INT <= 28) {
+                // Android 9 and lower: set by battery saver
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY);
+            } else {
+                // Android 9 and up: system default
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+            }
         }
     }
 
@@ -491,6 +603,26 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
             super.onBackPressed();
         }
 
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem m = null;
+        if (mTheme == 0) {
+            m = menu.findItem(R.id.menu_theme_system);
+        } else if (mTheme == 1) {
+            m = menu.findItem(R.id.menu_theme_light);
+        }  else if (mTheme == 2) {
+            m = menu.findItem(R.id.menu_theme_dark);
+        }
+        if (m != null) {
+            m.setChecked(true);
+        }
+        m = menu.findItem(R.id.menu_theme_system);
+        if (Build.VERSION.SDK_INT <= 28) {
+            m.setTitle(R.string.menu_theme_battery_saver);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     private boolean checkGooglePlayServices() {
@@ -638,9 +770,11 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     /* preferneces */
     public final static String PREFS_NAME = "mqttpushclient_prefs";
     public final static String PREFS_INST = "instance_prefs";
+    public final static String PREFS_UI = "ui_prefs";
 
     public final static String ACCOUNTS = "accounts";
     public final static String UUID = "uuid";
+    public final static String THEME = "theme";
 
     public final static String ARG_MQTT_ACCOUNT = "ARG_MQTT_ACCOUNT";
     public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ADDR";
@@ -660,7 +794,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     public final static int RC_ABOUT = 6;
     public final static int RC_PRIVACY = 7;
     public final static int RC_GOOGLE_PLAY_SERVICES = 8;
-
+    public final static int RC_IMAGE_CHOOSER = 9;
 
     private long lastBackPressTime = 0;
     private boolean mActivityStarted;
@@ -669,5 +803,6 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     private AccountRecyclerViewAdapter mAdapter;
     private RecyclerView mListView;
     private AccountViewModel mViewModel;
+    private int mTheme;
 
 }

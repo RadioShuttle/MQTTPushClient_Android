@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+
+  <style>
+   body {margin: 0; padding: 0;}
+   #canvas {visibility: hidden; background-color: white;}
+  </style>
+
+  <!-- android specific meta -->
+  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true"></meta-data>
+
+  <script>
+    const BORDER_PX = 3;
+    var g_settings = new Object();
+
+   function onMqttInit(account, view) {
+     var canv = document.getElementById('canvas');
+     canv.style.visibility = "visible";
+     window.addEventListener('resize', onMqttResize);
+
+     /* get parameters and overide default settings */
+     var p = parseParameters(view.getParameters());
+
+     g_settings['y_label'] = 'ylabel' in p ? p['ylabel'] : "°C";
+     g_settings['y_min'] = 'ymin' in p ? Number(p['ymin']) : -20;
+     g_settings['y_max'] = 'ymax' in p ? Number(p['ymax']) : 40;
+     g_settings['y_tick_interval'] = 'yinterval' in p ? Number(p['yinterval']) : 10;
+
+     g_settings['x_range'] = 'xrange' in p ? p['xrange'] : "6h"; /* s, min, h, d */
+     g_settings['x_label'] = 'xlabel' in p ? p['xlabel'] : "h";
+     g_settings['x_tick_interval'] = 'xinterval' in p ? p['xinterval'] : "60min";
+
+     /* 2nd Y axis. Must be set to visible. */
+     g_settings['y2_visible'] = 'y2visible' in p ? p['y2visible'] : "false";
+     g_settings['y2_label'] = 'y2label' in p ? p['y2label'] : "%";
+     g_settings['y2_min'] = 'y2min' in p ? Number(p['y2min']) : 0;
+     g_settings['y2_max'] = 'y2max' in p ? Number(p['y2max']) : 100;
+     g_settings['y2_tick_interval'] = 'y2interval' in p ? Number(p['y2interval']) : 20;
+
+     onMqttResize();
+   }
+
+   function onMqttMessage(msg) {
+     onMqttResize();
+   }
+
+   function onMqttResize() {
+     /* the size of the component must be adjusted to the size of the viewport */
+     document.getElementById('visible_area').style.width = window.innerWidth + "px";
+     document.getElementById('visible_area').style.height = window.innerHeight + "px";
+
+     var canv = document.getElementById('canvas');
+     var a = Math.min(window.innerWidth, window.innerHeight);
+     var a2 = (a - 2 * BORDER_PX);
+
+     canv.style.marginLeft = BORDER_PX + "px";
+     canv.style.marginTop = BORDER_PX + "px";
+     canv.style.width = a2  + "px";
+     canv.style.height = a2 + + "px";
+
+     /* multiply canvas dimensions with window.devicePixelRatio for sharper images */
+     canv.width = '' + Math.round(a2 * window.devicePixelRatio);
+     canv.height = '' +  Math.round(a2 * window.devicePixelRatio);
+
+     /* draw line graph with historical data */
+     draw(MQTT.view.getHistoricalData());
+    }
+
+   /* get Y value from historical data record. Must be numeric */
+   function getYValue(msg) {
+     return Number(msg.text);
+   }
+
+   /* get Y2 value from historical data record. Must be numeric */
+   function getY2Value(msg) {
+     return 0;
+   }
+
+   function draw(data) {
+     var COLOR1 = "#000000";
+     var COLOR2 = "#2196f3";
+     var COLOR3 = "#FF8A65";
+
+     var Y_MIN = g_settings['y_min'];
+     var Y_MAX = g_settings['y_max'];
+     var Y_TICK = g_settings['y_tick_interval'];
+
+     var Y2_MIN = g_settings['y2_min'];
+     var Y2_MAX = g_settings['y2_max'];
+     var Y2_TICK = g_settings['y2_tick_interval'];
+
+     var FONT_SIZE = 10;
+     var X_LABEL = g_settings['x_label'];
+     var Y_LABEL = g_settings['y_label'];
+     var Y2_LABEL = g_settings['y2_label'];
+
+     var showY2axis = g_settings['y2_visible'].toLowerCase() == 'true';
+
+     var X_MAX;
+     if (data != null && data.length > 0) {
+       X_MAX = data[data.length - 1].receivedDate;
+     } else {
+       X_MAX = new Date().getTime();
+     }
+
+     var reg = new RegExp('^\\s*(\\d+)\\s*(s|min|m|h|d)\\s*$', 'i');
+     var res = g_settings['x_range'].match(reg);
+     var _x_unit = res[2].toLowerCase();
+     var _x_range = Number(res[1]);
+     if (_x_unit == 's') {
+       _x_range *= 1000;
+     } else if (_x_unit == 'min' || _x_unit == 'm') {
+       _x_range *= 1000 * 60;
+     } else if (_x_unit == 'h') {
+       _x_range *= 1000 * 60 * 60;
+     } else {
+       _x_range *= 1000 * 60 * 60 * 24;
+     }
+     var X_MIN = X_MAX - _x_range;
+
+     res = g_settings['x_tick_interval'].match(reg);
+     _x_unit = res[2].toLowerCase();
+     var _x_tick = Number(res[1]);
+     if (_x_unit == 's') {
+       _x_tick *= 1000;
+     } else if (_x_unit == 'min' || _x_unit == 'm') {
+       _x_tick *= 1000 * 60;
+     } else if (_x_unit == 'h') {
+       _x_tick *= 1000 * 60 * 60;
+     } else {
+       _x_tick *= 1000 * 60 * 60 * 24;
+     }
+     var X_TICK = _x_tick;
+
+     var canv = document.getElementById('canvas');
+     var a = canv.width / window.devicePixelRatio;
+     var b = a;
+
+     var ctx = canv.getContext('2d');
+     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+     ctx.clearRect(0, 0, a, a);
+
+     /* Y axis */
+     var y_range = Y_MAX - Y_MIN;
+     var ys = Math.floor(y_range / Y_TICK);
+     var y_ml = 6 / 2;
+     a -= (Math.ceil(FONT_SIZE / 2) + 2) + (FONT_SIZE + 2 + y_ml);
+     var y_len = a - a % ys;
+     var y_tick_px = y_len / ys;
+     var y_offset = Math.ceil(FONT_SIZE / 2) + 2;
+
+     var f1 = '' + Y_MAX;
+     var f2= '' + Y_MIN;
+     ctx.font = FONT_SIZE + "px Arial";
+     var m1 = ctx.measureText(f1);
+     var m2 = ctx.measureText(f2);
+     var y_label_width = Math.max(m1.width, m2.width);
+     var x_offset = y_label_width + y_ml;
+     var y_labels = new Array();
+     for(var i = 0; i < ys + 1; i++) {
+       var label = '' + (Y_MAX - Y_TICK * i) + '';
+       y_labels.push(label);
+     }
+
+     ctx.beginPath();
+     ctx.lineWidth = 1;
+     ctx.moveTo(x_offset, y_offset);
+     ctx.lineTo(x_offset, y_offset + y_len);
+     ctx.textBaseline = "middle";
+     ctx.textAlign = "right";
+
+     var lastPos = 0;
+     for(var i = 0; i < ys + 1; i++) {
+       ctx.moveTo(x_offset - y_ml, i * y_tick_px + y_offset);
+       ctx.lineTo(x_offset + y_ml, i * y_tick_px + y_offset);
+       if (i == 0 || i == ys) {
+         ctx.fillText(y_labels[i], x_offset - y_ml, i * y_tick_px + y_offset);
+       } else {
+         if (i * y_tick_px > lastPos * y_tick_px + FONT_SIZE+2 &&
+           i * y_tick_px + FONT_SIZE+2 < ys * y_tick_px) {
+          lastPos = i;
+          ctx.fillText(y_labels[i], x_offset - y_ml, i * y_tick_px + y_offset);
+         }
+       }
+     }
+
+     ctx.textBaseline = "middle";
+     ctx.textAlign = "left";
+     ctx.fillText(Y_LABEL, x_offset + y_ml, y_offset);
+
+     ctx.textBaseline = "alphabetic";
+     ctx.textAlign = "start";
+
+     ctx.strokeStyle = COLOR1;
+     ctx.closePath();
+     ctx.stroke();
+
+     /* X axis */
+     var x_range = X_MAX - X_MIN; /* t in millis */
+
+     var x_unit, x_div;
+     if (x_range <= 1000 * 60) {
+       x_unit = 's';
+       x_div = 1000;
+     } else if (x_range <= 1000 * 60 * 60) {
+       x_unit = 'm';
+       x_div = 1000 * 60;
+     } else if (x_range <= 1000 * 60 * 60 * 24) {
+       x_unit = 'h';
+       x_div = 1000 * 60 * 60;
+     } else {
+       x_unit = 'd';
+       x_div = 1000 * 60 * 60 * 24;
+     }
+
+     var x_add = ctx.measureText("0").width / 2;
+     var b = b - x_offset - x_add;
+     var x_range_unit = Math.ceil(x_range / x_div);
+     var xs = x_range / X_TICK;
+
+     var y2_label_width = 0;
+     if (showY2axis) {
+       var f1 = '' + Y2_MAX;
+       var f2= '' + Y2_MIN;
+       var m1 = ctx.measureText(f1);
+       var m2 = ctx.measureText(f2);
+       y2_label_width = 1 + Math.max(m1.width, m2.width);
+       b = b + x_add - y2_label_width - y_ml;
+     }
+
+     var x_len = b - b % xs;
+     var x_grid_len = x_len / xs;
+
+     var x_labels = new Array();
+     var label;
+     for(var i = xs; i >= 0; i--) {
+       label = (x_range_unit / xs * (-i)).toFixed(1);
+       if (label.length > 1 && label.substring(label.length-2) == ".0") {
+         label = label.substring(0, label.length-2);
+       }
+       x_labels.push(label);
+     }
+
+     ctx.beginPath();
+     ctx.lineWidth = 1;
+     ctx.moveTo(x_offset, y_offset + y_len);
+     ctx.lineTo(x_offset + x_len, y_offset + y_len);
+     ctx.textAlign = 'center';
+     lastPos = 0;
+     var wl, wc, we;
+     we = ctx.measureText(x_labels[xs]).width / 2;
+     for(var i = 0; i < xs + 1; i++) {
+       ctx.moveTo(x_offset + i * x_grid_len, y_offset + y_len - y_ml);
+       ctx.lineTo(x_offset + i * x_grid_len, y_offset + y_len + y_ml);
+       if (i == 0 || i == xs) {
+         ctx.fillText(x_labels[i], x_offset + i * x_grid_len, y_offset + y_len + FONT_SIZE + y_ml);
+       } else {
+         wl = ctx.measureText(x_labels[lastPos]).width / 2;
+         wc = ctx.measureText(x_labels[i]).width / 2;
+         if (i * x_grid_len - wc > lastPos * x_grid_len + wl + 2 &&
+           i * x_grid_len + wl + 2 < xs * x_grid_len - we) {
+           lastPos = i;
+           ctx.fillText(x_labels[i], x_offset + i * x_grid_len, y_offset + y_len + FONT_SIZE + y_ml);
+         }
+       }
+     }
+
+     ctx.textAlign = 'center';
+     ctx.textBaseline = "bottom";
+     ctx.fillText(X_LABEL, x_offset + x_len / 2, y_offset + y_len - y_ml);
+     ctx.textAlign = 'start';
+     ctx.textBaseline = "alphabetic";
+
+     ctx.strokeStyle = COLOR1;
+     ctx.closePath();
+     ctx.stroke();
+
+     /* Y2 axis */
+     if (showY2axis) {
+       var y2_range = Y2_MAX - Y2_MIN;
+       var y2s = Math.floor(y2_range / Y2_TICK);
+       var y2_tick_px = y_len / y2s;
+
+       ctx.beginPath();
+       ctx.lineWidth = 1;
+       ctx.moveTo(x_offset + x_len, y_offset);
+       ctx.lineTo(x_offset + x_len, y_offset + y_len);
+
+       ctx.textBaseline = "middle";
+       ctx.textAlign = "left";
+
+       var lastPos = 0;
+       var y2label;
+       for(var i = 0; i < y2s + 1; i++) {
+         ctx.moveTo(x_offset + x_len - y_ml, i * y2_tick_px + y_offset);
+         ctx.lineTo(x_offset + x_len + y_ml, i * y2_tick_px + y_offset);
+         y2label = '' + (Y2_MAX - Y2_TICK * i) + '';
+         if (i == 0 || i == y2s) {
+           ctx.fillText(y2label, x_offset + x_len + y_ml + 1, i * y2_tick_px + y_offset);
+         } else {
+           if (i * y2_tick_px > lastPos * y2_tick_px + FONT_SIZE+2 &&
+             i * y2_tick_px + FONT_SIZE+2 < y2s * y2_tick_px) {
+             lastPos = i;
+             ctx.fillText(y2label, x_offset + x_len + y_ml + 1, i * y2_tick_px + y_offset);
+           }
+         }
+       }
+
+       ctx.textBaseline = "middle";
+       ctx.textAlign = "right";
+       ctx.fillText(Y2_LABEL, x_offset + x_len - y_ml - 2, y_offset);
+       ctx.textBaseline = "alphabetic";
+       ctx.textAlign = "start";
+
+       ctx.closePath();
+       ctx.stroke();
+     }
+
+     /* graph */
+     var x,y, x2, y2;
+     if (data && data.length > 0) {
+       if (showY2axis) {
+         ctx.fillStyle = COLOR2;
+         ctx.fillRect(x_offset + y_ml + ctx.measureText(Y_LABEL).width + 1, y_offset - 2, 4, 4);
+         ctx.fillStyle = COLOR3;
+         ctx.fillRect(x_offset + x_len - y_ml - ctx.measureText(Y2_LABEL).width - 2 - 4, y_offset - 2, 4, 4);
+       }
+       var n = showY2axis ? 2 : 1;
+       for(var k = 0; k < n; k++) {
+         ctx.beginPath();
+         ctx.globalCompositeOperation = "destination-over";
+         if (k == 0) {
+           ctx.strokeStyle = COLOR2;
+           ctx.fillStyle = COLOR2;
+         } else {
+           ctx.strokeStyle = COLOR3;
+           ctx.fillStyle = COLOR3;
+         }
+         ctx.lineWidth = 2;
+
+         var maxTime = data[data.length - 1].receivedDate.getTime()
+         if (data.length == 1) {
+           if (k == 0) {
+             y = y_len - (getYValue(data[0]) - Y_MIN) / y_range * y_len;
+           } else {
+             y = y_len - (getY2Value(data[0]) - Y2_MIN) / y2_range * y_len;
+           }
+           x = x_len - (maxTime - data[0].receivedDate.getTime()) / x_range * x_len;
+           ctx.arc(x_offset + x, y_offset + y, 2, 0, 2 * Math.PI);
+
+           ctx.closePath();
+           ctx.fill();
+         } else {
+           /* draw lines */
+           for(var i = data.length - 1; i > 0; i--) {
+             if (k == 0) {
+               y = y_len - (getYValue(data[i]) - Y_MIN) / y_range * y_len;
+               y2 = y_len - (getYValue(data[i - 1]) - Y_MIN) / y_range * y_len;
+             } else {
+               y = y_len - (getY2Value(data[i]) - Y2_MIN) / y2_range * y_len;
+               y2 = y_len - (getY2Value(data[i - 1]) - Y2_MIN) / y2_range * y_len;
+             }
+             x = x_len - (maxTime - data[i].receivedDate.getTime()) / x_range * x_len;
+             x2 = x_len - (maxTime - data[i - 1].receivedDate.getTime()) / x_range * x_len;
+             ctx.moveTo(x_offset + x, y_offset + y);
+             ctx.lineTo(x_offset + x2, y_offset + y2);
+             if (data[i - 1].receivedDate.getTime() < X_MIN) {
+               break;
+             }
+           }
+           ctx.closePath();
+           ctx.stroke();
+         }
+       }
+     }
+   }
+
+   function parseParameters(paras) {
+     var args, arg;
+     var p = new Object();
+     for(var i = 0; i < paras.length; i++) {
+       var args = paras[i].split(new RegExp('\\s+'));
+       for(var j = 0; j < args.length; j++) {
+         args[j] = args[j].replace(new RegExp('\"|\'','g'), '');
+         arg = args[j].split("=");
+         if (arg.length >= 2) {
+           p[arg[0].toLowerCase()] = arg[1];
+         }
+       }
+     }
+     return p;
+   }
+  </script>
+ </head>
+
+ <body>
+  <div id="visible_area">
+   <canvas id="canvas" width="100" height="100"></canvas>
+  </div>
+ </body>
+</html>

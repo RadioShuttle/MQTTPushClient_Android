@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_add"
+        android:orderInCategory="5"
+        android:icon="@drawable/ic_menu_add"
+        android:title="@string/action_add"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_save"
+        android:orderInCategory="10"
+        android:icon="@drawable/ic_menu_save"
+        android:title="@string/action_save_account"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menu_clear"
+        android:orderInCategory="20"
+        android:title="@string/action_clear"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:visible="false"
+        android:id="@+id/menu_html_example"
+        android:orderInCategory="25"
+        android:title="@string/menu_html_example"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/htmL_example_basic"
+                android:orderInCategory="26"
+                android:title="@string/menu_html_basic"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_color_picker"
+                android:orderInCategory="27"
+                android:title="@string/menu_html_color_picker"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_gauge"
+                android:orderInCategory="28"
+                android:title="@string/menu_html_gauge"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_clock"
+                android:orderInCategory="29"
+                android:title="@string/menu_html_clock"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_lamp_color_chooser"
+                android:orderInCategory="30"
+                android:title="@string/menu_html_light_color_chooser"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_thermometer"
+                android:orderInCategory="31"
+                android:title="@string/menu_html_thermometer"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/htmL_example_line_graph"
+                android:orderInCategory="31"
+                android:title="@string/menu_html_line_graph"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+
+    <item
+        android:visible="false"
+        android:id="@+id/menu_help"
+        android:orderInCategory="50"
+        android:title="@string/title_help"
+        app:showAsAction="never" />
+
+</menu>

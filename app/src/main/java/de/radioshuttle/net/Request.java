@@ -19,7 +19,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -49,7 +48,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -69,6 +67,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         mAccountUpdated = false;
         mHasTopics = null;
         mCancelled = new AtomicBoolean(false);
+        mCompleted = false;
     }
 
     public void cancel() {
@@ -223,7 +222,10 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 if (!Utils.equals(mSenderID, mPushAccount.fcm_sender_id) || !Utils.equals(m.get("app_id"), mPushAccount.fcm_app_id)) {
                     mPushAccount.fcm_app_id = m.get("app_id");
                     mPushAccount.fcm_sender_id = mSenderID;
-                    updateAccountFCMData();
+
+                    synchronized (ACCOUNTS) {
+                        updateAccountFCMData();
+                    }
                 }
 
                 for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) {
@@ -234,11 +236,21 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 }
 
                 if (app == null) {
-                    FirebaseOptions options = new FirebaseOptions.Builder()
-                            .setApplicationId(m.get("app_id"))
-                            .build();
                     try {
-                        app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
+                        synchronized (FIREBASE_SYNC) {
+                            for (FirebaseApp a : FirebaseApp.getApps(mAppContext)) { // reread
+                                if (a.getName().equals(mSenderID)) {
+                                    app = FirebaseApp.getInstance(mSenderID);
+                                    break;
+                                }
+                            }
+                            if (app == null) {
+                                FirebaseOptions options = new FirebaseOptions.Builder()
+                                        .setApplicationId(m.get("app_id"))
+                                        .build();
+                                app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
+                            }
+                        }
                     } catch(Exception e) {
                         Log.d(TAG, "Error initializing firebase for "+ mSenderID, e);
                     }
@@ -260,7 +272,9 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 /* get stored filter scripts. local stored scripts may not be up to date */
                 if (mGetTopicFilterScripts) {
                     LinkedHashMap<String, Cmd.Topic> topics = mConnection.getTopics();
-                    updateLocalStoredScripts(topics);
+                    synchronized (ACCOUNTS) {
+                        updateLocalStoredScripts(topics);
+                    }
                 }
 
             }
@@ -442,9 +456,30 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     @Override
     protected void onPostExecute(PushAccount pushAccount) {
         super.onPostExecute(pushAccount);
+        setCompleted(true);
         mPushAccount.status = 0;
+
         if (mAccountLiveData != null) {
             mAccountLiveData.setValue(this);
+        }
+        if (mSync) {
+            if (mLastSyncKeyOut != null) {
+                Notifications.setLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(), mLastSyncKeyOut[0], (int) mLastSyncKeyOut[1]);
+                Log.d(TAG, "last sync date set: " + new Date(mLastSyncKeyOut[0]) + " " + (mLastSyncKeyOut[0] / 1000L) + " / " + mLastSyncKeyOut[1]);
+            }
+            if (mNewMessagesCnt != null && mNewMessagesCnt > 0) {
+                Notifications.addToNewMessageCounter(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(),
+                        mNewMessagesCnt);
+                Log.d(TAG, "New messages: " + mNewMessagesCnt);
+            }
+        }
+    }
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        if (mSync) {
+            mLastSyncKeyIn = Notifications.getLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName());
         }
     }
 
@@ -453,9 +488,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     }
 
     protected void syncMessages() throws IOException, ServerError {
-        long[] lastSyncKey = Notifications.getLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName());
-        long lastReceived = lastSyncKey[0];
-        int lastReceivedSeqNo = (int) lastSyncKey[1];
+        long lastReceived = mLastSyncKeyIn[0];
+        int lastReceivedSeqNo = (int) mLastSyncKeyIn[1];
 
         //if last received older than 30 days, set it to 30daysAgo
         GregorianCalendar monthAgo = new GregorianCalendar();
@@ -542,20 +576,18 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
             }
         }
 
-        if (lastReceived > lastSyncKey[0] || (lastReceived == lastSyncKey[0] && lastReceivedSeqNo >  (int) lastSyncKey[1])) {
-            Notifications.setLastSyncDate(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(), lastReceived, lastReceivedSeqNo);
+        if (lastReceived > mLastSyncKeyIn[0] || (lastReceived == mLastSyncKeyIn[0] && lastReceivedSeqNo >  (int) mLastSyncKeyIn[1])) {
+            mLastSyncKeyOut = new long[] {lastReceived, lastReceivedSeqNo};
             // Log.d(TAG, "last sync date set: " + new Date(lastReceived) + " " + (lastReceived / 1000L) + " / " + lastReceivedSeqNo);
         }
 
         if (ids.size() > 0) {
-            Notifications.addToNewMessageCounter(mAppContext, mPushAccount.pushserver, mPushAccount.getMqttAccountName(),
-                    ids.size());
+            mNewMessagesCnt = ids.size();
             Intent intent = new Intent(MqttMessage.UPDATE_INTENT);
             intent.putExtra(MqttMessage.ARG_PUSHSERVER_ADDR, mPushAccount.pushserver);
             intent.putExtra(MqttMessage.ARG_MQTT_ACCOUNT, mPushAccount.getMqttAccountName());
             intent.putExtra(MqttMessage.ARG_IDS, ids);
             LocalBroadcastManager.getInstance(mAppContext).sendBroadcast(intent);
-
         }
 
         /* delete all messages older than 30 days */
@@ -590,6 +622,14 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
         mGetTopicFilterScripts = false;
     }
 
+    public void setCompleted(boolean completed) {
+        mCompleted = true;
+    }
+
+    public boolean hasCompleted() {
+        return mCompleted;
+    }
+
     /* true, if this account has topics, if null: getTopics() was not called in this request */
     public Boolean hasTopics() {
         return mHasTopics;
@@ -598,7 +638,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected String mSenderID;
 
     protected String mToken;
-    protected Boolean mHasTopics;
+    public Boolean mHasTopics;
     protected volatile boolean mAccountUpdated;
     protected boolean mGetTopicFilterScripts;
     protected boolean mSync;
@@ -609,6 +649,17 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
     protected MutableLiveData<Request> mAccountLiveData;
     protected CertException mCertException;
     protected boolean mInsecureConnectionAsk;
+
+    protected boolean mCompleted;
+
+    // values set, used in pre-, postExectue
+    long[] mLastSyncKeyIn; // value read in preExecute
+    long[] mLastSyncKeyOut; // value to be processed in postExecute
+    Integer mNewMessagesCnt; // value to be processed in postExecute;
+
+
+    public static Object FIREBASE_SYNC = new Object();
+    public static Object ACCOUNTS = new Object();
 
     private final static String TAG = Request.class.getSimpleName();
 }

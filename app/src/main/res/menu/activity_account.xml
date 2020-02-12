@@ -15,6 +15,20 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/menu_theme"
+        android:orderInCategory="103"
+        android:title="@string/menu_theme"
+        app:showAsAction="never">
+        <menu>
+            <group android:id="@+id/groupTheme" android:checkableBehavior="single">
+                <item android:id="@+id/menu_theme_light" android:title="@string/menu_theme_light" />
+                <item android:id="@+id/menu_theme_dark" android:title="@string/menu_theme_dark" />
+                <item android:id="@+id/menu_theme_system" android:title="@string/menu_theme_system_default" />
+            </group>
+        </menu>
+    </item>
+
+    <item
         android:id="@+id/menu_privacy"
         android:orderInCategory="105"
         android:title="@string/menu_privacy"

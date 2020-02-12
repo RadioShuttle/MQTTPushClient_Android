@@ -7,6 +7,11 @@
     <string name="menu_privacy">Privacy Policy</string>
     <string name="menu_reload">Reload</string>
     <string name="menu_noactions">No actions defined</string>
+    <string name="menu_theme">Theme</string>
+    <string name="menu_theme_light">Light</string>
+    <string name="menu_theme_dark">Dark</string>
+    <string name="menu_theme_battery_saver">System Default</string>
+    <string name="menu_theme_system_default">System Default</string>
 
     <string name="info_no_topics">Add at least one topic to receive notifications. Navigate into the server account edit mode and tap on MQTT TOPICS.</string>
 
@@ -25,9 +30,11 @@
     <string name="action_add">Add</string>
     <string name="action_update">Update</string>
     <string name="action_edit_topic">Edit</string>
+    <string name="action_edit_dashboard_item">Edit</string>
     <string name="action_update_topic">Update</string>
     <string name="action_mqtt_topics">MQTT Topics</string>
     <string name="action_mqtt_actions">MQTT Actions</string>
+    <string name="menu_manage_images">Manage Images</string>
 
     <string name="dlg_remove_account_title">Remove Account</string>
     <string name="dlg_remove_account_msg">Confirm removal of currently selected account.</string>
@@ -106,6 +113,7 @@
     <string name="select_single_topic">Only one topic may be selected for editing</string>
 
     <string name="errormsg_unexpected_error">An unexprected error has occured.</string>
+    <string name="errormsg_general_error">An error has occured.</string>
 
     <string name="title_privacy">Privacy Policy</string>
     <string name="privacy_summary">
@@ -188,6 +196,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="action_set">Set</string>
     <string name="action_test">Test Data</string>
     <string name="test_data_label">Test Data (msg.text):</string>
+    <string name="test_data_label_outputscript">Test Data (input):</string>
 
     <!-- Filter Content Templates -->
     <string name="menu_topcifilter_example_title">Insert Example</string>
@@ -196,4 +205,155 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="menu_topicfilter_regexp_title">Regular Expression</string>
     <string name="menu_topicfilter_binary_title">Binary</string>
     <string name="menu_topicfilter_hexdump_title">Hex Dump</string>
+
+    <!-- Image Chooser Activity -->
+    <string name="title_chooser">Select an Image</string>
+    <string name="title_manage_images">Manage Images</string>
+    <string name="tab_title_internal">Internal</string>
+    <string name="tab_title_user">User</string>
+    <string name="no_image">None</string>
+
+    <string name="action_import">Import</string>
+    <string name="import_no_files">No files found</string>
+    <string name="import_error">An error occured. Import failed.</string>
+    <string name="import_error_format">Format not supported or image too small.</string>
+    <string name="import_error_lowmem">Not enough memory.</string>
+    <string name="import_error_security">Import failed. System denies access to the selected document provider.</string>
+
+    <!-- Dashboard -->
+    <string name="action_dashboard">Dashboard</string>
+    <string name="action_list">List View</string>
+    <string name="title_dashboard">Dashboard</string>
+
+    <!-- Dashboard menu items -->
+    <string name="action_delete_dashboard_items">Delete</string>
+    <string name="action_zoom">Zoom</string>
+
+    <string name="action_add_text">Text View</string>
+    <string name="action_add_switch">Button/Switch</string>
+    <string name="action_add_group">Group View</string>
+    <string name="action_add_progress">Progress Bar/Slider</string>
+    <string name="action_add_custom">Custom View</string>
+    <string name="action_add_optionlist">Option List</string>
+
+    <string name="title_add_group">Add Group View</string>
+    <string name="title_add_text">Add Text View</string>
+    <string name="title_add_progress">Add Progress Bar/Slider</string>
+    <string name="title_add_switch">Add Button/Switch</string>
+    <string name="title_add_custom">Add Custom View</string>
+    <string name="title_add_optionlist">Add Option List</string>
+
+    <string name="title_edit_group">Edit Group View</string>
+    <string name="title_edit_text">Edit Text View</string>
+    <string name="title_edit_progress">Edit Progress Bar/Slider</string>
+    <string name="title_edit_switch">Edit Button/Switch</string>
+    <string name="title_edit_custom">Edit Custom View</string>
+    <string name="title_edit_optionlist">Edit Option List</string>
+    <string name="title_add_option_entry">Add Option</string>
+    <string name="title_edit_option_entry">Edit Option</string>
+
+    <string name="menu_html_example">Insert Example</string>
+    <string name="menu_html_basic">Basic HTML</string>
+    <string name="menu_html_color_picker">Color Picker</string>
+    <string name="menu_html_gauge">Gauge</string>
+    <string name="menu_html_clock">Clock</string>
+    <string name="menu_html_light_color_chooser">Light Switch With Color Picker</string>
+    <string name="menu_html_thermometer">Thermometer</string>
+    <string name="menu_html_line_graph">Line Graph</string>
+
+    <!-- Dashboard edit activity -->
+    <string name="dash_label_name">Name:</string>
+    <string name="dash_label_option_payload">Value:</string>
+    <string name="dash_label_option_displayval">Label:</string>
+    <string name="dash_label_option_image">Image:</string>
+    <string name="dash_label_text_color">Text Color:</string>
+    <string name="dash_label_bcolor_header">Background</string>
+    <string name="dash_label_bcolor">Color:</string>
+    <string name="dash_label_bcolor_Image">Image</string>
+    <string name="dash_label_bcolor2">Background:</string>
+    <string name="dash_label_group">Group:</string>
+    <string name="dash_label_position">Pos:</string>
+    <string name="dash_label_textsize">Text Size:</string>
+    <string name="dash_label_progress_header">Progress Bar/Slider:</string>
+    <string name="dash_label_progress_range">Range:</string>
+    <string name="dash_label_progress_decimal">Decimal:</string>
+    <string name="dash_label_progress_percent">Display in percent</string>
+    <string name="dash_label_progress_color">Progress Color:</string>
+    <string name="dash_label_on_state">On state</string>
+    <string name="dash_label_off_state">Off state</string>
+    <string name="dash_label_on_state_text">Value:</string>
+    <string name="dash_label_off_state_text">Value: </string>
+    <string name="dash_label_color">Color:</string>
+    <string name="dash_label_system_default">Default</string>
+    <string name="dash_label_transparent">Transp.</string>
+    <string name="dash_label_clear">Clear</string>
+    <string name="dash_label_image">Image:</string>
+    <string name="dash_label_optionlist">Option List</string>
+    <string name="dash_label_empty_image_btn">None</string>
+
+
+    <string-array name="dash_label_size_array">
+        <item name="dash_label_textsize_s">Small</item>
+        <item name="dash_label_textsize_m">Medium</item>
+        <item name="dash_label_textsize_l">Large</item>
+    </string-array>
+    <string name="dash_label_subscribe_topic">Topic (sub):</string>
+    <string name="dash_label_publish_topic">Topic (pub):</string>
+    <string name="dash_section_publish">Publish</string>
+    <string name="dash_label_input_type">Input Type:</string>
+    <string name="dash_outputscript_label">Script:</string>
+    <string name="dash_html_label">HTML:</string>
+    <string name="dash_label_message">Message:</string>
+    <string-array name="dash_label_input_type_array">
+        <item name="dash_label_input_text">Text</item>
+        <item name="dash_label_input_number">Number</item>
+    </string-array>
+    <string name="dash_label_historical_data">Provide historical data</string>
+    <string name="dash_label_parameters">Parameters</string>
+
+    <string name="dlg_delete_option_title">Delete Option</string>
+    <string name="dlg_delete_option_msg">Delete selection option</string>
+    <string name="dlg_delete_option_msg_pl">Delete selection options.</string>
+    <string name="dlg_confirm_clear_html_title">Clear HTML content?</string>
+
+
+    <string name="dash_item_unknown">Unknown view type</string>
+    <string name="dash_item_err">Error:</string>
+    <string name="error_input_ge0">Value must be greater than 0</string>
+    <string name="error_input_invalid_range">Invalid range. Max value must be greater than min value</string>
+    <string name="error_out_of_range">Received value is out of range.</string>
+    <string name="error_image_not_found">Image file could not be loaded.</string>
+    <string name="error_send_image_prefix">Saving image to server failed:  </string>
+    <string name="error_send_image_invalid_args">Invalid file parameter</string>
+    <string name="error_javascript_img_resource_not_found">Image resource not found:</string>
+    <string name="error_javascript_tmp_img_resource">Using temp resources is not allowed: </string>
+
+    <string name="select_single_dash">Only one dash may be selected for editing</string>
+    <string name="new_group_label">New Group</string>
+
+    <string name="dash_filter_script_header">Filter the content of all messages</string>
+    <string name="dash_output_script_header">Set content for message being published</string>
+    <string name="dash_err_version_err">Version error. Quit the editor to update to the latest version.</string>
+    <string name="dash_err_version_err_replaced">Version error. Dashboard has been replaced by a newer version.</string>
+    <string name="dash_err_subscribe_failed">Subscribe to topic failed.</string>
+    <string name="dash_err_optionlist_unique">An option with this value already exists.</string>
+
+    <string name="dash_update_dlg_title">Update required</string>
+    <string name="dash_update_dlg_msg">This dashboard was created with a newer version. To modify the dashboard, update this app.</string>
+    <string name="dash_update_dlg_update">Update now</string>
+
+    <!-- delete dialog -->
+    <string name="dlg_del_dash_title">Delete</string>
+    <string name="dlg_dash_items_all">All items</string>
+    <string name="dlg_dash_selected">Selected items</string>
+
+    <string name="err_invalid_topic_format">Invalid format.</string>
+    <string name="err_invalid_topic_format_wc">Wildcards are not allowed, if historical data are to be provided."</string>
+
+    <!-- Detail view dialog -->
+    <string name="dlg_info_message_published">Message has been published.</string>
+
+    <!-- End Dashboard -->
+
+
 </resources>

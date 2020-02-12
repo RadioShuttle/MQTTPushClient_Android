@@ -77,7 +77,7 @@ public class ActionsRequest extends Request {
                 } else if (mCmd == Cmd.CMD_UPD_ACTION) {
                     rc = mConnection.updateAction(mActionArg.prevName, mActionArg.name, arg);
                 } else {
-                    rc = mConnection.publish(arg.topic, arg.content, arg.retain);
+                    rc = mConnection.publish(arg.topic, arg.content.getBytes("UTF-8"), arg.retain);
                 }
                 //TODO: handle rc
             } catch(MQTTException e) {
@@ -120,7 +120,7 @@ public class ActionsRequest extends Request {
     public ActionsViewModel.Action mActionArg;
 
     private ArrayList<ActionsViewModel.Action> tmpRes;
-    public Boolean mHasTopics;
+    // public Boolean mHasTopics;
 
     /** contains the reuslt if request was successful  */
     public volatile ArrayList<ActionsViewModel.Action> mActions;

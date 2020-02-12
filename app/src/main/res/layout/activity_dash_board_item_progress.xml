@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/itemProgressConstraintLayout"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/progressBarContent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textContent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/itemProgressBar"
+            app:layout_constraintVertical_chainStyle="spread"
+            android:singleLine="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ProgressBar
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textContent"
+            app:layout_constraintBottom_toBottomOf="@+id/itemSeekBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_margin="8dp"
+            android:max="10000"
+            android:id="@+id/itemProgressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <SeekBar
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/itemProgressBar"
+            app:layout_constraintBottom_toBottomOf="parent"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:visibility="gone"
+            android:max="10000"
+            android:id="@+id/itemSeekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:gravity="center"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/progressBarContent" />
+
+    <ImageView
+        android:id="@+id/check"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/progressBarContent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_check"
+        android:background="@drawable/ic_check_background"
+        android:visibility="gone"
+        android:layout_marginLeft="8dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp" />
+
+    <include layout="@layout/activity_dash_board_item_error_img" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

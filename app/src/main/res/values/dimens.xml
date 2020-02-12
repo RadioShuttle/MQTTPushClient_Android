@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dashboard_cellspacing">4dp</dimen>
+    <dimen name="dashboard_zoom_1">100dp</dimen>
+    <dimen name="dashboard_zoom_2">150dp</dimen>
+    <dimen name="dashboard_zoom_3">200dp</dimen>
+
+    <dimen name="image_selection_cell_margin">4dp</dimen>
+    <dimen name="image_selection_cell_image_width">96dp</dimen>
+</resources>

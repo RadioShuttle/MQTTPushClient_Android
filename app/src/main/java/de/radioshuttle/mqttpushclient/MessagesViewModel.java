@@ -240,7 +240,7 @@ public class MessagesViewModel extends AndroidViewModel {
             }
         };
         if (pushAccount != null) {
-            t.execute((Object[]) null);
+            t.executeOnExecutor(Utils.executor, (Object[]) null); //
         }
     }
 

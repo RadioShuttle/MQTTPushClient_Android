@@ -10,9 +10,14 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -36,7 +41,7 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
     public AccountRecyclerViewAdapter(AppCompatActivity activity, int selectedRow, RowSelectionListener listener) {
         pushAccounts = null;
         mSelectedRow = selectedRow;
-        context = activity.getApplicationContext();
+        context = activity;
         mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         rowSelectionListener = listener;
         mMultiplePushServer = false;
@@ -176,12 +181,32 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
             vh.newMessages.setText("+" + String.valueOf(b.newMessages));
         }
 
-
         holder.itemView.setSelected(mSelectedRow == position);
+
+        /*
+         * Inflate a dummy webview. This will reduce creation time of subsequent webview
+         * creations (up to 1s). Unfortunately this can only be done on the main UI
+         * thread (and blocks everything pending), so the right time to do this is after
+         * the last entry of the accountlist is shown to the user (so the chance
+         * is minimal that the user will recognize any delay caused by this operation.)
+         */
+        if (!webviewInit && position == pushAccounts.size() -1) {
+            webviewInit = true;
+            Handler hander = new Handler(Looper.getMainLooper());
+            hander.post(new Runnable() {
+                @Override
+                public void run() {
+                    mDummyWebview = new WebView(mInflater.getContext());
+                    // Log.d("Acc", "oncreat");
+                }
+            });
+        }
 
         // TODO: set color according status
         // ImageViewCompat.setImageTintList(vh.circleImage, ColorStateList.valueOf(ContextCompat.getColor(context, R.color.green)));
     }
+
+    private static boolean webviewInit = false;
 
     public void setData(ArrayList<PushAccount> pushAccounts) {
         this.pushAccounts = pushAccounts;
@@ -258,6 +283,8 @@ public class AccountRecyclerViewAdapter extends RecyclerView.Adapter {
         ImageView warningImage;
         ProgressBar progressBar;
     }
+
+    private WebView mDummyWebview;
 
     private boolean mMultiplePushServer;
     private RowSelectionListener rowSelectionListener;

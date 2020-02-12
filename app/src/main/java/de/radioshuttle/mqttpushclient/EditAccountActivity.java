@@ -106,7 +106,7 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
                     } else {
                         if (mViewModel.isCurrentRequest(request)) {
                             mSwipeRefreshLayout.setRefreshing(false);
-                            mViewModel.confirmResultDelivered();
+                            mViewModel.confirmResultDelivered(request);
                             setUIEnabled(true, true);
 
                             /* handle cerificate exception */
@@ -454,10 +454,12 @@ public class EditAccountActivity extends AppCompatActivity implements Certificat
 
         try {
             mViewModel.accountList.setValue(pushAccount);
-            SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
-            SharedPreferences.Editor editor = settings.edit();
-            editor.putString(AccountListActivity.ACCOUNTS, mViewModel.getAccountsJSON());
-            editor.commit();
+            synchronized (Request.ACCOUNTS) {
+                SharedPreferences settings = getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString(AccountListActivity.ACCOUNTS, mViewModel.getAccountsJSON());
+                editor.commit();
+            }
             Toast.makeText(getApplicationContext(), R.string.info_data_saved, Toast.LENGTH_LONG).show();
 
             if (mMode == MODE_ADD) {
