@@ -13,8 +13,8 @@ The app offers the following application sections:
 The dashboard view has a graphical user interface in which display and control elements (“dashes”) can be created. These dashes can be used to monitor and control any actions, such as lighting, temperature display, weather, light color, heating control, home automation, to name just a few possibilities. Dash controls offer switches, sliders, text display, selection lists and web views, which are displayed as groupable interactive tiles.
 
 ## Prerequisites to test drive app
-<TODO App Icon>
-The app can be downloaded from the app store (*Google Play Store* or *Apple App Store*) which is the easiest way to test drive it. This app is designed as an addition to an existing MQTT environment and provides an easy-to-use interface with the ability to receive MQTT messages as push notifications.
+<!--<TODO App Icon>-->
+The app can be downloaded from the app store (_Google Play Store_ or _Apple App Store_) which is the easiest way to test drive it. This app is designed as an addition to an existing MQTT environment and provides an easy-to-use interface with the ability to receive MQTT messages as push notifications.
 
 
 Required MQTT server:
