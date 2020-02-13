@@ -14,7 +14,7 @@ The dashboard view has a graphical user interface in which display and control e
 
 ## Prerequisites to test drive app
 <TODO App Icon>
-The app can be downloaded from the app store (_Google Play Store_ or _Apple App Store_) which is the easiest way to test drive it. This app is designed as an addition to an existing MQTT environment and provides an easy-to-use interface with the ability to receive MQTT messages as push notifications.
+The app can be downloaded from the app store (*Google Play Store* or *Apple App Store*) which is the easiest way to test drive it. This app is designed as an addition to an existing MQTT environment and provides an easy-to-use interface with the ability to receive MQTT messages as push notifications.
 
 
 Required MQTT server:
