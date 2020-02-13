@@ -1,11 +1,10 @@
-MQTTPushClient.iml
-.gitignore
 .gradle
 local.properties
 .idea
 .DS_Store
-build
 captures
+build
 .externalNativeBuild
-
-
+app/build
+app/release
+**/*.iml
