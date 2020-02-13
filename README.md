@@ -10,11 +10,11 @@ The app offers the following application sections:
 * Actions for sending defined messages (menu with MQTT actions)
 * Dashboard view
 
-The dashboard view has a graphical user interface in which display and control elements ("dashes") can be created. These dashes can be used to monitor and control any actions, such as lighting, temperature display, weather, light color, heating control, home automation, to name just a few possibilities. Dash controls offer switches, sliders, text display, selection lists and web views, which are displayed as groupable interactive tiles.
+The dashboard view has a graphical user interface in which display and control elements (“dashes”) can be created. These dashes can be used to monitor and control any actions, such as lighting, temperature display, weather, light color, heating control, home automation, to name just a few possibilities. Dash controls offer switches, sliders, text display, selection lists and web views, which are displayed as groupable interactive tiles.
 
 ## Prerequisites to test drive app
 <TODO App Icon>
-The app can be downloaded from the app store (_Google Play Store_ or _Apple App Store_) which is the easiest way to test drive it. This app is designed as an addition to an existing MQTT environment and provides an easy-to-use interface with the ability to receive MQTT messages as push notifications.
+The app can be downloaded from the app store (Google Play Store or Apple App Store) which is the easiest way to test drive it. This app is designed as an addition to an existing MQTT environment and provides an easy-to-use interface with the ability to receive MQTT messages as push notifications.
 
 
 Required MQTT server:
@@ -25,7 +25,7 @@ Required MQTT server:
 
 If no own MQTT server is available, a public MQTT server, for example from Arduino Hannover, can be used. At mqtt.arduino-hannover.de an account for the MQTT server can be created.
 
-The MQTT push server "push.radioshuttle.de" is already preset when setting up a new server connection and can be used with any MQTT server.
+The MQTT push server “push.radioshuttle.de” is already preset when setting up a new server connection and can be used with any MQTT server.
 
 
 ## Supported Android devices
@@ -35,7 +35,7 @@ We started to support fairly old Android versions to allow almost every device t
 
 
 ## License and contributions
-The software is provided under the [Apache 2.0 license](docs/LICENSE-apache-2.0.txt).. Contributions to this project are accepted under the same license.
+The software is provided under the [Apache 2.0 license](docs/LICENSE-apache-2.0.txt). Contributions to this project are accepted under the same license.
 
 ## Development prerequisites
 * Android Studio 3.5.3 or later
@@ -46,7 +46,7 @@ The software is provided under the [Apache 2.0 license](docs/LICENSE-apache-2.0.
 * Install Android Studio
 * Check out (clone) this project
 * Import the project in Android Studio: 
-  * Start Android Studio and select "Import project"
+  * Start Android Studio and select “Import project”
   * Select folder containing the main build file (build.gradle)
 
 For a first impression:
@@ -54,12 +54,12 @@ For a first impression:
 
 ## Publish an own app on the Google Store
 * Set an application ID:
-  * Open app/build.gradle (Module: app) and set your own unique application ID, the default   "de.radioshuttle.mqttpushclient" must not be used for own projects.
+  * Open app/build.gradle (Module: app) and set your own unique application ID, the default   “de.radioshuttle.mqttpushclient” must not be used for own projects.
 * Create a signing configuration
 
 To upload the app to the Google Play Store, the app/bundle must be signed. See https://developer.android.com/studio/publish/app-signing
 
-In app/build.gradle replace
+In app/build.gradle replace:
 <pre>
 if(project.hasProperty("MQTTPushClient.signing") {
 ...
@@ -69,11 +69,11 @@ The custom signing configuration must be adjusted (the code to be replaced refer
 file containing the radioshuttle.de signing configuration, which is not part of this 
 distribution). 
 
-Please delete the line 
+Please delete the line …
 <pre>
 MQTTPushClient.signing=/helios/release/Android/MQTTPushClient/
 </pre>
-in gradle.properties or replace the value with the location of your own
+… in gradle.properties or replace the value with the location of your own
 signing configuration file.
 
 
