@@ -4,14 +4,14 @@ android {
 
     if(project.hasProperty("MQTTPushClient.signing")
             && new File(project.property("MQTTPushClient.signing") + "signing.gradle").exists()) {
-        apply from: project.property("MQTTPushClient.signing") + "signing.gradle";
+        apply from: project.property("MQTTPushClient.signing") + "signing.gradle"
     }
     compileSdkVersion 29
     defaultConfig {
         applicationId "de.radioshuttle.mqttpushclient"
         minSdkVersion 16
         targetSdkVersion 29
-        versionCode 57
+        versionCode 59
         versionName "2.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
