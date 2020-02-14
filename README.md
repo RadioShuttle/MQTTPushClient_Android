@@ -50,19 +50,19 @@ The software is provided under the [Apache 2.0 license](docs/LICENSE-apache-2.0.
 * Check out (clone) this project
 * Import the project in Android Studio: 
   * Start Android Studio and select “Import project”
-  * Select folder containing the main build file (build.gradle)
+  * Select folder containing the main build file (“build.gradle”)
 
 For a first impression:
 * Set up an emulator instance or connect a device via USB to run the application
 
 ## Publish an own app on the Google Store
 * Set an application ID:
-  * Open app/build.gradle (Module: app) and set your own unique application ID, the default   “de.radioshuttle.mqttpushclient” must not be used for own projects.
+  * Open “app/build.gradle” (Module: app) and set your own unique application ID, the default   “de.radioshuttle.mqttpushclient” must not be used for own projects.
 * Create a signing configuration
 
 To upload the app to the Google Play Store, the app/bundle must be signed. See https://developer.android.com/studio/publish/app-signing
 
-In app/build.gradle replace:
+In “app/build.gradle” replace:
 
 `if(project.hasProperty("MQTTPushClient.signing") {
 ...
@@ -76,7 +76,7 @@ Please delete the line …
 
 `MQTTPushClient.signing=/helios/release/Android/MQTTPushClient/`
 
-… in gradle.properties or replace the value with the location of your own
+… in “gradle.properties”, or replace the value with the location of your own
 signing configuration file.
 
 
