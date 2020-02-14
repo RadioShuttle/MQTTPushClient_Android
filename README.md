@@ -1,3 +1,5 @@
+![Title image](/docs/title_image.png)
+
 # RadioShuttle MQTT Push Client app for Android
 
 This app allows you to receive push notifications from MQTT environments. The app communicates with the public MQTT push server (radioshuttle.de), which in turn connects to an MQTT server and sends messages via the push services of Apple or Google. The app allows the configuration of push notifications for defined MQTT topics, which are automatically monitored by the MQTT push server. In the case of activity, these are immediately forwarded to the app, which outputs the message as a push notification. Push notifications are delivered automatically even if the app is not running.
