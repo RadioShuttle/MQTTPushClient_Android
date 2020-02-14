@@ -1,7 +1,7 @@
 /*
- * $Id$
- * This is an unpublished work copyright (c) 2018 HELIOS Software GmbH
- * 30827 Garbsen, Germany
+ * Copyright (c) 2018 HELIOS Software GmbH
+ * 30827 Garbsen (Hannover) Germany
+ * Licensed under the Apache License, Version 2.0
  */
 
 package de.radioshuttle.mqttpushclient;
