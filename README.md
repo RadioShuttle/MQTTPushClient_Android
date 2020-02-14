@@ -63,19 +63,18 @@ For a first impression:
 To upload the app to the Google Play Store, the app/bundle must be signed. See https://developer.android.com/studio/publish/app-signing
 
 In app/build.gradle replace:
-<pre>
-if(project.hasProperty("MQTTPushClient.signing") {
+
+`if(project.hasProperty("MQTTPushClient.signing") {
 ...
-}
-</pre>
+}`
 The custom signing configuration must be adjusted (the code to be replaced references an external 
 file containing the radioshuttle.de signing configuration, which is not part of this 
 distribution). 
 
 Please delete the line …
-<pre>
-MQTTPushClient.signing=/helios/release/Android/MQTTPushClient/
-</pre>
+
+`MQTTPushClient.signing=/helios/release/Android/MQTTPushClient/`
+
 … in gradle.properties or replace the value with the location of your own
 signing configuration file.
 
