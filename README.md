@@ -67,6 +67,7 @@ In app/build.gradle replace:
 `if(project.hasProperty("MQTTPushClient.signing") {
 ...
 }`
+
 The custom signing configuration must be adjusted (the code to be replaced references an external 
 file containing the radioshuttle.de signing configuration, which is not part of this 
 distribution). 
