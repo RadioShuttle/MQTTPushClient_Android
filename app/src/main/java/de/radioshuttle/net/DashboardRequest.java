@@ -521,6 +521,7 @@ public class DashboardRequest extends Request {
                                 File tempFile = new File(ImportFiles.getUserFilesDir(mAppContext), tmpFilename);
                                 File destFile = new File(ImportFiles.getUserFilesDir(mAppContext), enc.format(r)  + '.' + Cmd.DASH512_PNG);
                                 FileOutputStream fos = null;
+                                boolean downloadCompleted = false;
                                 try {
                                     fos = new FileOutputStream(tempFile);
                                     int total = 0, read;
@@ -529,20 +530,26 @@ public class DashboardRequest extends Request {
                                         total += read;
                                         fos.write(buffer, 0, read);
                                     }
+                                    downloadCompleted = true;
                                 } finally {
                                     if (fos != null) {
                                         try {fos.close(); } catch(IOException io) {}
                                     }
                                     if (tempFile.exists()) {
-                                        if (!tempFile.renameTo(destFile)) {
-                                            Log.d(TAG, "Error renaming file: " + tempFile.getName());
+                                        if (!downloadCompleted) {
+                                            Log.d(TAG, "Deleting tmp file. Error occured " + tempFile.getName());
                                             tempFile.delete();
                                         } else {
-                                            mReceivedResources = true;
-                                            if (mdate > 0) {
-                                                destFile.setLastModified(mdate);
+                                            if (!tempFile.renameTo(destFile)) {
+                                                Log.d(TAG, "Error renaming file: " + tempFile.getName());
+                                                tempFile.delete();
+                                            } else {
+                                                mReceivedResources = true;
+                                                if (mdate > 0) {
+                                                    destFile.setLastModified(mdate);
+                                                }
+                                                Log.d(TAG, "Loaded resource from server: " + r + ", " + destFile.getName());
                                             }
-                                            Log.d(TAG, "Loaded resource from server: " + r + ", " + destFile.getName());
                                         }
                                     }
                                 }
