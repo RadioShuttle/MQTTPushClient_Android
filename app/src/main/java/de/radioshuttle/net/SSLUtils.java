@@ -34,8 +34,7 @@ public class SSLUtils {
     }
 
     private static SSLSocketFactory createSslSocketFactory() throws Exception {
-        //TODO: tls 1.3 has been temporarily disabled due to an implementaion bug
-        SSLContext sslContext = SSLContext.getInstance("TLSv1.2"); //TODO
+        SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(null, new TrustManager[] {new AppTrustManager()}, new SecureRandom());
         return sslContext.getSocketFactory();
     }
