@@ -610,7 +610,7 @@ public class Cmd {
                 dashboardTopics = new HashMap<>();
             }
             for(Object[] msg : messages) {
-                if (msg.length >= 5) {
+                if (msg.length >= 4) {
                     os.writeLong((Long) msg[0]);
                     topic = (String) msg[1];
                     writeString(topic, os);
@@ -814,7 +814,14 @@ public class Cmd {
     }
 
     public void writeContent(byte[] data) throws IOException {
-        bos.write(data);
+        int offset = 0;
+        int blockSize = 0;
+        // write data in blocks of BUFFER_SIZE (15K) to prevent write operations > 16K (workaround for TLSv1.3 implementation errors)
+        while(offset < data.length) {
+            blockSize = Math.min(BUFFER_SIZE, data.length - offset);
+            bos.write(data, offset, blockSize);
+            offset += blockSize;
+        }
         bos.flush();
     }
 
@@ -855,7 +862,7 @@ public class Cmd {
     public Cmd(DataInputStream is, DataOutputStream os) {
         dis = is;
         dos = os;
-        bos = new BufferedOutputStream(os);
+        bos = new BufferedOutputStream(os, 8192);
     }
 
     public static void writeString(String s, DataOutputStream dos) throws IOException {
@@ -1017,7 +1024,7 @@ public class Cmd {
     public final static int MAX_STRING_SIZE = MAX_TOPICS_SIZE;
     public final static int MAX_PAYLOAD = 1024 * 256;
     public final static long MAX_PAYLOAD_RESOURCE = MAX_PAYLOAD * 10L;
-    public final static int BUFFER_SIZE = 1024 * 16;
+    public static int BUFFER_SIZE = 1024 * 15;
     static {
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
         try {
