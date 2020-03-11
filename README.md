@@ -38,7 +38,7 @@ We started to support fairly old Android versions to allow almost every device t
 
 
 ## License and contributions
-The software is provided under the [Apache 2.0 license](docs/readme/LICENSE-apache-2.0.txt). Contributions to this project are accepted under the same license.
+The software is provided under the [Apache 2.0 license](/docs/readme/LICENSE-apache-2.0.txt). Contributions to this project are accepted under the same license.
 
 ## Development prerequisites
 * Android Studio 3.6.1 or later
