@@ -323,7 +323,18 @@ public class Cmd {
         return m;
     }
 
-    public void fcmDataResponse(RawCmd request, String app_id, String senderID, String pushServerID) throws IOException {
+    public void fcmDataResponse(RawCmd request, String app_id, String senderID, String pushServerID, String project_id, String api_key) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        writeString(app_id, os);
+        writeString(senderID, os);
+        writeString(pushServerID, os);
+        writeString(project_id, os);
+        writeString(api_key, os);
+        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
+    }
+
+    public void fcmDataIOSResponse(RawCmd request, String app_id, String senderID, String pushServerID) throws IOException {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         writeString(app_id, os);
@@ -338,6 +349,10 @@ public class Cmd {
         m.put("app_id", readString(is));
         m.put("sender_id", readString(is));
         m.put("pushserverid", readString(is));
+        if (is.available() > 0) { // TODO: remove after all push servers have been updated
+            m.put("project_id", readString(is));
+            m.put("api_key", readString(is));
+        }
         return m;
     }
 
