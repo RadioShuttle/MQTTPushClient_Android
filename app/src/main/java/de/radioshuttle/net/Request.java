@@ -219,9 +219,12 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
 
                 FirebaseApp app = null;
                 mSenderID = m.get("sender_id");
-                if (!Utils.equals(mSenderID, mPushAccount.fcm_sender_id) || !Utils.equals(m.get("app_id"), mPushAccount.fcm_app_id)) {
+                if (!Utils.equals(mSenderID, mPushAccount.fcm_sender_id) || !Utils.equals(m.get("app_id"), mPushAccount.fcm_app_id)
+                    || !Utils.equals(m.get("project_id"), mPushAccount.fcm_project_id) || !Utils.equals(m.get("api_key"), mPushAccount.fcm_api_key)) {
                     mPushAccount.fcm_app_id = m.get("app_id");
                     mPushAccount.fcm_sender_id = mSenderID;
+                    mPushAccount.fcm_project_id = m.get("project_id");
+                    mPushAccount.fcm_api_key = m.get("api_key");
 
                     synchronized (ACCOUNTS) {
                         updateAccountFCMData();
@@ -246,7 +249,9 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                             }
                             if (app == null) {
                                 FirebaseOptions options = new FirebaseOptions.Builder()
+                                        .setProjectId(m.get("project_id"))
                                         .setApplicationId(m.get("app_id"))
+                                        .setApiKey(m.get("api_key"))
                                         .build();
                                 app = FirebaseApp.initializeApp(mAppContext, options, mSenderID);
                             }
@@ -259,6 +264,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 if (app != null) {
                     FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
                     instanceIdTask = id.getInstanceId();
+
                     cont = true;
                 } else {
                     throw new ClientError(mAppContext.getString(R.string.errormsg_firebase_init_failed));
