@@ -55,12 +55,12 @@ The software is provided under the [Apache 2.0 license](/docs/readme/LICENSE-apa
 For a first impression:
 * Set up an emulator instance or connect a device via USB to run the application
 
-## Publish an own app on the Google Store
+## Publish an own app on Google Play
 * Set an application ID:
   * Open “app/build.gradle” (Module: app) and set your own unique application ID, the default  “de.radioshuttle.mqttpushclient” must not be used for own projects.
 * Create a signing configuration
 
-To upload the app to the Google Play Store, the app/bundle must be signed. See https://developer.android.com/studio/publish/app-signing
+To upload the app to Google Play, the app/bundle must be signed. See https://developer.android.com/studio/publish/app-signing
 
 In “app/build.gradle” replace:
 
