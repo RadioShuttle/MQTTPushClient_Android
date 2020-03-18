@@ -111,6 +111,10 @@ The server operator of the MQTT push server can send direct messages to the app,
 ## Credits
 This app has initially been written by the RadioShuttle engineers (www.radioshuttle.de). Many thanks to everyone who helped to bring this project forward.
 
+## Releated links
+* App Online help project: https://github.com/RadioShuttle/MQTTPushClient_iOS
+* App for iOS project: https://github.com/RadioShuttle/MQTTPushClient_iOS
+
 ## Acknowledgements
 We used external resources, libraries and code, many thanks to:
 * Google Material Icons: https://material.io/resources/icons/
