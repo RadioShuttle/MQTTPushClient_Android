@@ -57,7 +57,7 @@ For a first impression:
 
 ## Publish an own app on the Google Store
 * Set an application ID:
-  * Open “app/build.gradle” (Module: app) and set your own unique application ID, the default   “de.radioshuttle.mqttpushclient” must not be used for own projects.
+  * Open “app/build.gradle” (Module: app) and set your own unique application ID, the default  “de.radioshuttle.mqttpushclient” must not be used for own projects.
 * Create a signing configuration
 
 To upload the app to the Google Play Store, the app/bundle must be signed. See https://developer.android.com/studio/publish/app-signing
