@@ -32,7 +32,7 @@ The MQTT push server “push.radioshuttle.de” is already preset when setting u
 
 
 ## Supported Android devices
-We started to support fairly old Android versions to allow almost every device to be used with this MQTT Push Client app, however latest Android versions are likely to work fine.
+We already support pretty old Android versions, so almost any device can be used with this MQTT push client application, but the latest Android versions will probably work fine as well.
 * Minimum version: Android 4.1
 * Current target version: Android 10
 
