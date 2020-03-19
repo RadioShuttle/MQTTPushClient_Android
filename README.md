@@ -89,7 +89,7 @@ Unlimited commercial use of the RadioShuttle MQTT push server software for opera
 ## MQTT push solution background
 Apps that are permanently polling connections from mobile apps to MQTT servers do not work due to their high energy requirement and constant mobile network changes. Users wish to receive messages on their mobile devices, whether or not the app is running. Even when the mobile device is turned off, or there is no Internet connection, messages should arrive automatically once the device is online again.
 
-The RadioShuttle MQTT push solution implements this via the RadioShuttle MQTT push server and its corresponding MQTT Push Client apps for Android and iOS. The app communicates via the MQTT push server only. The MQTT push server monitors the MQTT messages for the specified accounts and sends push messages via Google (Android) and Apple (iOS) to corresponding mobile devices of this account. In addition, the server keeps the last 100 MQTT push messages for each account.
+The RadioShuttle MQTT push solution implements this via the RadioShuttle MQTT push server and its corresponding MQTT Push Client apps for Android and iOS. The app communicates via the MQTT push server only. The MQTT push server monitors the MQTT messages for the specified accounts and sends push messages via Google (Android) and Apple (iOS) to corresponding mobile devices connected to this account. In addition, the server keeps the last 100 MQTT push messages for each account.
 
 The mobile device receives and displays push messages even if the app is not running. Once the app is started it will display received messages in the app message view, at the same time it will update the latest messages from the MQTT push server to ensure that it is up to date.
 
