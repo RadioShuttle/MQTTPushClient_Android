@@ -12,7 +12,7 @@ The app offers the following application sections:
 * Actions for sending defined messages (menu with MQTT actions)
 * Dashboard view
 
-The message view allows browsing all server collected MQTT messages for registered topics. These can be regular messages (without push notification) or push messages which have already been received via push. Messages can be deleted locally on the device. The main app window shows the server connections with the number of new/unread messages.
+The messages view allows browsing all server collected MQTT messages for registered topics. These can be regular messages (without push notification) or push messages which have already been received via push. Messages can be deleted locally on the device. The main app window shows the server connections with the number of new/unread messages.
 
 The dashboard view has a graphical user interface in which display and control elements (“dashes”) can be created. These dashes can be used to monitor and control any actions, such as switching lights, temperature display, weather, light color, heating control, home automation, to name just a few possibilities. Dash controls offer switches, sliders, text display, selection lists and web views, which are displayed as groupable interactive tiles.
 
@@ -93,9 +93,9 @@ Apps that are permanently polling connections from mobile apps to MQTT servers d
 
 The RadioShuttle MQTT push solution implements this via the RadioShuttle MQTT push server and its corresponding MQTT Push Client apps for Android and iOS. The app communicates via the MQTT push server only. The MQTT push server monitors the MQTT messages for the specified accounts and sends push messages via Google (Android) and Apple (iOS) to corresponding mobile devices connected to this account. In addition, the server keeps the last 100 MQTT push messages for each account.
 
-The mobile device receives and displays push messages even if the app is not running. Once the app is started, it will display received messages in its “Messages” view. At the same time it will update the latest messages from the MQTT push server to ensure that it is up to date.
+The mobile device receives and displays push messages even if the app is not running. Once the app is started, it will display received messages in its messages view. At the same time it will update the latest messages from the MQTT push server to ensure that it is up to date.
 
-The dash view will not connect to the MQTT server for the dash gallery view, instead it will communicate with the MQTT push server only. The MQTT push server remembers the latest message for each registered topic, therefore the display should represent the latest data (e.g. lights on or off, temperature, etc.).
+The dashboard view will not connect to the MQTT server for the dash gallery view, instead it will communicate with the MQTT push server only. The MQTT push server remembers the latest message for each registered topic, therefore the display should represent the latest data (e.g. lights on or off, temperature, etc.).
 
 The entire solution is highly optimized for great performance and reliable push messages without any polling. As push messages are being processed by Google and Apple, the amount of push messages per day should be limited to a reasonable number per account (e.g. 50 messages per day). The MQTT push server will limit the push messages per account to not more than one message within 20 seconds. In case of too many messages, it will delay push messages to avoid spamming.
 
