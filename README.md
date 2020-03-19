@@ -12,6 +12,8 @@ The app offers the following application sections:
 * Actions for sending defined messages (menu with MQTT actions)
 * Dashboard view
 
+The message view allows browsing all server collected MQTT messages for registered topics. These can be regular messages (without push notification) or push messages which have already been received via push. Messages can be deleted locally on the device. The main app window shows the server connections with the number of new/unread messages.
+
 The dashboard view has a graphical user interface in which display and control elements (“dashes”) can be created. These dashes can be used to monitor and control any actions, such as switching lights, temperature display, weather, light color, heating control, home automation, to name just a few possibilities. Dash controls offer switches, sliders, text display, selection lists and web views, which are displayed as groupable interactive tiles.
 
 ## Prerequisites to test drive app
