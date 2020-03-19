@@ -91,7 +91,7 @@ Apps that are permanently polling connections from mobile apps to MQTT servers d
 
 The RadioShuttle MQTT push solution implements this via the RadioShuttle MQTT push server and its corresponding MQTT Push Client apps for Android and iOS. The app communicates via the MQTT push server only. The MQTT push server monitors the MQTT messages for the specified accounts and sends push messages via Google (Android) and Apple (iOS) to corresponding mobile devices connected to this account. In addition, the server keeps the last 100 MQTT push messages for each account.
 
-The mobile device receives and displays push messages even if the app is not running. Once the app is started it will display received messages in the app message view, at the same time it will update the latest messages from the MQTT push server to ensure that it is up to date.
+The mobile device receives and displays push messages even if the app is not running. Once the app is started, it will display received messages in the app message view. At the same time it will update the latest messages from the MQTT push server to ensure that it is up to date.
 
 The dash view will not connect to the MQTT server for the dash gallery view, instead it will communicate with the MQTT push server only. The MQTT push server remembers the latest message for each registered topic, therefore the display should represent the latest data (e.g. lights on or off, temperature, etc.).
 
