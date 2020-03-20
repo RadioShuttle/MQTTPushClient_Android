@@ -72,14 +72,14 @@ In “app/build.gradle” replace:
 
 The custom signing configuration must be adjusted (the code to be replaced references an external 
 file containing the radioshuttle.de signing configuration, which is not part of this 
-distribution). 
+distribution)
 
 Please delete the line …
 
 `MQTTPushClient.signing=/helios/release/Android/MQTTPushClient/`
 
 … in “gradle.properties”, or replace the value with the location of your own
-signing configuration file.
+signing configuration file
 
 
 ## RadioShuttle MQTT push server
