@@ -26,13 +26,12 @@ import de.radioshuttle.utils.Utils;
 public class DashBoardJavaScript extends JavaScript {
 
     private DashBoardJavaScript(Application app) {
+        super(app);
         try {
-            color_js = Utils.getRawStringResource(app, "javascript_color", true);
             wrapper_filterscript_js = Utils.getRawStringResource(app, "javascript_wrapper_filterscript", true);
         } catch (IOException e) {
             Log.d(TAG, "Error loading raw resource: javascript_color.js", e);
         }
-        this.app = app;
     }
 
     public static synchronized DashBoardJavaScript getInstance(Application app) {
@@ -344,8 +343,6 @@ public class DashBoardJavaScript extends JavaScript {
         Application app;
     }
 
-    private Application app;
-    private String color_js;
     private String wrapper_filterscript_js;
     private static DashBoardJavaScript js;
 
