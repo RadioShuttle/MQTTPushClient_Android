@@ -499,7 +499,7 @@ public class EditTopicActivity extends AppCompatActivity implements CertificateE
             }
             header += ":";
             intent.putExtra(JavaScriptEditorActivity.ARG_HEADER, header);
-            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc) {\n var content = msg.text;");
+            intent.putExtra(JavaScriptEditorActivity.ARG_JSPREFIX, "function filterMsg(msg, acc, view) {\n var content = msg.text;");
             intent.putExtra(JavaScriptEditorActivity.ARG_JSSUFFIX, " return content;\n}");
             intent.putExtra(JavaScriptEditorActivity.ARG_COMPONENT, JavaScriptEditorActivity.CONTENT_FILTER);
 
