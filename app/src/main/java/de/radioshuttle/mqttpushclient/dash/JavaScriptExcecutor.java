@@ -306,7 +306,7 @@ public class JavaScriptExcecutor {
         public HashMap<String, Object> call() {
             HashMap<String, Object> result = new HashMap<>();
             try {
-                String content = JavaScript.getInstance().formatMsg(jsContext, message, 0);
+                String content = JavaScript.getInstance(mApplication).formatMsg(jsContext, message, 0);
                 result.put("content", content);
             } finally {
                 /* put additional message data to result too */
