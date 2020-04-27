@@ -33,6 +33,7 @@ import androidx.lifecycle.ViewModelProvider;
 import de.radioshuttle.db.AppDatabase;
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.db.MqttMessageDao;
+import de.radioshuttle.mqttpushclient.dash.DColor;
 import de.radioshuttle.mqttpushclient.dash.DashBoardJavaScript;
 import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.mqttpushclient.dash.Message;
@@ -69,6 +70,7 @@ public class JavaScriptViewModel extends AndroidViewModel {
                 @Override
                 public void run() {
                     JSResult result = new JSResult();
+                    HashMap<String, Object> contentFilterViewProps = null;
                     final DashBoardJavaScript js = DashBoardJavaScript.getInstance(getApplication());
                     final JavaScript.Context context;
                     try {
@@ -84,6 +86,12 @@ public class JavaScriptViewModel extends AndroidViewModel {
                                 mItem.getJSViewProperties(viewProperties);
                             }
                             js.initViewProperties(context, viewProperties);
+                        } else if (mMode == JavaScriptEditorActivity.CONTENT_FILTER) {
+                            /* javasdcript interface for textColor, backgroundColor*/
+                            contentFilterViewProps = new HashMap<>();
+                            contentFilterViewProps.put("background", DColor.OS_DEFAULT);
+                            contentFilterViewProps.put("textcolor", DColor.OS_DEFAULT);
+                            js.initMessageViewProperties(context, contentFilterViewProps);
                         }
                         try {
                             Future<JSResult> future = Utils.executor.submit(new Callable<JSResult>() {
@@ -105,6 +113,11 @@ public class JavaScriptViewModel extends AndroidViewModel {
 
                             try {
                                 result = future.get(JavaScript.TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                                if (mMode == JavaScriptEditorActivity.CONTENT_FILTER) {
+                                    // colors set by script
+                                    result.viewProperies = contentFilterViewProps;
+                                }
+
                             } catch (ExecutionException e) {
                                 result.code = JSResult.ERR_INTERPRETER;
                                 if (e.getCause() != null) {
@@ -237,6 +250,7 @@ public class JavaScriptViewModel extends AndroidViewModel {
         int code; // see constants below
         String result; // filtered content
         String errorMsg; // errorMsg
+        HashMap<String, Object> viewProperies;
 
         public static int ERR_TIMEOUT = 1;
         public static int ERR_INTERPRETER = 2;
