@@ -6,6 +6,9 @@
 
 package de.radioshuttle.utils;
 
+import android.app.Application;
+import android.util.Log;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,23 +16,26 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.radioshuttle.db.MqttMessage;
+import de.radioshuttle.mqttpushclient.MessagesViewModel;
+import de.radioshuttle.mqttpushclient.dash.DColor;
 
 public class ModifyPagedList implements Callable {
 
-    public ModifyPagedList(List<MqttMessage> pagedList, HashMap<String, JavaScript.Context> javaScript, String errPrefix) {
+    public ModifyPagedList(Application app, List<MqttMessage> pagedList, HashMap<String, MessagesViewModel.JSContext> javaScript, String errPrefix) {
         mStopped = new AtomicBoolean(false);
         mPagedList = pagedList;
         mJavaScript = javaScript;
         cnt = 0;
         mErrPrefix = (errPrefix == null ? "Filter script error:" : errPrefix);
+        mApp = app;
     }
 
     @Override
     public Object call() throws Exception {
         if (mPagedList != null && mJavaScript != null) {
             MqttMessage msg;
-            JavaScript.Context jsContext;
-            JavaScript interpreter = JavaScript.getInstance();
+            MessagesViewModel.JSContext jsContext;
+            JavaScript interpreter = JavaScript.getInstance(mApp);
             String formatedContent;
             String orgPayload;
 
@@ -37,14 +43,22 @@ public class ModifyPagedList implements Callable {
                 msg = mPagedList.get(i);
                 jsContext = mJavaScript.get(msg.getTopic());
                 if (jsContext != null) {
-                    if (jsContext instanceof JSInitError) {
+                    if (jsContext.context instanceof JSInitError) {
                         orgPayload = new String(msg.getPayload(), Utils.UTF_8);
-                        formatedContent = mErrPrefix + " " + ((JSInitError) jsContext).getMessage() + "\n" + orgPayload;
+                        formatedContent = mErrPrefix + " " + ((JSInitError) jsContext.context).getMessage() + "\n" + orgPayload;
                     } else {
                         try {
-                            formatedContent = interpreter.formatMsg(jsContext, msg, 0);
+                            if (jsContext.viewProps != null) {
+                                jsContext.viewProps.put("background", DColor.OS_DEFAULT);
+                                jsContext.viewProps.put("textcolor", DColor.OS_DEFAULT);
+                            }
+                            formatedContent = interpreter.formatMsg(jsContext.context, msg, 0);
                             if (formatedContent == null) {
                                 formatedContent = "";
+                            }
+                            if (jsContext.viewProps != null && jsContext.viewProps.containsKey("background") && jsContext.viewProps.containsKey("textcolor")) {
+                                msg.textColor = (Long) jsContext.viewProps.get("textcolor");
+                                msg.backgroundColor = (Long) jsContext.viewProps.get("background");
                             }
                         } catch(Exception e) {
                             orgPayload = new String(msg.getPayload(), Utils.UTF_8);
@@ -90,9 +104,12 @@ public class ModifyPagedList implements Callable {
         mStopped.set(true);
     }
 
+    private final static String TAG = ModifyPagedList.class.getSimpleName();
+
     protected volatile int cnt;
     protected AtomicBoolean mStopped;
     protected List<MqttMessage> mPagedList;
-    protected Map<String, JavaScript.Context> mJavaScript;
+    protected Map<String, MessagesViewModel.JSContext> mJavaScript;
     protected String mErrPrefix;
+    protected Application mApp;
 }
