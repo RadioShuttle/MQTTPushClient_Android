@@ -6,25 +6,43 @@
 
 package de.radioshuttle.utils;
 
+import android.app.Application;
 import android.util.Base64;
+import android.util.Log;
 
 import com.squareup.duktape.Duktape;
 
+import java.io.IOException;
+import java.util.HashMap;
+
 import de.radioshuttle.db.MqttMessage;
+import de.radioshuttle.mqttpushclient.dash.DColor;
+import de.radioshuttle.mqttpushclient.dash.DashBoardJavaScript;
 
 public class JavaScript {
 
-    public static synchronized JavaScript getInstance() {
+    public static synchronized JavaScript getInstance(Application app) {
         if (js == null) {
-            js = new JavaScript();
+            js = new JavaScript(app);
         }
         return js;
+    }
+
+    protected JavaScript(Application app) {
+        this.app = app;
+        try {
+            color_js = Utils.getRawStringResource(app, "javascript_color", true);
+        } catch (IOException e) {
+            Log.d(TAG, "Error loading raw resource: javascript_color.js", e);
+        }
+
     }
 
     /** formatter - interpreter resources are release after call */
     public String formatMsg(String jsBody, MqttMessage m, int notificationType, String accUser, String accMqttServer, String accPushServer) throws Exception {
         String res = null;
         Context context = initFormatter(jsBody, accUser, accPushServer, accMqttServer);
+        initMessageViewProperties(context, null);
         try {
             res = formatMsg(context, m, notificationType);
         } finally {
@@ -50,6 +68,84 @@ public class JavaScript {
         return result;
     }
 
+    /** for use in message view to set textColor and backgroundColor */
+    public void initMessageViewProperties(Context jsContext, HashMap<String, Object> viewProperties) {
+        MessageViewPropertiesImpl viewPropsImpl = new MessageViewPropertiesImpl(viewProperties);
+        ((Duktape) jsContext.getInterpreter()).set("view", MessageViewProperties.class, viewPropsImpl);
+        if (!Utils.isEmpty(color_js)) {
+            ((Duktape) jsContext.getInterpreter()).evaluate(color_js);
+        }
+    }
+
+    protected interface MessageViewProperties {
+        void setBackgroundColor(double color);
+        double getBackgroundColor();
+        void setTextColor(double color);
+        double getTextColor();
+    }
+
+    public static class MessageViewPropertiesImpl implements MessageViewProperties {
+
+        public MessageViewPropertiesImpl() {
+            this(null);
+        }
+
+        public MessageViewPropertiesImpl(HashMap<String, Object> viewProps) {
+            p = viewProps;
+            if (p == null) {
+                p = new HashMap<>();
+                setTextColor(DColor.OS_DEFAULT);
+                setBackgroundColor(DColor.OS_DEFAULT);
+            }
+        }
+
+        @Override
+        public void setBackgroundColor(double color) {
+            // Log.d(TAG, "c: " + color);
+            p.put("background", doubleToLong(color));
+        }
+
+        @Override
+        public double getBackgroundColor() {
+            return longToDouble((long) (p.get("background") == null ? 0L : p.get("background")));
+        }
+
+        @Override
+        public void setTextColor(double color) {
+            p.put("textcolor", doubleToLong(color));
+        }
+
+        @Override
+        public double getTextColor() {
+            return longToDouble((long) (p.get("textcolor") == null ? 0L : p.get("textcolor")));
+        }
+
+        protected double longToDouble(long i) {
+            double v;
+            if (i == DColor.CLEAR) {
+                v = DColor.CLEAR;
+            } else if (i == DColor.OS_DEFAULT) {
+                v = DColor.OS_DEFAULT;
+            } else {
+                v = i & 0xFFFFFFFFL;
+            }
+            return v;
+        }
+
+        protected long doubleToLong(double d) {
+            long v;
+            if (d == (double) DColor.CLEAR) {
+                v = DColor.CLEAR;
+            } else if (d == (double) DColor.OS_DEFAULT) {
+                v = DColor.OS_DEFAULT;
+            } else {
+                v = (long) d & 0xFFFFFFFFL;
+            }
+            return v;
+        }
+
+        public HashMap<String, Object> p;
+    }
 
     public Context initFormatter(String jsBody, String accUser, String accMqttServer, String accPushServer) throws Exception {
         DuktapeContext dc = new DuktapeContext();
@@ -147,6 +243,8 @@ public class JavaScript {
     }
 
     private static JavaScript js;
+    protected volatile String color_js;
+    protected Application app;
 
     private final static String TAG = JavaScript.class.getSimpleName();
 
