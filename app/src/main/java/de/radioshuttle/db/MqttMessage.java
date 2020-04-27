@@ -8,6 +8,7 @@ package de.radioshuttle.db;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -93,6 +94,12 @@ public class MqttMessage {
     public final static String ARG_MQTT_ACCOUNT = "MQTT_MSG_UPDATE_ACC";
     public final static String ARG_CNT = "MQTT_MSG_CNT";
     public final static String ARG_IDS = "MQTT_MSG_UPDATE_IDS";
+
+    /* values set by user filter script */
+    @Ignore
+    public Long backgroundColor;
+    @Ignore
+    public Long textColor;
 
     public static int MESSAGE_EXPIRE_DAYS = 30;
 }
