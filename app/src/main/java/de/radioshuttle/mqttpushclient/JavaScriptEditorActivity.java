@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import de.radioshuttle.mqttpushclient.dash.DColor;
 import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.utils.Utils;
 
@@ -26,7 +27,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -112,10 +112,20 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 mTestDataLoaded = savedInstanceState.getBoolean("mTestDataLoaded", mTestDataLoaded);
             }
             mResultTextView = findViewById(R.id.headerText);
+            mResultPanelDefaultBgColor = 0; //ContextCompat.getColor(this, R.color.colorHeader);
+            if (savedInstanceState == null) {
+                mResultPanelDefaultTextColor = mResultTextView.getCurrentTextColor();
+            } else {
+                mResultPanelDefaultTextColor = savedInstanceState.getInt("result_panel_text_color");
+            }
+
             mViewModel.javaScriptResult.observe(this, new Observer<JavaScriptViewModel.JSResult>() {
                 @Override
                 public void onChanged(JavaScriptViewModel.JSResult jsResult) {
                     if (jsResult != null) {
+                        long textColor = mResultPanelDefaultTextColor;
+                        long backgroundColor = mResultPanelDefaultBgColor;
+
                         if (jsResult.code == 0) {
                             String val = "";
                             if (mComponentType == CONTENT_OUTPUT_DASHBOARD && !Utils.isEmpty(jsResult.result)) {
@@ -124,12 +134,30 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                                 val = jsResult.result;
                             }
                             mResultTextView.setText(getString(R.string.javascript_result) + "\n" + val);
+                            if (jsResult.viewProperies != null && jsResult.viewProperies.containsKey("textcolor") && jsResult.viewProperies.containsKey("background")) {
+                                /* colors: implies  CONTENT_FILTER mode */
+                                textColor = (Long) jsResult.viewProperies.get("textcolor");
+                                backgroundColor = (Long) jsResult.viewProperies.get("background");
+                                if (textColor == DColor.OS_DEFAULT || textColor == DColor.CLEAR) {
+                                    textColor = mResultPanelDefaultTextColor;
+                                }
+                                if (backgroundColor == DColor.OS_DEFAULT || textColor == DColor.CLEAR) {
+                                    backgroundColor = mResultPanelDefaultBgColor;
+                                }
 
+                                mResultTextView.setTextColor((int) textColor);
+                                mResultTextView.setBackgroundColor((int) backgroundColor);
+                            }
                         } else if (jsResult.code == 1) {
                             mResultTextView.setText(getString(R.string.javascript_err) + "\n" + getString(R.string.javascript_err_timeout));
                         } else {
                             mResultTextView.setText(getString(R.string.javascript_err) + "\n" + jsResult.errorMsg);
                         }
+                        if (mComponentType == CONTENT_FILTER) {
+                            mResultTextView.setTextColor((int) textColor);
+                            mResultTextView.setBackgroundColor((int) backgroundColor);
+                        }
+
                     }
                 }
             });
@@ -298,12 +326,10 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                 webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_TOPIC_FILTER_SCRIPTS);
                 startActivityForResult(webIntent, 0);
             } else if (mComponentType == CONTENT_FILTER_DASHBOARD) {
-                Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
                 Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
                 webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_FILTER_SCRIPT);
                 startActivityForResult(webIntent, 0);
             } else if (mComponentType == CONTENT_OUTPUT_DASHBOARD) {
-                Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
                 Intent webIntent = new Intent(JavaScriptEditorActivity.this, HelpActivity.class);
                 webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_OUTPUT_SCRIPT);
                 startActivityForResult(webIntent, 0);
@@ -324,6 +350,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean("mTestDataLoaded", mTestDataLoaded);
+        outState.putInt("result_panel_text_color", mResultPanelDefaultTextColor);
     }
 
     protected boolean hasDataChanged() {
@@ -348,6 +375,9 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
     protected EditText mTestDataMsgContent;
     protected TextView mResultTextView;
     protected ProgressBar mProgressBar;
+
+    protected int mResultPanelDefaultBgColor;
+    protected int mResultPanelDefaultTextColor;
 
     public final static String ARG_TITLE = "ARG_TITLE";
     public final static String ARG_HEADER = "ARG_HEADER";
