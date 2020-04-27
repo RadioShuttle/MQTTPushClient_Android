@@ -40,7 +40,7 @@
      } else {
        /* message content is in JSON format */
        obj = JSON.parse(msg.text);
-       if (!obj.color) {
+       if (typeof obj.color === 'undefined') {
          obj.color = COLOR_YELLOW;
        }
      }
@@ -102,7 +102,7 @@
     function onButtonWrapperClicked() {
       var colorInput = document.getElementById('colorInput');
       var color;
-      if (obj == null || !obj.color) {
+      if (obj == null || typeof obj.color === 'undefined') {
         color = COLOR_YELLOW;
       } else {
         color = obj.color;
@@ -143,8 +143,8 @@
   <div id="visible_area">
    <div align="center" id="imageWrapper" onclick="onImageClicked(this);">
      <!-- see Material Icons: https://google.github.io/material-design-icons/ -->
-     <i id="bimage" class="material-icons">&#xe42e</i><
-    /div>
+     <i id="bimage" class="material-icons">&#xe42e</i>
+   </div>
 
    <div align="center" id="buttonWrapper" align="center">
     <input id="colorInput" type="color" onchange="onColorSelected(this);"></input>
