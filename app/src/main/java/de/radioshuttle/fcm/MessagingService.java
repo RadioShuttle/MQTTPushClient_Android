@@ -405,7 +405,7 @@ public class MessagingService extends FirebaseMessagingService {
             Future<String> future = Utils.executor.submit(new Callable<String>() {
                 @Override
                 public String call() throws Exception {
-                    return JavaScript.getInstance().formatMsg(
+                    return JavaScript.getInstance(getApplication()).formatMsg(
                             code,
                             mqttMessage,
                             0,
