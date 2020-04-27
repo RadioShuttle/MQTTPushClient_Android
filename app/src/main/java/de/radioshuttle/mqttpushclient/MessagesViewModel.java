@@ -53,10 +53,15 @@ public class MessagesViewModel extends AndroidViewModel {
     public PushAccount pushAccount;
     public HashSet<Integer> newItems;
 
-    protected volatile HashMap<String, JavaScript.Context> currJSContextMap;
-    protected HashMap<String, JavaScript.Context> prevJSContextMap;
+    protected volatile HashMap<String, JSContext> currJSContextMap;
+    protected HashMap<String, JSContext> prevJSContextMap;
     protected volatile boolean jsDisabled;
     protected volatile String jsErrorTxt;
+
+    public static class JSContext {
+        public JavaScript.Context context;
+        public HashMap<String, Object> viewProps;
+    }
 
     public MessagesViewModel(final PushAccount account, final Application app) {
         super(app);
@@ -77,7 +82,7 @@ public class MessagesViewModel extends AndroidViewModel {
             public List<MqttMessage> apply(List<MqttMessage> input) {
                 // long start = System.currentTimeMillis();
 
-                HashMap<String, JavaScript.Context> jsContextMap = currJSContextMap;
+                HashMap<String, JSContext> jsContextMap = currJSContextMap;
 
                 String pl;
                 if (jsDisabled) {
@@ -88,7 +93,7 @@ public class MessagesViewModel extends AndroidViewModel {
                     }
                 } else if (jsContextMap != null && !jsContextMap.isEmpty()) {
                     /* */
-                    ModifyPagedList jsModify = new ModifyPagedList(input, jsContextMap, app.getString(R.string.filterscript_err));
+                    ModifyPagedList jsModify = new ModifyPagedList(getApplication(), input, jsContextMap, app.getString(R.string.filterscript_err));
                     Future future = Utils.executor.submit(jsModify);
                     int itemsProcessed = 0;
 
@@ -141,9 +146,9 @@ public class MessagesViewModel extends AndroidViewModel {
         // long start = System.currentTimeMillis();
         if (prevJSContextMap != null) {
             /* release JS resrouces */
-            Iterator<JavaScript.Context> it = prevJSContextMap.values().iterator();
+            Iterator<JSContext> it = prevJSContextMap.values().iterator();
             while(it.hasNext()) {
-                it.next().close();
+                it.next().context.close();
             }
         }
         prevJSContextMap = currJSContextMap;
@@ -151,8 +156,8 @@ public class MessagesViewModel extends AndroidViewModel {
         SharedPreferences settings = getApplication().getSharedPreferences(AccountListActivity.PREFS_NAME, Activity.MODE_PRIVATE);
         String accountsJson = settings.getString(AccountListActivity.ACCOUNTS, null);
 
-        JavaScript interpreter = JavaScript.getInstance();
-        HashMap<String, JavaScript.Context> jsContextMap = new HashMap<>();
+        JavaScript interpreter = JavaScript.getInstance(getApplication());
+        HashMap<String, JSContext> jsContextMap = new HashMap<>();
         try {
             if (accountsJson != null) {
                 JSONArray jarray = new JSONArray(accountsJson);
@@ -171,12 +176,19 @@ public class MessagesViewModel extends AndroidViewModel {
                         if (!Utils.isEmpty(t.jsSrc)) {
                             /* init javascript function for every topic which has java script code */
                             try {
-                                jsContextMap.put(t.name, interpreter.initFormatter(t.jsSrc, pushAccount.user, mqttServer, pushAccount.pushserver));
+                                JavaScript.Context context = interpreter.initFormatter(t.jsSrc, pushAccount.user, mqttServer, pushAccount.pushserver);
+                                JSContext jsc = new JSContext();
+                                jsc.context = context;
+                                jsc.viewProps =  new HashMap<String, Object>();
+                                interpreter.initMessageViewProperties(context, jsc.viewProps);
+                                jsContextMap.put(t.name, jsc);
                             } catch(Exception e) {
                                 /* init failed */
                                 ModifyPagedList.JSInitError je = new ModifyPagedList.JSInitError();
                                 je.errorText = "" + e.getMessage();
-                                jsContextMap.put(t.name, je);
+                                JSContext jsc = new JSContext();
+                                jsc.context = je;
+                                jsContextMap.put(t.name, jsc);
                             }
                         }
                     }
@@ -249,16 +261,16 @@ public class MessagesViewModel extends AndroidViewModel {
         super.onCleared();
         if (prevJSContextMap != null) {
             /* release JS resrouces */
-            Iterator<JavaScript.Context> it = prevJSContextMap.values().iterator();
+            Iterator<JSContext> it = prevJSContextMap.values().iterator();
             while(it.hasNext()) {
-                it.next().close();
+                it.next().context.close();
             }
         }
         if (currJSContextMap != null) {
             /* release JS resrouces */
-            Iterator<JavaScript.Context> it = currJSContextMap.values().iterator();
+            Iterator<JSContext> it = currJSContextMap.values().iterator();
             while(it.hasNext()) {
-                it.next().close();
+                it.next().context.close();
             }
         }
 
