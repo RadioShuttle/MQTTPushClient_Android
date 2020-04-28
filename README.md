@@ -43,7 +43,7 @@ We already support pretty old Android versions, so almost any device can be used
 The software is provided under the [Apache 2.0 license](/docs/readme/LICENSE-apache-2.0.txt). Contributions to this project are accepted under the same license.
 
 ## Development prerequisites
-* Android Studio 3.6.2 or later
+* Android Studio 3.6.3 or later
 * Java programming language skills
 * Android development experience
 
