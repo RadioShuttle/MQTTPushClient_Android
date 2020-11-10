@@ -816,7 +816,9 @@ public class DashBoardViewModel extends AndroidViewModel {
                 mModificationDate, mLastReceivedMsgDate, mLastReceivedMsgSeqNo);
         currentSyncRequest = request;
 
-        request.executeOnExecutor(mRequestExecutor);
+        if (!mRequestExecutor.isShutdown()) {
+            request.executeOnExecutor(mRequestExecutor);
+        }
     }
 
     public long publish(final String topic, final byte[] payload, final boolean retain, final Item originator) {
