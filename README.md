@@ -35,7 +35,7 @@ The MQTT push server “push.radioshuttle.de” is already preset when setting u
 
 ## Supported Android devices
 We already support pretty old Android versions, so almost any device can be used with this MQTT push client application, but the latest Android versions will probably work fine as well.
-* Minimum version: Android 4.1.1
+* Minimum version: Android 4.1
 * Current target version: Android 10
 
 
@@ -43,7 +43,7 @@ We already support pretty old Android versions, so almost any device can be used
 The software is provided under the [Apache 2.0 license](/docs/readme/LICENSE-apache-2.0.txt). Contributions to this project are accepted under the same license.
 
 ## Development prerequisites
-* Android Studio 4.1 or later
+* Android Studio 4.1.1 or later
 * Java programming language skills
 * Android development experience
 
