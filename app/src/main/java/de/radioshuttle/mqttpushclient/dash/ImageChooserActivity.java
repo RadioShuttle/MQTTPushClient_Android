@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
@@ -373,10 +374,11 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
             requestFiles.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)
                 requestFiles.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-            if (requestFiles.resolveActivity(getPackageManager()) != null) {
+
+            try {
                 Intent browser = Intent.createChooser(requestFiles, getString(R.string.action_import));
                 startActivityForResult(browser, RC_IMPORT_IMAGE);
-            } else {
+            } catch(ActivityNotFoundException e) {
                 Toast.makeText(getApplicationContext(), R.string.import_no_files, Toast.LENGTH_LONG).show();
             }
         }
