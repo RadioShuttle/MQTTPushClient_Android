@@ -26,6 +26,7 @@
     <string name="action_clear">Clear</string>
     <string name="action_delete_topics">Delete</string>
     <string name="action_delete_msgs">Delete</string>
+    <string name="action_filter_msgs">Topic Filter</string>
     <string name="action_actions">MQTT Actions</string>
     <string name="action_add">Add</string>
     <string name="action_update">Update</string>
@@ -75,6 +76,8 @@
 
     <string name="notification_deleted">Pending Messages Deleted</string>
     <string name="notification_show_messages">Too many messages stored on the FCM server or have expired (after 4 weeks)</string>
+
+    <string name="messages_filter_label">Topic:</string>
 
     <string name="action_cmd_exe">Executed %s</string>
     <!-- notification service -->

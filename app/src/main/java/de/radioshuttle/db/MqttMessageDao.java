@@ -32,8 +32,8 @@ public interface MqttMessageDao {
     @Query("SELECT * FROM codes")
     List<Code> getCodes();
 
-    @Query("SELECT * FROM mqtt_messages, codes c1, codes c2 WHERE c2.name = :pushServer and c2.id = push_server_id and c1.name = :account and mqtt_accont_id = c1.id  ORDER BY `when` DESC")
-    public abstract DataSource.Factory<Integer, MqttMessage> getReceivedMessages(String pushServer, String account);
+    @Query("SELECT * FROM mqtt_messages, codes c1, codes c2 WHERE c2.name = :pushServer and c2.id = push_server_id and c1.name = :account and mqtt_accont_id = c1.id and (:topicFilter is null or topic like '%' || :topicFilter || '%') ORDER BY `when` DESC")
+    public abstract DataSource.Factory<Integer, MqttMessage> getReceivedMessages(String pushServer, String account, String topicFilter);
 
     @Query("SELECT * FROM mqtt_messages WHERE push_server_id = :pushID and mqtt_accont_id = :accountID  ORDER BY `when` DESC LIMIT 10")
     public List<MqttMessage> loadReceivedMessages(long pushID, long accountID);

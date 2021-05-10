@@ -8,10 +8,15 @@ package de.radioshuttle.mqttpushclient;
 
 import android.app.AlertDialog;
 
+import androidx.core.content.ContextCompat;
+import androidx.core.view.MenuCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.paging.PagedList;
+
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import androidx.annotation.Nullable;
@@ -23,12 +28,16 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -75,15 +84,44 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
             if (!hastMultipleServer) {
                 server.setVisibility(View.GONE);
             }
-            mViewModel = ViewModelProviders.of(
-                    this, new MessagesViewModel.Factory(b, getApplication()))
+
+            mViewModel = new ViewModelProvider(
+                    this, new MessagesViewModel.Factory(b, getApplication(), null))
                     .get(MessagesViewModel.class);
             if (mViewModel.pushAccount == null)
                 mViewModel.pushAccount = b;
 
-            mActionsViewModel = ViewModelProviders.of(this).get(ActionsViewModel.class);
+            mActionsViewModel = new ViewModelProvider(this).get(ActionsViewModel.class);
             boolean actionsLoaded = mActionsViewModel.initialized;
             mActionsViewModel.init(json);
+
+            boolean savedState = false; // currently state is not saved
+            mFilterVisible = (savedInstanceState != null ? savedInstanceState.getBoolean(FILTER_VISIBLE) : savedState);
+            if (mFilterVisible) {
+                showFilterView();
+            } else {
+                hideFilterView();
+            }
+            View vb = findViewById(R.id.filterCloseButton);
+
+            vb.setOnClickListener((v) -> closeFilterView());
+            EditText filterEditText = findViewById(R.id.filterEditText);
+            filterEditText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    mViewModel.onFilterUpdated(s.toString());
+                }
+            });
 
 
             final MessagesPagedListAdapter adapter = new MessagesPagedListAdapter(this);
@@ -115,12 +153,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                 }
             });
 
-            mViewModel.messagesPagedList.observe(this, new Observer<PagedList<MqttMessage>>() {
-                @Override
-                public void onChanged(@Nullable PagedList<MqttMessage> mqttMessages) {
-                    adapter.submitList(mqttMessages, mViewModel.newItems);
-                }
-            });
+            mViewModel.messagesPagedList.observe(this, mqttMessages -> adapter.submitList(mqttMessages, mViewModel.newItems));
 
             mActionsViewModel.actionsRequest.observe(this, new Observer<Request>() {
                 @Override
@@ -238,12 +271,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
             });
 
             mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
-            mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    refreshActions(false);
-                }
-            });
+            mSwipeRefreshLayout.setOnRefreshListener(() -> refreshActions(false));
 
             if (!actionsLoaded) {
                 refreshActions(true);
@@ -281,6 +309,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuCompat.setGroupDividerEnabled(menu, true);
         ActionsRequest r = (ActionsRequest) mActionsViewModel.actionsRequest.getValue();
         if (r != null)
         {
@@ -347,6 +376,9 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
             case R.id.menu_delete :
                 showDeleteDialog();
                 return true;
+            case R.id.menu_filter:
+                showFilterView();
+                return true;
             case R.id.menu_change_view :
                 if (!mActivityStarted) {
                     mActivityStarted = true;
@@ -355,6 +387,37 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    protected void showFilterView() {
+        mFilterVisible = true;
+        View filter = findViewById(R.id.filterSection);
+        if (filter.getVisibility() != View.VISIBLE) {
+            filter.setVisibility(View.VISIBLE);
+        }
+    }
+
+    protected void closeFilterView() {
+        EditText te = findViewById(R.id.filterEditText);
+        te.setText(null);
+        // mViewModel.onFilterUpdated(null);
+        hideFilterView();
+    }
+
+    protected void hideFilterView() {
+        mFilterVisible = false;
+        View filter = findViewById(R.id.filterSection);
+        if (filter.getVisibility() != View.GONE) {
+            filter.setVisibility(View.GONE);
+        }
+
+        EditText filterText = (EditText) findViewById(R.id.filterEditText);
+        if (filterText != null) {
+            filterText.clearFocus();
+            InputMethodManager imm = (InputMethodManager) getSystemService(
+                    Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(filterText.getWindowToken(), 0);
         }
     }
 
@@ -496,6 +559,7 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putLong(CURRENT_DAY, mCurrentDay);
+        outState.putBoolean(FILTER_VISIBLE, mFilterVisible);
     }
 
     @Override
@@ -518,9 +582,11 @@ public class MessagesActivity extends AppCompatActivity implements CertificateEr
     private RecyclerView.AdapterDataObserver mAdapterObserver;
     private MessagesViewModel mViewModel;
     private ActionsViewModel mActionsViewModel;
+    private boolean mFilterVisible;
 
     private long mCurrentDay;
     private static String CURRENT_DAY = "CURRENT_DAY";
+    private static String FILTER_VISIBLE = "FILTER_VISIBLE";
 
     private final static int ACTION_ITEM_GROUP_ID = Menu.FIRST + 1;
 

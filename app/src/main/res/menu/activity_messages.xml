@@ -2,6 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <group android:id="@+id/g1">
     <item
         android:id="@+id/menu_change_view"
         android:orderInCategory="90"
@@ -17,12 +18,22 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menu_filter"
+        android:orderInCategory="110"
+        android:icon="@drawable/ic_menu_search"
+        android:title="@string/action_filter_msgs"
+        app:showAsAction="never" />
+    </group>
+
+
+    <group>
+    <item
         android:id="@+id/menu_noactions"
         android:enabled="false"
         android:visible="false"
-        android:orderInCategory="101"
+        android:orderInCategory="120"
         android:title="@string/menu_noactions"
         app:showAsAction="never" />
-
+    </group>
 
 </menu>

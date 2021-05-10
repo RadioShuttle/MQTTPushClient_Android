@@ -12,6 +12,7 @@
     <color name="highlight_newitem">#1B5E20</color>
 
     <color name="colorHeader">#00000000</color>
+    <color name="colorFilter">#00000000</color>
     <color name="colorNewMessages">#FF7043</color>
 
     <color name="linkcolor">#9dafff</color>

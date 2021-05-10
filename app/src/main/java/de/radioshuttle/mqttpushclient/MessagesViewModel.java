@@ -57,15 +57,17 @@ public class MessagesViewModel extends AndroidViewModel {
     protected HashMap<String, JSContext> prevJSContextMap;
     protected volatile boolean jsDisabled;
     protected volatile String jsErrorTxt;
+    protected String filter;
 
     public static class JSContext {
         public JavaScript.Context context;
         public HashMap<String, Object> viewProps;
     }
 
-    public MessagesViewModel(final PushAccount account, final Application app) {
+    public MessagesViewModel(final PushAccount account, final Application app, String filter) {
         super(app);
         pushAccount = account;
+        this.filter = filter;
 
         MqttMessageDao dao = AppDatabase.getInstance(app).mqttMessageDao();
         newItems = new HashSet<>();
@@ -121,7 +123,12 @@ public class MessagesViewModel extends AndroidViewModel {
             }
         };
 
-        DataSource.Factory<Integer, MqttMessage> ds = dao.getReceivedMessages(account.pushserverID, account.getMqttAccountName());
+        DataSource.Factory<Integer, MqttMessage> ds = new DataSource.Factory<Integer, MqttMessage>() {
+            @Override
+            public DataSource<Integer, MqttMessage> create() {
+                return dao.getReceivedMessages(account.pushserverID, account.getMqttAccountName(), MessagesViewModel.this.filter).create();
+            }
+        };
         ds = ds.mapByPage(f);
 
         messagesPagedList = new LivePagedListBuilder<>(
@@ -130,6 +137,11 @@ public class MessagesViewModel extends AndroidViewModel {
         IntentFilter intentFilter = new IntentFilter(MqttMessage.UPDATE_INTENT);
         LocalBroadcastManager.getInstance(app).registerReceiver(broadcastReceiver, intentFilter);
 
+    }
+
+    public void onFilterUpdated(String s) {
+        filter = s;
+        refresh();
     }
 
     public void refresh() {
@@ -279,19 +291,21 @@ public class MessagesViewModel extends AndroidViewModel {
 
     public static class Factory implements ViewModelProvider.Factory {
 
-        public Factory(PushAccount pushAccount, Application app) {
+        public Factory(PushAccount pushAccount, Application app, String filter) {
             this.app = app;
             this.pushAccount = pushAccount;
+            this.filter = filter;
         }
 
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            return (T) new MessagesViewModel(pushAccount, app);
+            return (T) new MessagesViewModel(pushAccount, app, filter);
         }
 
         PushAccount pushAccount;
         Application app;
+        String filter;
     }
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
