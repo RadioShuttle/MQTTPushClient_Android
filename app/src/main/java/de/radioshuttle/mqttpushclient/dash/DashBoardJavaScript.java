@@ -14,12 +14,10 @@ import androidx.appcompat.content.res.AppCompatResources;
 
 import com.squareup.duktape.Duktape;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
 import de.radioshuttle.mqttpushclient.R;
-import de.radioshuttle.utils.HeliosUTF8Decoder;
 import de.radioshuttle.utils.JavaScript;
 import de.radioshuttle.utils.Utils;
 

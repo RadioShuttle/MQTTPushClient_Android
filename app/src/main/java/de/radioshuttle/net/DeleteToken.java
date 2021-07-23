@@ -20,7 +20,6 @@ import com.google.firebase.iid.InstanceIdResult;
 import java.io.IOException;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
-import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 
 public class DeleteToken extends Request {

@@ -6,7 +6,6 @@
 
 package de.radioshuttle.mqttpushclient;
 
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.paging.PagedList;
 import androidx.paging.PagedListAdapter;
@@ -19,7 +18,6 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;

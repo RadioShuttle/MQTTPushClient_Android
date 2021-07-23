@@ -8,13 +8,10 @@ package de.radioshuttle.mqttpushclient;
 
 import android.app.AlertDialog;
 
-import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelProviders;
-import androidx.paging.PagedList;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -48,7 +45,6 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 
-import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.mqttpushclient.dash.DashBoardActivity;
 import de.radioshuttle.mqttpushclient.dash.ViewState;

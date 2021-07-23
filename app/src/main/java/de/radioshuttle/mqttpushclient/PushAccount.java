@@ -12,12 +12,10 @@ import org.json.JSONObject;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.net.CertException;
 import de.radioshuttle.net.Connection;
-import de.radioshuttle.utils.Utils;
 
 public class PushAccount {
     public PushAccount() {

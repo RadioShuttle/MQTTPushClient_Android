@@ -26,15 +26,6 @@ import androidx.paging.PagedList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import de.radioshuttle.net.DashboardRequest;
-import de.radioshuttle.net.Request;
-import de.radioshuttle.utils.Utils;
-
 public class ImageChooserViewModel extends AndroidViewModel {
 
     public ImageChooserViewModel(@NonNull Application application, boolean selectionMode) {

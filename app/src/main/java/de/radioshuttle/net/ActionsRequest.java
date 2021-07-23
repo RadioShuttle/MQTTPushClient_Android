@@ -8,11 +8,9 @@ package de.radioshuttle.net;
 
 import androidx.lifecycle.MutableLiveData;
 import android.content.Context;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;

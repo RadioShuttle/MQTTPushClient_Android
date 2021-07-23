@@ -17,7 +17,6 @@ import java.util.HashMap;
 
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.dash.DColor;
-import de.radioshuttle.mqttpushclient.dash.DashBoardJavaScript;
 
 public class JavaScript {
 

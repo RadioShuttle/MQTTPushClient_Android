@@ -15,7 +15,7 @@
         android:roundIcon="@mipmap/ic_radioshuttle_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".dash.ImageChooserActivity"></activity>
+        <activity android:name=".dash.ImageChooserActivity" />
         <activity android:name=".dash.DashBoardEditActivity" />
         <activity android:name=".dash.DashBoardActivity" />
         <activity android:name=".EditActionActivity" />
@@ -27,6 +27,7 @@
         <meta-data
             android:name="google_analytics_adid_collection_enabled"
             android:value="false" />
+        <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
 
         <activity android:name=".AccountListActivity">
             <intent-filter>

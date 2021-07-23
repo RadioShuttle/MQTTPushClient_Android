@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -18,13 +17,10 @@ import android.os.Build;
 import android.util.Log;
 import android.webkit.WebResourceResponse;
 
-import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
@@ -37,7 +33,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
-import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.utils.HeliosUTF8Decoder;
 import de.radioshuttle.utils.HeliosUTF8Encoder;

@@ -115,8 +115,8 @@
 
     <string name="select_single_topic">Only one topic may be selected for editing</string>
 
-    <string name="errormsg_unexpected_error">An unexprected error has occured.</string>
-    <string name="errormsg_general_error">An error has occured.</string>
+    <string name="errormsg_unexpected_error">An unexprected error has occurred.</string>
+    <string name="errormsg_general_error">An error has occurred.</string>
 
     <string name="title_privacy">Privacy Policy</string>
     <string name="privacy_summary">
@@ -147,7 +147,7 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="errormsg_not_authorized">Bad user name or password or not authorized</string>
     <string name="errormsg_not_permitted">License error: this account is not activated/permitted by %s. Contact sales.</string>
     <string name="errormsg_invalid_url">Invalid MQTT server URL."</string>
-    <string name="errormsg_unexpected_server_error">An unexpected error on the push server has occured.</string>
+    <string name="errormsg_unexpected_server_error">An unexpected error on the push server has occurred.</string>
     <string name="errormsg_op_canceled">Request canceled.</string>
     <string name="errormsg_fcm_id">Messaging token not received yet. Click Refresh to retry.</string>
 
@@ -218,7 +218,7 @@ to communicate with the MQTT broker and to receive push notifications
 
     <string name="action_import">Import</string>
     <string name="import_no_files">No files found</string>
-    <string name="import_error">An error occured. Import failed.</string>
+    <string name="import_error">An error occurred. Import failed.</string>
     <string name="import_error_format">Format not supported or image too small.</string>
     <string name="import_error_lowmem">Not enough memory.</string>
     <string name="import_error_security">Import failed. System denies access to the selected document provider.</string>

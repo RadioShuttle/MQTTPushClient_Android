@@ -12,7 +12,6 @@ import androidx.lifecycle.MutableLiveData;
 import java.util.concurrent.atomic.AtomicLong;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
-import de.radioshuttle.mqttpushclient.dash.Item;
 import de.radioshuttle.mqttpushclient.dash.Message;
 
 public class PublishRequest extends Request {

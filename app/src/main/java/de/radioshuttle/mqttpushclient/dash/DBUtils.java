@@ -7,15 +7,8 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.res.TypedArray;
-import android.graphics.Rect;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.View;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,13 +19,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import de.radioshuttle.db.MqttMessage;
+
 import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 

@@ -26,13 +26,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import de.radioshuttle.db.MqttMessage;
 import de.radioshuttle.mqttpushclient.dash.ImageResource;
-import de.radioshuttle.mqttpushclient.dash.ImportFiles;
 import de.radioshuttle.net.Request;
 import de.radioshuttle.net.DeleteToken;
 import de.radioshuttle.utils.FirebaseTokens;

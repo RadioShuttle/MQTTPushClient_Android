@@ -8,7 +8,6 @@ package de.radioshuttle.mqttpushclient.dash;
 
 import android.graphics.drawable.Drawable;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;

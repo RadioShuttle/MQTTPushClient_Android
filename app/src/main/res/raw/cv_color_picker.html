@@ -8,9 +8,6 @@
     #colorInput {margin: 0; padding: 0; position: relative;}
   </style>
 
-  <!-- android specific meta -->
-  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
-
   <script>
 
     function onMqttInit(account, view) {
@@ -51,7 +48,7 @@
 
  <body>
   <div id="visible_area">
-    <input id="colorInput" type="color" onchange="onColorSelected(this);"></input>
+    <input id="colorInput" type="color" onchange="onColorSelected(this);">
   </div>
  </body>
 </html>

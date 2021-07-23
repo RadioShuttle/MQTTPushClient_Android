@@ -12,16 +12,13 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.MainThread;
-import androidx.core.content.ContextCompat;
 import androidx.core.widget.TextViewCompat;
 import androidx.lifecycle.MutableLiveData;
-import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.radioshuttle.mqttpushclient.R;
 import de.radioshuttle.utils.Utils;
 
 public abstract class Item {

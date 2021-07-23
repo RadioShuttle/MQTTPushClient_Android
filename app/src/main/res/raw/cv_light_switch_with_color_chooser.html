@@ -10,9 +10,6 @@
    #colorLabel {display: table-cell;}
   </style>
 
-  <!-- android specific meta -->
-  <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
-
   <!-- see Material Icons: https://google.github.io/material-design-icons/ -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
     rel="stylesheet">
@@ -146,8 +143,8 @@
      <i id="bimage" class="material-icons">&#xe42e</i>
    </div>
 
-   <div align="center" id="buttonWrapper" align="center">
-    <input id="colorInput" type="color" onchange="onColorSelected(this);"></input>
+   <div align="center" id="buttonWrapper">
+    <input id="colorInput" type="color" onchange="onColorSelected(this);">
     <div id="colorLabel" onclick="onButtonWrapperClicked();"></div>
    </div>
   </div>
