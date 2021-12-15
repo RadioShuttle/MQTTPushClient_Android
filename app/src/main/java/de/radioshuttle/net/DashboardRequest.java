@@ -145,7 +145,7 @@ public class DashboardRequest extends Request {
                     itemJSON = itemArray.getJSONObject(j);
 
                     saveResource("uri", itemJSON, replacedImportedResources, serverResourceSet, userDir, importDir);
-                    saveResource("uri2", itemJSON, replacedImportedResources, serverResourceSet, userDir, importDir);
+                    saveResource("uri_off", itemJSON, replacedImportedResources, serverResourceSet, userDir, importDir);
                     saveResource("background_uri", itemJSON, replacedImportedResources, serverResourceSet, userDir, importDir);
 
                     JSONArray optionListArr = itemJSON.optJSONArray("optionlist");
