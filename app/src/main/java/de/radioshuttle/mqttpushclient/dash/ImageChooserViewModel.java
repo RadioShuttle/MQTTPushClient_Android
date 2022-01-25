@@ -28,14 +28,14 @@ import org.json.JSONObject;
 
 public class ImageChooserViewModel extends AndroidViewModel {
 
-    public ImageChooserViewModel(@NonNull Application application, boolean selectionMode) {
+    public ImageChooserViewModel(@NonNull Application application, boolean selectionMode, String accountDir) {
         super(application);
         mSelctionMode = selectionMode;
 
         ImageDataSource.Factory factory = new ImageDataSource.Factory(this);
         mLiveDataInternalImages = new LivePagedListBuilder(factory, 100).build();
 
-        ImageDataSourceUser.Factory userFactory = new ImageDataSourceUser.Factory(this);
+        ImageDataSourceUser.Factory userFactory = new ImageDataSourceUser.Factory(this, accountDir);
         mLiveDataUserImages = new LivePagedListBuilder(userFactory, 100).build();
         mImportedFilesErrorLiveData = new MutableLiveData<>();
 
@@ -106,18 +106,20 @@ public class ImageChooserViewModel extends AndroidViewModel {
 
     public static class Factory implements ViewModelProvider.Factory {
 
-        public Factory(Application app, boolean selectionMode) {
+        public Factory(Application app, boolean selectionMode, String accountDir) {
             this.app = app;
             this.selectionMode = selectionMode;
+            this.accountDir = accountDir;
         }
 
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            return (T) new ImageChooserViewModel(app, selectionMode);
+            return (T) new ImageChooserViewModel(app, selectionMode, accountDir);
         }
 
         Application app;
+        String accountDir;
         boolean selectionMode;
     }
 

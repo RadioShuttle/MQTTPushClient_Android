@@ -92,7 +92,7 @@ public class JavaScriptExcecutor {
                                 mAccount.pushserver);
                         HashMap<String, Object> viewProperties = new HashMap<>();
                         item.getJSViewProperties(viewProperties);
-                        js.initViewProperties(context, viewProperties);
+                        js.initViewProperties(context, viewProperties, mAccount.getAccountDirName());
 
                         Future future = Utils.executor.submit(new Runnable() {
                             @Override
@@ -224,7 +224,7 @@ public class JavaScriptExcecutor {
                                 throw e;
                             }
 
-                            js.initViewProperties(jsContext, viewProperties);
+                            js.initViewProperties(jsContext, viewProperties, mAccount.getAccountDirName());
                             lastSrc = task.item.script_f;
                         }
                         /* if there was a timeout error in the previous run, do not try again, just return error*/

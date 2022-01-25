@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
+import de.radioshuttle.utils.HeliosUTF8Encoder;
 
 import de.radioshuttle.net.CertException;
 import de.radioshuttle.net.Connection;
@@ -128,6 +129,12 @@ public class PushAccount {
             sb.append(user);
         }
         return sb.toString();
+    }
+
+    /** returns a unique account directory name for this account */
+    public String getAccountDirName() {
+        HeliosUTF8Encoder fileNameEncoder = new HeliosUTF8Encoder();
+        return fileNameEncoder.format(getKey());
     }
 
     public String getMqttAccountName() {

@@ -72,10 +72,10 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
 
         Bundle receivedArgs = getIntent().getExtras();
         boolean selectionMode = receivedArgs != null && receivedArgs.getInt(ARG_CTRL_IDX, -1) >= 0;
-
+        String accountDir = receivedArgs.getString(ARG_ACCOUNT_DIR);
 
         mViewModel = ViewModelProviders.of(this, new ImageChooserViewModel.Factory(
-                getApplication(), selectionMode)).get(ImageChooserViewModel.class);
+                getApplication(), selectionMode, accountDir)).get(ImageChooserViewModel.class);
 
         /* internal images */
         mInternalImageList = findViewById(R.id.internalImageList);
@@ -596,6 +596,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
     public final static String ARG_CTRL_IDX = "ARG_CTRL_IDX";
     public final static String ARG_RESOURCE_URI = "ARG_RESOURCE_URI";
     public final static String ARG_LOCKED_RES = "ARG_LOCKED_RES";
+    public final static String ARG_ACCOUNT_DIR = "ARG_ACCOUNT_DIR";
 
     protected final static String KEY_SELECTED_TAB = " KEY_SELECTED_TAB";
 

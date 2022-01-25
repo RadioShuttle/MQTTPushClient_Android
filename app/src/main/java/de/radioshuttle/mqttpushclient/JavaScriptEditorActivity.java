@@ -97,6 +97,7 @@ public class JavaScriptEditorActivity extends AppCompatActivity {
                             Log.d(TAG, "URI parse error: ", e);
                         }
                         mViewModel.mContentFilterCache.put("acc.pushServer", mViewModel.mAccount.pushserver);
+                        mViewModel.mContentFilterCache.put("acc.dir", mViewModel.mAccount.getAccountDirName());
                     }
                 } catch (JSONException e) {
                     Log.d(TAG, "Error creating account from json: " + e.getMessage());

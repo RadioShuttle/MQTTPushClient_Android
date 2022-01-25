@@ -536,7 +536,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                     @Override
                     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                         // Log.d(TAG, "shouldInterceptRequest 1: " + request.getUrl().toString());
-                        return ImageResource.handleWebResource(mActivity, request.getUrl());
+                        return ImageResource.handleWebResource(mActivity, mAccount.getAccountDirName(), request.getUrl());
                     }
 
                     @Nullable
@@ -545,7 +545,7 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                         // Log.d(TAG, "shouldInterceptRequest 2: " + url);
                         WebResourceResponse r = null;
                         try {
-                            r = ImageResource.handleWebResource(mActivity, Uri.parse(url));
+                            r = ImageResource.handleWebResource(mActivity, mAccount.getAccountDirName(), Uri.parse(url));
                         } catch(Exception e) {
                             //TODO: remove after test
                         }

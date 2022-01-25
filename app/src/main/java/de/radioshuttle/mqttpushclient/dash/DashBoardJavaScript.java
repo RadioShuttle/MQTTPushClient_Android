@@ -39,8 +39,8 @@ public class DashBoardJavaScript extends JavaScript {
         return js;
     }
 
-    public void initViewProperties(Context context, HashMap<String, Object> viewProps) {
-        ViewPropertiesImpl viewProperties = new ViewPropertiesImpl(viewProps, app);
+    public void initViewProperties(Context context, HashMap<String, Object> viewProps, String accountDirName) {
+        ViewPropertiesImpl viewProperties = new ViewPropertiesImpl(viewProps, app, accountDirName);
         ((Duktape) context.getInterpreter()).set("view", ViewProperties.class, viewProperties);
         if (!Utils.isEmpty(color_js)) {
             ((Duktape) context.getInterpreter()).evaluate(color_js);
@@ -111,9 +111,10 @@ public class DashBoardJavaScript extends JavaScript {
     }
 
     private static class ViewPropertiesImpl implements ViewProperties {
-        public ViewPropertiesImpl(HashMap<String, Object> props, Application app) {
+        public ViewPropertiesImpl(HashMap<String, Object> props, Application app, String accountDirName) {
             p = props;
             this.app = app;
+            this.accountDirName = accountDirName;
             unknownImgtxt = app.getString(R.string.error_javascript_img_resource_not_found);
             tempResoure = app.getString(R.string.error_javascript_tmp_img_resource);
         }
@@ -152,7 +153,7 @@ public class DashBoardJavaScript extends JavaScript {
                 if (resourceName.toLowerCase().startsWith("tmp/")) { // imported but not saved images are not allowed
                     throw new RuntimeException(tempResoure + " " + resourceName);
                 }
-                uri = ImageResource.getResourceURI(app, resourceName);
+                uri = ImageResource.getResourceURI(app, accountDirName, resourceName);
                 if (Utils.isEmpty(uri)) {
                     throw new RuntimeException(unknownImgtxt + " " + resourceName);
                 }
@@ -173,7 +174,7 @@ public class DashBoardJavaScript extends JavaScript {
                             img = AppCompatResources.getDrawable(app, IconHelper.INTENRAL_ICONS.get(uri));
                             // Log.d(TAG, "setCtrlImage: loaded internal " + uri);
                         } else { // user
-                            img = ImageResource.loadExternalImage(app, uri);
+                            img = ImageResource.loadExternalImage(app, accountDirName, uri);
                             // Log.d(TAG, "setCtrlImseage: loaded user " + uri);
                         }
                         p.put(propKeyBlob, img);
@@ -338,6 +339,7 @@ public class DashBoardJavaScript extends JavaScript {
 
         String unknownImgtxt;
         String tempResoure;
+        String accountDirName;
         Application app;
     }
 

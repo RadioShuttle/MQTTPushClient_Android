@@ -963,6 +963,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 args.putString(OptionEditDialog.ARG_ERROR_3, entry.errorImage);
             }
         }
+        args.putString(OptionEditDialog.ARG_ACCOUNT_DIR, mViewModel.getPushAccount().getAccountDirName());
 
         dlg.setArguments(args);
         dlg.show(getSupportFragmentManager(), OptionEditDialog.class.getSimpleName());
@@ -1196,7 +1197,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 found = true;
             } else if (ImageResource.isExternalResource(mBackgroundURI)) {
                 try {
-                    BitmapDrawable bm = ImageResource.loadExternalImage(this, mBackgroundURI);
+                    BitmapDrawable bm = ImageResource.loadExternalImage(this, mViewModel.getPushAccount().getAccountDirName(),  mBackgroundURI);
                     mButtonBackgroundImg.setImageDrawable(bm);
                     if (bm != null) {
                         found = true;
@@ -1245,7 +1246,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     found = true;
                 } else if (ImageResource.isExternalResource(mOnImageURI)) {
                     try {
-                        BitmapDrawable bm = ImageResource.loadExternalImage(this, mOnImageURI);
+                        BitmapDrawable bm = ImageResource.loadExternalImage(this, mViewModel.getPushAccount().getAccountDirName(), mOnImageURI);
                         mButtonSwitchOn.setImageDrawable(bm);
                         if (bm != null) {
                             found = true;
@@ -1288,7 +1289,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     found = true;
                 } else if (ImageResource.isExternalResource(mOffImageURI)) {
                     try {
-                        BitmapDrawable bm = ImageResource.loadExternalImage(this, mOffImageURI);
+                        BitmapDrawable bm = ImageResource.loadExternalImage(this, mViewModel.getPushAccount().getAccountDirName(), mOffImageURI);
                         mButtonSwitchOff.setImageDrawable(bm);
                         if (bm != null) {
                             found = true;
@@ -1520,9 +1521,10 @@ public class DashBoardEditActivity extends AppCompatActivity implements
             ArrayList<Integer> palette = ColorPickerDialog.simplePalette();
             palette.add(0, defaultColor);
             // chekc if current textcolor in palette. if not add
+            //TODO: consider removing this:
             boolean found = false;
             for (int i = 0; i < palette.size(); i++) {
-                if (palette.get(i) == currentColor) {
+                if (palette.get(i) == (int) currentColor) {
                     found = true;
                     break;
                 }
@@ -1875,6 +1877,7 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                 if (!Utils.isEmpty(acc)) {
                     intent.putExtra(JavaScriptEditorActivity.ARG_ACCOUNT, acc);
                 }
+                intent.putExtra(ImageChooserActivity.ARG_ACCOUNT_DIR, mViewModel.getPushAccount().getAccountDirName());
                 startActivityForResult(intent, ACTIVITY_REQUEST_IMAGE_CHOOSER);
             }
         }

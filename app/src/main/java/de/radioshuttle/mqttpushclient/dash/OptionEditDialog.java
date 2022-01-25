@@ -84,6 +84,7 @@ public class OptionEditDialog extends DialogFragment implements AdapterView.OnIt
             } else {
                 mURI = savedInstanceState.getString(ARG_IMAGE_URI);
             }
+            mAccountDir = args.getString(ARG_ACCOUNT_DIR);
             int size = args.getInt(ARG_LISTSIZE, -1);
             if (size >= 0) {
                 if (savedInstanceState == null) {
@@ -167,6 +168,8 @@ public class OptionEditDialog extends DialogFragment implements AdapterView.OnIt
             if (!Utils.isEmpty(acc)) {
                 intent.putExtra(JavaScriptEditorActivity.ARG_ACCOUNT, acc);
             }
+            intent.putExtra(ImageChooserActivity.ARG_ACCOUNT_DIR, mAccountDir);
+
             startActivityForResult(intent, REQUEST_CODE);
         }
     }
@@ -199,7 +202,7 @@ public class OptionEditDialog extends DialogFragment implements AdapterView.OnIt
                 found = true;
             } else if (ImageResource.isExternalResource(mURI)) {
                 try {
-                    BitmapDrawable bm = ImageResource.loadExternalImage(getContext(), mURI);
+                    BitmapDrawable bm = ImageResource.loadExternalImage(getContext(), mAccountDir, mURI);
                     mImageButton.setImageDrawable(bm);
                     if (bm != null) {
                         found = true;
@@ -305,6 +308,7 @@ public class OptionEditDialog extends DialogFragment implements AdapterView.OnIt
     boolean mPinit;
     int mSelectedPosIdx;
     String mURI;
+    String mAccountDir;
 
     static final int REQUEST_CODE = 4;
     static final int CONTROL_CODE = 4;
@@ -317,6 +321,7 @@ public class OptionEditDialog extends DialogFragment implements AdapterView.OnIt
     static final String ARG_ERROR_1 = "ARG_ERROR_1";
     static final String ARG_ERROR_2 = "ARG_ERROR_2";
     static final String ARG_ERROR_3 = "ARG_ERROR_3";
+    static final String ARG_ACCOUNT_DIR = "ARG_ACCOUNT_DIR";
 
     private final static String TAG = OptionEditDialog.class.getSimpleName();
 

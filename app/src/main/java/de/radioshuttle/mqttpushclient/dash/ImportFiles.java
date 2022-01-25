@@ -39,6 +39,7 @@ import java.util.HashSet;
 
 import de.radioshuttle.net.Cmd;
 import de.radioshuttle.utils.HeliosUTF8Encoder;
+import de.radioshuttle.utils.Utils;
 
 public class ImportFiles implements Runnable {
 
@@ -285,8 +286,8 @@ public class ImportFiles implements Runnable {
         deleteFilesDir(context, getImportedFilesDir(context));
     }
 
-    public static void deleteUserFilesDir(Context context) {
-        deleteFilesDir(context, getUserFilesDir(context));
+    public static void deleteUserFilesDir(Context context, String userDirName) {
+        deleteFilesDir(context, getUserFilesDir(context, userDirName));
     }
 
     public static void deleteFilesDir(Context context, File dir) {
@@ -313,8 +314,9 @@ public class ImportFiles implements Runnable {
         return dir;
     }
 
-    public static File getUserFilesDir(Context context) {
-        File dir = new File(context.getFilesDir(), LOCAL_USER_FILES_DIR);
+    public static File getUserFilesDir(Context context, String userDirName) {
+        String path = LOCAL_USER_FILES_DIR + "/" + (Utils.isEmpty(userDirName) ? "tmp" : userDirName);
+        File dir = new File(context.getFilesDir(), path);
         if (!dir.exists()) {
             dir.mkdirs();
         }
@@ -466,7 +468,7 @@ public class ImportFiles implements Runnable {
     private final static String TMP_PREFIX = "tmp_";
     private final static String LOCAL_IMAGE_DIR = "images";
     private final static String LOCAL_IMPORTED_FILES_DIR = LOCAL_IMAGE_DIR + "/" + "imported";
-    private final static String LOCAL_USER_FILES_DIR = LOCAL_IMAGE_DIR + "/" + "user";
+    private final static String LOCAL_USER_FILES_DIR = LOCAL_IMAGE_DIR + "/" + "userimgs";
 
     public final static long MIN_FREE_SPACE_INT = 100L * 1024L * 1024L;
     public final static int MAX_IMAGE_SIZE_PX = 512;

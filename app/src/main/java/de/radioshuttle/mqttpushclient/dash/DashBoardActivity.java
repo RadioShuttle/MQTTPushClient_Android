@@ -542,6 +542,7 @@ public class DashBoardActivity extends AppCompatActivity implements
             intent.putExtra(DashBoardEditActivity.ARG_DASHBOARD, mViewModel.getItemsRaw());
             intent.putExtra(DashBoardEditActivity.ARG_DASHBOARD_VERSION, mViewModel.getItemsVersion());
 
+            intent.putExtra(ImageChooserActivity.ARG_ACCOUNT_DIR, mViewModel.getPushAccount().getAccountDirName());
             // intent.putStringArrayListExtra(ImageChooserActivity.ARG_LOCKED_RES, new ArrayList<String>());
 
             startActivityForResult(intent, RC_IMAGE_CHOOSER);

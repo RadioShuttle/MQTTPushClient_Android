@@ -423,7 +423,7 @@ public class DetailViewDialog extends DialogFragment {
                             @Override
                             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                                 // Log.d(TAG, "shouldInterceptRequest 1: " + request.getUrl().toString());
-                                return ImageResource.handleWebResource(getContext(), request.getUrl());
+                                return ImageResource.handleWebResource(getContext(), mViewModel.getPushAccount().getAccountDirName(), request.getUrl());
                             }
 
                             @Nullable
@@ -432,7 +432,7 @@ public class DetailViewDialog extends DialogFragment {
                                 // Log.d(TAG, "shouldInterceptRequest 2: " + url);
                                 WebResourceResponse r = null;
                                 try {
-                                    r = ImageResource.handleWebResource(getContext(), Uri.parse(url));
+                                    r = ImageResource.handleWebResource(getContext(), mViewModel.getPushAccount().getAccountDirName(), Uri.parse(url));
                                 } catch(Exception e) {}
                                 return r;
                             }

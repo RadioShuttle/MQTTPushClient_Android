@@ -55,6 +55,7 @@ import de.radioshuttle.fcm.MessagingService;
 import de.radioshuttle.fcm.Notifications;
 import de.radioshuttle.mqttpushclient.dash.DashBoardActivity;
 import de.radioshuttle.mqttpushclient.dash.ImageResource;
+import de.radioshuttle.mqttpushclient.dash.ImportFiles;
 import de.radioshuttle.mqttpushclient.dash.ViewState;
 import de.radioshuttle.net.AppTrustManager;
 import de.radioshuttle.net.Connection;
@@ -376,6 +377,17 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                         AsyncTask<String, Object, Object> t = new AsyncTask<String, Object, Object>() {
                             @Override
                             protected Object doInBackground(String[] objects) {
+                                File userDir = ImportFiles.getUserFilesDir(getApplicationContext(), objects[2]);
+                                if (userDir.exists()) {
+                                    File[] contents = userDir.listFiles();
+                                    if (contents != null) {
+                                        for(File f : contents) {
+                                            f.delete();
+                                        }
+                                        userDir.delete();
+                                    }
+                                }
+
                                 AppDatabase db = AppDatabase.getInstance(getApplication());
                                 MqttMessageDao dao = db.mqttMessageDao();
                                 long psid = dao.getCode(objects[0]);
@@ -395,7 +407,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
                             }
 
                         };
-                        t.executeOnExecutor(Utils.executor, new String[] {account.pushserverID, account.getMqttAccountName()});
+                        t.executeOnExecutor(Utils.executor, new String[] {account.pushserverID, account.getMqttAccountName(), account.getAccountDirName()});
                         ViewState.getInstance(getApplication()).removeAccount(account.getKey());
                         // Log.d(TAG, "deleteDevice: account data removed!!");
                     }

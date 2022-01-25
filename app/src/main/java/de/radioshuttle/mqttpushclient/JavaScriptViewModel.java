@@ -65,6 +65,7 @@ public class JavaScriptViewModel extends AndroidViewModel {
             final String accUser = mContentFilterCache.get("acc.user");
             final String accMqttServer = mContentFilterCache.get("acc.mqttServer");
             final String accPushServer = mContentFilterCache.get("acc.pushServer");
+            final String accountDirName = mContentFilterCache.get("acc.dir");
 
             Utils.executor.submit(new Runnable() {
                 @Override
@@ -85,7 +86,7 @@ public class JavaScriptViewModel extends AndroidViewModel {
                             if (mItem != null) {
                                 mItem.getJSViewProperties(viewProperties);
                             }
-                            js.initViewProperties(context, viewProperties);
+                            js.initViewProperties(context, viewProperties, accountDirName);
                         } else if (mMode == JavaScriptEditorActivity.CONTENT_FILTER) {
                             /* javasdcript interface for textColor, backgroundColor*/
                             contentFilterViewProps = new HashMap<>();

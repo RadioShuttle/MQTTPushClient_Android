@@ -160,7 +160,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                             if (ImageResource.isInternalResource(uri)) {
                                                 drawable = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(uri));
                                             } else {
-                                                drawable =  ImageResource.loadExternalImage(getApplication(), uri);
+                                                drawable =  ImageResource.loadExternalImage(getApplication(), mPushAccount.getAccountDirName(), uri);
                                             }
                                             result.put(uri, drawable);
                                         } catch (Exception e) {
@@ -362,7 +362,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     if (ImageResource.isInternalResource(item.background_uri)) {
                                         item.backgroundImage = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(item.background_uri));
                                     } else {
-                                        item.backgroundImage = ImageResource.loadExternalImage(getApplication(), item.background_uri);
+                                        item.backgroundImage = ImageResource.loadExternalImage(getApplication(), mPushAccount.getAccountDirName(), item.background_uri);
                                     }
                                     if (item.backgroundImage != null) {
                                         item.backgroundImageDetail = item.backgroundImage.getConstantState().newDrawable();
@@ -382,7 +382,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     if (ImageResource.isInternalResource(sw.uri)) {
                                         sw.image = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uri));
                                     } else {
-                                        sw.image = ImageResource.loadExternalImage(getApplication(), sw.uri);
+                                        sw.image = ImageResource.loadExternalImage(getApplication(), mPushAccount.getAccountDirName(), sw.uri);
                                     }
                                     if (sw.image != null) {
                                         sw.imageDetail = sw.image.getConstantState().newDrawable();
@@ -398,7 +398,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                     if (ImageResource.isInternalResource(sw.uriOff)) {
                                         sw.imageOff = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(sw.uriOff));
                                     } else {
-                                        sw.imageOff = ImageResource.loadExternalImage(getApplication(), sw.uriOff);
+                                        sw.imageOff = ImageResource.loadExternalImage(getApplication(), mPushAccount.getAccountDirName(), sw.uriOff);
                                     }
                                     if (sw.imageOff != null) {
                                         sw.imageDetailOff = sw.imageOff.getConstantState().newDrawable();
@@ -421,7 +421,7 @@ public class DashBoardViewModel extends AndroidViewModel {
                                                 if (ImageResource.isInternalResource(opt.imageURI)) {
                                                     opt.uiImage = AppCompatResources.getDrawable(getApplication(), IconHelper.INTENRAL_ICONS.get(opt.imageURI));
                                                 } else {
-                                                    opt.uiImage = ImageResource.loadExternalImage(getApplication(), opt.imageURI);
+                                                    opt.uiImage = ImageResource.loadExternalImage(getApplication(), mPushAccount.getAccountDirName(), opt.imageURI);
                                                 }
                                                 if (opt.uiImage != null) {
                                                     opt.uiImageDetail = opt.uiImage.getConstantState().newDrawable();

@@ -7,6 +7,7 @@
 package de.radioshuttle.mqttpushclient.dash;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -187,7 +188,7 @@ public final class ImageResource {
         return isUserResource(uri) || isImportedResource(uri);
     }
 
-    public static WebResourceResponse handleWebResource(Context context, Uri u) {
+    public static WebResourceResponse handleWebResource(Context context, String userDirName, Uri u) {
         WebResourceResponse r = null;
         try {
             if (u != null && CustomItem.BASE_URI.getAuthority().equalsIgnoreCase(u.getAuthority())) {
@@ -198,11 +199,11 @@ public final class ImageResource {
                 // Log.d(TAG, "uri: " + u);
 
                 InputStream is = null;
-                String res = ImageResource.getResourceURI(context, path);
+                String res = ImageResource.getResourceURI(context, userDirName, path);
                 String mimeType = "image/png"; // default
                 if (res != null) {
                     if (ImageResource.isUserResource(res)) {
-                        String filePath = getImageFilePath(context, res);
+                        String filePath = getImageFilePath(context, userDirName, res);
                         File f = new File(filePath);
                         is = new FileInputStream(f);
                         // mimeType = "image/png";
@@ -248,7 +249,7 @@ public final class ImageResource {
         return r;
     }
 
-    public static String getResourceURI(Context context, String resourceName) {
+    public static String getResourceURI(Context context, String userDirName, String resourceName) {
         String uri = null;
         try {
             boolean checkUserRes;
@@ -262,7 +263,7 @@ public final class ImageResource {
                 checkUserRes = true;
             }
             if (checkUserRes) {
-                File userImagesDir = ImportFiles.getUserFilesDir(context);
+                File userImagesDir = ImportFiles.getUserFilesDir(context, userDirName);
                 String[] userFiles = userImagesDir.list();
                 if (userFiles.length > 0) {
                     HeliosUTF8Decoder dec = new HeliosUTF8Decoder();
@@ -288,8 +289,8 @@ public final class ImageResource {
         return uri;
     }
 
-    public static BitmapDrawable loadExternalImage(Context context, String uri) throws URISyntaxException, UnsupportedEncodingException {
-        String path = getImageFilePath(context, uri);
+    public static BitmapDrawable loadExternalImage(Context context, String userDirName, String uri) throws URISyntaxException, UnsupportedEncodingException {
+        String path = getImageFilePath(context, userDirName, uri);
 
         Bitmap bm = BitmapFactory.decodeFile(path);
         BitmapDrawable bd = null;
@@ -299,14 +300,14 @@ public final class ImageResource {
         return bd;
     }
 
-    protected static String getImageFilePath(Context context, String uri) {
+    protected static String getImageFilePath(Context context, String userDirName, String uri) {
         File dir = null;
         String name = null;
         if (isImportedResource(uri)) {
             dir = ImportFiles.getImportedFilesDir(context);
             name = getURIPath(uri);
         } else if (isUserResource(uri)) {
-            dir = ImportFiles.getUserFilesDir(context);
+            dir = ImportFiles.getUserFilesDir(context, userDirName);
             name = getURIPath(uri) + '.' + Cmd.DASH512_PNG;
         }
         String path = dir.getAbsolutePath();
@@ -323,14 +324,16 @@ public final class ImageResource {
             if (context == null) {
                 return;
             }
+
             /* delete all file in imported files dir */
             ImportFiles.deleteImportedFilesDir(context);
 
-            /* delete all files in user dir which are unreferenced (not included in any dashbard) */
+            /* delete all files in user dir which are unreferenced (not included in dashbard) */
             if (accounts != null) {
                 final HashSet<String> referencedFiles = new HashSet<>();
                 ViewState vs = ViewState.getInstance(context);
                 for(PushAccount p : accounts) {
+                    referencedFiles.clear(); // unreferenced files per account
                     String jsonDash = vs.getDashBoardContent(p.getKey());
                     if (!Utils.isEmpty(jsonDash)) {
                         JSONObject jo = new JSONObject(jsonDash);
@@ -388,18 +391,32 @@ public final class ImageResource {
                             }
                         }
                     }
-                }
-                File dir = ImportFiles.getUserFilesDir(context);
-                if (dir.isDirectory() && dir.exists()) {
-                    File[] unreferencedFiles = dir.listFiles(new FilenameFilter() {
-                        @Override
-                        public boolean accept(File file, String name) {
-                            return !referencedFiles.contains(name);
+                    File dir = ImportFiles.getUserFilesDir(context, p.getAccountDirName());
+                    if (dir.isDirectory() && dir.exists()) {
+                        File[] unreferencedFiles = dir.listFiles(new FilenameFilter() {
+                            @Override
+                            public boolean accept(File file, String name) {
+                                return !referencedFiles.contains(name);
+                            }
+                        });
+                        if (unreferencedFiles != null) {
+                            for(File f : unreferencedFiles) {
+                                Log.d(TAG, "removing unreferenced file: " + f.getName());
+                                f.delete();
+                            }
                         }
-                    });
-                    for(File f : unreferencedFiles) {
-                        Log.d(TAG, "removing unreferenced file: " + f.getName());
-                        f.delete();
+                    }
+                }
+                /* delete user images in old user dir */
+                //TODO: can be removed in a later version
+                File oldUserDir = new File(context.getFilesDir(), "images/user");
+                if (oldUserDir.exists()) {
+                    File[] contents = oldUserDir.listFiles();
+                    if (contents != null) {
+                        for(File f : contents) {
+                            f.delete();
+                        }
+                        oldUserDir.delete();
                     }
                 }
             }

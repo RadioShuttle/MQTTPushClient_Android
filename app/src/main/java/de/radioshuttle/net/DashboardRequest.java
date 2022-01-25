@@ -131,7 +131,7 @@ public class DashboardRequest extends Request {
 
             JSONArray groupArray = mDashboardPara.getJSONArray("groups");
             JSONObject groupJSON, itemJSON;
-            File userDir = ImportFiles.getUserFilesDir(mAppContext);
+            File userDir = ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName());
             File importDir = ImportFiles.getImportedFilesDir(mAppContext);
 
             for (int i = 0; i < groupArray.length(); i++) {
@@ -427,7 +427,7 @@ public class DashboardRequest extends Request {
                 HeliosUTF8Encoder enc = new HeliosUTF8Encoder();
                 String resourceName;
                 String internalFileName;
-                File localDir = ImportFiles.getUserFilesDir(mAppContext);
+                File localDir = ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName());
                 ArrayList<String> resourceNames = new ArrayList<>();
                 if (!Utils.isEmpty(currentDash)) {
                     JSONObject jsonObject = new JSONObject(currentDash);
@@ -515,8 +515,8 @@ public class DashboardRequest extends Request {
                                     continue;
                                 }
                                 String tmpFilename = System.nanoTime() + enc.format(r)  + '.' + Cmd.DASH512_PNG;
-                                File tempFile = new File(ImportFiles.getUserFilesDir(mAppContext), tmpFilename);
-                                File destFile = new File(ImportFiles.getUserFilesDir(mAppContext), enc.format(r)  + '.' + Cmd.DASH512_PNG);
+                                File tempFile = new File(ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName()), tmpFilename);
+                                File destFile = new File(ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName()), enc.format(r)  + '.' + Cmd.DASH512_PNG);
                                 FileOutputStream fos = null;
                                 boolean downloadCompleted = false;
                                 try {
@@ -610,7 +610,9 @@ public class DashboardRequest extends Request {
             if (resourcesArray != null) {
                 for (int i = 0; i < resourcesArray.length(); i++) {
                     uri = resourcesArray.optString(i);
-                    usedResoureces.add(ImageResource.getURIPath(uri));
+                    if (ImageResource.isUserResource(uri)) {
+                        usedResoureces.add(ImageResource.getURIPath(uri));
+                    }
                 }
             }
             unusedResources.removeAll(usedResoureces);

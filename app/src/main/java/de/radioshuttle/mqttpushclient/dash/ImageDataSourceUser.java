@@ -28,9 +28,10 @@ import de.radioshuttle.utils.Utils;
 
 public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
 
-    public ImageDataSourceUser(ImageChooserViewModel viewModel) {
+    public ImageDataSourceUser(ImageChooserViewModel viewModel, String accountDir) {
         mViewModel = viewModel;
         mUserImageResources = new ArrayList<>();
+        mAccountDir = accountDir;
     }
 
     private List<ImageResource> loadRangeInternal(int startPosition, int loadCount) {
@@ -62,7 +63,7 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
                         imageFile = new File(ImportFiles.getImportedFilesDir(mViewModel.getApplication()), filename);
                     } else { // user resource
                         filename = dec.format(filename) + '.' + Cmd.DASH512_PNG;
-                        imageFile = new File(ImportFiles.getUserFilesDir(mViewModel.getApplication()), filename);
+                        imageFile = new File(ImportFiles.getUserFilesDir(mViewModel.getApplication(), mAccountDir), filename);
                     }
                     resource.drawable = new BitmapDrawable(
                             mViewModel.getApplication().getResources(),
@@ -85,7 +86,7 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
         }
 
         List<ImageResource> serverImages = new ArrayList<>();
-        File userImagesDir = ImportFiles.getUserFilesDir(mViewModel.getApplication());
+        File userImagesDir = ImportFiles.getUserFilesDir(mViewModel.getApplication(), mAccountDir);
         String[] userFiles = userImagesDir.list();
         if (userImagesDir != null) {
             ImageResource r;
@@ -156,18 +157,21 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
     ArrayList<ImageResource> mUserImageResources;
 
     ImageChooserViewModel mViewModel;
+    String mAccountDir;
 
     public final static class Factory extends DataSource.Factory<Integer, Drawable> {
 
-        public Factory(ImageChooserViewModel viewModel) {
+        public Factory(ImageChooserViewModel viewModel, String accountDir) {
             mModel = viewModel;
+            mAccountDir = accountDir;
         }
 
         @Override
         public DataSource create() {
-            return new ImageDataSourceUser(mModel);
+            return new ImageDataSourceUser(mModel, mAccountDir);
         }
         ImageChooserViewModel mModel;
+        String mAccountDir;
     }
 
     private final static String TAG = ImageDataSourceUser.class.getSimpleName();
