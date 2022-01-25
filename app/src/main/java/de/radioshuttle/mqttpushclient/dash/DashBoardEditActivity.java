@@ -2458,7 +2458,6 @@ public class DashBoardEditActivity extends AppCompatActivity implements
 
     protected void showHelp() {
         if (mItem instanceof CustomItem) {
-            Toast.makeText(getApplicationContext(), "Not implemented yet", Toast.LENGTH_LONG).show();
             Intent webIntent = new Intent(this, HelpActivity.class);
             webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_CUSTOM_VIEW_HTML);
             startActivityForResult(webIntent, ACTIVITY_REQUEST_CUSTOM_VIEW_HELP);
