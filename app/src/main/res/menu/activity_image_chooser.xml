@@ -15,4 +15,10 @@
         android:title="@string/action_import"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/menu_help"
+        android:orderInCategory="101"
+        android:title="@string/title_help"
+        app:showAsAction="never" />
+
 </menu>

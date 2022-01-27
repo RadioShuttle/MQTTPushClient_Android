@@ -219,5 +219,6 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
     public final static String HELP_DASH_FILTER_SCRIPT = "dashboard_scripts.html#filter_script";
     public final static String HELP_DASH_OUTPUT_SCRIPT = "dashboard_scripts.html#output_script";
     public final static String HELP_DASH_CUSTOM_VIEW_HTML = "dashboard_scripts.html#customviewHTML";
+    public final static String HELP_DASH_MANAGE_IMAGES_HTML = "dashboard.html#manage_images";
 
 }

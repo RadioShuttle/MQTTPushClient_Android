@@ -234,7 +234,7 @@ to communicate with the MQTT broker and to receive push notifications
 
     <string name="action_add_text">Text View</string>
     <string name="action_add_switch">Button/Switch</string>
-    <string name="action_add_group">Group View</string>
+    <string name="action_add_group">Group</string>
     <string name="action_add_progress">Progress Bar/Slider</string>
     <string name="action_add_custom">Custom View</string>
     <string name="action_add_optionlist">Option List</string>

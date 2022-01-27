@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 
 import de.radioshuttle.mqttpushclient.CertificateErrorDialog;
+import de.radioshuttle.mqttpushclient.HelpActivity;
 import de.radioshuttle.mqttpushclient.InsecureConnectionDialog;
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
@@ -266,11 +267,22 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
                 handled = true;
                 checkAndSave();
                 break;
+            case R.id.menu_help :
+                handled = true;
+                showHelp();
+                break;
             default:
                 handled = super.onOptionsItemSelected(item);
         }
         return handled;
     }
+
+    protected void showHelp() {
+        Intent webIntent = new Intent(this, HelpActivity.class);
+        webIntent.putExtra(HelpActivity.CONTEXT_HELP, HelpActivity.HELP_DASH_MANAGE_IMAGES_HTML);
+        startActivityForResult(webIntent, RC_SHOW_HELP);
+    }
+
 
     protected void updateView() {
         if (mSelectedTAB == TAB_INTERNAL) {
@@ -601,6 +613,7 @@ public class ImageChooserActivity extends AppCompatActivity  implements ImageCho
     protected final static String KEY_SELECTED_TAB = " KEY_SELECTED_TAB";
 
     private final static int RC_IMPORT_IMAGE = 1;
+    private final static int RC_SHOW_HELP = 2;
     public final static String TAG = ImageChooserActivity.class.getSimpleName();
 
 }
