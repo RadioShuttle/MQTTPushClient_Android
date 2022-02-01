@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 HELIOS Software GmbH
- * 30827 Garbsen (Hannover) Germany
- * Licensed under the Apache License, Version 2.0
+ *	$Id$
+ *	This is an unpublished work copyright (c) 2018 HELIOS Software GmbH
+ *	30827 Garbsen, Germany.
  */
 
 package de.radioshuttle.net;
@@ -102,6 +102,27 @@ public class Cmd {
                 try { bis.close();} catch(Exception  io) {}
             }
         }
+        return readCommand();
+    }
+
+    public RawCmd saveResourceRequest(int seqNo, int mode, String name, String type, byte[] resource) throws IOException {
+        ByteArrayOutputStream ba = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(ba);
+        os.write(mode);
+        writeString(name, os);
+        writeString(type, os);
+        os.writeLong(System.currentTimeMillis() / 1000L);
+        long s = resource.length;
+        if (s <= 0 || s > MAX_PAYLOAD_RESOURCE) {
+            throw new RuntimeException("Invalid size");
+        }
+        os.writeInt((int) s); // blob size
+        byte[] args = ba.toByteArray();
+        writeHeader(CMD_SAVE_RESOURCE, seqNo, FLAG_REQUEST, 0, args.length + (int) s);
+        bos.write(args);
+        bos.flush();
+        bos.write(resource);
+        bos.flush();
         return readCommand();
     }
 
@@ -264,10 +285,7 @@ public class Cmd {
         DataInputStream is = getDataInputStream(data);
         m.put("uri", readString(is));
         m.put("user", readString(is));
-        short n = is.readShort();
-        if (n < 0 || n > Cmd.MAX_STRING_SIZE) {
-            throw new IOException("Invalid string len");
-        }
+        int n = is.readUnsignedShort();
         char[] pwd = new char[n];
         if (PROTOCOL_MAJOR == 1 && clientProtocolMinor < 2) { // pre 1.2 password is utf-16
             for (int i = 0; i < n; i++) {
@@ -282,10 +300,7 @@ public class Cmd {
 
         byte[] uuid = null;
         if (is.available() >= 2) { // extended in 1.5
-            n = is.readShort();
-            if (n < 0 || n > Cmd.MAX_STRING_SIZE) {
-                throw new IOException("Invalid string len");
-            }
+            n = is.readUnsignedShort();
             uuid = new byte[n];
             is.readFully(uuid);
         } else {
@@ -331,15 +346,6 @@ public class Cmd {
         writeString(pushServerID, os);
         writeString(project_id, os);
         writeString(api_key, os);
-        writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
-    }
-
-    public void fcmDataIOSResponse(RawCmd request, String app_id, String senderID, String pushServerID) throws IOException {
-        ByteArrayOutputStream ba = new ByteArrayOutputStream();
-        DataOutputStream os = new DataOutputStream(ba);
-        writeString(app_id, os);
-        writeString(senderID, os);
-        writeString(pushServerID, os);
         writeCommand(request.command, request.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
@@ -456,7 +462,7 @@ public class Cmd {
         DataOutputStream os = new DataOutputStream(ba);
         os.writeLong(version);
         os.writeInt(itemID);
-        writeString(dashboardJson, os);
+        writeString(dashboardJson, os, false);
         writeCommand(CMD_SET_DASHBOARD, seqNo, FLAG_REQUEST, 0, ba.toByteArray());
         return readCommand();
     }
@@ -473,7 +479,11 @@ public class Cmd {
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(ba);
         os.writeLong(version);
-        writeString(dashboard, os);
+        if (PROTOCOL_MAJOR != 1 || clientProtocolMinor >= 6) { // since 1.6 write p_string32
+            writeLongString(dashboard, os);
+        } else {
+            writeString(dashboard, os);
+        }
         writeCommand(cmd.command, cmd.seqNo, FLAG_RESPONSE, 0, ba.toByteArray());
     }
 
@@ -481,7 +491,11 @@ public class Cmd {
         Object[] result  = new Object[2];
         DataInputStream is = getDataInputStream(data);
         result[0] = is.readLong();
-        result[1] = readString(is);
+        if (PROTOCOL_MAJOR != 1 || clientProtocolMinor >= 6) { // since 1.6 read p_string32
+            result[1] = readLongString(is);
+        } else {
+            result[1] = readString(is);
+        }
         return result;
     }
 
@@ -918,7 +932,7 @@ public class Cmd {
         }
         if (len == 0 || len == -1) { // len == -1 was pre 1.2
             b = new byte[0];
-        } else if (len > 0 && len <= MAX_STRING_SIZE ) {
+        } else if (len > 0 && len <= MAX_PAYLOAD ) { // string len cannot be larger than max payload
             b = new byte[len];
             dis.readFully(b);
         } else {
@@ -1026,12 +1040,13 @@ public class Cmd {
     /* protocol */
     public final static String MAGIC = "MQTP";
     public final static byte PROTOCOL_MAJOR = 1;
-    public final static byte PROTOCOL_MINOR = 5;
+    public final static byte PROTOCOL_MINOR = 6;
     public final static int MAGIC_SIZE = 4;
     public final static byte[] MAGIC_BLOCK;
 
     /* file types */
     public final static String DASH512_PNG =  "dash512png";
+    public final static String DASH_HTML =  "dashhtml";
 
     public byte clientProtocolMinor;
 

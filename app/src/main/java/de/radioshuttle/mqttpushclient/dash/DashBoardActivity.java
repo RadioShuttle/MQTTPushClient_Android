@@ -553,7 +553,7 @@ public class DashBoardActivity extends AppCompatActivity implements
 
     protected boolean checkIfUpdateRequired() {
         boolean updateRequired = false;
-        if (mViewModel.mVersion != -1 && mViewModel.mVersion != Item.DASHBOARD_VERSION ) {
+        if (mViewModel.mVersion != -1 && mViewModel.mVersion > Item.DASHBOARD_VERSION ) {
             updateRequired = true;
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.dash_update_dlg_title);

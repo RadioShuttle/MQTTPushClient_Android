@@ -275,7 +275,7 @@ public abstract class Item {
     public final static int DEFAULT_TEXTSIZE = 1;
 
     /** Dashboard version */
-    public final static int DASHBOARD_VERSION = 0;
+    public final static int DASHBOARD_VERSION = 1;
 
     protected static String TAG = Item.class.getSimpleName();
 }

@@ -169,6 +169,15 @@ public class Connection {
         return Cmd.readString(d);
     }
 
+    public String addResource(String filename, String type, byte[] resource) throws IOException, ServerError {
+        Cmd.RawCmd response = mCmd.saveResourceRequest(++mSeqNo, 0, filename, type, resource);
+
+        handleError(response);
+        DataInputStream d = mCmd.getDataInputStream(response.data);
+
+        return Cmd.readString(d);
+    }
+
     public int[] deleteResources(List<String> resourceNames, String type) throws IOException, ServerError {
         Cmd.RawCmd response = mCmd.deleteResourcesRequest(++mSeqNo, resourceNames, type);
         handleError(response);

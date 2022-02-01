@@ -154,6 +154,8 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="errormsg_incompatible_protocol" formatted="false">"Incompatible protocol version. Client: %d.%d, Server: %d.%d"</string>
     <string name="errormsg_unknown_host">IP address of push server could not be determined.</string>
 
+    <string name="errormsg_invalid_request">Error: Invalid request arguments.</string>
+
     <string name="errormsg_mqtt_prefix">MQTT error:</string>
     <string name="status_ok">Server online</string>
 
@@ -326,8 +328,9 @@ to communicate with the MQTT broker and to receive push notifications
     <string name="error_input_invalid_range">Invalid range. Max value must be greater than min value</string>
     <string name="error_out_of_range">Received value is out of range.</string>
     <string name="error_image_not_found">Image file could not be loaded.</string>
-    <string name="error_send_image_prefix">Saving image to server failed:  </string>
+    <string name="error_send_image_prefix">Saving resrouces to server failed:  </string>
     <string name="error_send_image_invalid_args">Invalid file parameter</string>
+    <string name="error_send_html_invalid_args">Invalid html code parameter</string>
     <string name="error_javascript_img_resource_not_found">Image resource not found:</string>
     <string name="error_javascript_tmp_img_resource">Using temp resources is not allowed: </string>
 

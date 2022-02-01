@@ -207,4 +207,8 @@ public class DBUtils {
         return dashboardObj;
     }
 
+    public static boolean isHTMLResource(String uri) {
+        return !Utils.isEmpty(uri) && uri.toLowerCase().startsWith("res://html/");
+    }
+
 }
