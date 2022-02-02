@@ -13,7 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -52,7 +52,7 @@ public class DashboardRequest extends Request {
         mReceivedDashboard = null;
         mCurrentDashboard =ViewState.getInstance(context).getDashBoardContent(pushAccount.getKey());
         mDeleteFiles = new ArrayList<>();
-        mReceivedResources = false;
+        mReceivedImageResources = false;
         mLastReceivedMsgDate = lastReceivedMsgDate;
         mLastReceivedMsgSeqNo = lastReceivedMsgSeqNo;
     }
@@ -205,7 +205,7 @@ public class DashboardRequest extends Request {
         if (!isEmptyDashboard()) {
             JSONArray groupArray = mDashboardPara.getJSONArray("groups");
             JSONObject groupJSON, itemJSON;
-            String type, html;
+            String type, html, htmlUri;
             char[] f;
 
             for (int i = 0; i < groupArray.length(); i++) {
@@ -217,23 +217,40 @@ public class DashboardRequest extends Request {
 
                 String resourceName;
                 Random rand = new Random();
+                File file;
+                File userDir = ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName());
                 for (int j = 0; j < itemArray.length(); j++) {
                     itemJSON = itemArray.getJSONObject(j);
                     type = itemJSON.optString("type");
                     if ("custom".equals(type)) {
                         html = itemJSON.optString("html");
+                        htmlUri = itemJSON.optString("htmlUri");
                         if(!Utils.isEmpty(html)) {
+                            /* html content must be saved to file */
                             f = new char[8];
-                            for(int k = 0; k < 8; k++) { // generate random file name
-                                f[k] = (char) (97 + rand.nextInt(26));
-                            }
-                            resourceName = mConnection.addResource(new String(f), Cmd.DASH_HTML, html.getBytes("UTF-8"));
+                            do {
+                                for (int k = 0; k < 8; k++) { // generate random file name
+                                    f[k] = (char) (97 + rand.nextInt(26));
+                                }
+                                resourceName = new String(f);
+                                file = new File(userDir,  resourceName + "." + Cmd.DASH_HTML);
+                            } while(file.exists());
+
+                            resourceName = mConnection.addResource(resourceName, Cmd.DASH_HTML, html.getBytes("UTF-8"));
                             if (mConnection.lastReturnCode != Cmd.RC_OK) {
                                 throw new ServerError(0, mAppContext.getString(R.string.error_send_html_invalid_args));
                             }
-                            html = "res://html/" + resourceName;
+                            file = new File(userDir,  resourceName + "." + Cmd.DASH_HTML); // resourcename might have changed
+                            try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
+                                bos.write(html.getBytes("UTF-8"));
+                            }
+                            html = "";
+                            htmlUri = "res://html/" + resourceName;
                             itemJSON.put("html", html);
+                            itemJSON.put("htmlUri", htmlUri);
                             resourceNames.add(resourceName);
+                        } else if (DBUtils.isHTMLResource(htmlUri)) {
+                            resourceNames.add(ImageResource.getURIPath(htmlUri));
                         }
                     }
                 }
@@ -320,28 +337,19 @@ public class DashboardRequest extends Request {
 
                 List<Cmd.FileInfo> serverResourceList = null;
                 List<Cmd.FileInfo> htmlResourceList = null;
-                HashSet<String> addedHtmlResources;
+                HashSet<String> htmlResources;
                 try {
                     serverResourceList = mConnection.enumResources(Cmd.DASH512_PNG);
                     htmlResourceList = mConnection.enumResources(Cmd.DASH_HTML);
-                    /*
-                    if (serverResourceList != null) {
-                        for (String s : serverResourceList) {
-                            Log.d(TAG, "server entry: " + s);
-                        }
-                    }
-                     */
                 } catch(ServerError e) {
                     /* ignonre server error, which are not impotant here (connection errors will not be caught here) */
                     Log.d(TAG, "enum resources server error: " +  e.getMessage());
                 }
 
                 /* if images where added, they must be saved first -> check all resource uris */
-                String jsonStrHTML;
                 try {
                     saveImportedResources(serverResourceList);
-                    jsonStrHTML = mDashboardPara.toString(); // local json format. item.html contains html code instead uris
-                    addedHtmlResources = saveHTMLResources();
+                    htmlResources = saveHTMLResources();
                 } catch(ServerError e) {
                     String msg = mAppContext.getString(R.string.error_send_image_prefix);
                     msg += ' ' +  e.getMessage();
@@ -353,7 +361,7 @@ public class DashboardRequest extends Request {
                 long result = mConnection.setDashboardRequest(mLocalVersion, mItemIDPara, jsonStr);
                 if (result != 0) { //Cmd.RC_OK
                     mServerVersion = result;
-                    mReceivedDashboard = jsonStrHTML;
+                    mReceivedDashboard = jsonStr;
                     mStoreDashboardLocally = true;
                     mSaved = true;
                     // delete dsf
@@ -366,7 +374,7 @@ public class DashboardRequest extends Request {
                         if (unusedResources.size() > 0) {
                             mConnection.deleteResources(unusedResources, Cmd.DASH512_PNG);
                         }
-                        unusedResources = findUnusedHtmlResources(htmlResourceList, addedHtmlResources);
+                        unusedResources = findUnusedHtmlResources(htmlResourceList, htmlResources);
                         if (unusedResources.size() > 0) {
                             mConnection.deleteResources(unusedResources, Cmd.DASH_HTML);
                         }
@@ -452,8 +460,8 @@ public class DashboardRequest extends Request {
                     Object[] dash = mConnection.getDashboard();
                     if (dash != null) {
                         // html resources are stored in external resource files. load them and include code in dashboard
-                        mReceivedDashboard = replaceHTMLUris((String) dash[1]);
                         mServerVersion = (long) dash[0];
+                        mReceivedDashboard = (String) dash[1];
                         mStoreDashboardLocally = true;
                     }
                 } catch(ServerError e) {
@@ -464,68 +472,12 @@ public class DashboardRequest extends Request {
             }
         }
 
-        syncImages();
+        syncResources();
 
         return true;
     }
 
-    protected String replaceHTMLUris(String dashboard) throws JSONException, IOException, ServerError {
-        JSONObject db = new JSONObject(dashboard);
-        int dashVersion = db.getInt("version");
-        if (dashVersion > 0) { // html uris since version 1
-            // load html code (custom items) and insert into json
-            JSONArray groupArray = db.getJSONArray("groups");
-            JSONObject groupJSON, itemJSON;
-            String type, html, resourceName;
-            DataInputStream is;
-            int total = 0, read, len;
-            byte[] buffer = new byte[Cmd.BUFFER_SIZE];
-            ByteArrayOutputStream bao = new ByteArrayOutputStream();
-
-
-            for (int i = 0; i < groupArray.length(); i++) {
-                groupJSON = groupArray.getJSONObject(i);
-                if (!groupJSON.has("items")) {
-                    continue;
-                }
-
-                JSONArray itemArray = groupJSON.getJSONArray("items");
-
-                for (int j = 0; j < itemArray.length(); j++) {
-                    itemJSON = itemArray.getJSONObject(j);
-                    type = itemJSON.optString("type");
-                    if ("custom".equals(type)) {
-                        html = itemJSON.optString("html");
-                        if (DBUtils.isHTMLResource(html)) {
-                            resourceName = ImageResource.getURIPath(html);
-                            is = mConnection.getResource(resourceName, Cmd.DASH_HTML);
-                            if (mConnection.lastReturnCode == Cmd.RC_INVALID_ARGS) {
-                                Log.d(TAG, "Requested resource does not exist: " + resourceName);
-                                // no resource? clear html, ignore error (should not occur)
-                                html = "";
-                            } else {
-                                total = 0;
-                                is.readLong(); // skip modification date
-                                len = is.readInt();
-                                bao.reset();
-                                System.out.println();
-                                while(total < len && (read = is.read(buffer, 0, Math.min(len - total, buffer.length))) != -1) {
-                                    total += read;
-                                    bao.write(buffer, 0, read);
-                                }
-                                html = new String(bao.toByteArray(), "UTF-8");
-                            }
-                            itemJSON.put("html", html);
-                        }
-                    }
-                }
-            }
-            dashboard = db.toString();
-        }
-        return dashboard;
-    }
-
-    protected void syncImages() {
+    protected void syncResources() {
         try {
             /* sync image resources */
             if (requestStatus == Cmd.RC_OK) {
@@ -540,7 +492,7 @@ public class DashboardRequest extends Request {
                 String resourceName;
                 String internalFileName;
                 File localDir = ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName());
-                ArrayList<String> resourceNames = new ArrayList<>();
+                ArrayList<Resource> resourceNames = new ArrayList<>();
                 if (!Utils.isEmpty(currentDash)) {
                     JSONObject jsonObject = new JSONObject(currentDash);
                     JSONArray groupArray = jsonObject.getJSONArray("groups");
@@ -555,7 +507,7 @@ public class DashboardRequest extends Request {
                                     internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
                                     f = new File(localDir, internalFileName);
                                     if (!f.exists()) {
-                                        resourceNames.add(resourceName);
+                                        resourceNames.add(new Resource(resourceName, Cmd.DASH512_PNG));
                                     }
                                 }
                             } catch(Exception e) {
@@ -570,18 +522,19 @@ public class DashboardRequest extends Request {
                         for (int j = 0; j < itemArray.length(); j++) {
                             try {
                                 itemJSON = itemArray.getJSONObject(j);
-                                String[] uris = new String[] {"uri", "uri_off", "background_uri"};
+                                String[] uris = new String[] {"uri", "uri_off", "background_uri", "htmlUri"};
                                 for(String u : uris) {
                                     uri = itemJSON.optString(u);
-                                    if (ImageResource.isUserResource(uri)) {
+                                    if (ImageResource.isUserResource(uri) || DBUtils.isHTMLResource(uri)) {
                                         resourceName = ImageResource.getURIPath(uri);
-                                        internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                        internalFileName = enc.format(resourceName) + '.' + (ImageResource.isUserResource(uri) ? Cmd.DASH512_PNG : Cmd.DASH_HTML);
                                         f = new File(localDir, internalFileName);
                                         if (!f.exists()) {
-                                            resourceNames.add(resourceName);
+                                            resourceNames.add(new Resource(resourceName, ImageResource.isUserResource(uri) ? Cmd.DASH512_PNG : Cmd.DASH_HTML));
                                         }
                                     }
                                 }
+
                                 JSONArray optionListArr = itemJSON.optJSONArray("optionlist");
                                 if (optionListArr != null) {
                                     JSONObject jsonOption;
@@ -594,7 +547,7 @@ public class DashboardRequest extends Request {
                                                 internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
                                                 f = new File(localDir, internalFileName);
                                                 if (!f.exists()) {
-                                                    resourceNames.add(resourceName);
+                                                    resourceNames.add(new Resource(resourceName, Cmd.DASH512_PNG));
                                                 }
                                             }
                                         }
@@ -608,13 +561,13 @@ public class DashboardRequest extends Request {
                     }
 
                     DataInputStream is = null;
-                    for(String r : resourceNames) {
+                    for(Resource r : resourceNames) {
                         /* resource errors are not handled as long as there are not caused by an IO error */
                         // Log.d(TAG, "missing local resources: " + resourceNames);
                         int len = 0;
                         long mdate;
                         try {
-                            is = mConnection.getResource(r, Cmd.DASH512_PNG);
+                            is = mConnection.getResource(r.name, r.type);
                             if (mConnection.lastReturnCode == Cmd.RC_INVALID_ARGS) {
                                 Log.d(TAG, "Requested resource does not exist: " + r);
                                 continue;
@@ -626,9 +579,9 @@ public class DashboardRequest extends Request {
                                     Log.d(TAG, "low mem, skipping get resource file " + r);
                                     continue;
                                 }
-                                String tmpFilename = System.nanoTime() + enc.format(r)  + '.' + Cmd.DASH512_PNG;
+                                String tmpFilename = System.nanoTime() + enc.format(r.name)  + '.' + r.type;
                                 File tempFile = new File(ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName()), tmpFilename);
-                                File destFile = new File(ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName()), enc.format(r)  + '.' + Cmd.DASH512_PNG);
+                                File destFile = new File(ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName()), enc.format(r.name)  + '.' + r.type);
                                 FileOutputStream fos = null;
                                 boolean downloadCompleted = false;
                                 try {
@@ -653,7 +606,11 @@ public class DashboardRequest extends Request {
                                                 Log.d(TAG, "Error renaming file: " + tempFile.getName());
                                                 tempFile.delete();
                                             } else {
-                                                mReceivedResources = true;
+                                                if (r.type.equals(Cmd.DASH512_PNG)) {
+                                                    mReceivedImageResources = true;
+                                                } else if (r.type.equals(Cmd.DASH_HTML)) {
+                                                    mReceivedHtmlResources = true;
+                                                }
                                                 if (mdate > 0) {
                                                     destFile.setLastModified(mdate);
                                                 }
@@ -676,10 +633,10 @@ public class DashboardRequest extends Request {
         }
     }
 
-    protected List<String> findUnusedHtmlResources(List<Cmd.FileInfo> serverResourceList, HashSet<String> addedResources) throws JSONException {
+    protected List<String> findUnusedHtmlResources(List<Cmd.FileInfo> serverResourceList, HashSet<String> htmlResources) {
         ArrayList<String> unusedResources = new ArrayList<>();
         for(Cmd.FileInfo e : serverResourceList) {
-            if (!addedResources.contains(e.name)) {
+            if (!htmlResources.contains(e.name)) {
                 unusedResources.add(e.name);
             }
         }
@@ -775,8 +732,12 @@ public class DashboardRequest extends Request {
         return invalidVersion;
     }
 
-    public boolean hasNewResourcesReceived() {
-        return mReceivedResources;
+    public boolean hasNewImageResourcesReceived() {
+        return mReceivedImageResources;
+    }
+
+    public boolean hasNewHtmlResourcesReceived() {
+        return mReceivedHtmlResources;
     }
 
     /** not defined if requestStatus != Cmd.RC_OK*/
@@ -820,7 +781,8 @@ public class DashboardRequest extends Request {
     String mCurrentDashboard;
     long mLocalVersion;
     long mServerVersion;
-    boolean mReceivedResources;
+    boolean mReceivedImageResources;
+    boolean mReceivedHtmlResources;
 
     private long mLastReceivedMsgDate;
     private int mLastReceivedMsgSeqNo;
@@ -828,6 +790,15 @@ public class DashboardRequest extends Request {
     public int mCmd;
 
     protected boolean mStoreDashboardLocally; // indicates if mReceivedDashboard must be stored in onPostExecute()
+
+    private static class Resource {
+        Resource(String name, String type) {
+            this.name = name;
+            this.type = type;
+        }
+        String name;
+        String type;
+    }
 
     private final static String TAG = DashboardRequest.class.getSimpleName();
 }

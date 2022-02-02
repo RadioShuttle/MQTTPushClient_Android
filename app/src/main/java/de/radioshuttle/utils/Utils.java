@@ -9,7 +9,12 @@ package de.radioshuttle.utils;
 import android.content.Context;
 import android.content.res.Configuration;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -98,6 +103,22 @@ public class Utils {
             }
         }
         return sw.toString();
+    }
+
+    public static String readStringFromFile(File f) throws IOException {
+        String result = null;
+        if (f != null) {
+            try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f))) {
+                ByteArrayOutputStream bao = new ByteArrayOutputStream();
+                byte[] buffer = new byte[8192];
+                int read;
+                while((read = bis.read(buffer)) != -1) {
+                    bao.write(buffer, 0, read);
+                }
+                result = bao.toString("UTF-8");
+            }
+        }
+        return result;
     }
 
     public static boolean isNightMode(Context context) {

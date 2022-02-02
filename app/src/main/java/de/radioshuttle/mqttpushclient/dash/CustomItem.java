@@ -44,6 +44,7 @@ public class CustomItem extends Item {
     public JSONObject toJSONObject() throws JSONException {
         JSONObject o = super.toJSONObject();
         o.put("html", html == null ? "" : html);
+        o.put("htmlUri", htmlUri == null ? "" : htmlUri);
         JSONArray paras = new JSONArray();
         if (mParameter != null) {
             for(String p : mParameter) {
@@ -57,6 +58,7 @@ public class CustomItem extends Item {
     protected void setJSONData(JSONObject o) {
         super.setJSONData(o);
         html = o.optString("html");
+        htmlUri = o.optString("htmlUri");
         mParameter.clear();
         JSONArray paras = o.optJSONArray("parameter");
         if (paras != null) {
@@ -406,6 +408,7 @@ public class CustomItem extends Item {
 
     private JSObject mWebviewInterface;
     private String html = "";
+    public String htmlUri;
     private ArrayList<String> mParameter;
 
     //UI state

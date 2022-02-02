@@ -30,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import de.radioshuttle.mqttpushclient.PushAccount;
 import de.radioshuttle.mqttpushclient.R;
+import de.radioshuttle.net.Cmd;
 import de.radioshuttle.utils.Utils;
 
 public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<Integer> {
@@ -336,22 +338,6 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
             h.value.setText(content);
         }
 
-        if (h.errorImage != null) {
-            if (javaScriptError instanceof String) { // TYPE_TEXT
-                ColorStateList csl = ColorStateList.valueOf(h.defaultColor);
-                ImageViewCompat.setImageTintList(h.errorImage, csl);
-                h.errorImage.setBackgroundResource(R.drawable.ic_error_image_background);
-
-                if (h.errorImage.getVisibility() != View.VISIBLE) {
-                    h.errorImage.setVisibility(View.VISIBLE);
-                }
-            } else {
-                if (h.errorImage.getVisibility() != View.GONE) {
-                    h.errorImage.setVisibility(View.GONE);
-                }
-            }
-        }
-
         // switch
         if (item instanceof Switch) {
             final Switch sw = (Switch) item;
@@ -440,6 +426,19 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
         if (item instanceof CustomItem) {
             final WebView webView = (WebView) h.contentContainer;
             final CustomItem citem = (CustomItem) item;
+            boolean resourceLoadErr = false;
+            if (DBUtils.isHTMLResource(citem.htmlUri) && Utils.isEmpty(citem.getHtml())) {
+                File userDir = ImportFiles.getUserFilesDir(mActivity, mAccount.getAccountDirName());
+                String resourceName = ImageResource.getURIPath(citem.htmlUri);
+                File htmlResource = new File(userDir, resourceName + "." + Cmd.DASH_HTML);
+                try {
+                    citem.setHtml(Utils.readStringFromFile(htmlResource));
+                } catch (IOException e) {
+                    javaScriptError = mActivity.getString(R.string.error_html_not_found);
+                    citem.data.put("error", javaScriptError);
+                    resourceLoadErr = true;
+                }
+            }
 
             long xcolor = citem.getTextcolor();
             int color;
@@ -457,7 +456,10 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                 h.html = citem;
 
                 citem.isLoading = true;
-                citem.data.remove("error"); // clear erros
+                if (!resourceLoadErr) {
+                    javaScriptError = null;
+                    citem.data.remove("error"); // clear erros
+                }
                 citem.data.remove("error2");
                 CustomItem.JSObject webInterface = citem.getWebInterface();
                 webInterface.setViewModel(mActivity.mViewModel);
@@ -564,6 +566,22 @@ public class DashBoardAdapter extends RecyclerView.Adapter implements Observer<I
                     } else {
                         webView.loadUrl("javascript:" + jsOnMqttMessageCall);
                     }
+                }
+            }
+        }
+
+        if (h.errorImage != null) {
+            if (javaScriptError instanceof String) { // TYPE_TEXT
+                ColorStateList csl = ColorStateList.valueOf(h.defaultColor);
+                ImageViewCompat.setImageTintList(h.errorImage, csl);
+                h.errorImage.setBackgroundResource(R.drawable.ic_error_image_background);
+
+                if (h.errorImage.getVisibility() != View.VISIBLE) {
+                    h.errorImage.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (h.errorImage.getVisibility() != View.GONE) {
+                    h.errorImage.setVisibility(View.GONE);
                 }
             }
         }

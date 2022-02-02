@@ -70,6 +70,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -674,6 +675,16 @@ public class DashBoardEditActivity extends AppCompatActivity implements
                     CustomItem custItem = (CustomItem) mItem;
 
                     if (savedInstanceState == null) {
+                        if (DBUtils.isHTMLResource(custItem.htmlUri) && Utils.isEmpty(custItem.getHtml())) {
+                            File userDir = ImportFiles.getUserFilesDir(getApplicationContext(), mViewModel.getPushAccount().getAccountDirName());
+                            String resourceName = ImageResource.getURIPath(custItem.htmlUri);
+                            File htmlResource = new File(userDir, resourceName + "." + Cmd.DASH_HTML);
+                            try {
+                                custItem.setHtml(Utils.readStringFromFile(htmlResource));
+                            } catch (IOException e) {
+                                showErrorMsg(getString(R.string.error_html_not_found));
+                            }
+                        }
                         mEditTextHTML.setText(custItem.getHtml());
                     }
                     View tmpRow = findViewById(R.id.rowBackgroundImage);

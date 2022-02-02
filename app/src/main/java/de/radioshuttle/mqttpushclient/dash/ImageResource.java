@@ -360,12 +360,12 @@ public final class ImageResource {
                             for (int j = 0; j < itemArray.length(); j++) {
                                 try {
                                     itemJSON = itemArray.getJSONObject(j);
-                                    String[] uris = new String[] {"uri", "uri_off", "background_uri"};
+                                    String[] uris = new String[] {"uri", "uri_off", "background_uri", "htmlUri"};
                                     for(String u : uris) {
                                         uri = itemJSON.optString(u);
-                                        if (ImageResource.isUserResource(uri)) {
+                                        if (ImageResource.isUserResource(uri) || DBUtils.isHTMLResource(uri)) {
                                             resourceName = ImageResource.getURIPath(uri);
-                                            internalFileName = enc.format(resourceName) + '.' + Cmd.DASH512_PNG;
+                                            internalFileName = enc.format(resourceName) + '.' + (ImageResource.isUserResource(uri) ? Cmd.DASH512_PNG : Cmd.DASH_HTML);
                                             referencedFiles.add(internalFileName);
                                         }
                                     }

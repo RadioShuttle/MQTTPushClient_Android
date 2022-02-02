@@ -633,7 +633,9 @@ public class DashBoardActivity extends AppCompatActivity implements
                             showErrorMsg(t);
                             return;
                         } else { // no errors. hide previous shown error message
-                            if (request.hasNewResourcesReceived()) {
+                            if (request.hasNewHtmlResourcesReceived()) {
+                                reload(); // rare case missing html resource reloaded from server.
+                            } else if (request.hasNewImageResourcesReceived()) {
                                 Log.d(TAG, "new resource onLoadMessagesFinished, calling refresh ");
                                 mViewModel.refresh();
                             }
