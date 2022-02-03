@@ -633,18 +633,17 @@ public class DashBoardActivity extends AppCompatActivity implements
                             showErrorMsg(t);
                             return;
                         } else { // no errors. hide previous shown error message
-                            if (request.hasNewHtmlResourcesReceived()) {
-                                reload(); // rare case missing html resource reloaded from server.
-                            } else if (request.hasNewImageResourcesReceived()) {
-                                Log.d(TAG, "new resource onLoadMessagesFinished, calling refresh ");
-                                mViewModel.refresh();
-                            }
                             mViewModel.setLastReceivedMessages(request.getReceivedMessages(),
                                     request.getLastReceivedMsgDate(), request.getLastReceivedMsgSeqNo()); // to be cached later
                             mViewModel.setHistoricalData(request.getHistoricalData());
                             mLastErrorStr = null;
                             if (mSnackbar != null && mSnackbar.isShownOrQueued()) {
                                 mSnackbar.dismiss(); //TODO: make sure, error message is shown at least a few seconds (there may be a publish, deletion error currntyl showing)
+                            }
+                            if (request.hasNewHtmlResourcesReceived() || request.hasNewImageResourcesReceived()) {
+                                Log.d(TAG, "new resource onLoadMessagesFinished, calling refresh ");
+                                reload(); // uptdate ui and deliver all cached messages
+                                return;
                             }
                         }
                     }
