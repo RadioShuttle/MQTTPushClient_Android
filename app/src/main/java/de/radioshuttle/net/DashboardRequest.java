@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -459,7 +460,6 @@ public class DashboardRequest extends Request {
                 try {
                     Object[] dash = mConnection.getDashboard();
                     if (dash != null) {
-                        // html resources are stored in external resource files. load them and include code in dashboard
                         mServerVersion = (long) dash[0];
                         mReceivedDashboard = (String) dash[1];
                         mStoreDashboardLocally = true;
@@ -487,12 +487,12 @@ public class DashboardRequest extends Request {
                 } else if (!Utils.isEmpty(mCurrentDashboard)) {
                     currentDash = mCurrentDashboard;
                 }
-                String uri, uri2, background_uri; File f;
+                String uri; File f;
                 HeliosUTF8Encoder enc = new HeliosUTF8Encoder();
                 String resourceName;
                 String internalFileName;
                 File localDir = ImportFiles.getUserFilesDir(mAppContext, mPushAccount.getAccountDirName());
-                ArrayList<Resource> resourceNames = new ArrayList<>();
+                HashSet<Resource> resourceNames = new HashSet<>();
                 if (!Utils.isEmpty(currentDash)) {
                     JSONObject jsonObject = new JSONObject(currentDash);
                     JSONArray groupArray = jsonObject.getJSONArray("groups");
@@ -796,6 +796,20 @@ public class DashboardRequest extends Request {
             this.name = name;
             this.type = type;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Resource resource = (Resource) o;
+            return name.equals(resource.name) && type.equals(resource.type);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(new String[] {name, type});
+        }
+
         String name;
         String type;
     }

@@ -16,6 +16,7 @@ import androidx.paging.DataSource;
 import androidx.paging.PositionalDataSource;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,7 +88,13 @@ public class ImageDataSourceUser  extends PositionalDataSource<ImageResource> {
 
         List<ImageResource> serverImages = new ArrayList<>();
         File userImagesDir = ImportFiles.getUserFilesDir(mViewModel.getApplication(), mAccountDir);
-        String[] userFiles = userImagesDir.list();
+        final String filter = "." + Cmd.DASH512_PNG;
+        String[] userFiles = userImagesDir.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(filter);
+            }
+        });
         if (userImagesDir != null) {
             ImageResource r;
             String resourcename;
