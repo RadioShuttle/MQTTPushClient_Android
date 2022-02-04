@@ -2,11 +2,12 @@
 <html>
  <head>
   <meta charset="UTF-8">
+  <meta name = "viewport" content = "user-scalable = no">
 
   <style>
    body {margin: 0; padding: 0;}
    #buttonWrapper, #imageWrapper {visibility: hidden;}
-   #colorInput {visibility: hidden; position: fixed;}
+   #colorInput {display: none;}
    #colorLabel {display: table-cell;}
   </style>
 
@@ -18,18 +19,25 @@
    var obj = null;
    const COLOR_YELLOW = 0xFFEE33;
    const COLOR_DK_GRAY = 0xA0A0A0;
-    
+
    function onMqttInit(account, view) {
-     var colorLabel = document.getElementById("colorLabel");
-     colorLabel.style.backgroundColor = numToHex(COLOR_YELLOW);
      var image = document.getElementById("bimage");
      image.style.color = numToHex(COLOR_DK_GRAY);
+
+     if (MQTT.view.isDialog()) { /* detail view (input) */
+       document.getElementById("colorLabel").style.display = "none";
+       var colorInput = document.getElementById("colorInput");
+       colorInput.style.display = "initial";
+       colorInput.value = numToHex(COLOR_YELLOW);
+     } else {
+       var colorLabel = document.getElementById("colorLabel");
+       colorLabel.style.backgroundColor = numToHex(COLOR_YELLOW);
+     }
      onMqttResize();
      window.addEventListener('resize', onMqttResize);
    }
 
    function onMqttMessage(msg) {
-     var colorLabel = document.getElementById("colorLabel");
      if (!msg.text) {
        obj = new Object();
        obj.state = 'off';
@@ -47,8 +55,14 @@
      } else {
        image.style.color = numToHex(COLOR_DK_GRAY);
      }
-     colorLabel.style.backgroundColor = numToHex(obj.color);
-    }    
+     if (MQTT.view.isDialog()) {
+       var colorInput = document.getElementById('colorInput');
+       colorInput.value = numToHex(obj.color);
+     } else {
+       var colorLabel = document.getElementById("colorLabel");
+       colorLabel.style.backgroundColor = numToHex(obj.color);
+     }
+    }
 
     function onMqttResize() {
       /* the size of the component must be adjusted to the size of the viewport */
@@ -57,11 +71,10 @@
       var viewPortArea = document.getElementById('visible_area');
       viewPortArea.style.width = w + "px";
       viewPortArea.style.height = h + "px";
-      
+
       var buttonWrapper = document.getElementById("buttonWrapper");
-      var colorLabel = document.getElementById('colorLabel');
       buttonWrapper.style.visibility = "visible";
-      
+
       var imageWrapper = document.getElementById("imageWrapper");
       var image = document.getElementById("bimage");
       imageWrapper.style.visibility = "visible";
@@ -70,11 +83,14 @@
       image.style.fontSize = Math.floor(h * .5) + "px";
       var r = h * .35;
 
-      colorLabel.style.width = Math.floor(r / 2) + "px";
       if (MQTT.view.isDialog()) {
+        var colorInput = document.getElementById('colorInput');
+        colorInput.style.width = Math.floor(r / 2) + "px";
         buttonWrapper.style.marginTop = Math.floor(r * .1) + "px";
-        colorLabel.style.height = Math.floor(r * .5) + "px";
+        colorInput.style.height = Math.floor(r * .5) + "px";
       } else {
+        var colorLabel = document.getElementById('colorLabel');
+        colorLabel.style.width = Math.floor(r / 2) + "px";
         buttonWrapper.style.marginTop = Math.floor(r / 2 / 3) + "px";
         colorLabel.style.height = Math.floor(r / 3) + "px";
       }
@@ -91,21 +107,8 @@
       } else {
         obj.state = 'off';
       }
-      var t = document.getElementById('colorInput');
       /* send values */
       MQTT.publish(MQTT.view.getSubscribedTopic(), JSON.stringify(obj), false);
-    }
-
-    function onButtonWrapperClicked() {
-      var colorInput = document.getElementById('colorInput');
-      var color;
-      if (obj == null || typeof obj.color === 'undefined') {
-        color = COLOR_YELLOW;
-      } else {
-        color = obj.color;
-      }
-      colorInput.value = numToHex(color);
-      colorInput.click();
     }
 
     function onColorSelected(t) {
@@ -117,7 +120,6 @@
       /* send values */
       MQTT.publish(MQTT.view.getSubscribedTopic(), JSON.stringify(obj), false);
     }
-
 
     function numToHex(i) {
       var c = i.toString(16);
@@ -145,7 +147,7 @@
 
    <div align="center" id="buttonWrapper">
     <input id="colorInput" type="color" onchange="onColorSelected(this);">
-    <div id="colorLabel" onclick="onButtonWrapperClicked();"></div>
+    <div id="colorLabel"></div>
    </div>
   </div>
  </body>
