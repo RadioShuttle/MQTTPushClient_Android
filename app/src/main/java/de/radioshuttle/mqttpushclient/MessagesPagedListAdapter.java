@@ -26,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
@@ -159,7 +160,8 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
                 @Override
                 public boolean areContentsTheSame(
                         @NonNull MqttMessage oldMsg, @NonNull MqttMessage newMsg) {
-                    return oldMsg.getId() == newMsg.getId(); // data will never change
+                    /* content may have changed after applying a filter script */
+                    return Arrays.equals(oldMsg.getPayload(), newMsg.getPayload());
                 }
             };
 
