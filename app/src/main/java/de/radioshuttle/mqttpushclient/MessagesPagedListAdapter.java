@@ -161,7 +161,13 @@ public class MessagesPagedListAdapter extends PagedListAdapter<MqttMessage, Mess
                 public boolean areContentsTheSame(
                         @NonNull MqttMessage oldMsg, @NonNull MqttMessage newMsg) {
                     /* content may have changed after applying a filter script */
-                    return Arrays.equals(oldMsg.getPayload(), newMsg.getPayload());
+                    long t1 = oldMsg.textColor != null ? oldMsg.textColor : 0x0100000000L;
+                    long t2 = newMsg.textColor != null ? newMsg.textColor : 0x0100000000L;
+                    long b1 = oldMsg.backgroundColor != null ? oldMsg.backgroundColor : 0x0100000000L;
+                    long b2 = newMsg.backgroundColor != null ? newMsg.backgroundColor : 0x0100000000L;
+                    boolean sameColors = (t1 == t2 && b1 == b2);
+                    //TODO: consider implementing equals in MqttMessage and use it here
+                    return sameColors && Arrays.equals(oldMsg.getPayload(), newMsg.getPayload());
                 }
             };
 
