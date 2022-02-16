@@ -47,6 +47,7 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
         } else {
             url = HELP_URL;
         }
+        url += CLIENT_PARAMETER;
 
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState);
@@ -220,5 +221,7 @@ public class HelpActivity extends AppCompatActivity implements SwipeRefreshLayou
     public final static String HELP_DASH_OUTPUT_SCRIPT = "dashboard_scripts.html#output_script";
     public final static String HELP_DASH_CUSTOM_VIEW_HTML = "dashboard_scripts.html#customviewHTML";
     public final static String HELP_DASH_MANAGE_IMAGES_HTML = "dashboard.html#manage_images";
+
+    protected final static String CLIENT_PARAMETER = "?client=Android";
 
 }
