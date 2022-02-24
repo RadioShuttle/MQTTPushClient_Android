@@ -43,7 +43,7 @@ We already support pretty old Android versions, so almost any device can be used
 The software is provided under the [Apache 2.0 license](/docs/readme/LICENSE-apache-2.0.txt). Contributions to this project are accepted under the same license.
 
 ## Development prerequisites
-* Android Studio Arctic Fox | 2020.3.1 Patch 4
+* Android Studio Bumblebee | 2021.1.1 Patch 2
 * Java programming language skills
 * Android development experience
 
