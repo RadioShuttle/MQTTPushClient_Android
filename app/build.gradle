@@ -6,11 +6,11 @@ android {
             && new File(project.property("MQTTPushClient.signing") + "signing.gradle").exists()) {
         apply from: project.property("MQTTPushClient.signing") + "signing.gradle"
     }
-    compileSdkVersion 30
+    compileSdkVersion 31
     defaultConfig {
         applicationId "de.radioshuttle.mqttpushclient"
         minSdkVersion 16
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 69
         versionName "2.0.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

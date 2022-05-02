@@ -29,7 +29,8 @@
             android:value="false" />
         <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
 
-        <activity android:name=".AccountListActivity">
+        <activity android:name=".AccountListActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -38,13 +39,15 @@
         </activity>
         <activity android:name=".EditAccountActivity" />
 
-        <service android:name="de.radioshuttle.fcm.MessagingService">
+        <service android:name="de.radioshuttle.fcm.MessagingService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
-        <receiver android:name="de.radioshuttle.fcm.Notifications">
+        <receiver android:name="de.radioshuttle.fcm.Notifications"
+            android:exported="true">
             <intent-filter>
                 <action android:name="notification_cancelled" />
             </intent-filter>

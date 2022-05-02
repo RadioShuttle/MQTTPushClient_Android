@@ -91,10 +91,14 @@ public class MessagingService extends FirebaseMessagingService {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra(FCM_ON_DELETE, true);
 
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= 31) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this,
                 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                flags);
 
         NotificationCompat.Builder b = null;
         if (Build.VERSION.SDK_INT >= 26) {
@@ -431,10 +435,14 @@ public class MessagingService extends FirebaseMessagingService {
         intent.putExtra(ARG_MQTT_ACCOUNT, mqttAccount);
         intent.putExtra(ARG_PUSHSERVER_ID, pushServerID);
 
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= 31) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this,
                 messageInfo.groupId, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                flags);
 
 
         Intent delItent = new Intent(this, Notifications.class);
@@ -444,7 +452,7 @@ public class MessagingService extends FirebaseMessagingService {
         PendingIntent delPendingIntent = PendingIntent.getBroadcast(
                 this,
                 messageInfo.groupId, delItent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                flags);
 
         NotificationCompat.Builder b;
         if (Build.VERSION.SDK_INT >= 26) {
