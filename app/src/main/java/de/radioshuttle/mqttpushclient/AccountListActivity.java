@@ -6,18 +6,24 @@
 
 package de.radioshuttle.mqttpushclient;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import androidx.annotation.Nullable;
 import com.google.android.material.snackbar.Snackbar;
@@ -323,6 +329,23 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
 
         if (!accountsChecked && !startedFromNotificationTray) {
             refresh();
+        }
+
+        /* Android 13 and later: request permission for notification once! (first run after install) */
+        //TODO: if the user denies, notifications will not work and must be expicitly set in system settings (for this app)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU || "Tiramisu".equals(Build.VERSION.CODENAME)) { //TODO: remove beta cmp
+            boolean requested = isettings.getBoolean(PN_REQUESTED, false);
+            if (!requested) {
+                launcherPostNotfication = registerForActivityResult(new ActivityResultContracts.RequestPermission(), result -> {
+                    SharedPreferences isettings2 = getSharedPreferences(PREFS_INST, Activity.MODE_PRIVATE);
+                    SharedPreferences.Editor iedit = isettings2.edit();
+                    iedit.putBoolean(PN_REQUESTED, true);
+                    iedit.apply();
+                });
+                if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    launcherPostNotfication.launch(Manifest.permission.POST_NOTIFICATIONS);
+                }
+            }
         }
 
     }
@@ -786,6 +809,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     public final static String ACCOUNTS = "accounts";
     public final static String UUID = "uuid";
     public final static String THEME = "theme";
+    public final static String PN_REQUESTED = "pn_requested";
 
     public final static String ARG_MQTT_ACCOUNT = "ARG_MQTT_ACCOUNT";
     public final static String ARG_PUSHSERVER_ID = "ARG_PUSHSERVER_ADDR";
@@ -815,5 +839,5 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     private RecyclerView mListView;
     private AccountViewModel mViewModel;
     private int mTheme;
-
+    private ActivityResultLauncher<String> launcherPostNotfication;
 }

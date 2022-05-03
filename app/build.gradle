@@ -6,11 +6,14 @@ android {
             && new File(project.property("MQTTPushClient.signing") + "signing.gradle").exists()) {
         apply from: project.property("MQTTPushClient.signing") + "signing.gradle"
     }
-    compileSdkVersion 31
+    // TODO: compileSdkVersion 33
+    compileSdkPreview "Tiramisu"
+
     defaultConfig {
         applicationId "de.radioshuttle.mqttpushclient"
         minSdkVersion 16
-        targetSdkVersion 31
+        // TODO: targetSdkVersion 33
+        targetSdkPreview "Tiramisu"
         versionCode 69
         versionName "2.0.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -34,7 +37,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.recyclerview:recyclerview:1.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
