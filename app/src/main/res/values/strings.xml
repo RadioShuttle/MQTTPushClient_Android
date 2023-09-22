@@ -71,6 +71,8 @@
     <string name="dlg_ntype_medium">Notify</string>
     <string name="dlg_ntype_high">Notify + Sound</string>
 
+    <string name="warning_no_notification_perm">You haven\'t allowed notifications</string>
+
     <string name="error_loading_accounts">Error: Loading accounts failed.</string>
     <string name="error_saving_accounts">Error: Saving account list failed.</string>
 

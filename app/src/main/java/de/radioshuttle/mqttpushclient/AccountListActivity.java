@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -74,6 +75,11 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account_list);
+
+        if (Build.VERSION.SDK_INT >= 33) {
+            mNotificationPermissionHandler = new NotificationPermissionHandler(this);
+            mNotificationPermissionHandler.checkPermission();
+        }
 
         if (savedInstanceState == null) {
             try {
@@ -815,5 +821,7 @@ public class AccountListActivity extends AppCompatActivity implements Certificat
     private RecyclerView mListView;
     private AccountViewModel mViewModel;
     private int mTheme;
+
+    private NotificationPermissionHandler mNotificationPermissionHandler;
 
 }
