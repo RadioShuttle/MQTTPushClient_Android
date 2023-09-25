@@ -13,7 +13,6 @@ import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
-import com.google.firebase.iid.InstanceIdResult;
 
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -72,19 +71,19 @@ public final class FirebaseTokens {
         }
     }
 
-    public void waitForTokenAndNotifyPushServer(final PushAccount pushAccount, final Task<InstanceIdResult> task) {
+    public void waitForTokenAndNotifyPushServer(final PushAccount pushAccount, final Task<String> task) {
         Utils.executor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
                     Tasks.await(task);
                     if (task.isSuccessful()) {
-                        InstanceIdResult result = task.getResult();
+                        String result = task.getResult();
                         /* check, if the token has not been sent in the meanwhile */
                         final String account = pushAccount.getKey();
                         rwLock.readLock().lock();
                         try {
-                            if (!tokens.containsKey(account) || !tokens.get(account).equals(result.getToken())) {
+                            if (!tokens.containsKey(account) || !tokens.get(account).equals(result)) {
 
                                 @SuppressLint("StaticFieldLeak")
                                 Request sendTokenRequest = new Request(context, pushAccount, null) {
@@ -99,7 +98,7 @@ public final class FirebaseTokens {
                                         }
                                     }
                                 };
-                                sendTokenRequest.setTokenRequest(result.getToken());
+                                sendTokenRequest.setTokenRequest(result);
                                 sendTokenRequest.executeOnExecutor(Utils.executor);
                             }
 

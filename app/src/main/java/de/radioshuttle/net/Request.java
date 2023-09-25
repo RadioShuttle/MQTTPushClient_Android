@@ -21,8 +21,7 @@ import android.util.Log;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -205,7 +204,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 }
             }
 
-            Task<InstanceIdResult> instanceIdTask = null;
+            Task<String> instanceIdTask = null;
 
             /* de.radioshuttle.fcm data*/
             if (cont && !isRestrictedAccess) {
@@ -260,9 +259,8 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                 }
 
                 if (app != null) {
-                    FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
-                    instanceIdTask = id.getInstanceId();
-
+                    FirebaseMessaging messageApp = app.get(FirebaseMessaging.class);
+                    instanceIdTask = messageApp.getToken();
                     cont = true;
                 } else {
                     throw new ClientError(mAppContext.getString(R.string.errormsg_firebase_init_failed));
@@ -290,7 +288,7 @@ public class Request extends AsyncTask<Void, Void, PushAccount> {
                     /* if the fcm token was not set as request argument, get fcm token from instanceid task */
                     if (mToken == null && instanceIdTask != null) {
                         if (instanceIdTask.isSuccessful()) {
-                            mToken = instanceIdTask.getResult().getToken();
+                            mToken = instanceIdTask.getResult();
                         } else if (!instanceIdTask.isComplete()) {
                             /* "get token" is still in progress? then wait and notify (async) */
                             FirebaseTokens.getInstance(mAppContext)

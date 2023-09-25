@@ -14,8 +14,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.io.IOException;
 
@@ -99,9 +98,9 @@ public class DeleteToken extends Request {
                     }
                 }
                 if (app != null) {
-                    FirebaseInstanceId id = FirebaseInstanceId.getInstance(app);
+                    FirebaseMessaging messageApp = app.get(FirebaseMessaging.class);
+                    Task<String> t = messageApp.getToken();
 
-                    Task<InstanceIdResult> t = id.getInstanceId();
                     try {
                         Tasks.await(t);
                     } catch (Exception e) {
@@ -110,14 +109,14 @@ public class DeleteToken extends Request {
 
                     if (t.isSuccessful()) {
                         try {
-                            id.deleteInstanceId();
+                            messageApp.deleteToken();
                             deviceRemoved = true;
                             Log.d(TAG, "token deleted");
-                        } catch (IOException e) {
-                            Log.d(TAG, "deleteInstanceId() failed for " + mPushAccount.pushserver + ": " + t.getResult().getToken());
+                        } catch (Exception e) {
+                            Log.d(TAG, "deleteInstanceId() failed for " + mPushAccount.pushserver + ": " + t.getResult());
                             // throw new ClientError(e);
                         }
-                        Log.d(TAG, "Token deleted for " + mPushAccount.pushserver + ": " + t.getResult().getToken());
+                        Log.d(TAG, "Token deleted for " + mPushAccount.pushserver + ": " + t.getResult());
                     } else {
                         Log.d(TAG, "Deletion of token for push server " + mPushAccount.pushserver + "  failed.");
                         // throw new ClientError("Deletion of token failed.");
