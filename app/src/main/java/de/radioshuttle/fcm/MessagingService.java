@@ -6,6 +6,7 @@
 
 package de.radioshuttle.fcm;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Notification;
@@ -74,6 +75,7 @@ public class MessagingService extends FirebaseMessagingService {
         }
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onDeletedMessages() {
         super.onDeletedMessages();
@@ -141,7 +143,9 @@ public class MessagingService extends FirebaseMessagingService {
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(this);
 
-        notificationManager.notify(FCM_ON_DELETE, 0, notification);
+        if (notificationManager.areNotificationsEnabled()) { // notification permission was granted when enabled
+            notificationManager.notify(FCM_ON_DELETE, 0, notification);
+        }
     }
 
 
@@ -381,6 +385,7 @@ public class MessagingService extends FirebaseMessagingService {
 
     }
 
+    @SuppressLint("MissingPermission")
     protected void showNotification(String pushServerAddr, String mqttAccount, String pushServerID, boolean multiMqttAccounts , final Msg m, int prio, int cnt, final JSInfo jsInfo) {
         String account = pushServerAddr + ":" + mqttAccount;
 
@@ -511,8 +516,9 @@ public class MessagingService extends FirebaseMessagingService {
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(this);
 
-        notificationManager.notify(messageInfo.group, messageInfo.groupId, notification);
-
+        if (notificationManager.areNotificationsEnabled()) { // notification permission was granted when enabled
+            notificationManager.notify(messageInfo.group, messageInfo.groupId, notification);
+        }
     }
 
     protected static void setAlertOnlyOnce(NotificationCompat.Builder b, Context context) {
