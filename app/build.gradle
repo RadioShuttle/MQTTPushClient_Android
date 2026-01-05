@@ -11,8 +11,8 @@ android {
         minSdkVersion 19
         targetSdkVersion 34
         compileSdk 34
-        versionCode 71
-        versionName "2.0.10"
+        versionCode 73
+        versionName "2.0.11"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -22,6 +22,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
 
