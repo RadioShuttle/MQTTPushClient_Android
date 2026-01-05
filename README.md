@@ -43,7 +43,7 @@ We already support pretty old Android versions, so almost any device can be used
 The software is provided under the [Apache 2.0 license](/docs/readme/LICENSE-apache-2.0.txt). Contributions to this project are accepted under the same license.
 
 ## Development prerequisites
-* Android Studio Giraffe | 2022.3.1 Patch 1
+* Android Studio Giraffe | 2022.3.1 Patch 2
 * Java programming language skills
 * Android development experience
 
